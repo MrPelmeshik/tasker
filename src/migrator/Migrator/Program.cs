@@ -23,7 +23,9 @@ public static class Program
             var migrationDir = Path.Combine(cfg.MigrationDirectory, db);
             var migrationScripts = Extends.GetMigrationScripts(migrationDir);
             var migrationHistories = GetMigrationHistories(cfg, db);
-            var lastAppliedMigrationOrder = migrationHistories.Max(x => x.Order);
+            var lastAppliedMigrationOrder = migrationHistories.Count == 0
+                ? 0
+                : migrationHistories.Max(x => x.Order);
 
             if (!Extends.CheckMigrations(migrationScripts, migrationHistories, lastAppliedMigrationOrder))
             {
@@ -37,8 +39,7 @@ public static class Program
             {
                 foreach (var migrationScript in migrationScripts.Where(x => x.Order > lastAppliedMigrationOrder))
                 {
-
-                    using var cmd = new NpgsqlCommand(migrationScript.Sql, conn);
+                    using var cmd = new NpgsqlCommand(migrationScript.Sql, conn, trans);
                     cmd.ExecuteNonQuery();
 
                     using var cmd2 = new NpgsqlCommand($"""
@@ -48,7 +49,7 @@ public static class Program
                                                        ,        @{nameof(migrationScript.Name)}
                                                        ,        @{nameof(migrationScript.Sql)}
                                                        ,        @{nameof(migrationScript.Hash)})
-                                                       """, conn);
+                                                       """, conn, trans);
                     cmd2.Parameters.AddWithValue(nameof(migrationScript.Order), migrationScript.Order);
                     cmd2.Parameters.AddWithValue(nameof(migrationScript.FileName), migrationScript.FileName);
                     cmd2.Parameters.AddWithValue(nameof(migrationScript.Name), migrationScript.Name);
