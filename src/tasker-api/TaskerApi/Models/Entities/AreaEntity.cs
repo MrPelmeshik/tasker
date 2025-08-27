@@ -1,49 +1,62 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-/// Область задач и действий (таблица areas).
+/// Области
 /// </summary>
+[Table("areas")]
 public class AreaEntity
 {
     /// <summary>
-    /// Идентификатор области.
+    /// ID области
     /// </summary>
+    [Key, Column("id")]
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Название области.
+    /// Заголовок области
     /// </summary>
-    public string Name { get; set; } = string.Empty;
+    [Column("title")]
+    public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// Описание области.
+    /// Описание области
     /// </summary>
+    [Column("description")]
     public string? Description { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя — создателя области.
+    /// ID создателя
     /// </summary>
-    public Guid UserId { get; init; }
+    [Column("creator_user_id")]
+    public Guid CreatorUserId { get; set; }
 
     /// <summary>
-    /// Признак активности области.
+    /// Дата создания
     /// </summary>
+    [Column("created_at")]
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// Дата обновления
+    /// </summary>
+    [Column("updated_at")]
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Дата деактивации
+    /// </summary>
+    [Column("deactivated_at")]
+    public DateTimeOffset? DeactivatedAt { get; set; }
+
+    /// <summary>
+    /// Признак активности
+    /// </summary>
+    [Column("is_active")]
     public bool IsActive { get; set; }
-
-    /// <summary>
-    /// Дата деактивации области (если применимо).
-    /// </summary>
-    public DateTimeOffset? Deactivated { get; init; }
-
-    /// <summary>
-    /// Время создания записи.
-    /// </summary>
-    public DateTimeOffset Created { get; set; }
-
-    /// <summary>
-    /// Время последнего обновления записи.
-    /// </summary>
-    public DateTimeOffset Updated { get; set; }
 }
 
 

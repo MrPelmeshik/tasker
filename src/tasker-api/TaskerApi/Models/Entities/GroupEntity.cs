@@ -5,22 +5,40 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-/// Пользователи
+/// Группы
 /// </summary>
-[Table("users")]
-public class UserEntity
+[Table("groups")]
+public class GroupEntity
 {
     /// <summary>
-    /// ID пользователя
+    /// ID группы
     /// </summary>
     [Key, Column("id")]
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Имя пользователя
+    /// Заголовок группы
     /// </summary>
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
+    [Column("title")]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Описание группы
+    /// </summary>
+    [Column("description")]
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// ID создателя
+    /// </summary>
+    [Column("creator_user_id")]
+    public Guid CreatorUserId { get; set; }
+
+    /// <summary>
+    /// ID области
+    /// </summary>
+    [Column("area_id")]
+    public Guid AreaId { get; set; }
 
     /// <summary>
     /// Дата создания

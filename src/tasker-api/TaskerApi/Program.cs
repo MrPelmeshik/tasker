@@ -28,33 +28,15 @@ builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
 // Регистрация провайдеров (Dapper)
-builder.Services.AddScoped<IUserActionLogProvider, UserActionLogProvider>();
 builder.Services.AddScoped<IUserProvider, UserProvider>();
-builder.Services.AddScoped<IActionProvider, ActionProvider>();
-builder.Services.AddScoped<IAreaProvider, AreaProvider>();
-builder.Services.AddScoped<ITaskProvider, TaskProvider>();
-builder.Services.AddScoped<ITagProvider, TagProvider>();
-builder.Services.AddScoped<IRuleProvider, RuleProvider>();
-builder.Services.AddScoped<IFileProvider, FileProvider>();
-builder.Services.AddScoped<IAreaMembershipProvider, AreaMembershipProvider>();
-builder.Services.AddScoped<IReferenceProvider, ReferenceProvider>();
+
+// Регистрация провайдеров Keycloak
+builder.Services.AddHttpClient<IKeycloakProvider, KeycloakProvider>();
+builder.Services.AddScoped<IKeycloakProvider, KeycloakProvider>();
 
 // Регистрация сервисов
 builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IActionService, ActionService>();
-builder.Services.AddScoped<IAreaService, AreaService>();
-builder.Services.AddScoped<ITaskService, TaskService>();
-builder.Services.AddScoped<ITagService, TagService>();
-builder.Services.AddScoped<IRuleService, RuleService>();
-builder.Services.AddScoped<IFileService, FileService>();
-builder.Services.AddScoped<IAreaMembershipService, AreaMembershipService>();
-builder.Services.AddScoped<IReferenceService, ReferenceService>();
-builder.Services.AddScoped<IUserActionLogService, UserActionLogService>();
-
-// Регистрация расширенных сервисов для связей между таблицами
-builder.Services.AddScoped<IActionTaskService, ActionTaskService>();
-builder.Services.AddScoped<IActionTagService, ActionTagService>();
-builder.Services.AddScoped<IFileLinkService, FileLinkService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
 builder.Services.AddScoped<UserActionLogAttribute>();

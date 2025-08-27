@@ -1,26 +1,31 @@
 using System;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-/// Пользователи
+/// Связь события и подзадачи
 /// </summary>
-[Table("users")]
-public class UserEntity
+[Table("events_2_subtask")]
+public class EventToSubtaskEntity
 {
     /// <summary>
-    /// ID пользователя
+    /// ID события
     /// </summary>
-    [Key, Column("id")]
-    public Guid Id { get; set; }
+    [Column("event_id")]
+    public Guid EventId { get; set; }
 
     /// <summary>
-    /// Имя пользователя
+    /// ID подзадачи
     /// </summary>
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
+    [Column("subtask_id")]
+    public Guid SubtaskId { get; set; }
+
+    /// <summary>
+    /// ID создателя
+    /// </summary>
+    [Column("creator_user_id")]
+    public Guid CreatorUserId { get; set; }
 
     /// <summary>
     /// Дата создания

@@ -1,69 +1,68 @@
+using System;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-/// Задача (таблица tasks).
+/// Задачи
 /// </summary>
+[Table("tasks")]
 public class TaskEntity
 {
     /// <summary>
-    /// Идентификатор задачи.
+    /// ID задачи
     /// </summary>
+    [Key, Column("id")]
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Идентификатор области.
+    /// Заголовок задачи
     /// </summary>
-    public Guid AreaId { get; init; }
-
-    /// <summary>
-    /// Заголовок задачи.
-    /// </summary>
+    [Column("title")]
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// Описание задачи.
+    /// Описание задачи
     /// </summary>
+    [Column("description")]
     public string? Description { get; set; }
 
     /// <summary>
-    /// Идентификатор статуса (task_status_ref).
+    /// ID создателя
     /// </summary>
-    public int StatusId { get; set; }
+    [Column("creator_user_id")]
+    public Guid CreatorUserId { get; set; }
 
     /// <summary>
-    /// Идентификатор видимости (visibility_ref).
+    /// ID группы
     /// </summary>
-    public int VisibilityId { get; set; }
+    [Column("group_id")]
+    public Guid GroupId { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя — создателя.
+    /// Дата создания
     /// </summary>
-    public Guid UserId { get; init; }
+    [Column("created_at")]
+    public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Время создания записи.
+    /// Дата обновления
     /// </summary>
-    public DateTimeOffset Created { get; set; }
+    [Column("updated_at")]
+    public DateTimeOffset UpdatedAt { get; set; }
 
     /// <summary>
-    /// Время последнего обновления записи.
+    /// Дата деактивации
     /// </summary>
-    public DateTimeOffset Updated { get; set; }
+    [Column("deactivated_at")]
+    public DateTimeOffset? DeactivatedAt { get; set; }
 
     /// <summary>
-    /// Время закрытия задачи (если закрыта).
+    /// Признак активности
     /// </summary>
-    public DateTimeOffset? Closed { get; init; }
-
-    /// <summary>
-    /// Признак активности записи.
-    /// </summary>
+    [Column("is_active")]
     public bool IsActive { get; set; }
-
-    /// <summary>
-    /// Время деактивации записи (если применимо).
-    /// </summary>
-    public DateTimeOffset? Deactivated { get; init; }
 }
 
 

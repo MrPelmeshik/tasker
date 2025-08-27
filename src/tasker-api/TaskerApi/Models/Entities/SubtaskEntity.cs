@@ -5,22 +5,34 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-/// Пользователи
+/// Подзадачи
 /// </summary>
-[Table("users")]
-public class UserEntity
+[Table("subtasks")]
+public class SubtaskEntity
 {
     /// <summary>
-    /// ID пользователя
+    /// ID подзадачи
     /// </summary>
     [Key, Column("id")]
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Имя пользователя
+    /// Заголовок подзадачи
     /// </summary>
-    [Column("name")]
-    public string Name { get; set; } = string.Empty;
+    [Column("title")]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Описание подзадачи
+    /// </summary>
+    [Column("description")]
+    public string? Description { get; set; }
+
+    /// <summary>
+    /// ID задачи
+    /// </summary>
+    [Column("task_id")]
+    public Guid TaskId { get; set; }
 
     /// <summary>
     /// Дата создания
