@@ -1,50 +1,27 @@
-using System;
-using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using TaskerApi.Models.Entities.Interfaces;
 
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-/// Пользователи
+///     Пользователи
 /// </summary>
 [Table("users")]
-public class UserEntity
+public class UserEntity : IGuidIdBaseEntity, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity
 {
     /// <summary>
-    /// ID пользователя
-    /// </summary>
-    [Key, Column("id")]
-    public Guid Id { get; set; }
-
-    /// <summary>
-    /// Имя пользователя
+    ///     Имя пользователя
     /// </summary>
     [Column("name")]
     public string Name { get; set; } = string.Empty;
 
-    /// <summary>
-    /// Дата создания
-    /// </summary>
-    [Column("created_at")]
     public DateTimeOffset CreatedAt { get; set; }
+    
+    public Guid Id { get; set; }
 
-    /// <summary>
-    /// Дата обновления
-    /// </summary>
-    [Column("updated_at")]
-    public DateTimeOffset UpdatedAt { get; set; }
-
-    /// <summary>
-    /// Дата деактивации
-    /// </summary>
-    [Column("deactivated_at")]
     public DateTimeOffset? DeactivatedAt { get; set; }
 
-    /// <summary>
-    /// Признак активности
-    /// </summary>
-    [Column("is_active")]
     public bool IsActive { get; set; }
+
+    public DateTimeOffset UpdatedAt { get; set; }
 }
-
-
