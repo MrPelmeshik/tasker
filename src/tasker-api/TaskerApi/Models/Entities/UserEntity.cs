@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Models.Entities.Interfaces;
+using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities;
 
@@ -7,7 +7,7 @@ namespace TaskerApi.Models.Entities;
 ///     Пользователи
 /// </summary>
 [Table("users")]
-public class UserEntity : IGuidIdBaseEntity, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity
+public class UserEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity
 {
     /// <summary>
     ///     Имя пользователя

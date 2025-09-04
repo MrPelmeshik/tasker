@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TaskerApi.Models.Entities.Interfaces;
+namespace TaskerApi.Interfaces.Entities;
 
 public interface IUpdatedDateBaseEntity
 {

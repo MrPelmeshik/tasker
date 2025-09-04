@@ -12,35 +12,27 @@ namespace TaskerApi.Attributes;
 /// Атрибут для логирования действий пользователя с возможностью указать описание действия.
 /// Использует внутренний фильтр, поддерживающий DI и пользовательский текст.
 /// </summary>
-public class UserActionLogAttribute : TypeFilterAttribute
+public class UserLogAttribute : TypeFilterAttribute
 {
     /// <summary>
     /// Создаёт атрибут логирования и принимает человекочитаемое описание действия.
     /// </summary>
     /// <param name="actionDescription">Описание действия, выполняемого эндпоинтом.</param>
-    public UserActionLogAttribute(string actionDescription) : base(typeof(UserActionLogFilter))
+    public UserLogAttribute(string actionDescription) : base(typeof(UserActionLogFilter))
     {
-        Arguments = new object[] { actionDescription };
+        Arguments = [actionDescription];
     }
 
     /// <summary>
     /// Внутренний фильтр, выполняющий запись лога действия пользователя в БД.
     /// </summary>
-    private sealed class UserActionLogFilter : IAsyncActionFilter
+    private sealed class UserActionLogFilter(
+        ILogger<UserActionLogFilter> logger,
+        IBaseProvider<UserLogEntity, int> logProvider,
+        IUnitOfWorkFactory uowFactory,
+        string actionDescription)
+        : IAsyncActionFilter
     {
-        private readonly ILogger<UserActionLogFilter> _logger;
-        private readonly IUserActionLogProvider _logProvider;
-        private readonly IUnitOfWorkFactory _uowFactory;
-        private readonly string _actionDescription;
-
-        public UserActionLogFilter(ILogger<UserActionLogFilter> logger, IUserActionLogProvider logProvider, IUnitOfWorkFactory uowFactory, string actionDescription)
-        {
-            _logger = logger;
-            _logProvider = logProvider;
-            _uowFactory = uowFactory;
-            _actionDescription = actionDescription;
-        }
-
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             var executedContext = await next();
@@ -60,7 +52,7 @@ public class UserActionLogAttribute : TypeFilterAttribute
 
                 var requestParams = new Dictionary<string, object?>
                 {
-                    ["action_description"] = _actionDescription
+                    ["action_description"] = actionDescription
                 };
                 foreach (var kv in context.RouteData.Values)
                     requestParams[$"route:{kv.Key}"] = kv.Value;
@@ -68,12 +60,12 @@ public class UserActionLogAttribute : TypeFilterAttribute
                     requestParams[$"query:{kv.Key}"] = kv.Value.ToString();
 
                 string? errorMessage = null;
-                if (executedContext.Exception is Exception ex)
+                if (executedContext.Exception != null)
                 {
-                    errorMessage = ex.Message;
+                    errorMessage = executedContext.Exception.Message;
                 }
 
-                var entity = new UserActionLogEntity
+                var entity = new UserLogEntity
                 {
                     UserId = userId,
                     IpAddress = ip,
@@ -83,17 +75,17 @@ public class UserActionLogAttribute : TypeFilterAttribute
                     RequestParams = JsonSerializer.Serialize(requestParams),
                     ResponseCode = response?.StatusCode,
                     ErrorMessage = errorMessage,
-                    Created = DateTimeOffset.UtcNow
+                    CreatedAt = DateTimeOffset.UtcNow
                 };
 
                 // Лог пишем в собственной короткой транзакции, чтобы не зависеть от бизнес-логики
-                await using var uow = await _uowFactory.CreateAsync(httpContext.RequestAborted, useTransaction: true);
-                await _logProvider.InsertAsync(entity, httpContext.RequestAborted, uow.Connection);
+                await using var uow = await uowFactory.CreateAsync(httpContext.RequestAborted, useTransaction: true);
+                await logProvider.CreateAsync(uow.Connection,entity, httpContext.RequestAborted, uow.Transaction);
                 await uow.CommitAsync(httpContext.RequestAborted);
             }
             catch (Exception logEx)
             {
-                _logger.LogError(logEx, "Не удалось записать лог действия пользователя");
+                logger.LogError(logEx, "Не удалось записать лог действия пользователя");
             }
         }
     }

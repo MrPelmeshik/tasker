@@ -28,24 +28,29 @@ builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
 // Регистрация провайдеров (Dapper)
-builder.Services.AddScoped<IUserProvider, UserProvider>();
+// builder.Services.AddScoped<IUserProvider, UserProvider>();
+builder.Services.AddScoped<IEventProvider, EventProvider>();
+builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
+builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
 
 // Регистрация провайдеров Keycloak
-builder.Services.AddHttpClient<IKeycloakProvider, KeycloakProvider>();
-builder.Services.AddScoped<IKeycloakProvider, KeycloakProvider>();
+// builder.Services.AddHttpClient<IKeycloakProvider, KeycloakProvider>();
+// builder.Services.AddScoped<IKeycloakProvider, KeycloakProvider>();
 
 // Регистрация сервисов
-builder.Services.AddScoped<IUserService, UserService>();
-builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IEventService, EventService>();
+// builder.Services.AddScoped<IUserService, UserService>();
+// builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
-builder.Services.AddScoped<UserActionLogAttribute>();
+builder.Services.AddScoped<UserLogAttribute>();
 
 // Configure Keycloak settings
-builder.Services.Configure<KeycloakSettings>(
-    builder.Configuration.GetSection("Keycloak"));
+/*builder.Services.Configure<KeycloakSettings>(
+    builder.Configuration.GetSection("Keycloak"));*/
 
 // Configure authentication
+/*
 var keycloakSettings = builder.Configuration.GetSection("Keycloak").Get<KeycloakSettings>();
 if (keycloakSettings != null)
 {
@@ -136,13 +141,14 @@ if (keycloakSettings != null)
             };
         });
 }
+*/
 
-builder.Services.AddAuthorization(options =>
+/*builder.Services.AddAuthorization(options =>
 {
     options.AddPolicy("admin", policy => policy.RequireRole("admin"));
     options.AddPolicy("manager", policy => policy.RequireRole("manager"));
     options.AddPolicy("user", policy => policy.RequireRole("user"));
-});
+});*/
 
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -151,7 +157,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Tasker API", Version = "v1" });
 
     // Добавляем поддержку JWT в Swagger
-    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    /*c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
@@ -165,7 +171,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
     }, [] } };
-    c.AddSecurityRequirement(requirement);
+    c.AddSecurityRequirement(requirement);*/
 });
 
 var app = builder.Build();

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Models.Entities.Interfaces;
+using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities;
 
@@ -7,7 +7,7 @@ namespace TaskerApi.Models.Entities;
 ///     Цели
 /// </summary>
 [Table("purposes")]
-public class PurposeEntity : IGuidIdBaseEntity, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity,
+public class PurposeEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity,
     ICreatorUserBaseEntity
 {
     /// <summary>

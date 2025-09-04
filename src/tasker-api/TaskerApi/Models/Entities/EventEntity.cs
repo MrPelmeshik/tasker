@@ -1,38 +1,39 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Models.Entities.Interfaces;
+using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-///     События
+/// События
 /// </summary>
 [Table("events")]
-public class EventEntity : IGuidIdBaseEntity, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity, ICreatorUserBaseEntity
+public class EventEntity : 
+    IIdBaseEntity<Guid>, 
+    ISoftDeleteBaseEntity, 
+    IUpdatedDateBaseEntity, 
+    ICreatedDateBaseEntity, 
+    ICreatorUserBaseEntity
 {
     /// <summary>
-    ///     Заголовок события
+    /// Заголовок события
     /// </summary>
     [Column("title")]
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Описание события
+    /// Описание события
     /// </summary>
     [Column("description")]
     public string? Description { get; set; }
-
-
+    
     public DateTimeOffset CreatedAt { get; set; }
 
     public Guid CreatorUserId { get; set; }
     public Guid Id { get; set; }
-
-
+    
     public DateTimeOffset? DeactivatedAt { get; set; }
-
-
+    
     public bool IsActive { get; set; }
-
-
+    
     public DateTimeOffset UpdatedAt { get; set; }
 }

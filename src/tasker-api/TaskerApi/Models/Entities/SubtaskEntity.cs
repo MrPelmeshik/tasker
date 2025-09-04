@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Models.Entities.Interfaces;
+using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities;
 
@@ -7,7 +7,7 @@ namespace TaskerApi.Models.Entities;
 ///     Подзадачи
 /// </summary>
 [Table("subtasks")]
-public class SubtaskEntity : IGuidIdBaseEntity, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity,
+public class SubtaskEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity,
     ICreatorUserBaseEntity
 {
     /// <summary>

@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Models.Entities.Interfaces;
+using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities;
 
@@ -7,7 +7,7 @@ namespace TaskerApi.Models.Entities;
 ///     Группы
 /// </summary>
 [Table("groups")]
-public class GroupEntity : IGuidIdBaseEntity, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity, ICreatorUserBaseEntity
+public class GroupEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity, ICreatorUserBaseEntity
 {
     /// <summary>
     ///     Заголовок группы

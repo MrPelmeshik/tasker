@@ -24,13 +24,6 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Interfaces\" />
-      <Folder Include="Infrastructure\" />
-      <Folder Include="Models\Entities\" />
-      <Folder Include="Models\Requests\" />
-      <Folder Include="Models\Responses\" />
-      <Folder Include="Providers\" />
-      <Folder Include="Services\" />
       <Folder Include="Attributes\" />
     </ItemGroup>
 

@@ -1,29 +1,33 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Models.Entities.Interfaces;
+using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-///     Задачи
+/// Задачи
 /// </summary>
 [Table("tasks")]
-public class TaskEntity : IGuidIdBaseEntity, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity,
+public class TaskEntity : 
+    IIdBaseEntity<Guid>, 
+    ISoftDeleteBaseEntity, 
+    IUpdatedDateBaseEntity, 
+    ICreatedDateBaseEntity,
     ICreatorUserBaseEntity
 {
     /// <summary>
-    ///     Заголовок задачи
+    /// Заголовок задачи
     /// </summary>
     [Column("title")]
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    ///     Описание задачи
+    /// Описание задачи
     /// </summary>
     [Column("description")]
     public string? Description { get; set; }
 
     /// <summary>
-    ///     ID группы
+    /// ID группы
     /// </summary>
     [Column("group_id")]
     public Guid GroupId { get; set; }
