@@ -5,7 +5,9 @@ using TaskerApi.Models.Entities.Base;
 
 namespace TaskerApi.Models.Entities;
 
-public class EventToGroupByEventEntity : EventRelationBaseEntity, IIdBaseEntity<Guid>
+public class EventToGroupByEventEntity : 
+    EventRelationBaseEntity, 
+    IIdBaseEntity<Guid>
 {
     /// <summary>
     /// ID события

@@ -6,11 +6,13 @@ using System.Text.Json;
 using TaskerApi.Models.Configuration;
 using TaskerApi.Infrastructure;
 using TaskerApi.Attributes;
+using TaskerApi.Interfaces.Entities;
 using TaskerApi.Providers;
 using TaskerApi.Services;
 using TaskerApi.Interfaces.Infrastructure;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,11 +29,35 @@ builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("D
 builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
+// Ресгистрация суностей БД
+// Механизм для создания TableMetaInfo для всех классов, реализующих IDbEntity
+
+// Получаем все типы, реализующие IDbEntity
+var dbEntityTypes = AppDomain.CurrentDomain.GetAssemblies()
+    .SelectMany(a => a.GetTypes())
+    .Where(t => typeof(IDbEntity).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
+    .ToList();
+
+foreach (var dbEntityType in dbEntityTypes)
+{
+    Console.WriteLine(dbEntityType.Name);
+}
+
+// Создаём TableMetaInfo для каждого типа и регистрируем как singleton
+foreach (var entityType in dbEntityTypes)
+{
+    var tableMetaInfoType = typeof(TableMetaInfo<>).MakeGenericType(entityType);
+    builder.Services.AddSingleton(tableMetaInfoType);
+}
+
+
 // Регистрация провайдеров (Dapper)
 // builder.Services.AddScoped<IUserProvider, UserProvider>();
+builder.Services.AddScoped<IUserLogProvider, UserLogProvider>();
 builder.Services.AddScoped<IEventProvider, EventProvider>();
 builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
 builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
+builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
 
 // Регистрация провайдеров Keycloak
 // builder.Services.AddHttpClient<IKeycloakProvider, KeycloakProvider>();
@@ -43,7 +69,7 @@ builder.Services.AddScoped<IEventService, EventService>();
 // builder.Services.AddScoped<IAuthService, AuthService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
-builder.Services.AddScoped<UserLogAttribute>();
+// builder.Services.AddScoped<UserLogAttribute>();
 
 // Configure Keycloak settings
 /*builder.Services.Configure<KeycloakSettings>(

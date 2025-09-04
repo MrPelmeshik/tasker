@@ -7,7 +7,11 @@ namespace TaskerApi.Models.Entities;
 ///     Связь события и цели
 /// </summary>
 [Table("events_2_purpose")]
-public class EventToPurposeEntity : ICreatorUserBaseEntity, ICreatedDateBaseEntity, IUpdatedDateBaseEntity,
+public class EventToPurposeEntity : 
+    IDbEntity,
+    ICreatorUserBaseEntity, 
+    ICreatedDateBaseEntity, 
+    IUpdatedDateBaseEntity,
     ISoftDeleteBaseEntity
 {
     /// <summary>

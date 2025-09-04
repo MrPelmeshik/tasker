@@ -7,7 +7,12 @@ namespace TaskerApi.Models.Entities;
 ///     Пользователи
 /// </summary>
 [Table("users")]
-public class UserEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity
+public class UserEntity : 
+    IDbEntity,
+    IIdBaseEntity<Guid>, 
+    ISoftDeleteBaseEntity, 
+    IUpdatedDateBaseEntity, 
+    ICreatedDateBaseEntity
 {
     /// <summary>
     ///     Имя пользователя

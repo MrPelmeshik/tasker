@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using TaskerApi.Attributes;
 
 namespace TaskerApi.Controllers;
 
@@ -13,6 +14,7 @@ public class HealthController : ControllerBase
     /// Проверка состояния сервиса.
     /// </summary>
     [HttpGet]
+    [UserLog("Проверка состояния сервиса")]
     public IActionResult Get() => Ok(new { status = "ok" });
 }
 

@@ -7,7 +7,13 @@ namespace TaskerApi.Models.Entities;
 ///     Области
 /// </summary>
 [Table("areas")]
-public class AreaEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity, ICreatorUserBaseEntity
+public class AreaEntity : 
+    IDbEntity,
+    IIdBaseEntity<Guid>, 
+    ISoftDeleteBaseEntity, 
+    IUpdatedDateBaseEntity, 
+    ICreatedDateBaseEntity, 
+    ICreatorUserBaseEntity
 {
     /// <summary>
     ///     Заголовок области

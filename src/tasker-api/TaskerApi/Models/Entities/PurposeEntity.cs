@@ -7,7 +7,12 @@ namespace TaskerApi.Models.Entities;
 ///     Цели
 /// </summary>
 [Table("purposes")]
-public class PurposeEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity,
+public class PurposeEntity : 
+    IDbEntity,
+    IIdBaseEntity<Guid>, 
+    ISoftDeleteBaseEntity, 
+    IUpdatedDateBaseEntity, 
+    ICreatedDateBaseEntity,
     ICreatorUserBaseEntity
 {
     /// <summary>

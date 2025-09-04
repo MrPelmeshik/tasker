@@ -7,7 +7,13 @@ namespace TaskerApi.Models.Entities;
 ///     Группы
 /// </summary>
 [Table("groups")]
-public class GroupEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity, ICreatorUserBaseEntity
+public class GroupEntity : 
+    IDbEntity,
+    IIdBaseEntity<Guid>, 
+    ISoftDeleteBaseEntity, 
+    IUpdatedDateBaseEntity, 
+    ICreatedDateBaseEntity, 
+    ICreatorUserBaseEntity
 {
     /// <summary>
     ///     Заголовок группы

@@ -7,7 +7,12 @@ namespace TaskerApi.Models.Entities;
 ///     Подзадачи
 /// </summary>
 [Table("subtasks")]
-public class SubtaskEntity : IIdBaseEntity<Guid>, ISoftDeleteBaseEntity, IUpdatedDateBaseEntity, ICreatedDateBaseEntity,
+public class SubtaskEntity : 
+    IDbEntity,
+    IIdBaseEntity<Guid>, 
+    ISoftDeleteBaseEntity, 
+    IUpdatedDateBaseEntity, 
+    ICreatedDateBaseEntity,
     ICreatorUserBaseEntity
 {
     /// <summary>

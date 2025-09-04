@@ -7,7 +7,11 @@ namespace TaskerApi.Models.Entities;
 ///     Связь события и задачи
 /// </summary>
 [Table("events_2_task")]
-public class EventToTaskEntity : ICreatorUserBaseEntity, ICreatedDateBaseEntity, IUpdatedDateBaseEntity,
+public class EventToTaskEntity : 
+    IDbEntity,
+    ICreatorUserBaseEntity, 
+    ICreatedDateBaseEntity, 
+    IUpdatedDateBaseEntity,
     ISoftDeleteBaseEntity
 {
     /// <summary>

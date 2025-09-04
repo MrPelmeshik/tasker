@@ -2,7 +2,10 @@ using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities;
 
-public class UserLogEntity : IIdBaseEntity<int>, ICreatedDateBaseEntity
+public class UserLogEntity : 
+    IDbEntity,
+    IIdBaseEntity<int>, 
+    ICreatedDateBaseEntity
 {
     public int Id { get; set; }
     public Guid? UserId { get; set; }

@@ -28,13 +28,14 @@ public class UserLogAttribute : TypeFilterAttribute
     /// </summary>
     private sealed class UserActionLogFilter(
         ILogger<UserActionLogFilter> logger,
-        IBaseProvider<UserLogEntity, int> logProvider,
+        IUserLogProvider logProvider,
         IUnitOfWorkFactory uowFactory,
         string actionDescription)
         : IAsyncActionFilter
     {
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
+            logger.LogInformation("Записываем лог действия пользователя: {actionDescription}", actionDescription);
             var executedContext = await next();
 
             try
@@ -79,9 +80,9 @@ public class UserLogAttribute : TypeFilterAttribute
                 };
 
                 // Лог пишем в собственной короткой транзакции, чтобы не зависеть от бизнес-логики
-                await using var uow = await uowFactory.CreateAsync(httpContext.RequestAborted, useTransaction: true);
-                await logProvider.CreateAsync(uow.Connection,entity, httpContext.RequestAborted, uow.Transaction);
-                await uow.CommitAsync(httpContext.RequestAborted);
+                // await using var uow = await uowFactory.CreateAsync(httpContext.RequestAborted, useTransaction: true);
+                // await logProvider.CreateAsync(uow.Connection,entity, httpContext.RequestAborted, uow.Transaction);
+                // await uow.CommitAsync(httpContext.RequestAborted);
             }
             catch (Exception logEx)
             {

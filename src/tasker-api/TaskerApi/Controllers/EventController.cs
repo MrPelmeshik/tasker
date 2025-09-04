@@ -10,14 +10,14 @@ namespace TaskerApi.Controllers;
 public class EventController(IEventService service) : ControllerBase
 {
     [HttpPost]
-    public async Task<EventCreateResponse> CreateByAreaAsync(EventCreateByAreaRequest item)
+    public async Task<EventCreateResponse> CreateByAreaAsync(EventCreateByAreaRequest item, CancellationToken cancellationToken)
     {
-        return await service.CreateAsync(item, CancellationToken.None);
+        return await service.CreateAsync(item, cancellationToken);
     }
     
     [HttpPost]
-    public async Task<EventCreateResponse> CreateByGroupAsync(EventCreateByGroupRequest item)
+    public async Task<EventCreateResponse> CreateByGroupAsync(EventCreateByGroupRequest item, CancellationToken cancellationToken)
     {
-        return await service.CreateAsync(item, CancellationToken.None);
+        return await service.CreateAsync(item, cancellationToken);
     }
 }

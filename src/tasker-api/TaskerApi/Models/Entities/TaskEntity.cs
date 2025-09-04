@@ -8,6 +8,7 @@ namespace TaskerApi.Models.Entities;
 /// </summary>
 [Table("tasks")]
 public class TaskEntity : 
+    IDbEntity,
     IIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 

@@ -2,7 +2,8 @@ using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities.Base;
 
-public class EventRelationBaseEntity : 
+public abstract class EventRelationBaseEntity : 
+    IDbEntity,
     ICreatorUserBaseEntity, 
     ICreatedDateBaseEntity, 
     IUpdatedDateBaseEntity, 

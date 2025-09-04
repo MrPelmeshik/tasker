@@ -15,7 +15,7 @@ namespace TaskerApi.Providers;
 /// </summary>
 public class BaseProvider<TEntity, TKey>(TableMetaInfo<TEntity> table) 
     : IBaseProvider<TEntity, TKey>
-    where TEntity : class, IIdBaseEntity<TKey>
+    where TEntity : class, IIdBaseEntity<TKey>, IDbEntity
 {
     public virtual async Task<TKey> CreateAsync(
         IDbConnection connection, 
