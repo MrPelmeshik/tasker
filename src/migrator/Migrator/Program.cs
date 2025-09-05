@@ -43,7 +43,7 @@ public static class Program
                     cmd.ExecuteNonQuery();
 
                     using var cmd2 = new NpgsqlCommand($"""
-                                                       insert into migration_history (order, file_name, name, sql, hash)
+                                                       insert into migration_history (order_number, file_name, name, sql, hash)
                                                        values ( @{nameof(migrationScript.Order)}
                                                        ,        @{nameof(migrationScript.FileName)}
                                                        ,        @{nameof(migrationScript.Name)}
@@ -73,7 +73,7 @@ public static class Program
         using var cmd = new NpgsqlCommand("""
                                           create table if not exists migration_history (
                                               id serial primary key,
-                                              order int not null,
+                                              order_number int not null,
                                               file_name text not null,
                                               name text not null,
                                               sql text not null,
@@ -86,7 +86,7 @@ public static class Program
     private static List<MigrationHistory> GetMigrationHistories(NpgsqlConnection conn)
     {
         using var cmd = new NpgsqlCommand("""
-                                           select  order
+                                           select  order_number
                                            ,       hash
                                            from    migration_history
                                            """, conn);
