@@ -38,15 +38,11 @@ var dbEntityTypes = AppDomain.CurrentDomain.GetAssemblies()
     .Where(t => typeof(IDbEntity).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
     .ToList();
 
-foreach (var dbEntityType in dbEntityTypes)
-{
-    Console.WriteLine(dbEntityType.Name);
-}
-
 // Создаём TableMetaInfo для каждого типа и регистрируем как singleton
-foreach (var entityType in dbEntityTypes)
+foreach (var tableMetaInfoType in dbEntityTypes
+             .Select(entityType => typeof(TableMetaInfo<>)
+                 .MakeGenericType(entityType)))
 {
-    var tableMetaInfoType = typeof(TableMetaInfo<>).MakeGenericType(entityType);
     builder.Services.AddSingleton(tableMetaInfoType);
 }
 
