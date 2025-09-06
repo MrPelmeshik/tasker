@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
+using System.Security.Claims;
 
 namespace TaskerApi.Controllers;
 
@@ -34,6 +35,7 @@ public class AuthController : ControllerBase
     /// <response code="400">Неверные данные для авторизации</response>
     /// <response code="500">Внутренняя ошибка сервера</response>
     [HttpPost("login")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), 200)]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), 400)]
     [ProducesResponseType(typeof(ApiResponse<AuthResponse>), 500)]
@@ -76,6 +78,7 @@ public class AuthController : ControllerBase
     /// <response code="400">Неверные данные для регистрации</response>
     /// <response code="500">Внутренняя ошибка сервера</response>
     [HttpPost("register")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), 201)]
     [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), 400)]
     [ProducesResponseType(typeof(ApiResponse<RegisterResponse>), 500)]
@@ -118,6 +121,7 @@ public class AuthController : ControllerBase
     /// <response code="400">Неверный refresh токен</response>
     /// <response code="500">Внутренняя ошибка сервера</response>
     [HttpPost("refresh")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<RefreshTokenResponse>), 200)]
     [ProducesResponseType(typeof(ApiResponse<RefreshTokenResponse>), 400)]
     [ProducesResponseType(typeof(ApiResponse<RefreshTokenResponse>), 500)]
@@ -160,6 +164,7 @@ public class AuthController : ControllerBase
     /// <response code="400">Неверный refresh токен</response>
     /// <response code="500">Внутренняя ошибка сервера</response>
     [HttpPost("logout")]
+    [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<object>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 500)]
@@ -252,4 +257,6 @@ public class AuthController : ControllerBase
             timestamp = DateTime.UtcNow
         });
     }
+
+    
 }

@@ -4,7 +4,7 @@ using TaskerApi.Interfaces.Entities;
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-///     Связь события и группы
+/// Связь события и группы
 /// </summary>
 [Table("events_2_group")]
 public class EventToGroupEntity : 
@@ -15,13 +15,13 @@ public class EventToGroupEntity :
     ISoftDeleteBaseEntity
 {
     /// <summary>
-    ///     ID события
+    /// ID события
     /// </summary>
     [Column("event_id")]
     public Guid EventId { get; set; }
 
     /// <summary>
-    ///     ID группы
+    /// ID группы
     /// </summary>
     [Column("group_id")]
     public Guid GroupId { get; set; }

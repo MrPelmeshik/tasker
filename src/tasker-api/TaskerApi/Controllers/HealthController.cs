@@ -7,7 +7,7 @@ namespace TaskerApi.Controllers;
 /// Контроллер проверки доступности.
 /// </summary>
 [ApiController]
-[Route("health")] 
+[Route("api/[controller]")] 
 public class HealthController : ControllerBase
 {
     /// <summary>

@@ -2,6 +2,9 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace TaskerApi.Interfaces.Entities;
 
+/// <summary>
+/// Базовая сущность с датой создания
+/// </summary>
 public interface ICreatedDateBaseEntity
 {
     /// <summary>

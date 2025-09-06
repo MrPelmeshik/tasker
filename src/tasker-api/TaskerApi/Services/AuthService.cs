@@ -1,290 +1,286 @@
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text.Json;
+using System.Text;
+using Microsoft.Extensions.Options;
+using Microsoft.IdentityModel.Tokens;
+using TaskerApi.Interfaces.Infrastructure;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Configuration;
+using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 
 namespace TaskerApi.Services;
 
-/// <summary>
-/// Сервис авторизации
-/// </summary>
-public class AuthService : IAuthService
+public class AuthService(
+    ILogger<AuthService> logger,
+    IOptions<JwtSettings> jwtOptions,
+    IUnitOfWorkFactory uowFactory,
+    IUserProvider userProvider) : IAuthService
 {
-    private readonly IKeycloakProvider _keycloakProvider;
-    private readonly ILogger<AuthService> _logger;
+    private readonly JwtSettings _jwt = jwtOptions.Value;
 
-    public AuthService(
-        IKeycloakProvider keycloakProvider,
-        ILogger<AuthService> logger)
-    {
-        _keycloakProvider = keycloakProvider;
-        _logger = logger;
-    }
-
-    /// <summary>
-    /// Авторизация пользователя
-    /// </summary>
     public async Task<ApiResponse<AuthResponse>> LoginAsync(LoginRequest request)
     {
         try
         {
-            _logger.LogInformation("Attempting login for user: {Username}", request.Username);
+            await using var uow = await uowFactory.CreateAsync(CancellationToken.None);
 
-            // Получаем токены от Keycloak
-            var keycloakResponse = await _keycloakProvider.GetTokenAsync(request.Username, request.Password);
-
-            // Получаем информацию о пользователе
-            var userInfo = await _keycloakProvider.GetUserInfoAsync(keycloakResponse.AccessToken);
-
-            // Извлекаем роли из токена
-            var roles = ExtractRolesFromToken(keycloakResponse.AccessToken);
-
-            var authResponse = new AuthResponse
+            UserEntity? user;
+            var username = request.Username.Trim();
+            logger.LogInformation("Попытка входа для имени пользователя/email '{Username}'", username);
+            if (username.Contains('@'))
             {
-                AccessToken = keycloakResponse.AccessToken,
-                RefreshToken = keycloakResponse.RefreshToken,
-                TokenType = keycloakResponse.TokenType,
-                ExpiresIn = keycloakResponse.ExpiresIn,
+                user = await userProvider.GetByEmailAsync(uow.Connection, username, CancellationToken.None, uow.Transaction);
+            }
+            else
+            {
+                user = await userProvider.GetByNameAsync(uow.Connection, username, CancellationToken.None, uow.Transaction);
+            }
+
+            if (user == null || string.IsNullOrWhiteSpace(user.PasswordHash) || string.IsNullOrWhiteSpace(user.PasswordSalt))
+            {
+                if (user == null)
+                {
+                    logger.LogWarning("Вход не выполнен: пользователь не найден для '{Username}'", username);
+                }
+                else
+                {
+                    logger.LogWarning("Вход не выполнен: у пользователя '{UserId}' отсутствуют учетные данные пароля (хэш/соль)", user.Id);
+                }
+                return ApiResponse<AuthResponse>.ErrorResult("Неверный логин или пароль");
+            }
+
+            var passwordOk = PasswordHasher.Verify(request.Password, user.PasswordHash, user.PasswordSalt);
+            if (!passwordOk)
+            {
+                logger.LogWarning("Вход не выполнен: не удалось проверить пароль для пользователя '{UserId}'", user.Id);
+                return ApiResponse<AuthResponse>.ErrorResult("Неверный логин или пароль");
+            }
+
+            var tokens = CreateTokens(user);
+            var response = new AuthResponse
+            {
+                AccessToken = tokens.accessToken,
+                RefreshToken = tokens.refreshToken,
+                ExpiresIn = _jwt.AccessTokenLifetimeMinutes * 60,
                 UserInfo = new UserInfo
                 {
-                    Id = userInfo.Sub,
-                    Username = userInfo.PreferredUsername,
-                    Email = userInfo.Email,
-                    FirstName = userInfo.GivenName,
-                    LastName = userInfo.FamilyName,
-                    Roles = roles
+                    Id = user.Id.ToString(),
+                    Username = user.Name,
+                    Email = user.Email ?? string.Empty,
+                    FirstName = user.FirstName ?? string.Empty,
+                    LastName = user.LastName ?? string.Empty,
+                    Roles = new List<string> { "user" }
                 }
             };
 
-            _logger.LogInformation("User {Username} successfully logged in", request.Username);
-
-            return ApiResponse<AuthResponse>.SuccessResult(authResponse, "Авторизация выполнена успешно");
+            return ApiResponse<AuthResponse>.SuccessResult(response, "Авторизация выполнена успешно");
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during login for user: {Username}", request.Username);
-            return ApiResponse<AuthResponse>.ErrorResult("Ошибка авторизации. Проверьте логин и пароль.");
+            logger.LogError(ex, "Ошибка входа");
+            return ApiResponse<AuthResponse>.ErrorResult("Внутренняя ошибка сервера");
         }
     }
 
-    /// <summary>
-    /// Регистрация нового пользователя
-    /// </summary>
     public async Task<ApiResponse<RegisterResponse>> RegisterAsync(RegisterRequest request)
     {
         try
         {
-            _logger.LogInformation("Attempting to register new user: {Username}", request.Username);
+            await using var uow = await uowFactory.CreateAsync(CancellationToken.None, useTransaction: true);
 
-            // Проверяем, что пароли совпадают
-            if (request.Password != request.ConfirmPassword)
+            var username = request.Username.Trim();
+            var email = request.Email.Trim();
+
+            var existingByName = await userProvider.GetByNameAsync(uow.Connection, username, CancellationToken.None, uow.Transaction);
+            if (existingByName != null)
+                return ApiResponse<RegisterResponse>.ErrorResult("Имя пользователя уже занято");
+
+            var existingByEmail = await userProvider.GetByEmailAsync(uow.Connection, email, CancellationToken.None, uow.Transaction);
+            if (existingByEmail != null)
+                return ApiResponse<RegisterResponse>.ErrorResult("Email уже используется");
+
+            var (hash, salt) = PasswordHasher.HashPassword(request.Password);
+
+            var user = new UserEntity
             {
-                return ApiResponse<RegisterResponse>.ErrorResult("Пароли не совпадают");
-            }
+                Id = Guid.NewGuid(),
+                Name = username,
+                Email = email,
+                FirstName = request.FirstName.Trim(),
+                LastName = request.LastName.Trim(),
+                PasswordHash = hash,
+                PasswordSalt = salt,
+                CreatedAt = DateTimeOffset.Now,
+                UpdatedAt = DateTimeOffset.Now,
+                IsActive = true
+            };
 
-            // Создаем пользователя в Keycloak
-            var userId = await _keycloakProvider.CreateUserAsync(request);
+            user.Id = await userProvider.CreateAsync(uow.Connection, user, CancellationToken.None, uow.Transaction, setDefaultValues: true);
+            await uow.CommitAsync(CancellationToken.None);
 
-            var registerResponse = new RegisterResponse
+            var response = new RegisterResponse
             {
-                UserId = userId,
+                UserId = user.Id.ToString(),
                 Message = "Пользователь успешно зарегистрирован"
             };
-
-            _logger.LogInformation("User {Username} successfully registered with ID: {UserId}", 
-                request.Username, userId);
-
-            return ApiResponse<RegisterResponse>.SuccessResult(registerResponse, "Регистрация выполнена успешно");
+            return ApiResponse<RegisterResponse>.SuccessResult(response);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during registration for user: {Username}", request.Username);
-            return ApiResponse<RegisterResponse>.ErrorResult("Ошибка регистрации. Попробуйте позже.");
+            logger.LogError(ex, "Ошибка регистрации");
+            return ApiResponse<RegisterResponse>.ErrorResult("Внутренняя ошибка сервера");
         }
     }
 
-    /// <summary>
-    /// Обновление токена доступа
-    /// </summary>
-    public async Task<ApiResponse<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+    public Task<ApiResponse<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
     {
         try
         {
-            _logger.LogInformation("Attempting to refresh token");
-
-            // Обновляем токен через Keycloak
-            var keycloakResponse = await _keycloakProvider.RefreshTokenAsync(request.RefreshToken);
-
-            var refreshResponse = new RefreshTokenResponse
+            var principal = ValidateTokenInternal(request.RefreshToken, validateLifetime: true, expectedTokenType: "refresh");
+            if (principal == null)
             {
-                AccessToken = keycloakResponse.AccessToken,
-                RefreshToken = keycloakResponse.RefreshToken,
-                TokenType = keycloakResponse.TokenType,
-                ExpiresIn = keycloakResponse.ExpiresIn
+                return Task.FromResult(ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"));
+            }
+
+            var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            var name = principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
+            if (!Guid.TryParse(sub, out var userId))
+            {
+                return Task.FromResult(ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"));
+            }
+
+            var accessToken = CreateJwtToken(userId, name, tokenType: "access", TimeSpan.FromMinutes(_jwt.AccessTokenLifetimeMinutes));
+            var refreshToken = CreateJwtToken(userId, name, tokenType: "refresh", TimeSpan.FromDays(_jwt.RefreshTokenLifetimeDays));
+
+            var response = new RefreshTokenResponse
+            {
+                AccessToken = accessToken,
+                RefreshToken = refreshToken,
+                ExpiresIn = _jwt.AccessTokenLifetimeMinutes * 60,
+                TokenType = "Bearer"
             };
-
-            _logger.LogInformation("Token successfully refreshed");
-
-            return ApiResponse<RefreshTokenResponse>.SuccessResult(refreshResponse, "Токен успешно обновлен");
+            return Task.FromResult(ApiResponse<RefreshTokenResponse>.SuccessResult(response));
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error during token refresh");
-            return ApiResponse<RefreshTokenResponse>.ErrorResult("Ошибка обновления токена. Токен недействителен или истек.");
+            logger.LogError(ex, "Ошибка обновления refresh токена");
+            return Task.FromResult(ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
 
-    /// <summary>
-    /// Выход из системы
-    /// </summary>
-    public async Task<ApiResponse<object>> LogoutAsync(LogoutRequest request)
+    public Task<ApiResponse<object>> LogoutAsync(LogoutRequest request)
     {
-        try
-        {
-            _logger.LogInformation("Attempting to logout user");
-
-            // Отзываем токен в Keycloak
-            var success = await _keycloakProvider.RevokeTokenAsync(request.RefreshToken);
-
-            if (success)
-            {
-                _logger.LogInformation("User successfully logged out");
-                return ApiResponse<object>.SuccessResult(null, "Выход выполнен успешно");
-            }
-            else
-            {
-                _logger.LogWarning("Failed to revoke token during logout");
-                return ApiResponse<object>.ErrorResult("Ошибка при выходе из системы");
-            }
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during logout");
-            return ApiResponse<object>.ErrorResult("Ошибка при выходе из системы");
-        }
+        // Stateless JWT: no server-side state to revoke by default
+        return Task.FromResult(ApiResponse<object>.SuccessResult(new { }, "Выход выполнен успешно"));
     }
 
-    /// <summary>
-    /// Получение информации о текущем пользователе
-    /// </summary>
     public async Task<ApiResponse<UserInfo>> GetUserInfoAsync(string accessToken)
     {
         try
         {
-            _logger.LogInformation("Attempting to get user info");
-
-            // Получаем информацию о пользователе из Keycloak
-            var keycloakUserInfo = await _keycloakProvider.GetUserInfoAsync(accessToken);
-
-            // Извлекаем роли из токена
-            var roles = ExtractRolesFromToken(accessToken);
-
-            var userInfo = new UserInfo
+            var principal = ValidateTokenInternal(accessToken, validateLifetime: true, expectedTokenType: "access");
+            if (principal == null)
             {
-                Id = keycloakUserInfo.Sub,
-                Username = keycloakUserInfo.PreferredUsername,
-                Email = keycloakUserInfo.Email,
-                FirstName = keycloakUserInfo.GivenName,
-                LastName = keycloakUserInfo.FamilyName,
-                Roles = roles
+                return ApiResponse<UserInfo>.ErrorResult("Неверный или просроченный токен");
+            }
+
+            var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!Guid.TryParse(sub, out var userId))
+                return ApiResponse<UserInfo>.ErrorResult("Неверный токен");
+
+            await using var uow = await uowFactory.CreateAsync(CancellationToken.None);
+            var user = await userProvider.GetByIdAsync(uow.Connection, userId, CancellationToken.None, uow.Transaction);
+            if (user == null)
+                return ApiResponse<UserInfo>.ErrorResult("Пользователь не найден");
+
+            var info = new UserInfo
+            {
+                Id = user.Id.ToString(),
+                Username = user.Name,
+                Email = user.Email ?? string.Empty,
+                FirstName = user.FirstName ?? string.Empty,
+                LastName = user.LastName ?? string.Empty,
+                Roles = new List<string> { "user" }
             };
-
-            _logger.LogInformation("User info successfully retrieved for user: {Username}", userInfo.Username);
-
-            return ApiResponse<UserInfo>.SuccessResult(userInfo, "Информация о пользователе получена");
+            return ApiResponse<UserInfo>.SuccessResult(info);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting user info");
-            return ApiResponse<UserInfo>.ErrorResult("Ошибка получения информации о пользователе");
+            logger.LogError(ex, "Ошибка получения информации о пользователе");
+            return ApiResponse<UserInfo>.ErrorResult("Внутренняя ошибка сервера");
         }
     }
 
-    /// <summary>
-    /// Проверка валидности токена
-    /// </summary>
-    public async Task<bool> ValidateTokenAsync(string accessToken)
+    public Task<bool> ValidateTokenAsync(string accessToken)
     {
-        try
-        {
-            return await _keycloakProvider.ValidateTokenAsync(accessToken);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error validating token");
-            return false;
-        }
+        var principal = ValidateTokenInternal(accessToken, validateLifetime: true, expectedTokenType: "access");
+        return Task.FromResult(principal != null);
     }
 
-    /// <summary>
-    /// Извлечение ролей из JWT токена
-    /// </summary>
-    private List<string> ExtractRolesFromToken(string accessToken)
+    private (string accessToken, string refreshToken) CreateTokens(UserEntity user)
     {
+        var access = CreateJwtToken(user.Id, user.Name, tokenType: "access", TimeSpan.FromMinutes(_jwt.AccessTokenLifetimeMinutes));
+        var refresh = CreateJwtToken(user.Id, user.Name, tokenType: "refresh", TimeSpan.FromDays(_jwt.RefreshTokenLifetimeDays));
+        return (access, refresh);
+    }
+
+    private string CreateJwtToken(Guid userId, string username, string tokenType, TimeSpan lifetime)
+    {
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwt.SecretKey));
+        var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            new(ClaimTypes.NameIdentifier, userId.ToString()),
+            new(ClaimTypes.Name, username),
+            new(ClaimTypes.Role, "user"),
+            new("token_type", tokenType)
+        };
+
+        var now = DateTime.UtcNow;
+        var token = new JwtSecurityToken(
+            issuer: _jwt.Issuer,
+            audience: _jwt.Audience,
+            claims: claims,
+            notBefore: now,
+            expires: now.Add(lifetime),
+            signingCredentials: creds);
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    private ClaimsPrincipal? ValidateTokenInternal(string token, bool validateLifetime, string expectedTokenType)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var key = Encoding.UTF8.GetBytes(_jwt.SecretKey);
         try
         {
-            var roles = new List<string>();
-
-            // Декодируем JWT токен (без проверки подписи, так как это уже проверено)
-            var parts = accessToken.Split('.');
-            if (parts.Length != 3)
+            var principal = tokenHandler.ValidateToken(token, new TokenValidationParameters
             {
-                return roles;
-            }
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(key),
+                ValidateIssuer = true,
+                ValidIssuer = _jwt.Issuer,
+                ValidateAudience = true,
+                ValidAudience = _jwt.Audience,
+                ValidateLifetime = validateLifetime,
+                ClockSkew = TimeSpan.FromSeconds(30),
+                NameClaimType = ClaimTypes.Name,
+                RoleClaimType = ClaimTypes.Role
+            }, out _);
 
-            var payload = parts[1];
-            var paddedPayload = payload.PadRight(4 * ((payload.Length + 3) / 4), '=');
-            var decodedPayload = Convert.FromBase64String(paddedPayload.Replace('-', '+').Replace('_', '/'));
-            var jsonPayload = System.Text.Encoding.UTF8.GetString(decodedPayload);
+            var tokenType = principal.FindFirst("token_type")?.Value;
+            if (!string.Equals(tokenType, expectedTokenType, StringComparison.Ordinal))
+                return null;
 
-            using var document = JsonDocument.Parse(jsonPayload);
-            var root = document.RootElement;
-
-            // Извлекаем realm_access.roles
-            if (root.TryGetProperty("realm_access", out var realmAccess) &&
-                realmAccess.TryGetProperty("roles", out var realmRoles))
-            {
-                foreach (var role in realmRoles.EnumerateArray())
-                {
-                    if (role.ValueKind == JsonValueKind.String)
-                    {
-                        roles.Add(role.GetString() ?? string.Empty);
-                    }
-                }
-            }
-
-            // Извлекаем resource_access[clientId].roles
-            if (root.TryGetProperty("resource_access", out var resourceAccess))
-            {
-                // Здесь нужно знать clientId для извлечения ролей клиента
-                // Пока извлекаем все доступные роли
-                foreach (var resource in resourceAccess.EnumerateObject())
-                {
-                    if (resource.Value.TryGetProperty("roles", out var clientRoles))
-                    {
-                        foreach (var role in clientRoles.EnumerateArray())
-                        {
-                            if (role.ValueKind == JsonValueKind.String)
-                            {
-                                var roleValue = role.GetString() ?? string.Empty;
-                                if (!roles.Contains(roleValue))
-                                {
-                                    roles.Add(roleValue);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            return roles.Where(r => !string.IsNullOrEmpty(r)).ToList();
+            return principal;
         }
-        catch (Exception ex)
+        catch
         {
-            _logger.LogError(ex, "Error extracting roles from token");
-            return new List<string>();
+            return null;
         }
     }
 }

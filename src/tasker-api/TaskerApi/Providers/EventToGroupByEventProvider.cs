@@ -4,5 +4,5 @@ using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Providers;
 
-public class EventToGroupByEventProvider(TableMetaInfo<EventToGroupByEventEntity> table) 
-    : BaseProvider<EventToGroupByEventEntity, Guid>(table), IEventToGroupByEventProvider;
+public class EventToGroupByEventProvider(ILogger<EventToGroupByEventProvider> logger, TableMetaInfo<EventToGroupByEventEntity> table) 
+    : BaseProvider<EventToGroupByEventEntity, Guid>(logger, table), IEventToGroupByEventProvider;

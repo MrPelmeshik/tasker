@@ -13,7 +13,7 @@ namespace TaskerApi.Providers;
 /// Ожидается, что сущности помечены атрибутом <see cref="TableAttribute"/> и реализуют <see cref="IIdBaseEntity"/>.
 /// При наличии <see cref="ISoftDeleteBaseEntity"/> применяется мягкое удаление.
 /// </summary>
-public class BaseProvider<TEntity, TKey>(TableMetaInfo<TEntity> table) 
+public class BaseProvider<TEntity, TKey>(ILogger<BaseProvider<TEntity, TKey>> logger, TableMetaInfo<TEntity> table) 
     : IBaseProvider<TEntity, TKey>
     where TEntity : class, IIdBaseEntity<TKey>, IDbEntity
 {
@@ -80,9 +80,10 @@ public class BaseProvider<TEntity, TKey>(TableMetaInfo<TEntity> table)
         IDbTransaction? transaction = null)
     {
         var sql = $"""
-                   SELECT * 
+                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} as {c.SrcName}"))}
                    FROM {table.DbName} 
                    WHERE {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = @{nameof(id)} 
+                   order by {table[nameof(IIdBaseEntity<TKey>.Id)].DbName}
                    LIMIT 1
                    """;
 
@@ -97,15 +98,16 @@ public class BaseProvider<TEntity, TKey>(TableMetaInfo<TEntity> table)
 
     public virtual async Task<IReadOnlyList<TEntity>> GetListAsync(
         IDbConnection connection, 
-        int offset, 
-        int limit, 
-        string? search, 
         CancellationToken cancellationToken, 
+        int? offset = null, 
+        int? limit = null, 
+        string? search = null, 
         IDbTransaction? transaction = null)
     {
         var whereList = new List<string>();
         
-        if (table.HasSoftDelete) whereList.Add($"{table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName} = true");
+        if (table.HasSoftDelete) 
+            whereList.Add($"{table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName} = true");
         
         if (!string.IsNullOrWhiteSpace(search))
         {
@@ -121,15 +123,18 @@ public class BaseProvider<TEntity, TKey>(TableMetaInfo<TEntity> table)
                 whereList.Add($"({likeExpr})");
             }
         }
+        
+        var limitOffset = string.Empty;
+        if (limit.HasValue && offset.HasValue)
+            limitOffset = $"\nOFFSET {offset.Value} LIMIT {limit.Value}";
 
         var whereSql = whereList.Count > 0 
-            ? ("\n WHERE " + string.Join(" AND ", whereList)) 
+            ? ("\nWHERE " + string.Join(" AND ", whereList)) 
             : string.Empty;
         var sql = $"""
-                   SELECT * 
+                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} as {c.SrcName}"))}
                    FROM {table.DbName}{whereSql} 
-                   ORDER BY {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} 
-                   OFFSET @{nameof(offset)} LIMIT @{nameof(limit)}
+                   ORDER BY {table[nameof(IIdBaseEntity<TKey>.Id)].DbName}{limitOffset}
                    """;
         
         var rows = await connection.QueryAsync<TEntity>(new CommandDefinition(
@@ -200,14 +205,14 @@ public class BaseProvider<TEntity, TKey>(TableMetaInfo<TEntity> table)
     {
         var sql = table.HasSoftDelete
             ? $"""
-               UPDATE {table.DbName}
-               SET {table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName} = false
+               update {table.DbName}
+               set {table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName} = false
                ,   {table[nameof(ISoftDeleteBaseEntity.DeactivatedAt)].DbName} = now()
-               WHERE {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = any(@{nameof(ids)})
+               where {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = any(@{nameof(ids)})
                """
             : $"""
-               DELETE FROM {table.DbName} 
-               WHERE {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = any(@{nameof(ids)})
+               delete from {table.DbName} 
+               where {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = any(@{nameof(ids)})
                """;
         
         var affected = await connection.ExecuteAsync(new CommandDefinition(sql, new { ids }, transaction, cancellationToken: cancellationToken));

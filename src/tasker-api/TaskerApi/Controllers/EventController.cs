@@ -5,8 +5,8 @@ using TaskerApi.Models.Responses;
 
 namespace TaskerApi.Controllers;
 
-[Route("api/[controller]")]
 [ApiController]
+[Route("api/[controller]")]
 public class EventController(IEventService service) : ControllerBase
 {
     [HttpPost]

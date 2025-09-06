@@ -4,7 +4,7 @@ using TaskerApi.Interfaces.Entities;
 namespace TaskerApi.Models.Entities;
 
 /// <summary>
-///     Связь события и цели
+/// Связь события и цели
 /// </summary>
 [Table("events_2_purpose")]
 public class EventToPurposeEntity : 
@@ -15,13 +15,13 @@ public class EventToPurposeEntity :
     ISoftDeleteBaseEntity
 {
     /// <summary>
-    ///     ID события
+    /// ID события
     /// </summary>
     [Column("event_id")]
     public Guid EventId { get; set; }
 
     /// <summary>
-    ///     ID цели
+    /// ID цели
     /// </summary>
     [Column("purpose_id")]
     public Guid PurposeId { get; set; }

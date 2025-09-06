@@ -4,5 +4,5 @@ using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Providers;
 
-public class EventToAreaByAreaProvider(TableMetaInfo<EventToAreaByAreaEntity> table) 
-    : BaseProvider<EventToAreaByAreaEntity, Guid>(table), IEventToAreaByAreaProvider;
+public class EventToAreaByAreaProvider(ILogger<EventToAreaByAreaProvider> logger, TableMetaInfo<EventToAreaByAreaEntity> table) 
+    : BaseProvider<EventToAreaByAreaEntity, Guid>(logger, table), IEventToAreaByAreaProvider;

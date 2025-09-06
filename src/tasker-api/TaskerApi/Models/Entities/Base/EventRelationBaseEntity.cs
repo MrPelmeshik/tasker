@@ -2,6 +2,9 @@ using TaskerApi.Interfaces.Entities;
 
 namespace TaskerApi.Models.Entities.Base;
 
+/// <summary>
+/// Базовая модель связи события
+/// </summary>
 public abstract class EventRelationBaseEntity : 
     IDbEntity,
     ICreatorUserBaseEntity, 

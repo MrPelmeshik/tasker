@@ -13,6 +13,7 @@ public class TableMetaInfo<T> where T : class, IDbEntity
         _columns = typeof(T)
             .GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Select(p => new ColumnMetaInfo(p))
+            .Where(c => !c.IsIgnored)
             .ToDictionary(c => c.SrcName, c => c)
             .AsReadOnly();
         

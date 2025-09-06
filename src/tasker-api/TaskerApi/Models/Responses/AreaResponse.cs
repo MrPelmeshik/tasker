@@ -1,30 +1,15 @@
-using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Interfaces.Entities;
+namespace TaskerApi.Models.Responses;
 
-namespace TaskerApi.Models.Entities;
-
-/// <summary>
-/// Области
-/// </summary>
-[Table("areas")]
-public class AreaEntity : 
-    IDbEntity,
-    IIdBaseEntity<Guid>, 
-    ISoftDeleteBaseEntity, 
-    IUpdatedDateBaseEntity, 
-    ICreatedDateBaseEntity,
-    ICreatorUserBaseEntity
+public class AreaResponse
 {
     /// <summary>
     /// Заголовок области
     /// </summary>
-    [Column("title")]
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
     /// Описание области
     /// </summary>
-    [Column("description")]
     public string? Description { get; set; }
 
     public Guid CreatorUserId { get; set; }

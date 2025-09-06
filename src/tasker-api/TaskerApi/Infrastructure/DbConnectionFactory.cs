@@ -1,3 +1,4 @@
+using System;
 using System.Data;
 using Microsoft.Extensions.Options;
 using Npgsql;
@@ -22,7 +23,8 @@ public class DbConnectionFactory : IDbConnectionFactory
     /// <param name="databaseSettings">Настройки базы данных.</param>
     public DbConnectionFactory(IOptions<DatabaseSettings> databaseSettings)
     {
-        _connectionString = ExpandEnvironmentVariables(databaseSettings.Value.ConnectionString);
+        _connectionString = ExpandEnvironmentVariables(databaseSettings.Value.ConnectionString)
+            ?? throw new InvalidOperationException("Database connection string is missing. Ensure 'Database:ConnectionString' is configured and required environment variables are set.");
     }
 
     /// <inheritdoc />

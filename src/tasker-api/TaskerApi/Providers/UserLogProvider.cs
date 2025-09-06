@@ -4,5 +4,5 @@ using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Providers;
 
-public class UserLogProvider(TableMetaInfo<UserLogEntity> table) 
-    : BaseProvider<UserLogEntity, int>(table), IUserLogProvider;
+public class UserLogProvider(ILogger<UserLogProvider> logger, TableMetaInfo<UserLogEntity> table) 
+    : BaseProvider<UserLogEntity, int>(logger, table), IUserLogProvider;

@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using TaskerApi.Models.Configuration;
 using TaskerApi.Infrastructure;
 using TaskerApi.Attributes;
@@ -48,122 +50,67 @@ foreach (var tableMetaInfoType in dbEntityTypes
 
 
 // Регистрация провайдеров (Dapper)
-// builder.Services.AddScoped<IUserProvider, UserProvider>();
 builder.Services.AddScoped<IUserLogProvider, UserLogProvider>();
+builder.Services.AddScoped<IUserProvider, UserProvider>();
 builder.Services.AddScoped<IEventProvider, EventProvider>();
 builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
 builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
 builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
+builder.Services.AddScoped<IAreaProvider, AreaProvider>();
 
-// Регистрация провайдеров Keycloak
-// builder.Services.AddHttpClient<IKeycloakProvider, KeycloakProvider>();
-// builder.Services.AddScoped<IKeycloakProvider, KeycloakProvider>();
+//
 
 // Регистрация сервисов
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
-// builder.Services.AddScoped<IUserService, UserService>();
-// builder.Services.AddScoped<IAuthService, AuthService>();
+builder.Services.AddScoped<IAreaService, AreaService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
 // builder.Services.AddScoped<UserLogAttribute>();
 
-// Configure Keycloak settings
-/*builder.Services.Configure<KeycloakSettings>(
-    builder.Configuration.GetSection("Keycloak"));*/
+// Configure Settings
 
-// Configure authentication
-/*
-var keycloakSettings = builder.Configuration.GetSection("Keycloak").Get<KeycloakSettings>();
-if (keycloakSettings != null)
-{
-    builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
+builder.Services.Configure<JwtSettings>(builder.Configuration.GetSection("Jwt"));
+
+// Configure authentication: JWT as default + Negotiate
+builder.Services
+    .AddAuthentication(options =>
+    {
+        options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+        options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+    })
+    .AddJwtBearer(options =>
+    {
+        var jwt = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+        options.RequireHttpsMetadata = false;
+        options.TokenValidationParameters = new TokenValidationParameters
         {
-            options.Authority = keycloakSettings.Authority;
-            options.Audience = keycloakSettings.Audience;
-            options.RequireHttpsMetadata = keycloakSettings.RequireHttpsMetadata;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = keycloakSettings.ValidateIssuer,
-                ValidateAudience = keycloakSettings.ValidateAudience,
-                ValidateLifetime = keycloakSettings.ValidateLifetime,
-                ValidateIssuerSigningKey = keycloakSettings.ValidateIssuerSigningKey,
-                RequireSignedTokens = true,
-                RequireExpirationTime = true,
-                NameClaimType = "preferred_username",
-                RoleClaimType = ClaimTypes.Role
-            };
+            ValidateIssuer = true,
+            ValidIssuer = jwt.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwt.Audience,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(System.Text.Encoding.UTF8.GetBytes(jwt.SecretKey)),
+            NameClaimType = ClaimTypes.Name,
+            RoleClaimType = ClaimTypes.Role,
+            ClockSkew = TimeSpan.FromSeconds(30)
+        };
+    })
+    .AddNegotiate();
 
-            // Map Keycloak roles (realm and client) to ASP.NET Core roles
-            options.Events = new JwtBearerEvents
-            {
-                OnTokenValidated = context =>
-                {
-                    if (context.Principal?.Identity is not ClaimsIdentity identity)
-                    {
-                        return Task.CompletedTask;
-                    }
+// builder.Services.AddAuthorization();
 
-                    var addedRoles = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+// Optionally require auth by default; comment out if you want anonymous by default
+builder.Services.AddAuthorization(options =>
+{
+    options.FallbackPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
 
-                    // realm_access.roles
-                    var realmAccess = context.Principal.FindFirst("realm_access")?.Value;
-                    if (!string.IsNullOrWhiteSpace(realmAccess))
-                    {
-                        try
-                        {
-                            using var doc = JsonDocument.Parse(realmAccess);
-                            if (doc.RootElement.TryGetProperty("roles", out var rolesEl) &&
-                                rolesEl.ValueKind == JsonValueKind.Array)
-                            {
-                                foreach (var role in rolesEl
-                                             .EnumerateArray()
-                                             .Select(roleEl => roleEl.GetString())
-                                             .Where(role => !string.IsNullOrWhiteSpace(role) && addedRoles.Add(role)))
-                                {
-                                    identity.AddClaim(new Claim(ClaimTypes.Role, role ?? throw new ArgumentNullException(nameof(role))));
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            // ignore parse errors
-                        }
-                    }
 
-                    // resource_access[clientId].roles
-                    var resourceAccess = context.Principal.FindFirst("resource_access")?.Value;
-                    if (string.IsNullOrWhiteSpace(resourceAccess)) return Task.CompletedTask;
-
-                    try
-                    {
-                        using var doc = JsonDocument.Parse(resourceAccess);
-                        if (doc.RootElement.TryGetProperty(keycloakSettings.ClientId, out var clientEl))
-                        {
-                            if (clientEl.TryGetProperty("roles", out var rolesEl) &&
-                                rolesEl.ValueKind == JsonValueKind.Array)
-                            {
-                                foreach (var role in rolesEl
-                                             .EnumerateArray()
-                                             .Select(roleEl => roleEl.GetString())
-                                             .Where(role => !string.IsNullOrWhiteSpace(role) && addedRoles.Add(role)))
-                                {
-                                    identity.AddClaim(new Claim(ClaimTypes.Role, role ?? throw new ArgumentNullException(nameof(role))));
-                                }
-                            }
-                        }
-                    }
-                    catch
-                    {
-                        // ignore parse errors
-                    }
-
-                    return Task.CompletedTask;
-                }
-            };
-        });
-}
-*/
 
 /*builder.Services.AddAuthorization(options =>
 {
@@ -179,7 +126,7 @@ builder.Services.AddSwaggerGen(c =>
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "Tasker API", Version = "v1" });
 
     // Добавляем поддержку JWT в Swagger
-    /*c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
     {
         Description = "JWT Authorization header using the Bearer scheme. Example: \"Authorization: Bearer {token}\"",
         Name = "Authorization",
@@ -193,7 +140,7 @@ builder.Services.AddSwaggerGen(c =>
     {
         Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = "Bearer" }
     }, [] } };
-    c.AddSecurityRequirement(requirement);*/
+    c.AddSecurityRequirement(requirement);
 });
 
 var app = builder.Build();
@@ -205,7 +152,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 app.UseAuthentication();
 app.UseAuthorization();

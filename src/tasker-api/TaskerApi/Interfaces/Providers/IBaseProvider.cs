@@ -67,10 +67,10 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
     /// <returns>Список объектов</returns>
     Task<IReadOnlyList<TEntity>> GetListAsync(
         IDbConnection connection, 
-        int offset,
-        int limit,
-        string? search,
         CancellationToken cancellationToken,
+        int? offset = null,
+        int? limit = null,
+        string? search = null,
         IDbTransaction? transaction = null);
 
     /// <summary>
