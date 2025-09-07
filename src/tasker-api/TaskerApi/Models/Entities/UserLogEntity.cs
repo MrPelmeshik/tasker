@@ -1,4 +1,4 @@
-using TaskerApi.Interfaces.Entities;
+using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Models.Entities;
 

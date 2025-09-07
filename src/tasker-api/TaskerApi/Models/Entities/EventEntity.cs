@@ -1,5 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Interfaces.Entities;
+using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Models.Entities;
 

@@ -5,16 +5,16 @@ using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
-using TaskerApi.Models.Configuration;
-using TaskerApi.Infrastructure;
 using TaskerApi.Attributes;
-using TaskerApi.Interfaces.Entities;
-using TaskerApi.Providers;
+using TaskerApi.Core.Implementations;
+using TaskerApi.Core.Interfaces;
+using TaskerApi.Models.Entities.Contracts;
 using TaskerApi.Services;
-using TaskerApi.Interfaces.Infrastructure;
-using TaskerApi.Interfaces.Providers;
-using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
+using TaskerApi.Providers.Implementations;
+using TaskerApi.Providers.Interfaces;
+using TaskerApi.Services.Implementations;
+using TaskerApi.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 

@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using TaskerApi.Interfaces.Infrastructure;
-using TaskerApi.Interfaces.Providers;
+using TaskerApi.Core.Interfaces;
 using TaskerApi.Models.Entities;
+using TaskerApi.Providers.Interfaces;
 
 namespace TaskerApi.Attributes;
 
@@ -79,10 +79,9 @@ public class UserLogAttribute : TypeFilterAttribute
                     CreatedAt = DateTimeOffset.UtcNow
                 };
 
-                // Лог пишем в собственной короткой транзакции, чтобы не зависеть от бизнес-логики
-                // await using var uow = await uowFactory.CreateAsync(httpContext.RequestAborted, useTransaction: true);
-                // await logProvider.CreateAsync(uow.Connection,entity, httpContext.RequestAborted, uow.Transaction);
-                // await uow.CommitAsync(httpContext.RequestAborted);
+                await using var uow = await uowFactory.CreateAsync(httpContext.RequestAborted, useTransaction: true);
+                await logProvider.CreateAsync(uow.Connection,entity, httpContext.RequestAborted, uow.Transaction, setDefaultValues: true);
+                await uow.CommitAsync(httpContext.RequestAborted);
             }
             catch (Exception logEx)
             {
