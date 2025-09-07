@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
+using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
-using TaskerApi.Services.Interfaces;
 
 namespace TaskerApi.Controllers;
 

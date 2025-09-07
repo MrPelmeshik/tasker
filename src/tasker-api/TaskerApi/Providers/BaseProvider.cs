@@ -1,11 +1,11 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
 using Dapper;
+using TaskerApi.Interfaces.Providers;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities.Contracts;
-using TaskerApi.Providers.Interfaces;
 
-namespace TaskerApi.Providers.Implementations;
+namespace TaskerApi.Providers;
 
 /// <summary>
 /// Базовый провайдер для сущностей

@@ -1,6 +1,6 @@
 using System.Data;
 
-namespace TaskerApi.Core.Interfaces;
+namespace TaskerApi.Interfaces.Core;
 
 /// <summary>
 /// Единица работы (Unit of Work), инкапсулирующая подключение и транзакцию.

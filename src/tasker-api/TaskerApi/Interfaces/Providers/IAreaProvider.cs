@@ -1,6 +1,6 @@
 using TaskerApi.Models.Entities;
 
-namespace TaskerApi.Providers.Interfaces;
+namespace TaskerApi.Interfaces.Providers;
 
 public interface IAreaProvider : IBaseProvider<AreaEntity, Guid>;
 

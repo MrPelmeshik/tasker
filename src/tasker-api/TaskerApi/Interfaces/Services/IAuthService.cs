@@ -2,7 +2,7 @@ using TaskerApi.Models.Common;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 
-namespace TaskerApi.Services.Interfaces;
+namespace TaskerApi.Interfaces.Services;
 
 /// <summary>
 /// Интерфейс сервиса авторизации

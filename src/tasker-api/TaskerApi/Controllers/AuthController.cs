@@ -3,8 +3,8 @@ using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using System.Security.Claims;
+using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
-using TaskerApi.Services.Interfaces;
 
 namespace TaskerApi.Controllers;
 

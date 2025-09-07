@@ -1,8 +1,8 @@
+using TaskerApi.Interfaces.Providers;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
-using TaskerApi.Providers.Interfaces;
 
-namespace TaskerApi.Providers.Implementations;
+namespace TaskerApi.Providers;
 
 public class AreaProvider(ILogger<AreaProvider> logger, TableMetaInfo<AreaEntity> table) 
     : BaseProvider<AreaEntity, Guid>(logger, table), IAreaProvider;

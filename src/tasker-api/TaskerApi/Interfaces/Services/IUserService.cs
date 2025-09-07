@@ -1,6 +1,6 @@
 using TaskerApi.Models.Entities;
 
-namespace TaskerApi.Services.Interfaces;
+namespace TaskerApi.Interfaces.Services;
 
 public interface IUserService
 {

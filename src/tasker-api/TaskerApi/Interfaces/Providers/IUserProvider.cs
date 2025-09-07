@@ -1,7 +1,7 @@
 using System.Data;
 using TaskerApi.Models.Entities;
 
-namespace TaskerApi.Providers.Interfaces;
+namespace TaskerApi.Interfaces.Providers;
 
 public interface IUserProvider : IBaseProvider<UserEntity, Guid>
 {

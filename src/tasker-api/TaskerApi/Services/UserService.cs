@@ -1,9 +1,9 @@
-using TaskerApi.Core.Interfaces;
+using TaskerApi.Interfaces.Core;
+using TaskerApi.Interfaces.Providers;
+using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Entities;
-using TaskerApi.Providers.Interfaces;
-using TaskerApi.Services.Interfaces;
 
-namespace TaskerApi.Services.Implementations;
+namespace TaskerApi.Services;
 
 public class UserService(
     ILogger<UserService> logger, 

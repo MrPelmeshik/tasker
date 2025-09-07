@@ -1,7 +1,7 @@
 using System.Data;
-using TaskerApi.Core.Interfaces;
+using TaskerApi.Interfaces.Core;
 
-namespace TaskerApi.Core.Implementations;
+namespace TaskerApi.Core;
 
 /// <summary>
 /// Фабрика Unit of Work, создающая открытое подключение и, при необходимости, транзакцию.

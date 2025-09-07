@@ -1,8 +1,8 @@
 using System.Data;
 using System.Data.Common;
-using TaskerApi.Core.Interfaces;
+using TaskerApi.Interfaces.Core;
 
-namespace TaskerApi.Core.Implementations;
+namespace TaskerApi.Core;
 
 /// <summary>
 /// Реализация Unit of Work с поддержкой транзакции.

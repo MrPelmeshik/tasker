@@ -1,10 +1,10 @@
 using System.Data;
 using Dapper;
+using TaskerApi.Interfaces.Providers;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
-using TaskerApi.Providers.Interfaces;
 
-namespace TaskerApi.Providers.Implementations;
+namespace TaskerApi.Providers;
 
 public class UserProvider(ILogger<UserProvider> logger, TableMetaInfo<UserEntity> table) 
     : BaseProvider<UserEntity, Guid>(logger, table), IUserProvider

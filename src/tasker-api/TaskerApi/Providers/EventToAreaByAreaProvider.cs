@@ -1,8 +1,8 @@
+using TaskerApi.Interfaces.Providers;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
-using TaskerApi.Providers.Interfaces;
 
-namespace TaskerApi.Providers.Implementations;
+namespace TaskerApi.Providers;
 
 public class EventToAreaByAreaProvider(ILogger<EventToAreaByAreaProvider> logger, TableMetaInfo<EventToAreaByAreaEntity> table) 
     : BaseProvider<EventToAreaByAreaEntity, Guid>(logger, table), IEventToAreaByAreaProvider;

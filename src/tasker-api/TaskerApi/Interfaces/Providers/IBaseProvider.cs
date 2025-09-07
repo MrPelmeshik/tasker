@@ -1,6 +1,6 @@
 using System.Data;
 
-namespace TaskerApi.Providers.Interfaces;
+namespace TaskerApi.Interfaces.Providers;
 
 /// <summary>
 /// Базовый интерфейс провайдера

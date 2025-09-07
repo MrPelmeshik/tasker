@@ -1,6 +1,6 @@
 using System.Data;
 
-namespace TaskerApi.Core.Interfaces;
+namespace TaskerApi.Interfaces.Core;
 
 /// <summary>
 /// Фабрика подключений к базе данных.

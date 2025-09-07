@@ -1,10 +1,10 @@
 using System.Data;
 using Microsoft.Extensions.Options;
 using Npgsql;
-using TaskerApi.Core.Interfaces;
+using TaskerApi.Interfaces.Core;
 using TaskerApi.Models.Common;
 
-namespace TaskerApi.Core.Implementations;
+namespace TaskerApi.Core;
 
 /// <summary>
 /// Реализация фабрики подключений к PostgreSQL через Npgsql.

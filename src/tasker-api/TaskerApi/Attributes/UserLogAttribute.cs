@@ -2,9 +2,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
-using TaskerApi.Core.Interfaces;
+using TaskerApi.Interfaces.Core;
+using TaskerApi.Interfaces.Providers;
 using TaskerApi.Models.Entities;
-using TaskerApi.Providers.Interfaces;
 
 namespace TaskerApi.Attributes;
 

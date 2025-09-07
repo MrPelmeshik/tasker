@@ -1,11 +1,11 @@
-using TaskerApi.Core.Interfaces;
+using TaskerApi.Interfaces.Core;
+using TaskerApi.Interfaces.Providers;
+using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
-using TaskerApi.Providers.Interfaces;
-using TaskerApi.Services.Interfaces;
 
-namespace TaskerApi.Services.Implementations;
+namespace TaskerApi.Services;
 
 public class EventService(
     ILogger<EventService> logger, 

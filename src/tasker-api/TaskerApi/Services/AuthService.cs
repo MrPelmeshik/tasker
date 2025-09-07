@@ -4,15 +4,15 @@ using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TaskerApi.Core;
-using TaskerApi.Core.Interfaces;
+using TaskerApi.Interfaces.Core;
+using TaskerApi.Interfaces.Providers;
+using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
-using TaskerApi.Providers.Interfaces;
-using TaskerApi.Services.Interfaces;
 
-namespace TaskerApi.Services.Implementations;
+namespace TaskerApi.Services;
 
 public class AuthService(
     ILogger<AuthService> logger,

@@ -1,4 +1,4 @@
-namespace TaskerApi.Core.Interfaces;
+namespace TaskerApi.Interfaces.Core;
 
 /// <summary>
 /// Фабрика для создания единиц работы.
