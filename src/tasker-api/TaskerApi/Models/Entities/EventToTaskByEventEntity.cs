@@ -5,14 +5,14 @@ using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Models.Entities;
 
-[Table("events_2_group")]
-public class EventToGroupByEventEntity : 
+[Table("events_2_task")]
+public class EventToTaskByEventEntity : 
     EventRelationBaseEntity,
     IIdBaseEntity<Guid>
 {
     [Key, Column("event_id")]
     public Guid Id { get; set; }
 
-    [Column("group_id")]
-    public Guid GroupId { get; set; }
+    [Column("task_id")]
+    public Guid TaskId { get; set; }
 }

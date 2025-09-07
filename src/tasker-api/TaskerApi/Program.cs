@@ -1,17 +1,14 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authentication.Negotiate;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
-using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
-using TaskerApi.Attributes;
 using TaskerApi.Core;
+using TaskerApi.Models.Entities.Contracts;
+using TaskerApi.Services;
 using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
-using TaskerApi.Models.Entities.Contracts;
-using TaskerApi.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Providers;
 
@@ -55,7 +52,18 @@ builder.Services.AddScoped<IEventProvider, EventProvider>();
 builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
 builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
 builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
+builder.Services.AddScoped<IEventToGroupByGroupProvider, EventToGroupByGroupProvider>();
+builder.Services.AddScoped<IEventToPurposeByEventProvider, EventToPurposeByEventProvider>();
+builder.Services.AddScoped<IEventToPurposeByPurposeProvider, EventToPurposeByPurposeProvider>();
+builder.Services.AddScoped<IEventToSubtaskByEventProvider, EventToSubtaskByEventProvider>();
+builder.Services.AddScoped<IEventToSubtaskBySubtaskProvider, EventToSubtaskBySubtaskProvider>();
+builder.Services.AddScoped<IEventToTaskByEventProvider, EventToTaskByEventProvider>();
+builder.Services.AddScoped<IEventToTaskByTaskProvider, EventToTaskByTaskProvider>();
 builder.Services.AddScoped<IAreaProvider, AreaProvider>();
+builder.Services.AddScoped<IGroupProvider, GroupProvider>();
+builder.Services.AddScoped<IPurposeProvider, PurposeProvider>();
+builder.Services.AddScoped<ITaskProvider, TaskProvider>();
+builder.Services.AddScoped<ISubtaskProvider, SubtaskProvider>();
 
 //
 

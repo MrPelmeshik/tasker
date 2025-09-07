@@ -1,24 +1,18 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using TaskerApi.Models.Entities.Contracts;
 using TaskerApi.Models.Entities.Base;
+using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Models.Entities;
 
-[Table("event_2_area")]
-public class EventToAreaByAreaEntity : 
-    EventRelationBaseEntity, 
+[Table("events_2_group")]
+public class EventToGroupByGroupEntity : 
+    EventRelationBaseEntity,
     IIdBaseEntity<Guid>
 {
-    /// <summary>
-    /// ID события
-    /// </summary>
     [Column("event_id")]
     public Guid EventId { get; set; }
 
-    /// <summary>
-    /// ID области
-    /// </summary>
-    [Key, Column("area_id")]
+    [Key, Column("group_id")]
     public Guid Id { get; set; }
 }

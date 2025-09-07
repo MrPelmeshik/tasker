@@ -5,6 +5,7 @@ using TaskerApi.Models.Entities.Base;
 
 namespace TaskerApi.Models.Entities;
 
+[Table("event_2_area")]
 public class EventToAreaByEventEntity : 
     EventRelationBaseEntity, 
     IIdBaseEntity<Guid>
