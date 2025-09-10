@@ -5,7 +5,7 @@ using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Models.Common;
 
-public class TableMetaInfo<T> where T : class, IDbEntity
+public class TableMetaInfo<T> where T : IDbEntity
 {
     public TableMetaInfo()
     {

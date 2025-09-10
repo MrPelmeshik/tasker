@@ -12,7 +12,8 @@ public class EventService(
     IUnitOfWorkFactory uowFactory, 
     IEventProvider eventProvider,
     IEventToAreaByEventProvider eventToAreaByEventProvider,
-    IEventToGroupByEventProvider eventToGroupByEventProvider)
+    IEventToGroupByEventProvider eventToGroupByEventProvider,
+    ICurrentUserService currentUser)
     : IEventService
 {
     public async Task<EventCreateResponse> CreateAsync(EventCreateByAreaRequest item, CancellationToken cancellationToken)
@@ -28,7 +29,7 @@ public class EventService(
                 {
                     Title = item.Title,
                     Description = item.Description,
-                    CreatorUserId = item.CreatorUserId,
+                    CreatorUserId = currentUser.UserId,
                 }, 
                 cancellationToken,
                 uow.Transaction,
@@ -40,7 +41,7 @@ public class EventService(
                 {
                     Id = eventId,
                     AreaId = item.AreaId,
-                    CreatorUserId = item.CreatorUserId,
+                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,
@@ -78,7 +79,7 @@ public class EventService(
                 {
                     Title = item.Title,
                     Description = item.Description,
-                    CreatorUserId = item.CreatorUserId,
+                    CreatorUserId = currentUser.UserId,
                 }, 
                 cancellationToken,
                 uow.Transaction,
@@ -90,7 +91,7 @@ public class EventService(
                 {
                     Id = eventId,
                     GroupId = item.GroupId,
-                    CreatorUserId = item.CreatorUserId,
+                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,

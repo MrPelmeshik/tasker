@@ -1,4 +1,7 @@
 using System.Data;
+using TaskerApi.Interfaces.Models.Common;
+using TaskerApi.Models.Common;
+using TaskerApi.Models.Common.SqlFilters;
 
 namespace TaskerApi.Interfaces.Providers;
 
@@ -42,7 +45,53 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
         bool setDefaultValues = false);
 
     /// <summary>
-    /// Получить по идентификатору
+    /// Получить список с пагинацией и фильтром
+    /// </summary>
+    /// <param name="connection">Подключение к базе данных</param>
+    /// <param name="filers">Фильтры</param>
+    /// <param name="withDeleted">Включить удалённые (если доступен SoftDelete)</param>
+    /// <param name="orderColumn">Сортировка</param>
+    /// <param name="orderDesc">Сортировка по убыванию</param>
+    /// <param name="offset">Смещение для пагинации</param>
+    /// <param name="limit">Количество записей</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <param name="transaction">Транзакция базы данных</param>
+    /// <returns>Список объектов</returns>
+    Task<IReadOnlyList<TEntity>> GetListAsync(
+        IDbConnection connection, 
+        CancellationToken cancellationToken, 
+        IList<IFilter>? filers = null,
+        bool withDeleted = false,
+        string? orderColumn = null,
+        bool orderDesc = false,
+        int? offset = null, 
+        int? limit = null, 
+        IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// Получить одну запись
+    /// </summary>
+    /// <param name="connection">Подключение к базе данных</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <param name="filers">Фильтры</param>
+    /// <param name="withDeleted">Включить удалённые (если доступен SoftDelete)</param>
+    /// <param name="orderColumn">Сортировка</param>
+    /// <param name="orderDesc">Сортировка по убыванию</param>
+    /// <param name="checkOnlyOne">Проверять чтобы была только одна запись</param>
+    /// <param name="transaction">Транзакция базы данных</param>
+    /// <returns>Объект</returns>
+    Task<TEntity?> GetSimpleAsync(
+        IDbConnection connection, 
+        CancellationToken cancellationToken, 
+        IList<IFilter>? filers = null,
+        bool withDeleted = false,
+        string? orderColumn = null,
+        bool orderDesc = false,
+        bool checkOnlyOne = false,
+        IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// Получить запись по идентификатору
     /// </summary>
     /// <param name="connection">Подключение к базе данных</param>
     /// <param name="id">Идентификатор</param>
@@ -50,28 +99,11 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
     /// <param name="transaction">Транзакция базы данных</param>
     /// <returns>Объект</returns>
     Task<TEntity?> GetByIdAsync(
-        IDbConnection connection, 
-        TKey id, 
-        CancellationToken cancellationToken, 
-        IDbTransaction? transaction = null);
-
-    /// <summary>
-    /// Получить список с пагинацией и простым фильтром
-    /// </summary>
-    /// <param name="connection">Подключение к базе данных</param>
-    /// <param name="offset">Смещение для пагинации</param>
-    /// <param name="limit">Количество записей</param>
-    /// <param name="search">Строка поиска</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <param name="transaction">Транзакция базы данных</param>
-    /// <returns>Список объектов</returns>
-    Task<IReadOnlyList<TEntity>> GetListAsync(
-        IDbConnection connection, 
+        IDbConnection connection,
+        TKey id,
         CancellationToken cancellationToken,
-        int? offset = null,
-        int? limit = null,
-        string? search = null,
-        IDbTransaction? transaction = null);
+        IDbTransaction? transaction = null
+    );
 
     /// <summary>
     /// Обновить запись

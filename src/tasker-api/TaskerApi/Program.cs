@@ -72,6 +72,8 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
 // builder.Services.AddScoped<UserLogAttribute>();

@@ -25,7 +25,6 @@
 
     <ItemGroup>
       <Folder Include="Attributes\" />
-      <Folder Include="Interfaces\" />
     </ItemGroup>
 
 </Project>

@@ -2,6 +2,7 @@ using System.Data;
 using Dapper;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Models.Common;
+using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Providers;
@@ -15,19 +16,15 @@ public class UserProvider(ILogger<UserProvider> logger, TableMetaInfo<UserEntity
         CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {
-        var sql = $"""
-                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} as {c.SrcName}"))}
-                   FROM {table.DbName}
-                   WHERE lower({table[nameof(UserEntity.Name)].DbName}) = lower(@{nameof(name)})
-                   LIMIT 1
-                   """;
-
-        var user = await connection.QueryFirstOrDefaultAsync<UserEntity>(new CommandDefinition(
-            commandText: sql,
-            parameters: new { name },
-            transaction: transaction,
-            cancellationToken: cancellationToken));
-        return user;
+        return await GetSimpleAsync(
+            connection,
+            cancellationToken,
+            filers: [new StringFilter(nameof(UserEntity.Name), name)],
+            orderColumn: nameof(UserEntity.Id),
+            orderDesc: false,
+            withDeleted: false,
+            transaction: transaction
+        );
     }
 
     public async Task<UserEntity?> GetByEmailAsync(
@@ -36,19 +33,15 @@ public class UserProvider(ILogger<UserProvider> logger, TableMetaInfo<UserEntity
         CancellationToken cancellationToken,
         IDbTransaction? transaction = null)
     {
-        var sql = $"""
-                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} as {c.SrcName}"))}
-                   FROM {table.DbName}
-                   WHERE lower({table[nameof(UserEntity.Email)].DbName}) = lower(@{nameof(email)})
-                   LIMIT 1
-                   """;
-
-        var user = await connection.QueryFirstOrDefaultAsync<UserEntity>(new CommandDefinition(
-            commandText: sql,
-            parameters: new { email },
-            transaction: transaction,
-            cancellationToken: cancellationToken));
-        return user;
+        return await GetSimpleAsync(
+            connection,
+            cancellationToken,
+            filers: [new StringFilter(nameof(UserEntity.Email), email)],
+            orderColumn: nameof(UserEntity.Id),
+            orderDesc: false,
+            withDeleted: false,
+            transaction: transaction
+        );
     }
 }
 

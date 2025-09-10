@@ -193,10 +193,15 @@ public class AuthService(
                 return ApiResponse<UserInfo>.ErrorResult("Неверный токен");
 
             await using var uow = await uowFactory.CreateAsync(CancellationToken.None);
-            var user = await userProvider.GetByIdAsync(uow.Connection, userId, CancellationToken.None, uow.Transaction);
-            if (user == null)
-                return ApiResponse<UserInfo>.ErrorResult("Пользователь не найден");
+            var user = await userProvider.GetByIdAsync(
+                uow.Connection, 
+                userId,
+                CancellationToken.None, 
+                transaction: uow.Transaction);
 
+            if (user == null)
+                return ApiResponse<UserInfo>.ErrorResult("Пользователь не найден");
+            
             var info = new UserInfo
             {
                 Id = user.Id.ToString(),
@@ -204,7 +209,7 @@ public class AuthService(
                 Email = user.Email ?? string.Empty,
                 FirstName = user.FirstName ?? string.Empty,
                 LastName = user.LastName ?? string.Empty,
-                Roles = new List<string> { "user" }
+                Roles = ["user"]
             };
             return ApiResponse<UserInfo>.SuccessResult(info);
         }
