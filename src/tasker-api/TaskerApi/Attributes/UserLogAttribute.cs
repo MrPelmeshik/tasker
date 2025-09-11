@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Filters;
 using Microsoft.Extensions.Logging;
+using System.Diagnostics;
 using System.Text.Json;
 using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Providers;
@@ -36,7 +37,10 @@ public class UserLogAttribute : TypeFilterAttribute
         public async Task OnActionExecutionAsync(ActionExecutingContext context, ActionExecutionDelegate next)
         {
             logger.LogInformation("Записываем лог действия пользователя: {actionDescription}", actionDescription);
+            var stopwatch = Stopwatch.StartNew();
             var executedContext = await next();
+            stopwatch.Stop();
+            var elapsedMs = stopwatch.ElapsedMilliseconds;
 
             try
             {
@@ -53,12 +57,16 @@ public class UserLogAttribute : TypeFilterAttribute
 
                 var requestParams = new Dictionary<string, object?>
                 {
-                    ["action_description"] = actionDescription
+                    ["action_description"] = actionDescription,
+                    ["elapsed_ms"] = elapsedMs
                 };
                 foreach (var kv in context.RouteData.Values)
                     requestParams[$"route:{kv.Key}"] = kv.Value;
                 foreach (var kv in request.Query)
                     requestParams[$"query:{kv.Key}"] = kv.Value.ToString();
+
+                if (!response.HasStarted)
+                    response.Headers["X-Elapsed-Ms"] = elapsedMs.ToString();
 
                 string? errorMessage = null;
                 if (executedContext.Exception != null)
@@ -87,6 +95,8 @@ public class UserLogAttribute : TypeFilterAttribute
             {
                 logger.LogError(logEx, "Не удалось записать лог действия пользователя");
             }
+
+            logger.LogInformation("Время выполнения действия '{actionDescription}': {elapsedMs} мс", actionDescription, elapsedMs);
         }
     }
 }
