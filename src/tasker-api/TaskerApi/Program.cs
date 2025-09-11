@@ -33,7 +33,7 @@ builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 // Получаем все типы, реализующие IDbEntity
 var dbEntityTypes = AppDomain.CurrentDomain.GetAssemblies()
     .SelectMany(a => a.GetTypes())
-    .Where(t => typeof(IDbEntity).IsAssignableFrom(t) && t.IsClass && !t.IsAbstract)
+    .Where(t => typeof(IDbEntity).IsAssignableFrom(t) && t is { IsClass: true, IsAbstract: false })
     .ToList();
 
 // Создаём TableMetaInfo для каждого типа и регистрируем как singleton
@@ -68,12 +68,17 @@ builder.Services.AddScoped<ISubtaskProvider, SubtaskProvider>();
 //
 
 // Регистрация сервисов
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddScoped<IEventService, EventService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
-builder.Services.AddHttpContextAccessor();
-builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
+builder.Services.AddScoped<IGroupService, GroupService>();
+builder.Services.AddScoped<IPurposeService, PurposeService>();
+builder.Services.AddScoped<ITaskService, TaskService>();
+builder.Services.AddScoped<ISubtaskService, SubtaskService>();
+builder.Services.AddScoped<IUserLogService, UserLogService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
 // builder.Services.AddScoped<UserLogAttribute>();
