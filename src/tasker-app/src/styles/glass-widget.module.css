@@ -1,0 +1,63 @@
+.glass {
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 16px;
+  padding: 16px;
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.30),
+    inset 0 1px 0 rgba(255,255,255,0.18);
+  contain: paint;
+  transition: none;
+}
+
+.glass::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(900px 450px at -10% -20%, rgba(255,255,255,0.06), transparent 60%);
+}
+
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.04) 26%, rgba(255,255,255,0.0) 42%);
+  opacity: 0.9;
+}
+
+/* Hover effects removed to avoid expensive repaints with backdrop-filter */
+
+.title {
+  margin: 0 0 12px 0;
+  font-size: 18px;
+  color: #fff;
+  text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 12px rgba(255,255,255,0.06);
+}
+
+.content {
+  color: #ddd;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass { transition: none; }
+  .glass:hover { transform: none; }
+}
+
+@supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
+  .glass {
+    background:
+      linear-gradient(180deg, rgba(40,40,40,0.85), rgba(30,30,30,0.80)) padding-box,
+      radial-gradient(120% 100% at 0% 0%, rgba(0, 200, 255, 0.18), rgba(0, 200, 255, 0) 60%) border-box,
+      radial-gradient(120% 100% at 100% 0%, rgba(255, 0, 160, 0.16), rgba(255, 0, 160, 0) 60%) border-box,
+      radial-gradient(160% 120% at 50% 120%, rgba(255,255,255,0.10), rgba(255,255,255,0)) border-box;
+  }
+}
+
+
