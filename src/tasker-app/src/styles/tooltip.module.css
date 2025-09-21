@@ -1,0 +1,84 @@
+.trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.tooltip {
+  position: absolute;
+  border-radius: var(--radius-s);
+  color: var(--color-text);
+  background:
+    linear-gradient(180deg, rgba(20,20,30,0.82), rgba(20,20,30,0.92)),
+    linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
+  box-shadow: var(--shadow-elev-2), var(--shadow-inset-0);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: var(--border-1) solid rgb(var(--white) / 0.10);
+  font-size: var(--font-12);
+  line-height: 1.35;
+  z-index: 10;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 160ms ease, visibility 160ms ease;
+  pointer-events: none;
+}
+
+/* Placement variants */
+.top {
+  left: 50%;
+  bottom: calc(100% + var(--space-8));
+  transform: translateX(-50%);
+}
+
+.bottom {
+  left: 50%;
+  top: calc(100% + var(--space-8));
+  transform: translateX(-50%);
+}
+
+.left {
+  right: calc(100% + var(--space-8));
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.right {
+  left: calc(100% + var(--space-8));
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Show on hover/focus of the trigger */
+.trigger:hover .tooltip,
+.trigger:focus-within .tooltip,
+.trigger:focus-visible .tooltip {
+  opacity: 1;
+  visibility: visible;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltip { transition: none; }
+}
+
+/* Size variants */
+.s {
+  max-width: 240px;
+  padding: var(--space-6) var(--space-8);
+  font-size: var(--font-11);
+}
+
+.m {
+  max-width: 320px;
+  padding: var(--space-8) var(--space-10);
+  font-size: var(--font-12);
+}
+
+.l {
+  max-width: 420px;
+  padding: var(--space-10) var(--space-12);
+  font-size: var(--font-13);
+}
+
+
