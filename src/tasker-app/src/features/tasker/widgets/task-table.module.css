@@ -40,25 +40,6 @@
 
 /* No mask needed with split header/body tables */
 
-/* Scrollbar styling for dark glass theme */
-.gridWrapper {
-  scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.22) transparent;
-}
-.gridWrapper::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
-}
-.gridWrapper::-webkit-scrollbar-track {
-  background: transparent;
-}
-.gridWrapper::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.22);
-  border-radius: 8px;
-}
-.gridWrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.30);
-}
 
 .thead th {
   position: sticky;

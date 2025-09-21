@@ -1,6 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 import styles from '../../styles/header.module.css';
+import { GlassButton } from '../ui/GlassButton';
 
 export const Header: React.FC = () => {
   const [userName, setUserName] = React.useState<string>('Гость');
@@ -25,7 +26,7 @@ export const Header: React.FC = () => {
         </NavLink>
         <nav className={styles.nav}>
           <NavLink to="/tasker" className={navClass}>
-            Задачник
+            <GlassButton size="l">Задачник</GlassButton>
           </NavLink>
         </nav>
       </div>
