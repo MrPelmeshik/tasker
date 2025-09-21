@@ -70,18 +70,21 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           <div className={css.spacer} />
           <span className={css.muted}>{weekStartIso}</span>
         </div>
+        {/* Static header table to prevent body text from sliding under header */}
+        <table className={css.table}>
+          <thead className={css.thead}>
+            <tr>
+              <th className={`${css.th} ${css.colCarry}`} title="Количество недель переноса"></th>
+              {daysHeader.map((d, i) => (
+                <th key={i} className={`${css.th} ${css.colDay}`} title={d.title}>{d.label}</th>
+              ))}
+              <th className={`${css.th} ${css.colFuture}`} title="Активности после этой недели"></th>
+              <th className={`${css.th} ${css.colTask}`}>Задача</th>
+            </tr>
+          </thead>
+        </table>
         <div className={css.gridWrapper}>
           <table className={css.table}>
-            <thead className={css.thead}>
-              <tr>
-                <th className={`${css.th} ${css.colCarry}`} title="Количество недель переноса"></th>
-                {daysHeader.map((d, i) => (
-                  <th key={i} className={`${css.th} ${css.colDay}`} title={d.title}>{d.label}</th>
-                ))}
-                <th className={`${css.th} ${css.colFuture}`} title="Активности после этой недели"></th>
-                <th className={`${css.th} ${css.colTask}`}>Задача</th>
-              </tr>
-            </thead>
             <tbody>
               {loading && (
                 <tr>
@@ -93,7 +96,9 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                   <td className={`${css.td} ${css.colCarry}`} title={`Перенос: ${task.carryWeeks}`}>{task.carryWeeks}</td>
                   {task.days.map((day) => (
                     <td key={day.date} className={`${css.td} ${css.colDay}`}>
-                      <span title={String(day.count)} className={`${css.heatCell} ${intensityClass(day.count)}`} />
+                      {day.count > 0 ? (
+                        <span title={String(day.count)} className={`${css.heatCell} ${intensityClass(day.count)}`} />
+                      ) : null}
                     </td>
                   ))}
                   <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>{task.hasFutureActivities ? '✓' : ''}</td>

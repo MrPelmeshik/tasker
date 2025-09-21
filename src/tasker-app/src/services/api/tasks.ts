@@ -44,12 +44,12 @@ export async function fetchWeeklyTasks(params: GetWeekParams): Promise<TaskWeekl
   const monday = new Date(params.weekStartIso + 'T00:00:00Z');
   const days = Array.from({ length: 7 }, (_, i) => toIsoDate(addDays(monday, i)));
 
-  const tasks = Array.from({ length: 12 }, (_, t) => {
-    const base = Math.floor(rng() * 4);
-    const activityDays: TaskActivityDay[] = days.map((d, i) => ({
-      date: d,
-      count: Math.max(0, Math.floor(base + rng() * 6 - 2)),
-    }));
+  const tasks = Array.from({ length: 50 }, (_, t) => {
+    const activityDays: TaskActivityDay[] = days.map((d) => {
+      const isActive = rng() < 0.3; // ~30% filled
+      const count = isActive ? Math.max(1, Math.floor(rng() * 6)) : 0;
+      return { date: d, count };
+    });
     const carryWeeks = Math.floor(rng() * 8);
     const hasFutureActivities = rng() > 0.6;
     return {
