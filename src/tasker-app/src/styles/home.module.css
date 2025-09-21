@@ -1,8 +1,8 @@
 .homeContainer {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 16px;
-  padding: 16px;
+  gap: var(--space-16);
+  padding: var(--space-16);
 }
 
 @media (min-width: 900px) {
@@ -12,16 +12,16 @@
 }
 
 .card {
-  background: #121212;
-  border: 1px solid #232323;
-  border-radius: 12px;
-  padding: 16px;
-  color: #fff;
+  background: var(--color-bg-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-m);
+  padding: var(--space-16);
+  color: var(--color-text);
 }
 
 .cardTitle {
-  margin: 0 0 12px 0;
-  font-size: 18px;
+  margin: 0 0 var(--space-12) 0;
+  font-size: var(--font-18);
 }
 
 .placeholder {
@@ -30,9 +30,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #aaa;
-  border: 1px dashed #333;
-  border-radius: 8px;
+  color: var(--color-text-secondary);
+  border: 1px dashed var(--color-dashed);
+  border-radius: var(--radius-xs);
 }
 
 

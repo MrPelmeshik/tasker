@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import type { WidgetSizeProps } from '../../../types/widget-size';
-import css from './task-table.module.css';
+import css from '../../../styles/task-table.module.css';
 import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity } from '../../../services/api/tasks';
 
 type WeekNav = 'prev' | 'next' | 'current' | 'latest';

@@ -1,5 +1,5 @@
 import React from 'react';
-import css from './App.module.css';
+import css from './styles/App.module.css';
 import { AppRouter } from './routes/AppRouter';
 import { AnimatedBackground } from './components/common/AnimatedBackground';
 

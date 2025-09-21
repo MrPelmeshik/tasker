@@ -1,5 +1,5 @@
 import React from 'react';
-import css from './glass-button.module.css';
+import css from '../../styles/glass-button.module.css';
 
 type GlassButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'default' | 'primary' | 'danger';

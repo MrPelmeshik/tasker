@@ -88,7 +88,14 @@ export const LoginPage: React.FC = () => {
                 autoComplete="new-password"
               />
             )}
-            <GlassButton size="m" className={styles.submit} fullWidth={true}>{isRegister ? 'Зарегистрироваться' : 'Войти'}</GlassButton>
+            <GlassButton 
+                size="m" 
+                className={styles.submit}
+                fullWidth={true}
+                type="submit"
+            >
+                    {isRegister ? 'Зарегистрироваться' : 'Войти'}
+            </GlassButton>
           </form>
         </GlassWidget>
       </div>

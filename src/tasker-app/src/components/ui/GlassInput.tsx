@@ -1,5 +1,5 @@
 import React from 'react';
-import css from './glass-input.module.css';
+import css from '../../styles/glass-input.module.css';
 
 type GlassInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> & {
   label?: string;

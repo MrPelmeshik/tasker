@@ -5,7 +5,95 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: #0e0f12;
+  background: var(--color-bg);
+}
+
+/* Design tokens */
+:root {
+  /* Radius scale */
+  --radius-2xs: 6px;   /* tiny pills, nav links */
+  --radius-xs: 8px;    /* small badges, placeholders */
+  --radius-s: 10px;    /* small buttons, inputs */
+  --radius-m: 12px;    /* default buttons/inputs */
+  --radius-l: 14px;    /* large buttons/inputs */
+  --radius-xl: 16px;   /* cards, glass widgets */
+  --radius-2xl: 18px;  /* extra large buttons */
+  --radius-round: 50%; /* circle avatars */
+  --radius-none: 0px;  /* square corners */
+
+  /* Colors */
+  --white: 255 255 255;
+  --black: 0 0 0;
+  --color-bg: #0e0f12;
+  --color-bg-header: #0d0d0d;
+  --color-bg-surface: #121212;
+  --color-bg-active: #1a1a1a;
+  --color-border: #232323;
+  --color-text: #ffffff;
+  --color-text-muted: #dddddd;
+  --color-text-secondary: #aaaaaa;
+  --color-text-subtle: #9aa3ab;
+  --color-dashed: #333333;
+  --color-accent: 0 200 255; /* rgb tuple */
+  --color-danger: 255 64 64; /* rgb tuple */
+  --color-danger-text: #ff8080;
+
+  /* Spacing scale */
+  --space-0: 0px;
+  --space-2: 2px;
+  --space-3: 3px;
+  --space-4: 4px;
+  --space-6: 6px;
+  --space-8: 8px;
+  --space-10: 10px;
+  --space-12: 12px;
+  --space-14: 14px;
+  --space-16: 16px;
+  --space-18: 18px;
+  --space-20: 20px;
+  --space-24: 24px;
+  --space-28: 28px;
+  --space-32: 32px;
+
+  /* Font size scale */
+  --font-11: 11px;
+  --font-12: 12px;
+  --font-13: 13px;
+  --font-14: 14px;
+  --font-15: 15px;
+  --font-16: 16px;
+  --font-17: 17px;
+  --font-18: 18px;
+
+  /* Border widths */
+  --border-0: 0px;
+  --border-1: 1px;
+  --border-2: 2px;
+
+  /* Common sizes */
+  --size-18: 18px;
+  --size-28: 28px;
+  --size-32: 32px;
+  --size-40: 40px;
+  --size-col-task-min: 260px;
+
+  /* Blur radii */
+  --blur-6: 6px;
+  --blur-8: 8px;
+  --blur-10: 10px;
+
+  /* Scrollbar */
+  --scrollbar-size: 8px;
+
+  /* Shadows */
+  --shadow-elev-1: 0 8px 18px rgba(0,0,0,0.28);
+  --shadow-elev-2: 0 10px 22px rgba(0,0,0,0.32);
+  --shadow-elev-3: 0 12px 26px rgba(0,0,0,0.34);
+  --shadow-elev-4: 0 6px 16px rgba(0,0,0,0.26);
+  --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.30);
+  --shadow-inset-0: inset 0 1px 0 rgba(255,255,255,0.18);
+  --shadow-inset-1: inset 0 1px 0 rgba(255,255,255,0.22);
+  --shadow-inset-2: inset 0 1px 0 rgba(255,255,255,0.24);
 }
 
 code {
@@ -21,21 +109,21 @@ html, body, #root {
 /* Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: rgba(255,255,255,0.22) transparent;
+  scrollbar-color: rgb(var(--white) / 0.22) transparent;
 }
 
 /* WebKit */
 *::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+  width: var(--scrollbar-size);
+  height: var(--scrollbar-size);
 }
 *::-webkit-scrollbar-track {
-  background: rgba(255,255,255,0.06);
+  background: rgb(var(--white) / 0.06);
 }
 *::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.22);
-  border-radius: 8px;
+  background: rgb(var(--white) / 0.22);
+  border-radius: var(--radius-xs);
 }
 *::-webkit-scrollbar-thumb:hover {
-  background: rgba(255,255,255,0.30);
+  background: rgb(var(--white) / 0.30);
 }

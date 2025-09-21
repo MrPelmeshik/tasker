@@ -1,5 +1,5 @@
 import React from 'react';
-import css from './glass-toggle.module.css';
+import css from '../../styles/glass-toggle.module.css';
 
 type Size = 's' | 'm' | 'l';
 

@@ -6,28 +6,19 @@
 
 .toolbar {
   display: flex;
-  gap: 8px;
-  margin-bottom: 12px;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
   align-items: center;
 }
 
 .spacer { flex: 1; }
 
-.btn {
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.12);
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 8px;
-  cursor: pointer;
-}
-
-.btn:hover { background: rgba(255,255,255,0.10); }
+/* Removed local .btn overrides; GlassButton handles button styling */
 
 .gridWrapper {
   overflow: auto;
   border: none;
-  border-radius: 0;
+  border-radius: var(--radius-none);
   position: relative;
 }
 
@@ -46,20 +37,20 @@
   top: 0;
   background: transparent;
   z-index: 2;
-  border-bottom: 1px solid rgba(255,255,255,0.14);
+  border-bottom: var(--border-1) solid rgb(var(--white) / 0.14);
 }
 
 .th, .td {
-  padding: 2px 4px;
+  padding: var(--space-2) var(--space-4);
   white-space: nowrap;
-  border-bottom: 1px solid rgba(255,255,255,0.06);
+  border-bottom: var(--border-1) solid rgb(var(--white) / 0.06);
 }
 
 /* Removed thin separators to keep grid clean */
 
 /* Heavier separator before task column (after future) */
 .th.colFuture, .td.colFuture {
-  border-right: 2px solid rgba(255,255,255,0.16);
+  border-right: var(--border-2) solid rgb(var(--white) / 0.16);
 }
 
 /* Remove outer bottom border on last row */
@@ -69,7 +60,7 @@
 
 /* Row hover shading */
 .table tbody tr:hover .td {
-  background-color: rgba(255,255,255,0.03);
+  background-color: rgb(var(--white) / 0.03);
 }
 
 /* Column hover shading across the whole column (requires :has support) */
@@ -114,34 +105,34 @@
 
 .colCarry, .colFuture {
   text-align: center;
-  width: 40px;
+  width: var(--size-40);
 }
 
 /* Make carry weeks count smaller and dimmer */
-.td.colCarry { font-size: 11px; color: #9aa3ab; }
+.td.colCarry { font-size: var(--font-11); color: var(--color-text-subtle); }
 
 .colTask {
-  min-width: 260px;
+  min-width: var(--size-col-task-min);
   width: 100%;
 }
 
 .colDay {
   text-align: center;
-  width: 32px;
+  width: var(--size-32);
 }
 
 .heatCell {
   position: relative;
   display: inline-block;
-  width: 18px;
-  height: 18px;
-  border-radius: 5px;
-  border: 1px solid rgba(255,255,255,0.08);
-  backdrop-filter: blur(6px) saturate(140%);
-  -webkit-backdrop-filter: blur(6px) saturate(140%);
+  width: var(--size-18);
+  height: var(--size-18);
+  border-radius: calc(var(--radius-xs) - var(--space-3));
+  border: var(--border-1) solid rgb(var(--white) / 0.08);
+  backdrop-filter: blur(var(--blur-6)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur-6)) saturate(140%);
   background:
     linear-gradient(var(--heat, rgba(0, 200, 255, 0.06)), var(--heat, rgba(0, 200, 255, 0.06)));
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.12);
+  box-shadow: inset 0 1px 0 rgb(var(--white) / 0.12);
   will-change: transform, border-radius, box-shadow, filter;
   transition:
     transform 650ms ease-in-out,
@@ -161,9 +152,9 @@
 .intensity5 { --heat: rgba(0, 200, 255, 0.44); }
 
 .heatCell:hover {
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.20);
+  box-shadow: inset 0 1px 0 rgb(var(--white) / 0.20);
   transform: scale(1.25);
-  border-radius: 50%;
+  border-radius: var(--radius-round);
   filter: saturate(1.08) brightness(1.08);
   z-index: 1;
   transition:
@@ -183,8 +174,8 @@
 .heatCell:focus-visible {
   outline: none;
   transform: scale(1.25);
-  border-radius: 50%;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,0.18);
+  border-radius: var(--radius-round);
+  box-shadow: inset 0 1px 0 rgb(var(--white) / 0.18);
   z-index: 1;
   animation: jellyBlob 700ms ease-in-out both;
 }
@@ -205,6 +196,4 @@
   }
 }
 
-.muted { color: #9aa3ab; }
-
-
+.muted { color: var(--color-text-subtle); }
