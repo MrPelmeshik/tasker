@@ -1,0 +1,88 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  align-items: center;
+}
+
+.spacer { flex: 1; }
+
+.btn {
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.btn:hover { background: rgba(255,255,255,0.10); }
+
+.gridWrapper {
+  overflow: auto;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}
+
+.thead th {
+  position: sticky;
+  top: 0;
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 1;
+}
+
+.th, .td {
+  padding: 6px 8px;
+  white-space: nowrap;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.colCarry, .colFuture {
+  text-align: center;
+  width: 56px;
+}
+
+.colTask {
+  min-width: 260px;
+  width: 100%;
+}
+
+.colDay {
+  text-align: center;
+  width: 44px;
+}
+
+.heatCell {
+  display: inline-block;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0, 200, 255, 0.06);
+}
+
+.intensity0 { background: rgba(0, 200, 255, 0.06); }
+.intensity1 { background: rgba(0, 200, 255, 0.14); }
+.intensity2 { background: rgba(0, 200, 255, 0.24); }
+.intensity3 { background: rgba(0, 200, 255, 0.34); }
+.intensity4 { background: rgba(0, 200, 255, 0.46); }
+.intensity5 { background: rgba(0, 200, 255, 0.60); }
+
+.muted { color: #9aa3ab; }
+
+

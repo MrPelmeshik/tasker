@@ -36,14 +36,6 @@
   opacity: 0;
 }
 
-/* Если нужен динамический блик, можно добавить класс .highlighted к glass */
-.glass.highlighted::after {
-  background: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.0) 60%);
-  opacity: 0.7;
-  transition: opacity 0.3s;
-}
-
-
 .title {
   margin: 0 0 12px 0;
   font-size: 18px;
@@ -59,10 +51,8 @@
   min-height: 0;
 }
 
-/* When there is no title, let content use the full height without top gap */
-.noTitle .content { margin-top: 0; }
 
-/* Placeholder utility for empty widget content */
+
 .placeholder {
   height: 100%;
   min-height: 0;
