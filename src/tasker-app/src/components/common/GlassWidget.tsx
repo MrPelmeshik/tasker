@@ -6,6 +6,7 @@ type GlassWidgetProps = PropsWithChildren<{
   title?: string;
   colSpan?: ColumnSpan;
   rowSpan?: RowSpan;
+  className?: string;
 }>;
 
 function usePanelColumns(): number {
@@ -28,7 +29,7 @@ function usePanelColumns(): number {
   return columns;
 }
 
-export const GlassWidget: React.FC<GlassWidgetProps> = ({ title, colSpan = 1, rowSpan = 1, children }) => {
+export const GlassWidget: React.FC<GlassWidgetProps> = ({ title, colSpan = 1, rowSpan = 1, className, children }) => {
   const columns = usePanelColumns();
   const effectiveColSpan = colSpan === 'full' ? 'full' : Math.max(1, Math.min(colSpan, columns));
   const gridColumn = effectiveColSpan === 'full' ? '1 / -1' : `span ${effectiveColSpan}`;
@@ -36,8 +37,9 @@ export const GlassWidget: React.FC<GlassWidgetProps> = ({ title, colSpan = 1, ro
   const style: React.CSSProperties = { gridColumn, gridRow };
   const hasTitle = !!(typeof title === 'string' ? title.trim() : title);
 
+  const classes = [css.glass, className].filter(Boolean).join(' ');
   return (
-    <section className={css.glass} style={style}>
+    <section className={classes} style={style}>
       {hasTitle && <h3 className={css.title}>{title}</h3>}
       <div className={css.content}>{children}</div>
     </section>

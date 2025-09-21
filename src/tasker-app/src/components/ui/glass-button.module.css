@@ -64,6 +64,8 @@
 
 .inner { position: relative; z-index: 1; }
 
+.fullWidth { display: flex; width: 100%; }
+
 .primary { border-color: rgba(0, 200, 255, 0.28); }
 .primary:hover { border-color: rgba(0, 200, 255, 0.42); }
 .primary:active { border-color: rgba(0, 200, 255, 0.52); }
