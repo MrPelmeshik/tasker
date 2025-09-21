@@ -1,18 +1,27 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/login-page.module.css';
 import { GlassInput } from '../components/ui/GlassInput';
 import { GlassButton } from '../components/ui/GlassButton';
 import { GlassWidget } from '../components/common/GlassWidget';
 import { GlassToggle } from '../components/ui/GlassToggle';
+import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const [name, setName] = React.useState<string>('');
-  const [password, setPassword] = React.useState<string>('');
+  const { login, isAuth } = useAuth();
+  const [name, setName] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
   const [confirm, setConfirm] = React.useState<string>('');
-  const [isRegister, setIsRegister] = React.useState<boolean>(false);
-  const [error, setError] = React.useState<string | undefined>();
+  const [isRegister, setIsRegister] = useState<boolean>(false);
+  const [error, setError] = useState<string | undefined>();
+
+  useEffect(() => {
+    if (isAuth) {
+      navigate('/tasker', { replace: true });
+    }
+  }, [isAuth, navigate]);
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,9 +40,7 @@ export const LoginPage: React.FC = () => {
         return;
       }
     }
-    try {
-      window.localStorage.setItem('userName', trimmed);
-    } catch {}
+    login(trimmed);
     navigate('/tasker');
   };
 

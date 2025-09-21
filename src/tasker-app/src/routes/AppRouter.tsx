@@ -4,6 +4,7 @@ import { TaskerPage } from '../pages/TaskerPage';
 import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { Header } from '../components/common/Header';
+import { ProtectedRoute } from './ProtectedRoute';
 
 export const AppRouter: React.FC = () => {
   return (
@@ -21,9 +22,13 @@ const RouterContent: React.FC = () => {
       {showHeader && <Header />}
       <div>
         <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<Navigate to="/tasker" replace />} />
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/tasker" element={<TaskerPage />} />
+          <Route path="/tasker" element={
+            <ProtectedRoute>
+              <TaskerPage />
+            </ProtectedRoute>
+          } />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </div>

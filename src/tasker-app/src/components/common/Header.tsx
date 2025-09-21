@@ -2,27 +2,14 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import styles from '../../styles/header.module.css';
 import { GlassButton } from '../ui/GlassButton';
+import { useAuth } from '../../context/AuthContext';
 
 export const Header: React.FC = () => {
-  const [userName, setUserName] = React.useState<string>('Гость');
   const navigate = useNavigate();
-
-  React.useEffect(() => {
-    try {
-      const stored = window.localStorage.getItem('userName');
-      if (stored && stored.trim().length > 0) {
-        setUserName(stored);
-      }
-    } catch {}
-  }, []);
-
-  const navClass = ({ isActive }: { isActive: boolean }) =>
-    isActive ? styles.navLinkActive : styles.navLink;
+  const { userName, isAuth, logout } = useAuth();
 
   const handleLogout = () => {
-    try {
-      window.localStorage.removeItem('userName');
-    } catch {}
+    logout();
     navigate('/login');
   };
 
@@ -42,10 +29,10 @@ export const Header: React.FC = () => {
         </nav>
       </div>
       <div className={styles.right}>
-        <div className={styles.user} title={userName}>
+        <div className={styles.user} title={userName ?? 'Гость'}>
           <div className={styles.avatar} aria-hidden />
-          <span className={styles.userName}>{userName}</span>
-          {userName !== 'Гость' && (
+          <span className={styles.userName}>{userName ?? 'Гость'}</span>
+          {isAuth && (
             <GlassButton 
               size="s" 
               onClick={handleLogout}
