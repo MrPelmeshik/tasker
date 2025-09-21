@@ -4,11 +4,14 @@ import styles from '../styles/login-page.module.css';
 import { GlassInput } from '../components/ui/GlassInput';
 import { GlassButton } from '../components/ui/GlassButton';
 import { GlassWidget } from '../components/common/GlassWidget';
+import { GlassToggle } from '../components/ui/GlassToggle';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [name, setName] = React.useState<string>('');
   const [password, setPassword] = React.useState<string>('');
+  const [confirm, setConfirm] = React.useState<string>('');
+  const [isRegister, setIsRegister] = React.useState<boolean>(false);
   const [error, setError] = React.useState<string | undefined>();
 
   const onSubmit = (e: React.FormEvent) => {
@@ -17,6 +20,16 @@ export const LoginPage: React.FC = () => {
     if (trimmed.length < 2) {
       setError('Введите имя (минимум 2 символа)');
       return;
+    }
+    if (isRegister) {
+      if (password.trim().length < 4) {
+        setError('Пароль слишком короткий (минимум 4 символа)');
+        return;
+      }
+      if (password !== confirm) {
+        setError('Пароли не совпадают');
+        return;
+      }
     }
     try {
       window.localStorage.setItem('userName', trimmed);
@@ -27,11 +40,23 @@ export const LoginPage: React.FC = () => {
   return (
     <div className={styles.root}>
       <div className={styles.centerWrap}>
-        <GlassWidget title="Вход" className={styles.card}>
+        <GlassWidget className={styles.card}>
+          <div className={styles.toggleWrap}>
+            <GlassToggle
+              value={isRegister ? 'register' : 'login'}
+              onChange={(v) => { setIsRegister(v === 'register'); setError(undefined); }}
+              options={[
+                { key: 'login', label: 'Вход' },
+                { key: 'register', label: 'Регистрация' },
+              ]}
+              size="m"
+              equalWidth
+            />
+          </div>
           <form className={styles.form} onSubmit={onSubmit}>
             <GlassInput
               fullWidth
-              size="m"
+              size="l"
               label="Имя пользователя"
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -43,7 +68,7 @@ export const LoginPage: React.FC = () => {
             />
             <GlassInput
               fullWidth
-              size="m"
+              size="l"
               type="password"
               label="Пароль"
               value={password}
@@ -51,7 +76,19 @@ export const LoginPage: React.FC = () => {
               placeholder="Введите пароль"
               autoComplete="current-password"
             />
-            <GlassButton size="m" className={styles.submit}>Войти</GlassButton>
+            {isRegister && (
+              <GlassInput
+                fullWidth
+                size="m"
+                type="password"
+                label="Повторите пароль"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                placeholder="Повторите пароль"
+                autoComplete="new-password"
+              />
+            )}
+            <GlassButton size="m" className={styles.submit} fullWidth={true}>{isRegister ? 'Зарегистрироваться' : 'Войти'}</GlassButton>
           </form>
         </GlassWidget>
       </div>

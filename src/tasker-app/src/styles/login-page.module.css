@@ -2,8 +2,9 @@
   position: relative;
   min-height: 100vh;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 12vh;
 }
 
 .centerWrap {
@@ -26,10 +27,30 @@
   align-items: flex-start;
 }
 
+.toggleWrap { margin-bottom: 8px; }
+
 .submit {
   transform: translateZ(0);
   animation: fadeUp 520ms 120ms cubic-bezier(.2,.8,.2,1) both;
 }
+
+.switchRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.switchText { color: #aaa; font-size: 13px; }
+.switchBtn {
+  background: none;
+  border: none;
+  color: #6fdcff;
+  padding: 0;
+  font-size: 13px;
+  cursor: pointer;
+}
+.switchBtn:hover { text-decoration: underline; }
 
 @keyframes floatIn {
   from { opacity: 0; transform: translate3d(0, 12px, 0) scale(0.98); }
