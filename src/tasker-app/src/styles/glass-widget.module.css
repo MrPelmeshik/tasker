@@ -59,6 +59,9 @@
   min-height: 0;
 }
 
+/* When there is no title, let content use the full height without top gap */
+.noTitle .content { margin-top: 0; }
+
 /* Placeholder utility for empty widget content */
 .placeholder {
   height: 100%;

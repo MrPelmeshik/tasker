@@ -34,10 +34,12 @@ export const GlassWidget: React.FC<GlassWidgetProps> = ({ title, colSpan = 1, ro
   const gridColumn = effectiveColSpan === 'full' ? '1 / -1' : `span ${effectiveColSpan}`;
   const gridRow = rowSpan === 'full' ? '1 / -1' : `span ${rowSpan}`;
   const style: React.CSSProperties = { gridColumn, gridRow };
+  const hasTitle = !!(typeof title === 'string' ? title.trim() : title);
+  const sectionClassName = hasTitle ? css.glass : `${css.glass} ${css.noTitle}`;
 
   return (
-    <section className={css.glass} style={style}>
-      {title && <h3 className={css.title}>{title}</h3>}
+    <section className={sectionClassName} style={style}>
+      {hasTitle && <h3 className={css.title}>{title}</h3>}
       <div className={css.content}>{children}</div>
     </section>
   );
