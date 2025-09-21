@@ -16,7 +16,13 @@ export const LoginPage: React.FC = () => {
   const [confirm, setConfirm] = React.useState<string>('');
   const [isRegister, setIsRegister] = useState<boolean>(false);
   const [error, setError] = useState<string | undefined>();
+  const [errorDetails, setErrorDetails] = useState<string | undefined>();
   const [loading, setLoading] = useState<boolean>(false);
+
+  const clearError = () => {
+    setError(undefined);
+    setErrorDetails(undefined);
+  }
 
   useEffect(() => {
     if (isAuth) {
@@ -45,12 +51,12 @@ export const LoginPage: React.FC = () => {
 
     try {
       setLoading(true);
-      setError(undefined);
+      clearError();
       await login(trimmed, password);
       navigate('/tasker');
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ошибка входа';
-      setError(msg);
+      setError('Серверная ошибка');
+      setErrorDetails(err instanceof Error ? err.message : 'Ошибка входа');
     } finally {
       setLoading(false);
     }
@@ -63,7 +69,7 @@ export const LoginPage: React.FC = () => {
           <div className={styles.toggleWrap}>
             <GlassToggle
               value={isRegister ? 'register' : 'login'}
-              onChange={(v) => { setIsRegister(v === 'register'); setError(undefined); }}
+              onChange={(v) => { setIsRegister(v === 'register'); clearError(); }}
               options={[
                 { key: 'login', label: 'Вход' },
                 { key: 'register', label: 'Регистрация' },
@@ -81,7 +87,8 @@ export const LoginPage: React.FC = () => {
               onChange={(e) => setName(e.target.value)}
               placeholder="Например: alex@example.com"
               errorText={error}
-              onFocus={() => setError(undefined)}
+              errorDetails={errorDetails}
+              onFocus={() => clearError()}
               autoFocus
               autoComplete="username"
             />
