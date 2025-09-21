@@ -16,6 +16,7 @@ export const LoginPage: React.FC = () => {
   const [confirm, setConfirm] = React.useState<string>('');
   const [isRegister, setIsRegister] = useState<boolean>(false);
   const [error, setError] = useState<string | undefined>();
+  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     if (isAuth) {
@@ -23,7 +24,7 @@ export const LoginPage: React.FC = () => {
     }
   }, [isAuth, navigate]);
 
-  const onSubmit = (e: React.FormEvent) => {
+  const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
     if (trimmed.length < 2) {
@@ -39,9 +40,20 @@ export const LoginPage: React.FC = () => {
         setError('Пароли не совпадают');
         return;
       }
+      // TODO: implement registration endpoint usage if needed
     }
-    login(trimmed);
-    navigate('/tasker');
+
+    try {
+      setLoading(true);
+      setError(undefined);
+      await login(trimmed, password);
+      navigate('/tasker');
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ошибка входа';
+      setError(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -64,10 +76,10 @@ export const LoginPage: React.FC = () => {
             <GlassInput
               fullWidth
               size="l"
-              label="Имя пользователя"
+              label="Имя пользователя или email"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Например: Алексей"
+              placeholder="Например: alex@example.com"
               errorText={error}
               onFocus={() => setError(undefined)}
               autoFocus
@@ -100,8 +112,9 @@ export const LoginPage: React.FC = () => {
                 className={styles.submit}
                 fullWidth={true}
                 type="submit"
+                disabled={loading}
             >
-                    {isRegister ? 'Зарегистрироваться' : 'Войти'}
+                    {loading ? 'Входим…' : isRegister ? 'Зарегистрироваться' : 'Войти'}
             </GlassButton>
           </form>
         </GlassWidget>

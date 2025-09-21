@@ -5,6 +5,8 @@ using TaskerApi.Models.Responses;
 using System.Security.Claims;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Options;
 
 namespace TaskerApi.Controllers;
 
@@ -18,13 +20,16 @@ public class AuthController : ControllerBase
 {
     private readonly IAuthService _authService;
     private readonly ILogger<AuthController> _logger;
+    private readonly JwtSettings _jwt;
 
     public AuthController(
         IAuthService authService,
-        ILogger<AuthController> logger)
+        ILogger<AuthController> logger,
+        IOptions<JwtSettings> jwtOptions)
     {
         _authService = authService;
         _logger = logger;
+        _jwt = jwtOptions.Value;
     }
 
     /// <summary>
@@ -56,8 +61,19 @@ public class AuthController : ControllerBase
 
             var result = await _authService.LoginAsync(request);
 
-            if (result.Success)
+            if (result.Success && result.Data != null)
             {
+                var refreshToken = result.Data.RefreshToken;
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase),
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/api/auth",
+                    Expires = DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays)
+                };
+                Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+
                 return Ok(result);
             }
 
@@ -130,20 +146,31 @@ public class AuthController : ControllerBase
     {
         try
         {
-            if (!ModelState.IsValid)
+            // Пытаемся взять refresh токен из httpOnly cookie
+            if (Request.Cookies.TryGetValue("refreshToken", out var cookieRefresh) && !string.IsNullOrWhiteSpace(cookieRefresh))
             {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .ToList();
+                request.RefreshToken = cookieRefresh;
+            }
 
-                return BadRequest(ApiResponse<RefreshTokenResponse>.ErrorResult("Ошибка валидации", errors));
+            if (string.IsNullOrWhiteSpace(request.RefreshToken))
+            {
+                return BadRequest(ApiResponse<RefreshTokenResponse>.ErrorResult("Refresh токен отсутствует"));
             }
 
             var result = await _authService.RefreshTokenAsync(request);
 
-            if (result.Success)
+            if (result.Success && result.Data != null)
             {
+                // Обновляем httpOnly cookie новым refresh токеном
+                var cookieOptions = new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase),
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/api/auth",
+                    Expires = DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays)
+                };
+                Response.Cookies.Append("refreshToken", result.Data.RefreshToken, cookieOptions);
                 return Ok(result);
             }
 
@@ -181,6 +208,19 @@ public class AuthController : ControllerBase
                     .ToList();
 
                 return BadRequest(ApiResponse<object>.ErrorResult("Ошибка валидации", errors));
+            }
+
+            // Отзываем refresh cookie
+            if (Request.Cookies.ContainsKey("refreshToken"))
+            {
+                Response.Cookies.Append("refreshToken", string.Empty, new CookieOptions
+                {
+                    HttpOnly = true,
+                    Secure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase),
+                    SameSite = SameSiteMode.Lax,
+                    Path = "/api/auth",
+                    Expires = DateTimeOffset.UnixEpoch
+                });
             }
 
             var result = await _authService.LogoutAsync(request);

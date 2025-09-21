@@ -20,6 +20,35 @@ builder.Services.AddControllers();
 // Добавляем AutoMapper
 builder.Services.AddAutoMapper(typeof(Program));
 
+// Конфигурация CORS из переменных окружения/конфига
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var allowedOriginsCsv = builder.Configuration["Cors:AllowedOriginsCsv"];
+if (!string.IsNullOrWhiteSpace(allowedOriginsCsv))
+{
+	var csv = allowedOriginsCsv
+		.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
+	allowedOrigins = allowedOrigins.Concat(csv).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
+}
+
+builder.Services.AddCors(options =>
+{
+	options.AddPolicy("DefaultCors", policy =>
+	{
+		if (allowedOrigins.Length > 0)
+		{
+			policy.WithOrigins(allowedOrigins)
+				.AllowAnyHeader()
+				.AllowAnyMethod()
+				.AllowCredentials();
+		}
+		else
+		{
+			// Без заданных origins разрешаем любые запросы БЕЗ учёта куки (не для refresh)
+			policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+		}
+	});
+});
+
 // Конфигурация настроек базы данных
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 
@@ -41,7 +70,7 @@ foreach (var tableMetaInfoType in dbEntityTypes
              .Select(entityType => typeof(TableMetaInfo<>)
                  .MakeGenericType(entityType)))
 {
-    builder.Services.AddSingleton(tableMetaInfoType);
+	builder.Services.AddSingleton(tableMetaInfoType);
 }
 
 
@@ -168,6 +197,7 @@ if (app.Environment.IsDevelopment())
 
 // app.UseHttpsRedirection();
 
+app.UseCors("DefaultCors");
 app.UseAuthentication();
 app.UseAuthorization();
 

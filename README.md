@@ -35,3 +35,51 @@ PWD_PG_TASKER_DB_TASKER_API=...
 ### Если не проходит "ребилд" `docker-compose up --build`
 1. Перезапустить Docker
 2. Повторить выполнение команды `docker-compose up --build`
+
+---
+
+## Переменные окружения для сервера (TaskerApi)
+
+Обязательные/рекомендуемые переменные для продакшена:
+
+```
+# Базовые
+ASPNETCORE_ENVIRONMENT=Production
+# При необходимости: на каких адресах слушать
+# ASPNETCORE_URLS=http://0.0.0.0:5000;https://0.0.0.0:5001
+
+# JWT
+Jwt__Issuer=TaskerApi
+Jwt__Audience=TaskerApiAudience
+# Секрет длиной 32+ символов (случайный)
+Jwt__SecretKey=CHANGE_ME_TO_A_LONG_RANDOM_SECRET_32+_CHARS
+Jwt__AccessTokenLifetimeMinutes=60
+Jwt__RefreshTokenLifetimeDays=7
+
+# CORS (разрешённые Origin для фронтенда). Укажите конкретные URL через CSV
+Cors__AllowedOriginsCsv=https://your-frontend.example.com,http://localhost:3000
+# Либо массивом в appsettings.json -> Cors:AllowedOrigins
+
+# База данных
+# Вариант 1: задать пароль, если используется плейсхолдер из appsettings.json
+PWD_PG_DB_POSTGRES=...
+# Вариант 2: переопределить всю строку подключения напрямую (имеет приоритет над appsettings)
+# Database__ConnectionString=Host=postgres;Port=5432;Database=tasker_db;Username=postgres;Password=...
+```
+
+Замечания:
+- Для httpOnly refresh-cookie включён `SameSite=Lax`, `Path=/api/auth`, `Secure=true` при HTTPS. В продакшене используйте HTTPS, иначе cookie с `Secure` не будет отправляться.
+- Если фронт и бэкенд на разных доменах/портах, обязательно укажите точные Origins в `Cors__AllowedOriginsCsv` и вызывайте запросы с `credentials: 'include'` на фронте (уже настроено в клиенте для login/refresh/logout).
+
+## Переменные окружения для фронтенда (tasker-app)
+
+Создайте `src/tasker-app/.env` (или задайте переменные на хостинге):
+
+```
+# Базовый URL API (с префиксом /api)
+REACT_APP_API_BASE=https://api.example.com/api
+```
+
+Примечания по аутентификации:
+- Фронт хранит только access-токен (в sessionStorage). Refresh-токен хранится на стороне сервера в httpOnly cookie и не доступен JS.
+- Вызовы `/auth/login`, `/auth/refresh`, `/auth/logout` отправляются с `credentials: 'include'` для обмена cookie.
