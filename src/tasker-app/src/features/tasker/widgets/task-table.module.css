@@ -136,6 +136,9 @@
   width: 40px;
 }
 
+/* Make carry weeks count smaller and dimmer */
+.td.colCarry { font-size: 11px; color: #9aa3ab; }
+
 .colTask {
   min-width: 260px;
   width: 100%;

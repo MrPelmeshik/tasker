@@ -1,0 +1,87 @@
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: #fff;
+  cursor: pointer;
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  backdrop-filter: blur(8px) saturate(140%);
+  -webkit-backdrop-filter: blur(8px) saturate(140%);
+  box-shadow:
+    0 8px 18px rgba(0,0,0,0.28),
+    inset 0 1px 0 rgba(255,255,255,0.22);
+  transition: box-shadow 220ms ease, background 220ms ease, border-color 220ms ease, filter 220ms ease;
+}
+
+.btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  transition: box-shadow 220ms ease;
+}
+
+.btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.22), transparent 60%);
+}
+
+.btn:hover {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+  box-shadow:
+    0 10px 22px rgba(0,0,0,0.32),
+    inset 0 1px 0 rgba(255,255,255,0.26);
+  filter: saturate(1.04) brightness(1.03);
+  border-color: rgba(255,255,255,0.18);
+}
+
+.btn:hover::after {
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.10);
+}
+
+.btn:active {
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+  box-shadow:
+    0 6px 16px rgba(0,0,0,0.26),
+    inset 0 2px 6px rgba(0,0,0,0.28);
+  filter: saturate(1.0) brightness(0.98);
+  border-color: rgba(255,255,255,0.22);
+}
+
+.inner { position: relative; z-index: 1; }
+
+.primary { border-color: rgba(0, 200, 255, 0.28); }
+.primary:hover { border-color: rgba(0, 200, 255, 0.42); }
+.primary:active { border-color: rgba(0, 200, 255, 0.52); }
+.danger { border-color: rgba(255, 64, 64, 0.28); }
+.danger:hover { border-color: rgba(255, 64, 64, 0.42); }
+.danger:active { border-color: rgba(255, 64, 64, 0.52); }
+
+.xxs { padding: 2px 6px;  border-radius: 8px;  font-size: 11px; }
+.xs  { padding: 4px 8px;  border-radius: 9px;  font-size: 12px; }
+.s   { padding: 6px 10px; border-radius: 10px; font-size: 13px; }
+.m   { padding: 8px 12px; border-radius: 12px; font-size: 14px; }
+.l   { padding: 10px 14px; border-radius: 12px; font-size: 15px; }
+.xl  { padding: 12px 16px; border-radius: 14px; font-size: 16px; }
+.xxl { padding: 14px 18px; border-radius: 16px; font-size: 17px; }
+.xxxl{ padding: 16px 20px; border-radius: 18px; font-size: 18px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn { transition: none; }
+}
+
+

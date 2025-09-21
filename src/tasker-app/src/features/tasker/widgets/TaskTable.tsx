@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { GlassWidget } from '../../../components/common/GlassWidget';
+import { GlassButton } from '../../../components/ui/GlassButton';
 import type { WidgetSizeProps } from '../../../types/widget-size';
 import css from './task-table.module.css';
 import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity } from '../../../services/api/tasks';
@@ -61,12 +62,12 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const daysHeader = useMemo(() => buildWeekDays(weekStartIso), [weekStartIso]);
 
   return (
-    <GlassWidget title="Таблица задач" colSpan={colSpan} rowSpan={rowSpan}>
+    <GlassWidget colSpan={colSpan} rowSpan={rowSpan}>
       <div className={css.container}>
         <div className={css.toolbar}>
-          <button className={css.btn} onClick={() => go('prev')}>Пред. неделя</button>
-          <button className={css.btn} onClick={() => go('current')}>Текущая</button>
-          <button className={css.btn} onClick={() => go('next')}>След. неделя</button>
+          <GlassButton size="s" onClick={() => go('prev')}>Пред. неделя</GlassButton>
+          <GlassButton size="s" onClick={() => go('current')}>Текущая</GlassButton>
+          <GlassButton size="s" onClick={() => go('next')}>След. неделя</GlassButton>
           <div className={css.spacer} />
           <span className={css.muted}>{weekStartIso}</span>
         </div>
@@ -101,8 +102,8 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       ) : null}
                     </td>
                   ))}
-                  <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>{task.hasFutureActivities ? '✓' : ''}</td>
-                  <td className={`${css.td} ${css.colTask}`}>{task.taskName}</td>
+                  <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>{task.hasFutureActivities ? '→' : ''}</td>
+                  <td className={`${css.td} ${css.colTask}`}><GlassButton size="xxs" onClick={() => {}} style={{ marginRight: '4px' }}>+</GlassButton>{task.taskName}</td>
                 </tr>
               ))}
             </tbody>
