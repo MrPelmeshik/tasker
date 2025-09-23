@@ -1,0 +1,8 @@
+FROM postgres:17-alpine
+
+# Copy initialization scripts (executed on first run by the official entrypoint)
+COPY ./scripts/init/* /docker-entrypoint-initdb.d/
+
+# Health check
+HEALTHCHECK CMD pg_isready
+

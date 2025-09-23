@@ -1,0 +1,87 @@
+services:
+
+  postgres:
+    build:
+      context: ./docker/postgres
+      dockerfile: ./dockerfile
+    restart: always
+    container_name: postgres
+    hostname: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - db-pg-data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=${DB_PG_PWD_POSTGRES:?DB_PG_PWD_POSTGRES is required}
+      - POSTGRES_DB=default
+    command: ['postgres', '-c', 'wal_level=logical']
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  migrator:
+    container_name: migrator
+    build:
+      context: ./src/migrator
+      dockerfile: ./Migrator/Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command: ["--host", "postgres", "--port", "5432", "--user", "postgres", "--password-env", "DB_PG_PWD_POSTGRES", "--scripts", "/app/scripts"]
+    environment:
+      - DB_PG_PWD_POSTGRES=${DB_PG_PWD_POSTGRES:?DB_PG_PWD_POSTGRES is required}
+    volumes:
+      - ./docker/postgres/scripts/migrations:/app/scripts
+
+  tasker-api:
+    container_name: tasker-api
+    hostname: tasker-api
+    build:
+      context: ./src/tasker-api
+      dockerfile: ./TaskerApi/Dockerfile
+      args:
+        - BUILD_CONFIGURATION=${BUILD_CONFIGURATION:?BUILD_CONFIGURATION is required}
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      - Jwt__Issuer=${JWT_ISSUER:?JWT_ISSUER is required}
+      - Jwt__Audience=${JWT_AUDIENCE:?JWT_AUDIENCE is required}
+      - Jwt__AccessTokenLifetimeMinutes=${JWT_ACCESS_TOKEN_LIFETIME_MINUTES:?JWT_ACCESS_TOKEN_LIFETIME_MINUTES is required}
+      - Jwt__RefreshTokenLifetimeDays=${JWT_REFRESH_TOKEN_LIFETIME_DAYS:?JWT_REFRESH_TOKEN_LIFETIME_DAYS is required}
+      - DB_PG_PWD_POSTGRES=${DB_PG_PWD_POSTGRES:?DB_PG_PWD_POSTGRES is required}
+      - ASPNETCORE_ENVIRONMENT=${ASPNETCORE_ENVIRONMENT:?ASPNETCORE_ENVIRONMENT is required}
+      - ASPNETCORE_URLS=${ASPNETCORE_URLS:?ASPNETCORE_URLS is required}
+      - Cors__AllowedOriginsCsv=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    
+  tasker-app:
+    container_name: tasker-app
+    hostname: tasker-app
+    build:
+      context: ./src/tasker-app
+      dockerfile: ./Dockerfile
+      args:
+        - REACT_APP_API_BASE=${REACT_APP_API_BASE:?REACT_APP_API_BASE is required}
+    depends_on:
+      tasker-api:
+        condition: service_healthy
+    ports:
+      - "3000:3000"
+      
+
+volumes:
+    db-pg-data:
