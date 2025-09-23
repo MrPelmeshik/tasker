@@ -9,22 +9,6 @@ namespace TaskerApi.Interfaces.Providers;
 public interface IUserAreaAccessProvider : IBaseProvider<UserAreaAccessEntity, Guid>
 {
     /// <summary>
-    /// Проверить, есть ли у пользователя доступ к области
-    /// </summary>
-    /// <param name="connection">Соединение с БД</param>
-    /// <param name="userId">ID пользователя</param>
-    /// <param name="areaId">ID области</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <param name="transaction">Транзакция</param>
-    /// <returns>True, если доступ есть</returns>
-    Task<bool> HasAccessAsync(
-        IDbConnection connection, 
-        Guid userId, 
-        Guid areaId, 
-        CancellationToken cancellationToken, 
-        IDbTransaction? transaction = null);
-
-    /// <summary>
     /// Получить список областей, к которым у пользователя есть доступ
     /// </summary>
     /// <param name="connection">Соединение с БД</param>

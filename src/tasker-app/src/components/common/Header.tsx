@@ -26,6 +26,12 @@ export const Header: React.FC = () => {
             >
               Задачник
             </GlassButton>
+            <GlassButton 
+              size="l"
+              onClick={() => navigate('/management')}
+            >
+              Управление
+            </GlassButton>
         </nav>
       </div>
       <div className={styles.right}>

@@ -17,7 +17,7 @@ public class AreaService(
     IUserAreaAccessProvider userAreaAccessProvider)
     : IAreaService
 {
-    public async Task<IEnumerable<AreaResponse>> GetAsync(CancellationToken cancellationToken)
+    public async Task<IEnumerable<AreaResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
 
@@ -49,6 +49,49 @@ public class AreaService(
         }
     }
 
+    public async Task<AreaResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            var item = await areaProvider.GetByIdAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
+            
+            if (item == null)
+            {
+                await uow.CommitAsync(cancellationToken);
+                return null;
+            }
+            
+            if (!currentUser.AccessibleAreas.Contains(item.Id))
+            {
+                throw new UnauthorizedAccessException("Нет доступа к указанной области");
+            }
+
+            await uow.CommitAsync(cancellationToken);
+            return new AreaResponse
+            {
+                Id = item.Id,
+                Title = item.Title,
+                Description = item.Description,
+                CreatorUserId = item.CreatorUserId,
+                CreatedAt = item.CreatedAt,
+                UpdatedAt = item.UpdatedAt,
+                IsActive = item.IsActive,
+                DeactivatedAt = item.DeactivatedAt
+            };
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
     public async Task<AreaCreateResponse> CreateAsync(AreaCreateRequest item, CancellationToken cancellationToken)
     {
         await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
@@ -59,14 +102,16 @@ public class AreaService(
                 uow.Connection,
                 new AreaEntity()
                 {
+                    Id = Guid.NewGuid(),
                     Title = item.Title,
                     Description = item.Description,
+                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,
                 true);
 
-            var userAreaAccess = userAreaAccessProvider
+            await userAreaAccessProvider
                 .GrantAccessAsync(
                     uow.Connection,
                     currentUser.UserId,
@@ -80,6 +125,47 @@ public class AreaService(
             {
                 AreaId = id,
             };
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task UpdateAsync(Guid id, AreaUpdateRequest item, CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            var existingItem = await areaProvider.GetByIdAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
+
+            if (existingItem == null)
+            {
+                throw new KeyNotFoundException("Область не найдена");
+            }
+
+            if (!currentUser.AccessibleAreas.Contains(existingItem.Id))
+            {
+                throw new UnauthorizedAccessException("Нет доступа к указанной области");
+            }
+
+            existingItem.Title = item.Title;
+            existingItem.Description = item.Description;
+
+            await areaProvider.UpdateAsync(
+                uow.Connection,
+                existingItem,
+                cancellationToken,
+                transaction: uow.Transaction,
+                setDefaultValues: true);
+
+            await uow.CommitAsync(cancellationToken);
         }
         catch (Exception e)
         {

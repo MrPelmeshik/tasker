@@ -8,24 +8,24 @@ namespace TaskerApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
-public class AreaController(IAreaService service) : ControllerBase
+public class GroupController(IGroupService service) : ControllerBase
 {
     [HttpGet]
-    [UserLog("Получение списка областей")]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    [UserLog("Получение списка групп")]
+    public async Task<IActionResult> Get(CancellationToken cancellationToken)
     { 
         try 
         {
-            return Ok(await service.GetAllAsync(cancellationToken));
+            return Ok(await service.GetAsync(cancellationToken));
         }
         catch (Exception e)
         {
             return BadRequest(e.Message);
         }
     }
-    
+
     [HttpGet("{id}")]
-    [UserLog("Получение области по идентификатору")]
+    [UserLog("Получение группы по идентификатору")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     { 
         try 
@@ -33,7 +33,7 @@ public class AreaController(IAreaService service) : ControllerBase
             var result = await service.GetByIdAsync(id, cancellationToken);
             if (result == null)
             {
-                return NotFound("Область не найдена");
+                return NotFound("Группа не найдена");
             }
             return Ok(result);
         }
@@ -44,8 +44,8 @@ public class AreaController(IAreaService service) : ControllerBase
     }
     
     [HttpPost]
-    [UserLog("Создание области")]
-    public async Task<IActionResult> Create([FromBody]AreaCreateRequest item, CancellationToken cancellationToken)
+    [UserLog("Создание группы")]
+    public async Task<IActionResult> Create([FromBody]GroupCreateRequest item, CancellationToken cancellationToken)
     {
         try
         {
@@ -58,21 +58,21 @@ public class AreaController(IAreaService service) : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [UserLog("Обновление области")]
-    public async Task<IActionResult> Update(Guid id, [FromBody]AreaUpdateRequest item, CancellationToken cancellationToken)
+    [UserLog("Обновление группы")]
+    public async Task<IActionResult> Update(Guid id, [FromBody]GroupUpdateRequest item, CancellationToken cancellationToken)
     {
         try
         {
             await service.UpdateAsync(id, item, cancellationToken);
-            return Ok(new { success = true, message = "Область успешно обновлена" });
+            return Ok(new { success = true, message = "Группа успешно обновлена" });
         }
         catch (KeyNotFoundException)
         {
-            return NotFound("Область не найдена");
+            return NotFound("Группа не найдена");
         }
         catch (UnauthorizedAccessException)
         {
-            return Forbid("Нет доступа к указанной области");
+            return Forbid("Нет доступа к указанной группе");
         }
         catch (Exception e)
         {

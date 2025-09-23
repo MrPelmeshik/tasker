@@ -5,7 +5,11 @@ namespace TaskerApi.Interfaces.Services;
 
 public interface IAreaService
 {
-    Task<IEnumerable<AreaResponse>> GetAsync(CancellationToken cancellationToken);
+    Task<IEnumerable<AreaResponse>> GetAllAsync(CancellationToken cancellationToken);
+    
+    Task<AreaResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     
     Task<AreaCreateResponse> CreateAsync(AreaCreateRequest item, CancellationToken cancellationToken);
+    
+    Task UpdateAsync(Guid id, AreaUpdateRequest item, CancellationToken cancellationToken);
 }

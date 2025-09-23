@@ -11,7 +11,7 @@ public class ArraySqlFilter<T>(
             return (GetSqlByNullFilter(), null);
         
         var paramName = $"{fieldName}_{Guid.NewGuid():N}";
-        var filter = $"{fieldName} {(isExclude ? "not in" : "in")} @{paramName}::{TypeMappingHelper.GetPostgresTypeName(typeof(T))}[]";
+        var filter = $"{fieldName} {(isExclude ? "!= any" : "= any")} (@{paramName}::{TypeMappingHelper.GetPostgresTypeName(typeof(T))}[])";
         return (filter, (paramName, value));
     }
 }

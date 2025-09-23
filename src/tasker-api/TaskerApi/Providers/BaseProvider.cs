@@ -22,6 +22,56 @@ public class BaseProvider<TEntity, TKey>(
     : IBaseProvider<TEntity, TKey>
     where TEntity : class, IIdBaseEntity<TKey>, IDbEntity
 {
+    private IBaseProvider<TEntity, TKey> _baseProviderImplementation;
+
+    /// <summary>
+    /// Генерирует WHERE-условия и параметры на основе фильтров
+    /// </summary>
+    /// <param name="filters">Список фильтров</param>
+    /// <param name="additionalFilters">Дополнительные фильтры (например, по ID)</param>
+    /// <returns>Кортеж с WHERE-условием и параметрами</returns>
+    private (string whereSql, DynamicParameters parameters) BuildWhereClause(
+        IList<IFilter>? filters = null, 
+        IList<IFilter>? additionalFilters = null)
+    {
+        var whereList = new List<string>();
+        var parameters = new DynamicParameters();
+        
+        // Добавляем дополнительные фильтры (например, по ID)
+        if (additionalFilters is { Count: > 0 })
+        {
+            var sqlFilters = additionalFilters.Select(filter => filter.GetSql()).ToArray();
+
+            foreach (var sqlFilter in sqlFilters)
+            {
+                whereList.Add(sqlFilter.filter);
+                
+                if (sqlFilter.param.HasValue)
+                    parameters.Add(sqlFilter.param.Value.name, sqlFilter.param.Value.value);
+            }
+        }
+
+        // Добавляем основные фильтры
+        if (filters is { Count: > 0 })
+        {
+            var sqlFilters = filters.Select(filter => filter.GetSql()).ToArray();
+
+            foreach (var sqlFilter in sqlFilters)
+            {
+                whereList.Add(sqlFilter.filter);
+                
+                if (sqlFilter.param.HasValue)
+                    parameters.Add(sqlFilter.param.Value.name, sqlFilter.param.Value.value);
+            }
+        }
+
+        var whereSql = whereList.Count > 0 
+            ? ("\nWHERE " + string.Join(" AND ", whereList)) 
+            : string.Empty;
+
+        return (whereSql, parameters);
+    }
+
     public virtual async Task<TKey> CreateAsync(
         IDbConnection connection, 
         TEntity entity, 
@@ -89,24 +139,14 @@ public class BaseProvider<TEntity, TKey>(
         int? limit = null, 
         IDbTransaction? transaction = null)
     {
-        var whereList = new List<string>();
-        var parameters = new DynamicParameters();
+        var additionalFilters = new List<IFilter>();
         
         if (!withDeleted && table.HasSoftDelete) 
-            whereList.Add($"{table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName} = true");
-
-        if (filers is { Count: > 0 })
         {
-            var sqlFilters = filers.Select(filter => filter.GetSql()).ToArray();
-
-            foreach (var sqlFilter in sqlFilters)
-            {
-                whereList.Add(sqlFilter.filter);
-                
-                if (sqlFilter.param.HasValue)
-                    parameters.Add(sqlFilter.param.Value.name, sqlFilter.param.Value.value);
-            }
+            additionalFilters.Add(new SimpleFilter<bool>(table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName, true));
         }
+
+        var (whereSql, parameters) = BuildWhereClause(filers, additionalFilters);
 
         var orderBy = !string.IsNullOrEmpty(orderColumn)
             ? $"\nORDER BY {table[orderColumn].DbName}" + (orderDesc ? " DESC" : " ASC")
@@ -114,10 +154,6 @@ public class BaseProvider<TEntity, TKey>(
         
         var limitOffset = limit.HasValue
             ? $"\nLIMIT {limit.Value} OFFSET {offset ?? 0}"
-            : string.Empty;
-
-        var whereSql = whereList.Count > 0 
-            ? ("\nWHERE " + string.Join(" AND ", whereList)) 
             : string.Empty;
         
         var sql = $"""
@@ -180,12 +216,25 @@ public class BaseProvider<TEntity, TKey>(
         IDbConnection connection, 
         TKey id, 
         CancellationToken cancellationToken,
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null)
     {
+        // Объединяем фильтры: сначала дополнительные (по ID), потом основные
+        var allFilters = new List<IFilter>();
+        
+        // Добавляем фильтр по ID
+        allFilters.Add(new SimpleFilter<TKey>(table[nameof(IIdBaseEntity<TKey>.Id)].DbName, id));
+        
+        // Добавляем дополнительные фильтры
+        if (filers is { Count: > 0 })
+        {
+            allFilters.AddRange(filers);
+        }
+
         return await GetSimpleAsync(
             connection, 
             cancellationToken, 
-            filers: [new SimpleFilter<TKey>(nameof(IIdBaseEntity<TKey>.Id), id)], 
+            filers: allFilters, 
             orderColumn: nameof(IIdBaseEntity<TKey>.Id),
             orderDesc: false,
             withDeleted: false,
@@ -196,14 +245,22 @@ public class BaseProvider<TEntity, TKey>(
         IDbConnection connection,
         TEntity entity,
         CancellationToken cancellationToken,
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null,
         bool setDefaultValues = false)
     {
+        // Создаем фильтр по ID
+        var additionalFilters = new List<IFilter>
+        {
+            new SimpleFilter<TKey>(table[nameof(IIdBaseEntity<TKey>.Id)].DbName, entity.Id)
+        };
+
+        var (whereSql, parameters) = BuildWhereClause(filers, additionalFilters);
+
         var setSql = string.Join(", ", table.NotReadOnlyColumns.Select(c => $"{c.DbName} = {"@" + c.SrcName + "::" + TypeMappingHelper.GetPostgresTypeName(c.Property.PropertyType)}"));
         var sql = $"""
                    UPDATE {table.DbName} 
-                   SET {setSql} 
-                   WHERE {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = @{nameof(entity.Id)}
+                   SET {setSql}{whereSql}
                    """;
         
         if (setDefaultValues)
@@ -215,9 +272,16 @@ public class BaseProvider<TEntity, TKey>(
             }
         }
         
+        // Объединяем параметры entity с дополнительными параметрами фильтров
+        var entityParams = new DynamicParameters(entity);
+        foreach (var param in parameters.ParameterNames)
+        {
+            entityParams.Add(param, parameters.Get<object>(param));
+        }
+        
         var affected = await connection.ExecuteAsync(new CommandDefinition(
             commandText: sql,
-            parameters: entity,
+            parameters: entityParams,
             transaction: transaction,
             cancellationToken: cancellationToken));
 
@@ -228,12 +292,14 @@ public class BaseProvider<TEntity, TKey>(
         IDbConnection connection, 
         TKey id, 
         CancellationToken cancellationToken, 
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null)
     {
         var affected = await DeleteAsync(
             connection, 
             [id], 
             cancellationToken, 
+            filers,
             transaction);
         return affected;
     }
@@ -242,21 +308,28 @@ public class BaseProvider<TEntity, TKey>(
         IDbConnection connection, 
         IList<TKey> ids, 
         CancellationToken cancellationToken, 
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null)
     {
+        // Создаем фильтр по массиву ID
+        var additionalFilters = new List<IFilter>
+        {
+            new ArraySqlFilter<TKey>(table[nameof(IIdBaseEntity<TKey>.Id)].DbName, ids.ToArray())
+        };
+
+        var (whereSql, parameters) = BuildWhereClause(filers, additionalFilters);
+
         var sql = table.HasSoftDelete
             ? $"""
                update {table.DbName}
                set {table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName} = false
-               ,   {table[nameof(ISoftDeleteBaseEntity.DeactivatedAt)].DbName} = now()
-               where {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = any(@{nameof(ids)})
+               ,   {table[nameof(ISoftDeleteBaseEntity.DeactivatedAt)].DbName} = now(){whereSql}
                """
             : $"""
-               delete from {table.DbName} 
-               where {table[nameof(IIdBaseEntity<TKey>.Id)].DbName} = any(@{nameof(ids)})
+               delete from {table.DbName}{whereSql}
                """;
         
-        var affected = await connection.ExecuteAsync(new CommandDefinition(sql, new { ids }, transaction, cancellationToken: cancellationToken));
+        var affected = await connection.ExecuteAsync(new CommandDefinition(sql, parameters, transaction, cancellationToken: cancellationToken));
         return affected;
     }
 }

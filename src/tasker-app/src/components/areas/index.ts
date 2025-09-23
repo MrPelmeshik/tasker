@@ -1,0 +1,1 @@
+export { AreaManager } from './AreaManager';

@@ -102,6 +102,7 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
         IDbConnection connection,
         TKey id,
         CancellationToken cancellationToken,
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null
     );
 
@@ -118,6 +119,7 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
         IDbConnection connection, 
         TEntity entity, 
         CancellationToken cancellationToken, 
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null,
         bool setDefaultValues = false);
 
@@ -133,6 +135,7 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
         IDbConnection connection, 
         TKey id, 
         CancellationToken cancellationToken, 
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null);
 
     /// <summary>
@@ -147,6 +150,7 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
         IDbConnection connection, 
         IList<TKey> ids, 
         CancellationToken cancellationToken, 
+        IList<IFilter>? filers = null,
         IDbTransaction? transaction = null);
 }
 
