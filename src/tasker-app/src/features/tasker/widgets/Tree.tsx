@@ -99,10 +99,10 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                 <div className={css.areaContent}>
                   <div className={css.areaInfo}>
                     <div className={css.areaTitleRow}>
-                      <div className={css.areaTitle}>{area.title}</div>
                       <div className={css.areaGroupsCount}>
-                        {area.groups.length} групп
+                        {area.groups.length}
                       </div>
+                      <div className={css.areaTitle}>{area.title}</div>
                     </div>
                   </div>
                   <div className={css.areaActions}>
@@ -134,13 +134,15 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                         <div className={css.groupInfo}>
                           <div className={css.groupTitle}>{group.title}</div>
                         </div>
-                        <GlassButton 
-                          variant="subtle"
-                          size="xs"
-                          onClick={(e) => handleViewGroupDetails(group.id, e)}
-                        >
-                          <EyeIcon />
-                        </GlassButton>
+                        <div className={css.groupActions}>
+                          <GlassButton 
+                            variant="subtle"
+                            size="xs"
+                            onClick={(e) => handleViewGroupDetails(group.id, e)}
+                          >
+                            <EyeIcon />
+                          </GlassButton>
+                        </div>
                       </div>
                       </div>
                     </div>
