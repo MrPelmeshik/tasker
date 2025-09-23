@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
+import { GlassTag } from '../../../components/ui/GlassTag';
 import type { WidgetSizeProps } from '../../../types/widget-size';
 import css from '../../../styles/task-table.module.css';
 import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity } from '../../../services/api/tasks';
@@ -94,7 +95,16 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
               )}
               {!loading && data.map(task => (
                 <tr key={task.taskId}>
-                  <td className={`${css.td} ${css.colCarry}`} title={`Перенос: ${task.carryWeeks}`}>{task.carryWeeks}</td>
+                  <td className={`${css.td} ${css.colCarry}`} title={`Перенос: ${task.carryWeeks}`}>
+                    {task.carryWeeks > 0 ? (
+                      <GlassTag 
+                        variant="info" 
+                        size="xs"
+                      >
+                        {task.carryWeeks}
+                      </GlassTag>
+                    ) : null}
+                  </td>
                   {task.days.map((day) => (
                     <td key={day.date} className={`${css.td} ${css.colDay}`}>
                       {day.count > 0 ? (
@@ -102,7 +112,16 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       ) : null}
                     </td>
                   ))}
-                  <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>{task.hasFutureActivities ? '→' : ''}</td>
+                  <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>
+                    {task.hasFutureActivities ? (
+                      <GlassTag 
+                        variant="info" 
+                        size="xs"
+                      >
+                        →
+                      </GlassTag>
+                    ) : null}
+                  </td>
                   <td className={`${css.td} ${css.colTask}`}>
                     <div className={css.taskCell}>
                       <GlassButton size="xxs" variant="subtle" onClick={() => {}} className={css.taskButton}>+</GlassButton>

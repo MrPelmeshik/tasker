@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import styles from '../../../styles/home.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
+import { GlassTag } from '../../../components/ui/GlassTag';
 import type { WidgetSizeProps } from '../../../types/widget-size';
 import type { AreaWithGroups } from '../../../types/area-group';
 import { fetchAreasWithGroups } from '../../../services/api/areas-groups';
@@ -99,9 +100,13 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                 <div className={css.areaContent}>
                   <div className={css.areaInfo}>
                     <div className={css.areaTitleRow}>
-                      <div className={css.areaGroupsCount}>
+                      <GlassTag 
+                        variant="subtle" 
+                        size="xs"
+                        className={css.areaGroupsCount}
+                      >
                         {area.groups.length}
-                      </div>
+                      </GlassTag>
                       <div className={css.areaTitle}>{area.title}</div>
                     </div>
                   </div>
@@ -128,7 +133,6 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                 <div className={css.groupsSection}>
                   {area.groups.map((group) => (
                     <div key={group.id} className={css.groupItem}>
-                      <div className={css.connectingLine} />
                       <div className={css.groupCard}>
                       <div className={css.groupContent}>
                         <div className={css.groupInfo}>

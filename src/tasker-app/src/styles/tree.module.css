@@ -38,8 +38,8 @@
 }
 
 .areaCard {
-  background: var(--glass-bg-1);
-  border: var(--border-1) solid var(--glass-border-3);
+  background: rgba(255, 255, 255, 0.04);
+  border: var(--border-1) solid var(--glass-border-1);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   cursor: pointer;
@@ -54,15 +54,31 @@
 }
 
 .areaCard:hover {
-  background: var(--glass-bg-3);
-  border-color: var(--glass-border-6);
+  background: rgba(255, 255, 255, 0.06);
+  border-color: var(--glass-border-2);
   box-shadow: var(--shadow-hover);
 }
 
 .areaCard.expanded {
-  background: var(--glass-accent-bg);
-  border-color: var(--glass-accent-border);
+  background: rgba(100, 200, 255, 0.08);
+  border-color: rgba(100, 200, 255, 0.25);
   box-shadow: var(--shadow-accent);
+}
+
+.areaCard.expanded::after {
+  content: '';
+  position: absolute;
+  bottom: calc(-1 * var(--space-4));
+  left: var(--tree-indent);
+  width: var(--tree-connecting-line-width);
+  height: var(--space-4);
+  background: linear-gradient(
+    to bottom,
+    var(--glass-border-2),
+    var(--glass-border-1)
+  );
+  border-radius: 0 0 var(--radius-2xs) var(--radius-2xs);
+  z-index: 1;
 }
 
 /* Общие стили для контента карточек */
@@ -86,7 +102,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-4);
+  gap: var(--space-6);
 }
 
 .areaTitle,
@@ -108,7 +124,7 @@
   font-size: var(--font-10);
   font-weight: 400;
   color: var(--glass-text-muted);
-  background: var(--glass-bg-1);
+  background: rgba(255, 255, 255, 0.04);
   padding: var(--space-2);
   border-radius: var(--radius-round);
   display: inline-flex;
@@ -130,6 +146,22 @@
   animation: slideDown var(--transition-normal) ease-out;
 }
 
+.groupsSection::before {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--tree-indent));
+  top: 0;
+  width: var(--tree-connecting-line-width);
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    var(--glass-border-2),
+    var(--glass-border-1)
+  );
+  border-radius: var(--radius-2xs);
+  z-index: 1;
+}
+
 .groupItem {
   position: relative;
   margin-bottom: var(--space-4);
@@ -140,48 +172,26 @@
   box-sizing: border-box;
 }
 
-.connectingLine {
-  position: absolute;
-  left: calc(-1 * var(--tree-indent));
-  top: 0;
-  width: var(--tree-connecting-line-width);
-  height: 100%;
-  background: linear-gradient(
-    to bottom,
-    rgba(100, 200, 255, 0.8),
-    rgba(100, 200, 255, 0.4)
-  );
-  border-radius: 1px;
-  z-index: 1;
-}
-
-.groupItem:first-child .connectingLine {
-  top: 22px;
-  height: calc(100% - 22px);
-}
-
-.groupItem:last-child .connectingLine {
-  height: 22px;
-}
-
-.groupItem:not(:last-child)::after {
+.groupItem::before {
   content: '';
   position: absolute;
   left: calc(-1 * var(--tree-indent));
-  top: 22px;
+  top: 50%;
   width: var(--tree-connecting-line-height);
   height: var(--tree-connecting-line-width);
   background: linear-gradient(
     to right,
-    rgba(100, 200, 255, 0.8),
-    rgba(100, 200, 255, 0.4)
+    var(--glass-border-2),
+    var(--glass-border-1)
   );
-  border-radius: 1px;
+  border-radius: var(--radius-2xs);
+  transform: translateY(-50%);
+  z-index: 2;
 }
 
 .groupCard {
-  background: var(--glass-bg-1);
-  border: var(--border-1) solid var(--glass-border-3);
+  background: rgba(255, 255, 255, 0.03);
+  border: var(--border-1) solid var(--glass-border-1);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   flex: 1;
@@ -198,8 +208,8 @@
 }
 
 .groupCard:hover {
-  background: var(--glass-bg-3);
-  border-color: var(--glass-border-6);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--glass-border-2);
 }
 
 /* Общие стили для кнопок действий */

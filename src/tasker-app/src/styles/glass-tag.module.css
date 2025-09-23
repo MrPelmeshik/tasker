@@ -1,0 +1,156 @@
+.tag {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-s);
+  border: var(--border-1) solid rgb(var(--white) / 0.12);
+  color: var(--color-text);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.12), rgba(255,255,255,0.06));
+  backdrop-filter: blur(var(--blur-8)) saturate(140%);
+  -webkit-backdrop-filter: blur(var(--blur-8)) saturate(140%);
+  box-shadow:
+    var(--shadow-elev-1),
+    var(--shadow-inset-1);
+  font-size: var(--font-12);
+  font-weight: 500;
+  line-height: 1.2;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.tag::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.15), transparent 60%);
+}
+
+.inner { 
+  position: relative; 
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+/* Размеры тегов */
+.xxs { 
+  padding: var(--space-2) var(--space-4); 
+  border-radius: var(--radius-xs); 
+  font-size: var(--font-10); 
+  gap: var(--space-2);
+}
+
+.xs { 
+  padding: var(--space-3) var(--space-6); 
+  border-radius: var(--radius-xs); 
+  font-size: var(--font-11); 
+  gap: var(--space-3);
+}
+
+.s { 
+  padding: var(--space-4) var(--space-8); 
+  border-radius: var(--radius-s); 
+  font-size: var(--font-12); 
+  gap: var(--space-4);
+}
+
+.m { 
+  padding: var(--space-5) var(--space-10); 
+  border-radius: var(--radius-s); 
+  font-size: var(--font-13); 
+  gap: var(--space-4);
+}
+
+.l { 
+  padding: var(--space-6) var(--space-12); 
+  border-radius: var(--radius-m); 
+  font-size: var(--font-14); 
+  gap: var(--space-5);
+}
+
+/* Варианты цветов */
+.primary { 
+  border-color: rgb(var(--color-accent) / 0.28);
+  background: linear-gradient(180deg, rgba(0,200,255,0.15), rgba(0,200,255,0.08));
+}
+
+.primary::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(0,200,255,0.25), transparent 60%);
+}
+
+.danger { 
+  border-color: rgb(var(--color-danger) / 0.28);
+  background: linear-gradient(180deg, rgba(255,64,64,0.15), rgba(255,64,64,0.08));
+}
+
+.danger::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(255,64,64,0.25), transparent 60%);
+}
+
+.success { 
+  border-color: rgba(34, 197, 94, 0.28);
+  background: linear-gradient(180deg, rgba(34,197,94,0.15), rgba(34,197,94,0.08));
+}
+
+.success::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(34,197,94,0.25), transparent 60%);
+}
+
+.warning { 
+  border-color: rgba(245, 158, 11, 0.28);
+  background: linear-gradient(180deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
+}
+
+.warning::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(245,158,11,0.25), transparent 60%);
+}
+
+.info { 
+  border-color: rgba(59, 130, 246, 0.28);
+  background: linear-gradient(180deg, rgba(59,130,246,0.15), rgba(59,130,246,0.08));
+}
+
+.info::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(59,130,246,0.25), transparent 60%);
+}
+
+/* Subtle вариант - менее заметный */
+.subtle {
+  background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+  border-color: rgba(255,255,255,0.08);
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
+  filter: saturate(0.8) brightness(0.9);
+}
+
+.subtle::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.08), transparent 60%);
+}
+
+/* Стили для иконок внутри тегов */
+.tag svg {
+  width: 1em;
+  height: 1em;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
+/* Убираем курсор и выделение текста для тегов */
+.tag {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* Отключение анимаций для пользователей с prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .tag {
+    transition: none;
+  }
+}
