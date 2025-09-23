@@ -1,8 +1,8 @@
 namespace TaskerApi.Models.Common.SqlFilters;
 
-public class SimpleFilter(
+public class SimpleFilter<T>(
     string fieldName, 
-    object? value,
+    T? value,
     bool isExclude = false) 
     : BaseFilter(fieldName, isExclude)
 {
@@ -16,7 +16,7 @@ public class SimpleFilter(
             : "=";
         
         var paramName = $"{fieldName}_{Guid.NewGuid():N}";
-        var filter = $"{fieldName} {sqlOperator} @{paramName}";
+        var filter = $"{fieldName} {sqlOperator} @{paramName}::{TypeMappingHelper.GetPostgresTypeName(typeof(T))}";
 
         return (filter, (paramName, value));
     }

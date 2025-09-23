@@ -2,5 +2,5 @@ namespace TaskerApi.Models.Responses;
 
 public class AreaCreateResponse
 {
-    public Guid Id { get; set; }
+    public Guid AreaId { get; set; }
 }

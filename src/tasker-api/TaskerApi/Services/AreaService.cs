@@ -1,6 +1,8 @@
 using TaskerApi.Interfaces.Core;
+using TaskerApi.Interfaces.Models.Common;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -10,7 +12,9 @@ namespace TaskerApi.Services;
 public class AreaService(
     ILogger<EventService> logger,
     IUnitOfWorkFactory uowFactory,
-    IAreaProvider areaProvider)
+    ICurrentUserService currentUser,
+    IAreaProvider areaProvider,
+    IUserAreaAccessProvider userAreaAccessProvider)
     : IAreaService
 {
     public async Task<IEnumerable<AreaResponse>> GetAsync(CancellationToken cancellationToken)
@@ -22,6 +26,7 @@ public class AreaService(
             var items = await areaProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
+                filers: [new ArraySqlFilter<Guid>(nameof(AreaEntity.Id), currentUser.AccessibleAreas.ToArray())],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
@@ -61,10 +66,19 @@ public class AreaService(
                 uow.Transaction,
                 true);
 
+            var userAreaAccess = userAreaAccessProvider
+                .GrantAccessAsync(
+                    uow.Connection,
+                    currentUser.UserId,
+                    id,
+                    currentUser.UserId,
+                    cancellationToken,
+                    uow.Transaction);
+            
             await uow.CommitAsync(cancellationToken);
             return new AreaCreateResponse()
             {
-                Id = id,
+                AreaId = id,
             };
         }
         catch (Exception e)

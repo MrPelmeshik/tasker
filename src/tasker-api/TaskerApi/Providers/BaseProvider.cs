@@ -31,7 +31,7 @@ public class BaseProvider<TEntity, TKey>(
     {
         var sql = $"""
                    INSERT INTO {table.DbName} ({string.Join(", ", table.NotReadOnlyDbColumnNames)})
-                   VALUES ({string.Join(", ", table.NotReadOnlyColumns.Select(c => "@" + c.SrcName + "::" + TypeMappingHelper.GetPostgreSqlTypeName(c.Property.PropertyType)))})
+                   VALUES ({string.Join(", ", table.NotReadOnlyColumns.Select(c => "@" + c.SrcName + "::" + TypeMappingHelper.GetPostgresTypeName(c.Property.PropertyType)))})
                    RETURNING {table[nameof(IIdBaseEntity<TKey>.Id)].DbName}
                    """;
 
@@ -185,7 +185,7 @@ public class BaseProvider<TEntity, TKey>(
         return await GetSimpleAsync(
             connection, 
             cancellationToken, 
-            filers: [new SimpleFilter(nameof(IIdBaseEntity<TKey>.Id), id)], 
+            filers: [new SimpleFilter<TKey>(nameof(IIdBaseEntity<TKey>.Id), id)], 
             orderColumn: nameof(IIdBaseEntity<TKey>.Id),
             orderDesc: false,
             withDeleted: false,
@@ -199,7 +199,7 @@ public class BaseProvider<TEntity, TKey>(
         IDbTransaction? transaction = null,
         bool setDefaultValues = false)
     {
-        var setSql = string.Join(", ", table.NotReadOnlyColumns.Select(c => $"{c.DbName} = {"@" + c.SrcName + "::" + TypeMappingHelper.GetPostgreSqlTypeName(c.Property.PropertyType)}"));
+        var setSql = string.Join(", ", table.NotReadOnlyColumns.Select(c => $"{c.DbName} = {"@" + c.SrcName + "::" + TypeMappingHelper.GetPostgresTypeName(c.Property.PropertyType)}"));
         var sql = $"""
                    UPDATE {table.DbName} 
                    SET {setSql} 

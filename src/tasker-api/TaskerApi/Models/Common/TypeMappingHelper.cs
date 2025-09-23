@@ -10,7 +10,7 @@ public static class TypeMappingHelper
     /// </summary>
     /// <param name="type">Тип C#</param>
     /// <returns>TypeName для PostgreSQL или null, если маппинг не найден</returns>
-    public static string? GetPostgreSqlTypeName(Type type)
+    public static string? GetPostgresTypeName(Type type)
     {
         // Обрабатываем Nullable типы
         var underlyingType = Nullable.GetUnderlyingType(type) ?? type;

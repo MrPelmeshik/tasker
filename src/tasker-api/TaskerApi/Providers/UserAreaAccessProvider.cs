@@ -2,8 +2,10 @@ using System.Data;
 using Dapper;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Providers;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
+using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Providers;
 
@@ -69,25 +71,17 @@ public class UserAreaAccessProvider(
         CancellationToken cancellationToken, 
         IDbTransaction? transaction = null)
     {
-        // Сначала проверяем, нет ли уже активного доступа
-        var hasAccess = await HasAccessAsync(connection, userId, areaId, cancellationToken, transaction);
-        if (hasAccess)
-        {
-            throw new InvalidOperationException($"Пользователь {userId} уже имеет доступ к области {areaId}");
-        }
-
-        // Создаем новую запись доступа
-        var accessEntity = new UserAreaAccessEntity
-        {
-            UserId = userId,
-            AreaId = areaId,
-            GrantedByUserId = grantedByUserId,
-            CreatedAt = DateTimeOffset.Now,
-            UpdatedAt = DateTimeOffset.Now,
-            IsActive = true
-        };
-
-        return await CreateAsync(connection, accessEntity, cancellationToken, transaction, setDefaultValues: false);
+        return await CreateAsync(
+            connection, 
+            new UserAreaAccessEntity
+            {
+                UserId = userId,
+                AreaId = areaId,
+                GrantedByUserId = grantedByUserId,
+            }, 
+            cancellationToken, 
+            transaction, 
+            setDefaultValues: true);
     }
 
     public async Task<int> RevokeAccessAsync(
