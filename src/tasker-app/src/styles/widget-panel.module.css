@@ -1,7 +1,7 @@
 .panelContainer {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: var(--space-12);
   grid-column: 1 / -1;
 }
 
@@ -12,7 +12,7 @@
   /* Fixed column counts per breakpoint to make spans predictable */
   grid-template-columns: repeat(1, minmax(0, 1fr));
   grid-auto-rows: 120px;
-  gap: 16px;
+  gap: var(--space-16);
   align-items: stretch;
   justify-items: stretch;
 }

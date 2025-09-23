@@ -1,0 +1,300 @@
+.tree {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+/* Собственная шапка виджета */
+.widgetHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  border-bottom: var(--border-1) solid var(--glass-border-1);
+}
+
+.widgetTitle {
+  font-size: var(--font-18);
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.widgetContent {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+  box-sizing: border-box;
+}
+
+.areaSection {
+  position: relative;
+}
+
+.areaCard {
+  background: var(--glass-bg-1);
+  border: var(--border-1) solid var(--glass-border-3);
+  border-radius: var(--radius-2xs);
+  padding: var(--space-4) var(--space-6);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+  backdrop-filter: blur(var(--blur-8));
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  min-height: var(--tree-min-height);
+  box-sizing: border-box;
+}
+
+.areaCard:hover {
+  background: var(--glass-bg-3);
+  border-color: var(--glass-border-6);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-hover);
+}
+
+.areaCard.expanded {
+  background: var(--glass-accent-bg);
+  border-color: var(--glass-accent-border);
+  box-shadow: var(--shadow-accent);
+}
+
+.areaContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.areaInfo {
+  flex: 1;
+}
+
+.areaTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.areaTitle {
+  font-size: var(--font-12);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.2;
+  flex: 1;
+  min-width: 0;
+}
+
+.areaGroupsCount {
+  font-size: var(--font-10);
+  color: var(--glass-text-muted);
+  background: var(--glass-bg-1);
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-s);
+  display: inline-block;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.groupsSection {
+  position: relative;
+  margin-top: var(--space-4);
+  margin-left: var(--tree-indent);
+  width: calc(66.666% - var(--tree-indent));
+  max-width: calc(100% - 32px);
+  box-sizing: border-box;
+}
+
+.groupItem {
+  position: relative;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  min-height: var(--size-44);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.connectingLine {
+  position: absolute;
+  left: calc(-1 * var(--tree-indent));
+  top: 0;
+  width: var(--tree-connecting-line-width);
+  height: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(100, 200, 255, 0.8),
+    rgba(100, 200, 255, 0.4)
+  );
+  border-radius: 1px;
+  z-index: 1;
+}
+
+.groupItem:first-child .connectingLine {
+  top: 22px;
+  height: calc(100% - 22px);
+}
+
+.groupItem:last-child .connectingLine {
+  height: 22px;
+}
+
+.groupItem:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: calc(-1 * var(--tree-indent));
+  top: 22px;
+  width: var(--tree-connecting-line-height);
+  height: var(--tree-connecting-line-width);
+  background: linear-gradient(
+    to right,
+    rgba(100, 200, 255, 0.8),
+    rgba(100, 200, 255, 0.4)
+  );
+  border-radius: 1px;
+}
+
+.groupCard {
+  background: var(--glass-bg-1);
+  border: var(--border-1) solid var(--glass-border-3);
+  border-radius: var(--radius-2xs);
+  padding: var(--space-4) var(--space-6);
+  flex: 1;
+  transition: all var(--transition-fast);
+  backdrop-filter: blur(var(--blur-8));
+  min-height: var(--tree-min-height);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  box-sizing: border-box;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+.groupCard:hover {
+  background: var(--glass-bg-3);
+  border-color: var(--glass-border-6);
+  transform: translateY(-1px);
+}
+
+.groupTitle {
+  font-size: var(--font-12);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.2;
+}
+
+/* Анимация появления групп */
+.groupsSection {
+  animation: slideDown var(--transition-normal) ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Анимация для карточек областей */
+.areaCard {
+  animation: fadeInUp var(--transition-slow) ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Стили для скроллбара */
+.widgetContent::-webkit-scrollbar {
+  width: 6px;
+}
+
+.widgetContent::-webkit-scrollbar-track {
+  background: var(--glass-scrollbar-track);
+  border-radius: var(--space-3);
+}
+
+.widgetContent::-webkit-scrollbar-thumb {
+  background: var(--glass-scrollbar-thumb);
+  border-radius: var(--space-3);
+}
+
+.widgetContent::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-scrollbar-thumb-hover);
+}
+
+/* Дополнительные стили для предотвращения переполнения */
+.areaSection {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.areaTitle {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.groupTitle {
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Стили для кнопок действий */
+
+/* Кнопки действий для областей */
+.areaActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.areaCard:hover .areaActions {
+  opacity: 1;
+}
+
+/* Кнопки действий для групп */
+.groupContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: var(--space-8);
+}
+
+.groupInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.groupCard {
+  position: relative;
+}
+
+.groupCard .areaActions {
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.groupCard:hover .areaActions {
+  opacity: 1;
+}

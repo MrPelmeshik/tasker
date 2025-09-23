@@ -65,9 +65,9 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     <GlassWidget colSpan={colSpan} rowSpan={rowSpan}>
       <div className={css.container}>
         <div className={css.toolbar}>
-          <GlassButton size="s" onClick={() => go('prev')}>Пред. неделя</GlassButton>
-          <GlassButton size="s" onClick={() => go('current')}>Текущая</GlassButton>
-          <GlassButton size="s" onClick={() => go('next')}>След. неделя</GlassButton>
+          <GlassButton size="s" variant="subtle" onClick={() => go('prev')}>Пред. неделя</GlassButton>
+          <GlassButton size="s" variant="subtle" onClick={() => go('current')}>Текущая</GlassButton>
+          <GlassButton size="s" variant="subtle" onClick={() => go('next')}>След. неделя</GlassButton>
           <div className={css.spacer} />
           <span className={css.muted}>{weekStartIso}</span>
         </div>
@@ -103,7 +103,12 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                     </td>
                   ))}
                   <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>{task.hasFutureActivities ? '→' : ''}</td>
-                  <td className={`${css.td} ${css.colTask}`}><GlassButton size="xxs" onClick={() => {}} style={{ marginRight: '4px' }}>+</GlassButton>{task.taskName}</td>
+                  <td className={`${css.td} ${css.colTask}`}>
+                    <div className={css.taskCell}>
+                      <GlassButton size="xxs" variant="subtle" onClick={() => {}} className={css.taskButton}>+</GlassButton>
+                      <span>{task.taskName}</span>
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>

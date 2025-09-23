@@ -1,6 +1,6 @@
  .main {
   background-color: transparent;
-  color: #fff;
+  color: var(--color-text);
   min-height: 100vh;
   position: relative;
  }
