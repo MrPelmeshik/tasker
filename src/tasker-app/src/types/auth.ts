@@ -16,7 +16,6 @@ export type UserInfo = {
 
 export type AuthResponse = {
 	accessToken: string;
-	refreshToken: string; // будет в cookie; фронт не использует напрямую
 	tokenType: string; // "Bearer"
 	expiresIn: number; // seconds
 	userInfo: UserInfo;
@@ -24,7 +23,6 @@ export type AuthResponse = {
 
 export type RefreshTokenResponse = {
 	accessToken: string;
-	refreshToken: string; // будет в cookie; фронт не использует напрямую
 	tokenType: string; // "Bearer"
 	expiresIn: number; // seconds
 };
@@ -36,4 +34,18 @@ export type LoginRequest = {
 
 export type RefreshTokenRequest = {
 	refreshToken?: string;
+};
+
+export type RegisterRequest = {
+	username: string;
+	email: string;
+	firstName: string;
+	lastName: string;
+	password: string;
+	confirmPassword: string;
+};
+
+export type RegisterResponse = {
+	userId: string;
+	message: string;
 };

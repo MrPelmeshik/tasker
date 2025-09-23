@@ -14,7 +14,7 @@ public interface IAuthService
     /// </summary>
     /// <param name="request">Данные для авторизации</param>
     /// <returns>Токены доступа и информация о пользователе</returns>
-    Task<ApiResponse<AuthResponse>> LoginAsync(LoginRequest request);
+    Task<(ApiResponse<AuthResponse> response, string refreshToken)> LoginAsync(LoginRequest request);
 
     /// <summary>
     /// Регистрация нового пользователя
@@ -28,14 +28,8 @@ public interface IAuthService
     /// </summary>
     /// <param name="request">Refresh токен</param>
     /// <returns>Новые токены доступа</returns>
-    Task<ApiResponse<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request);
+    Task<(ApiResponse<RefreshTokenResponse> response, string refreshToken)> RefreshTokenAsync(RefreshTokenRequest request);
 
-    /// <summary>
-    /// Выход из системы
-    /// </summary>
-    /// <param name="request">Refresh токен для отзыва</param>
-    /// <returns>Результат выхода</returns>
-    Task<ApiResponse<object>> LogoutAsync(LogoutRequest request);
 
     /// <summary>
     /// Получение информации о текущем пользователе

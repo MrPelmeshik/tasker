@@ -59,11 +59,10 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<AuthResponse>.ErrorResult("Ошибка валидации", errors));
             }
 
-            var result = await _authService.LoginAsync(request);
+            var (result, refreshToken) = await _authService.LoginAsync(request);
 
             if (result.Success && result.Data != null)
             {
-                var refreshToken = result.Data.RefreshToken;
                 var cookieOptions = new CookieOptions
                 {
                     HttpOnly = true,
@@ -157,7 +156,7 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<RefreshTokenResponse>.ErrorResult("Refresh токен отсутствует"));
             }
 
-            var result = await _authService.RefreshTokenAsync(request);
+            var (result, newRefresh) = await _authService.RefreshTokenAsync(request);
 
             if (result.Success && result.Data != null)
             {
@@ -170,7 +169,7 @@ public class AuthController : ControllerBase
                     Path = "/api/auth",
                     Expires = DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays)
                 };
-                Response.Cookies.Append("refreshToken", result.Data.RefreshToken, cookieOptions);
+                Response.Cookies.Append("refreshToken", newRefresh, cookieOptions);
                 return Ok(result);
             }
 
@@ -186,31 +185,18 @@ public class AuthController : ControllerBase
     /// <summary>
     /// Выход из системы
     /// </summary>
-    /// <param name="request">Refresh токен для отзыва</param>
     /// <returns>Результат выхода</returns>
     /// <response code="200">Выход выполнен успешно</response>
-    /// <response code="400">Неверный refresh токен</response>
     /// <response code="500">Внутренняя ошибка сервера</response>
     [HttpPost("logout")]
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<object>), 200)]
-    [ProducesResponseType(typeof(ApiResponse<object>), 400)]
     [ProducesResponseType(typeof(ApiResponse<object>), 500)]
-    public async Task<IActionResult> Logout([FromBody] LogoutRequest request)
+    public IActionResult Logout()
     {
         try
         {
-            if (!ModelState.IsValid)
-            {
-                var errors = ModelState.Values
-                    .SelectMany(v => v.Errors)
-                    .Select(e => e.ErrorMessage)
-                    .ToList();
-
-                return BadRequest(ApiResponse<object>.ErrorResult("Ошибка валидации", errors));
-            }
-
-            // Отзываем refresh cookie
+            // Удаляем refresh cookie
             if (Request.Cookies.ContainsKey("refreshToken"))
             {
                 Response.Cookies.Append("refreshToken", string.Empty, new CookieOptions
@@ -223,14 +209,7 @@ public class AuthController : ControllerBase
                 });
             }
 
-            var result = await _authService.LogoutAsync(request);
-
-            if (result.Success)
-            {
-                return Ok(result);
-            }
-
-            return BadRequest(result);
+            return Ok(ApiResponse<object>.SuccessResult(new { }, "Выход выполнен успешно"));
         }
         catch (Exception ex)
         {
@@ -271,7 +250,7 @@ public class AuthController : ControllerBase
                 return Ok(result);
             }
 
-            return BadRequest(result);
+            return Unauthorized(result);
         }
         catch (Exception ex)
         {

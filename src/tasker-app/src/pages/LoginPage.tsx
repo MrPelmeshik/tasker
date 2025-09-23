@@ -10,8 +10,11 @@ import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
-  const { login, isAuth } = useAuth();
+  const { login, register, isAuth } = useAuth();
   const [name, setName] = useState<string>('');
+  const [email, setEmail] = useState<string>('');
+  const [firstName, setFirstName] = useState<string>('');
+  const [lastName, setLastName] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [confirm, setConfirm] = React.useState<string>('');
   const [isRegister, setIsRegister] = useState<boolean>(false);
@@ -38,21 +41,39 @@ export const LoginPage: React.FC = () => {
       return;
     }
     if (isRegister) {
-      if (password.trim().length < 4) {
-        setError('Пароль слишком короткий (минимум 4 символа)');
+      if (password.trim().length < 8) {
+        setError('Пароль слишком короткий (минимум 8 символов)');
         return;
       }
       if (password !== confirm) {
         setError('Пароли не совпадают');
         return;
       }
-      // TODO: implement registration endpoint usage if needed
+      if (!email.trim()) {
+        setError('Введите email');
+        return;
+      }
+      if (!firstName.trim() || !lastName.trim()) {
+        setError('Введите имя и фамилию');
+        return;
+      }
     }
 
     try {
       setLoading(true);
       clearError();
-      await login(trimmed, password);
+      if (isRegister) {
+        await register({
+          username: trimmed,
+          email: email.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          password: password,
+          confirmPassword: confirm,
+        });
+      } else {
+        await login(trimmed, password);
+      }
       navigate('/tasker');
     } catch (err) {
       setError('Серверная ошибка');
@@ -92,6 +113,37 @@ export const LoginPage: React.FC = () => {
               autoFocus
               autoComplete="username"
             />
+            {isRegister && (
+              <>
+                <GlassInput
+                  fullWidth
+                  size="m"
+                  label="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Введите email"
+                  autoComplete="email"
+                />
+                <GlassInput
+                  fullWidth
+                  size="m"
+                  label="Имя"
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                  placeholder="Введите имя"
+                  autoComplete="given-name"
+                />
+                <GlassInput
+                  fullWidth
+                  size="m"
+                  label="Фамилия"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
+                  placeholder="Введите фамилию"
+                  autoComplete="family-name"
+                />
+              </>
+            )}
             <GlassInput
               fullWidth
               size="l"

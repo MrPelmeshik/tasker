@@ -1,7 +1,7 @@
 import { getStoredTokens, isAccessTokenExpiredOrMissing, setStoredTokens, clearStoredTokens } from '../storage/token';
-import type { ApiResponse, AuthResponse, RefreshTokenResponse } from '../../types/auth';
+import type { ApiResponse, AuthResponse, RefreshTokenResponse, RegisterRequest, RegisterResponse } from '../../types/auth';
 
-const API_BASE = process.env.REACT_APP_API_BASE || '/api';
+const API_BASE = process.env.REACT_APP_API_BASE + '/api';
 
 async function refreshAccessToken(): Promise<boolean> {
 	try {
@@ -67,6 +67,16 @@ export async function loginRequest(username: string, password: string): Promise<
 		method: 'POST',
 		headers: { 'Content-Type': 'application/json' },
 		body: JSON.stringify({ username, password }),
+		credentials: 'include',
+	});
+	return res.json();
+}
+
+export async function registerRequest(payload: RegisterRequest): Promise<ApiResponse<RegisterResponse>> {
+	const res = await fetch(`${API_BASE}/auth/register`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(payload),
 		credentials: 'include',
 	});
 	return res.json();

@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Attributes;
 
@@ -14,6 +15,7 @@ public class HealthController : ControllerBase
     /// Проверка состояния сервиса.
     /// </summary>
     [HttpGet]
+    [AllowAnonymous]
     [UserLog("Проверка состояния сервиса")]
     public IActionResult Get() => Ok(new { status = "ok" });
 }

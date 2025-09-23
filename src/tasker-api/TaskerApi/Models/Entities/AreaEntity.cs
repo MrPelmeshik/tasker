@@ -30,12 +30,12 @@ public class AreaEntity :
     public Guid CreatorUserId { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
+    
     public Guid Id { get; set; }
 
     public DateTimeOffset? DeactivatedAt { get; set; }
 
     public bool IsActive { get; set; }
-
 
     public DateTimeOffset UpdatedAt { get; set; }
 }

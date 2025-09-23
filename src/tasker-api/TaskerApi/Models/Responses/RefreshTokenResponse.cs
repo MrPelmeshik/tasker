@@ -11,11 +11,6 @@ public class RefreshTokenResponse
     public string AccessToken { get; set; } = string.Empty;
 
     /// <summary>
-    /// Новый refresh токен
-    /// </summary>
-    public string RefreshToken { get; set; } = string.Empty;
-
-    /// <summary>
     /// Тип токена
     /// </summary>
     public string TokenType { get; set; } = "Bearer";

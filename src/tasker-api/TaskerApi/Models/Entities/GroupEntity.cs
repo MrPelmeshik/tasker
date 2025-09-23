@@ -36,6 +36,7 @@ public class GroupEntity :
     public DateTimeOffset CreatedAt { get; set; }
 
     public Guid CreatorUserId { get; set; }
+    
     public Guid Id { get; set; }
 
     public DateTimeOffset? DeactivatedAt { get; set; }

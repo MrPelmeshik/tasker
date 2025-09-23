@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data;
+using System.Reflection;
 using Dapper;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Models.Common;
@@ -30,7 +31,7 @@ public class BaseProvider<TEntity, TKey>(
     {
         var sql = $"""
                    INSERT INTO {table.DbName} ({string.Join(", ", table.NotReadOnlyDbColumnNames)})
-                   VALUES ({string.Join(", ", table.NotReadOnlySrcColumnNames.Select(c => "@" + c))})
+                   VALUES ({string.Join(", ", table.NotReadOnlyColumns.Select(c => "@" + c.SrcName + "::" + TypeMappingHelper.GetPostgreSqlTypeName(c.Property.PropertyType)))})
                    RETURNING {table[nameof(IIdBaseEntity<TKey>.Id)].DbName}
                    """;
 
@@ -108,21 +109,20 @@ public class BaseProvider<TEntity, TKey>(
         }
 
         var orderBy = !string.IsNullOrEmpty(orderColumn)
-            ? table[orderColumn].DbName + (orderDesc ? " desc" : " asc")
+            ? $"\nORDER BY {table[orderColumn].DbName}" + (orderDesc ? " DESC" : " ASC")
             : string.Empty;
         
         var limitOffset = limit.HasValue
-            ? $"\nlimit {limit.Value} offset {offset ?? 0}"
+            ? $"\nLIMIT {limit.Value} OFFSET {offset ?? 0}"
             : string.Empty;
 
         var whereSql = whereList.Count > 0 
-            ? ("\nwhere " + string.Join(" and ", whereList)) 
+            ? ("\nWHERE " + string.Join(" AND ", whereList)) 
             : string.Empty;
         
         var sql = $"""
-                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} as {c.SrcName}"))}
-                   FROM {table.DbName}{whereSql} 
-                   {orderBy}{limitOffset}
+                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} AS {c.SrcName}"))}
+                   FROM {table.DbName}{whereSql}{orderBy}{limitOffset}
                    """;
         
         var rows = await connection.QueryAsync<TEntity>(new CommandDefinition(
@@ -199,7 +199,7 @@ public class BaseProvider<TEntity, TKey>(
         IDbTransaction? transaction = null,
         bool setDefaultValues = false)
     {
-        var setSql = string.Join(", ", table.NotReadOnlyColumns.Select(c => $"{c.DbName} = @{c.SrcName}"));
+        var setSql = string.Join(", ", table.NotReadOnlyColumns.Select(c => $"{c.DbName} = {"@" + c.SrcName + "::" + TypeMappingHelper.GetPostgreSqlTypeName(c.Property.PropertyType)}"));
         var sql = $"""
                    UPDATE {table.DbName} 
                    SET {setSql} 

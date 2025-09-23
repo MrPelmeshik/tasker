@@ -20,9 +20,25 @@ public class AuthService(
     IUnitOfWorkFactory uowFactory,
     IUserProvider userProvider) : IAuthService
 {
-    private readonly JwtSettings _jwt = jwtOptions.Value;
+    private readonly JwtSettings _jwt = ValidateJwtSettings(jwtOptions.Value);
 
-    public async Task<ApiResponse<AuthResponse>> LoginAsync(LoginRequest request)
+    private static JwtSettings ValidateJwtSettings(JwtSettings jwt)
+    {
+        if (string.IsNullOrEmpty(jwt.SecretKey))
+            throw new InvalidOperationException("JWT SecretKey is not configured. Please set JWT_SECRET_KEY environment variable.");
+        if (string.IsNullOrEmpty(jwt.Issuer))
+            throw new InvalidOperationException("JWT Issuer is not configured. Please set JWT_ISSUER environment variable.");
+        if (string.IsNullOrEmpty(jwt.Audience))
+            throw new InvalidOperationException("JWT Audience is not configured. Please set JWT_AUDIENCE environment variable.");
+        if (jwt.AccessTokenLifetimeMinutes <= 0)
+            throw new InvalidOperationException("JWT AccessTokenLifetimeMinutes must be greater than 0. Please set JWT_ACCESS_TOKEN_LIFETIME_MINUTES environment variable.");
+        if (jwt.RefreshTokenLifetimeDays <= 0)
+            throw new InvalidOperationException("JWT RefreshTokenLifetimeDays must be greater than 0. Please set JWT_REFRESH_TOKEN_LIFETIME_DAYS environment variable.");
+        
+        return jwt;
+    }
+
+    public async Task<(ApiResponse<AuthResponse> response, string refreshToken)> LoginAsync(LoginRequest request)
     {
         try
         {
@@ -50,21 +66,26 @@ public class AuthService(
                 {
                     logger.LogWarning("Вход не выполнен: у пользователя '{UserId}' отсутствуют учетные данные пароля (хэш/соль)", user.Id);
                 }
-                return ApiResponse<AuthResponse>.ErrorResult("Неверный логин или пароль");
+                return (ApiResponse<AuthResponse>.ErrorResult("Неверный логин или пароль"), string.Empty);
+            }
+
+            if (!user.IsActive)
+            {
+                logger.LogWarning("Вход не выполнен: пользователь '{UserId}' деактивирован", user.Id);
+                return (ApiResponse<AuthResponse>.ErrorResult("Аккаунт заблокирован"), string.Empty);
             }
 
             var passwordOk = PasswordHasher.Verify(request.Password, user.PasswordHash, user.PasswordSalt);
             if (!passwordOk)
             {
                 logger.LogWarning("Вход не выполнен: не удалось проверить пароль для пользователя '{UserId}'", user.Id);
-                return ApiResponse<AuthResponse>.ErrorResult("Неверный логин или пароль");
+                return (ApiResponse<AuthResponse>.ErrorResult("Неверный логин или пароль"), string.Empty);
             }
 
             var tokens = CreateTokens(user);
             var response = new AuthResponse
             {
                 AccessToken = tokens.accessToken,
-                RefreshToken = tokens.refreshToken,
                 ExpiresIn = _jwt.AccessTokenLifetimeMinutes * 60,
                 UserInfo = new UserInfo
                 {
@@ -77,12 +98,12 @@ public class AuthService(
                 }
             };
 
-            return ApiResponse<AuthResponse>.SuccessResult(response, "Авторизация выполнена успешно");
+            return (ApiResponse<AuthResponse>.SuccessResult(response, "Авторизация выполнена успешно"), tokens.refreshToken);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Ошибка входа");
-            return ApiResponse<AuthResponse>.ErrorResult("Внутренняя ошибка сервера");
+            return (ApiResponse<AuthResponse>.ErrorResult("Внутренняя ошибка сервера"), string.Empty);
         }
     }
 
@@ -136,21 +157,21 @@ public class AuthService(
         }
     }
 
-    public Task<ApiResponse<RefreshTokenResponse>> RefreshTokenAsync(RefreshTokenRequest request)
+    public Task<(ApiResponse<RefreshTokenResponse> response, string refreshToken)> RefreshTokenAsync(RefreshTokenRequest request)
     {
         try
         {
             var principal = ValidateTokenInternal(request.RefreshToken, validateLifetime: true, expectedTokenType: "refresh");
             if (principal == null)
             {
-                return Task.FromResult(ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"));
+                return Task.FromResult((ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"), string.Empty));
             }
 
             var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
             var name = principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
             if (!Guid.TryParse(sub, out var userId))
             {
-                return Task.FromResult(ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"));
+                return Task.FromResult((ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"), string.Empty));
             }
 
             var accessToken = CreateJwtToken(userId, name, tokenType: "access", TimeSpan.FromMinutes(_jwt.AccessTokenLifetimeMinutes));
@@ -159,24 +180,18 @@ public class AuthService(
             var response = new RefreshTokenResponse
             {
                 AccessToken = accessToken,
-                RefreshToken = refreshToken,
                 ExpiresIn = _jwt.AccessTokenLifetimeMinutes * 60,
                 TokenType = "Bearer"
             };
-            return Task.FromResult(ApiResponse<RefreshTokenResponse>.SuccessResult(response));
+            return Task.FromResult((ApiResponse<RefreshTokenResponse>.SuccessResult(response), refreshToken));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Ошибка обновления refresh токена");
-            return Task.FromResult(ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"));
+            return Task.FromResult((ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"), string.Empty));
         }
     }
 
-    public Task<ApiResponse<object>> LogoutAsync(LogoutRequest request)
-    {
-        // Stateless JWT: no server-side state to revoke by default
-        return Task.FromResult(ApiResponse<object>.SuccessResult(new { }, "Выход выполнен успешно"));
-    }
 
     public async Task<ApiResponse<UserInfo>> GetUserInfoAsync(string accessToken)
     {

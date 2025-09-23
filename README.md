@@ -2,13 +2,27 @@
 
 ### Настройка переменных окружения
 
-В корне проекта создать файл `.env` и наполнить перменными окружения:
+В корне проекта создать файл `.env` и наполнить переменными окружения:
 ```
-# Пароль для доступа к БД postgres tasker_db для пользователя postgres
-PWD_PG_TASKER_DB_POSTGRES=...
+# Database
+DB_PG_PWD_POSTGRES=your_postgres_password
 
-# Пароль для доступа к БД postgres tasker_db для пользователя tasker_api
-PWD_PG_TASKER_DB_TASKER_API=...
+# JWT Settings
+JWT_SECRET_KEY=your_jwt_secret_key_here_must_be_at_least_32_characters_long
+JWT_ISSUER=TaskerAPI
+JWT_AUDIENCE=TaskerApp
+JWT_ACCESS_TOKEN_LIFETIME_MINUTES=60
+JWT_REFRESH_TOKEN_LIFETIME_DAYS=7
+
+# ASP.NET Core
+ASPNETCORE_ENVIRONMENT=Development
+ASPNETCORE_URLS=http://+:8080
+
+# CORS
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:3001
+
+# React App
+REACT_APP_API_BASE=http://localhost:8080/api
 ```
 
 ### Применение миграций

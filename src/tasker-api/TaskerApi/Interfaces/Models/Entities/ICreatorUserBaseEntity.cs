@@ -10,7 +10,7 @@ public interface ICreatorUserBaseEntity
     /// <summary>
     /// ID создателя
     /// </summary>
-    [NotMapped, Column("creator_user_id")]
+    [Column("creator_user_id")]
     Guid CreatorUserId { get; set; }
 }
 

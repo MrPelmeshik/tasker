@@ -14,6 +14,9 @@ using TaskerApi.Providers;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Добавляем переменные окружения как источник конфигурации
+builder.Configuration.AddEnvironmentVariables();
+
 // Add services to the container.
 builder.Services.AddControllers();
 
@@ -125,7 +128,12 @@ builder.Services
     })
     .AddJwtBearer(options =>
     {
-        var jwt = builder.Configuration.GetSection("Jwt").Get<JwtSettings>() ?? new JwtSettings();
+        var jwt = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
+        if (jwt == null || string.IsNullOrEmpty(jwt.SecretKey) || string.IsNullOrEmpty(jwt.Issuer) || string.IsNullOrEmpty(jwt.Audience))
+        {
+            throw new InvalidOperationException("JWT configuration is missing or incomplete. Please ensure JWT_ISSUER, JWT_AUDIENCE, and JWT_SECRET_KEY environment variables are set.");
+        }
+        
         options.RequireHttpsMetadata = false;
         options.TokenValidationParameters = new TokenValidationParameters
         {
@@ -145,12 +153,11 @@ builder.Services
 
 // builder.Services.AddAuthorization();
 
-// Optionally require auth by default; comment out if you want anonymous by default
+// Configure authorization policies
 builder.Services.AddAuthorization(options =>
 {
-    options.FallbackPolicy = new AuthorizationPolicyBuilder()
-        .RequireAuthenticatedUser()
-        .Build();
+    // Не устанавливаем FallbackPolicy, чтобы [AllowAnonymous] работал корректно
+    // Можно добавить именованные политики для конкретных ролей при необходимости
 });
 
 

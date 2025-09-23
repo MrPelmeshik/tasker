@@ -1,0 +1,12 @@
+# Folders to exclude from Docker build context
+node_modules
+build
+coverage
+.git
+.gitignore
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.env
+.env.*

@@ -8,10 +8,9 @@ namespace TaskerApi.Models.Requests;
 public class RefreshTokenRequest
 {
     /// <summary>
-    /// Refresh токен
+    /// Refresh токен (опциональный, может быть получен из cookie)
     /// </summary>
-    [Required(ErrorMessage = "Refresh токен обязателен")]
-    public string RefreshToken { get; set; } = string.Empty;
+    public string? RefreshToken { get; set; }
 }
 
 

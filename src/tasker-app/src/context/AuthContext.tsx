@@ -1,12 +1,13 @@
 import React from 'react';
 import { getStoredUserName, setStoredUserName, clearStoredUser } from '../services/storage/user';
 import { clearStoredTokens, getStoredTokens, setStoredTokens } from '../services/storage/token';
-import { loginRequest, logoutRequest } from '../services/api/client';
+import { loginRequest, logoutRequest, registerRequest } from '../services/api/client';
 
 type AuthContextValue = {
   userName: string | null;
   isAuth: boolean;
   login: (username: string, password: string) => Promise<void>;
+  register: (payload: { username: string; email: string; firstName: string; lastName: string; password: string; confirmPassword: string }) => Promise<void>;
   logout: () => void;
 };
 
@@ -30,6 +31,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUserName(name);
   }, []);
 
+  const register = React.useCallback(async (payload: { username: string; email: string; firstName: string; lastName: string; password: string; confirmPassword: string }) => {
+    const response = await registerRequest(payload);
+    if (!response.success) {
+      const msg = response.message || (response.errors && response.errors[0]) || 'Ошибка регистрации';
+      throw new Error(msg);
+    }
+    // авто-вход после регистрации
+    await login(payload.username, payload.password);
+  }, [login]);
+
   const logout = React.useCallback(() => {
     clearStoredTokens();
     setHasTokens(false);
@@ -42,8 +53,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userName,
     isAuth: hasTokens,
     login,
+    register,
     logout,
-  }), [userName, hasTokens, login, logout]);
+  }), [userName, hasTokens, login, register, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
