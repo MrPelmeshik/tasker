@@ -96,6 +96,7 @@ builder.Services.AddScoped<IGroupProvider, GroupProvider>();
 builder.Services.AddScoped<IPurposeProvider, PurposeProvider>();
 builder.Services.AddScoped<ITaskProvider, TaskProvider>();
 builder.Services.AddScoped<ISubtaskProvider, SubtaskProvider>();
+builder.Services.AddScoped<IUserAreaAccessProvider, UserAreaAccessProvider>();
 
 //
 
@@ -111,6 +112,7 @@ builder.Services.AddScoped<IPurposeService, PurposeService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISubtaskService, SubtaskService>();
 builder.Services.AddScoped<IUserLogService, UserLogService>();
+builder.Services.AddScoped<IUserAreaAccessService, UserAreaAccessService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
 // builder.Services.AddScoped<UserLogAttribute>();

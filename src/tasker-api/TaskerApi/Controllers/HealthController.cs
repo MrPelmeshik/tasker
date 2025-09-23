@@ -16,7 +16,7 @@ public class HealthController : ControllerBase
     /// </summary>
     [HttpGet]
     [AllowAnonymous]
-    [UserLog("Проверка состояния сервиса")]
+    // [UserLog("Проверка состояния сервиса")]
     public IActionResult Get() => Ok(new { status = "ok" });
 }
 
