@@ -19,10 +19,9 @@
   border-radius: var(--radius-m);
   border: var(--border-1) solid rgb(var(--white) / 0.12);
   color: var(--color-text);
-  background:
-    linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-  backdrop-filter: blur(var(--blur-8)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-8)) saturate(140%);
+  background: var(--glass-gradient-bg-subtle);
+  backdrop-filter: var(--glass-backdrop-blur-8);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
   box-shadow:
     var(--shadow-elev-1),
     var(--shadow-inset-0);

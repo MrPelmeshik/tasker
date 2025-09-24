@@ -38,13 +38,13 @@
 }
 
 .areaCard {
-  background: rgba(255, 255, 255, 0.04);
+  background: var(--glass-bg-1);
   border: var(--border-1) solid var(--glass-border-1);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   cursor: pointer;
   transition: all var(--transition-normal);
-  backdrop-filter: blur(var(--blur-8));
+  backdrop-filter: var(--glass-backdrop-blur-8);
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -54,14 +54,14 @@
 }
 
 .areaCard:hover {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-bg-2);
   border-color: var(--glass-border-2);
   box-shadow: var(--shadow-hover);
 }
 
 .areaCard.expanded {
-  background: rgba(100, 200, 255, 0.08);
-  border-color: rgba(100, 200, 255, 0.25);
+  background: var(--glass-accent-bg);
+  border-color: var(--glass-accent-border);
   box-shadow: var(--shadow-accent);
 }
 
@@ -190,13 +190,13 @@
 }
 
 .groupCard {
-  background: rgba(255, 255, 255, 0.03);
+  background: var(--glass-bg-1);
   border: var(--border-1) solid var(--glass-border-1);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   flex: 1;
   transition: all var(--transition-fast);
-  backdrop-filter: blur(var(--blur-8));
+  backdrop-filter: var(--glass-backdrop-blur-8);
   min-height: var(--tree-min-height);
   display: flex;
   flex-direction: column;
@@ -208,7 +208,7 @@
 }
 
 .groupCard:hover {
-  background: rgba(255, 255, 255, 0.05);
+  background: var(--glass-bg-2);
   border-color: var(--glass-border-2);
 }
 

@@ -37,6 +37,15 @@ body {
   --color-accent: 0 200 255; /* rgb tuple */
   --color-danger: 255 64 64; /* rgb tuple */
   --color-danger-text: #ff8080;
+  --color-success: 34 197 94; /* rgb tuple */
+  --color-warning: 245 158 11; /* rgb tuple */
+  --color-info: 59 130 246; /* rgb tuple */
+  
+  /* Hex color variables for gradients */
+  --color-gradient-purple: #6a5acd;
+  --color-gradient-cyan: #00bcd4;
+  --color-bg-dark: #0a0a0a;
+  --color-bg-black: #000;
 
   /* Glass effect colors */
   --glass-bg-1: rgba(255, 255, 255, 0.08);
@@ -60,6 +69,47 @@ body {
   --glass-scrollbar-track: rgba(255, 255, 255, 0.05);
   --glass-scrollbar-thumb: rgba(255, 255, 255, 0.2);
   --glass-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+
+  /* Common glass gradients */
+  --glass-gradient-bg: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
+  --glass-gradient-bg-hover: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
+  --glass-gradient-bg-active: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
+  --glass-gradient-bg-subtle: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  
+  /* Color-specific gradients for variants */
+  --glass-gradient-primary: linear-gradient(180deg, rgba(0,200,255,0.20), rgba(0,200,255,0.12));
+  --glass-gradient-primary-hover: linear-gradient(180deg, rgba(0,200,255,0.28), rgba(0,200,255,0.18));
+  --glass-gradient-primary-active: linear-gradient(180deg, rgba(0,200,255,0.15), rgba(0,200,255,0.08));
+  
+  --glass-gradient-danger: linear-gradient(180deg, rgba(255,64,64,0.20), rgba(255,64,64,0.12));
+  --glass-gradient-danger-hover: linear-gradient(180deg, rgba(255,64,64,0.28), rgba(255,64,64,0.18));
+  --glass-gradient-danger-active: linear-gradient(180deg, rgba(255,64,64,0.15), rgba(255,64,64,0.08));
+  
+  --glass-gradient-success: linear-gradient(180deg, rgb(var(--color-success) / 0.20), rgb(var(--color-success) / 0.12));
+  --glass-gradient-success-hover: linear-gradient(180deg, rgb(var(--color-success) / 0.28), rgb(var(--color-success) / 0.18));
+  --glass-gradient-success-active: linear-gradient(180deg, rgb(var(--color-success) / 0.15), rgb(var(--color-success) / 0.08));
+  
+  --glass-gradient-warning: linear-gradient(180deg, rgb(var(--color-warning) / 0.20), rgb(var(--color-warning) / 0.12));
+  --glass-gradient-warning-hover: linear-gradient(180deg, rgb(var(--color-warning) / 0.28), rgb(var(--color-warning) / 0.18));
+  --glass-gradient-warning-active: linear-gradient(180deg, rgb(var(--color-warning) / 0.15), rgb(var(--color-warning) / 0.08));
+  
+  --glass-gradient-info: linear-gradient(180deg, rgb(var(--color-info) / 0.20), rgb(var(--color-info) / 0.12));
+  --glass-gradient-info-hover: linear-gradient(180deg, rgb(var(--color-info) / 0.28), rgb(var(--color-info) / 0.18));
+  --glass-gradient-info-active: linear-gradient(180deg, rgb(var(--color-info) / 0.15), rgb(var(--color-info) / 0.08));
+  
+  /* Common backdrop filters */
+  --glass-backdrop-blur-6: blur(var(--blur-6)) saturate(140%);
+  --glass-backdrop-blur-8: blur(var(--blur-8)) saturate(140%);
+  --glass-backdrop-blur-10: blur(var(--blur-10)) saturate(140%);
+  
+  /* Common radial gradients for glass effects */
+  --glass-radial-default: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.22), transparent 60%);
+  --glass-radial-primary: radial-gradient(120% 80% at -10% -20%, rgba(0,200,255,0.30), transparent 60%);
+  --glass-radial-danger: radial-gradient(120% 80% at -10% -20%, rgba(255,64,64,0.30), transparent 60%);
+  --glass-radial-success: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-success) / 0.30), transparent 60%);
+  --glass-radial-warning: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-warning) / 0.30), transparent 60%);
+  --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.30), transparent 60%);
+  --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.08), transparent 60%);
 
   /* Spacing scale */
   --space-0: 0px;
@@ -96,6 +146,7 @@ body {
 
   /* Common sizes */
   --size-18: 18px;
+  --size-20: 20px;
   --size-28: 28px;
   --size-32: 32px;
   --size-40: 40px;

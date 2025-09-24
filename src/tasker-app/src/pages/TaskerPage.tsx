@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../styles/home.module.css';
+import styles from '../styles/tasker-page.module.css';
 import { TaskTable } from '../features/tasker/widgets/TaskTable';
 import { ActionGraph } from '../features/tasker/widgets/ActionGraph';
 import { LastActionList } from '../features/tasker/widgets/LastActionList';
@@ -18,7 +18,7 @@ export const TaskerPage: React.FC = () => {
     actionGraph: { colSpan: 4 as const, rowSpan: 1 as const },
   };
   return (
-    <div className={styles.homeContainer}>
+    <div className={styles.taskerPageContainer}>
       <WidgetPanel>
         <WidgetPlaceholder {...layout.placeholder1} />
         <TaskTable {...layout.taskTable} />

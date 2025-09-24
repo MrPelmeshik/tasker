@@ -1,0 +1,12 @@
+.taskerPageContainer {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-16);
+  padding: var(--space-16);
+}
+
+@media (min-width: 900px) {
+  .taskerPageContainer {
+    grid-template-columns: 2fr 1fr;
+  }
+}

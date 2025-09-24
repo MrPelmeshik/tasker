@@ -3,8 +3,8 @@
   border: var(--border-1) solid rgb(var(--white) / 0.08);
   border-radius: var(--radius-xl);
   padding: var(--space-16);
-  backdrop-filter: blur(var(--blur-8)) saturate(140%);
-  -webkit-backdrop-filter: blur(var(--blur-8)) saturate(140%);
+  backdrop-filter: var(--glass-backdrop-blur-8);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
   background: linear-gradient(180deg, rgb(var(--white) / 0.06), rgb(var(--white) / 0.02));
   box-shadow:
     var(--shadow-card),

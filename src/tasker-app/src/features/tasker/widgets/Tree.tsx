@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import styles from '../../../styles/home.module.css';
+import glassWidgetStyles from '../../../styles/glass-widget.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
@@ -181,7 +181,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   if (loading) {
     return (
       <GlassWidget title="Иерархия областей и групп" colSpan={colSpan} rowSpan={rowSpan}>
-        <div className={styles.placeholder}>Загрузка...</div>
+        <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
       </GlassWidget>
     );
   }
@@ -202,7 +202,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
 
         <div className={css.widgetContent}>
           {areas.length === 0 ? (
-            <div className={styles.placeholder}>
+            <div className={glassWidgetStyles.placeholder}>
               Нет доступных областей
             </div>
           ) : (
@@ -247,12 +247,12 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
               {expandedAreas.has(area.id) && (
                 <div className={css.groupsSection}>
                   {loadingGroups.has(area.id) ? (
-                    <div className={styles.placeholder}>Загрузка групп...</div>
+                    <div className={glassWidgetStyles.placeholder}>Загрузка групп...</div>
                   ) : (
                     (() => {
                       const groups = groupsByArea.get(area.id) || [];
                       return groups.length === 0 ? (
-                        <div className={styles.placeholder}>Нет групп в этой области</div>
+                        <div className={glassWidgetStyles.placeholder}>Нет групп в этой области</div>
                       ) : (
                         groups.map((group) => (
                           <div key={group.id} className={css.groupItem}>

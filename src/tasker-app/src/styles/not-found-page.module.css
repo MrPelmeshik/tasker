@@ -1,0 +1,14 @@
+.card {
+  background: var(--glass-bg-1);
+  border: var(--border-1) solid var(--glass-border-1);
+  border-radius: var(--radius-m);
+  padding: var(--space-16);
+  color: var(--color-text);
+  backdrop-filter: var(--glass-backdrop-blur-8);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
+}
+
+.cardTitle {
+  margin: 0 0 var(--space-12) 0;
+  font-size: var(--font-18);
+}

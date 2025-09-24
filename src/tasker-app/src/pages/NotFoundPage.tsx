@@ -1,5 +1,5 @@
 import React from 'react';
-import styles from '../styles/home.module.css';
+import styles from '../styles/not-found-page.module.css';
 import { GlassButton } from '../components/ui/GlassButton';
 
 export const NotFoundPage: React.FC = () => {
