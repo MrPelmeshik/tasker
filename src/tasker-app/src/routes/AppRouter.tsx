@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { TaskerPage } from '../pages/TaskerPage';
-import { ManagementPage } from '../pages/ManagementPage';
 import { LoginPage } from '../pages/LoginPage';
 import { NotFoundPage } from '../pages/NotFoundPage';
 import { Header } from '../components/common/Header';
@@ -28,11 +27,6 @@ const RouterContent: React.FC = () => {
           <Route path="/tasker" element={
             <ProtectedRoute>
               <TaskerPage />
-            </ProtectedRoute>
-          } />
-          <Route path="/management" element={
-            <ProtectedRoute>
-              <ManagementPage />
             </ProtectedRoute>
           } />
           <Route path="*" element={<NotFoundPage />} />

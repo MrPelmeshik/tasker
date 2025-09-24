@@ -20,5 +20,3 @@ export * from './types';
 // Features
 export * from './features/tasker';
 
-// Hooks
-export * from './hooks/useAreasAndGroups';
