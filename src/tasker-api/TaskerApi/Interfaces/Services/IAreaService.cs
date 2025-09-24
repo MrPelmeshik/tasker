@@ -12,4 +12,6 @@ public interface IAreaService
     Task<AreaCreateResponse> CreateAsync(AreaCreateRequest item, CancellationToken cancellationToken);
     
     Task UpdateAsync(Guid id, AreaUpdateRequest item, CancellationToken cancellationToken);
+    
+    Task<IEnumerable<AreaShortCardResponse>> GetAreaShortCardAsync(CancellationToken cancellationToken);
 }

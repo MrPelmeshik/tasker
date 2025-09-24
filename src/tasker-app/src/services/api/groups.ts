@@ -4,7 +4,8 @@ import type {
   GroupResponse, 
   GroupCreateRequest, 
   GroupUpdateRequest,
-  GroupCreateResponse 
+  GroupCreateResponse,
+  GroupSummaryResponse
 } from '../../types/api';
 
 // API клиент для работы с группами
@@ -65,6 +66,11 @@ export class GroupApiClient {
     const groups = await this.getGroupsByCreator(creatorUserId);
     return groups.filter(group => group.isActive);
   }
+
+  // Получить краткие карточки групп по области для Tree виджета
+  async getGroupShortCardByAreaForTree(areaId: string): Promise<GroupSummaryResponse[]> {
+    return apiFetch<GroupSummaryResponse[]>(`/group/getGroupShortCardByArea/${areaId}`);
+  }
 }
 
 // Экспорт экземпляра для использования
@@ -80,3 +86,4 @@ export const fetchGroupsByArea = (areaId: string) => groupApi.getGroupsByArea(ar
 export const fetchActiveGroupsByArea = (areaId: string) => groupApi.getActiveGroupsByArea(areaId);
 export const fetchGroupsByCreator = (creatorUserId: string) => groupApi.getGroupsByCreator(creatorUserId);
 export const fetchActiveGroupsByCreator = (creatorUserId: string) => groupApi.getActiveGroupsByCreator(creatorUserId);
+export const fetchGroupShortCardByAreaForTree = (areaId: string) => groupApi.getGroupShortCardByAreaForTree(areaId);

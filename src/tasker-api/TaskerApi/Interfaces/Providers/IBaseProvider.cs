@@ -152,6 +152,30 @@ public interface IBaseProvider<TEntity, TKey> where TEntity : class
         CancellationToken cancellationToken, 
         IList<IFilter>? filers = null,
         IDbTransaction? transaction = null);
+
+    /// <summary>
+    /// Получить количество записей
+    /// </summary>
+    /// <param name="connection">Подключение к базе данных</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <param name="filers">Фильтры</param>
+    /// <param name="withDeleted">Включить удаленные записи</param>
+    /// <param name="orderColumn">Колонка для сортировки</param>
+    /// <param name="orderDesc">Сортировка по убыванию</param>
+    /// <param name="offset">Смещение</param>
+    /// <param name="limit">Лимит</param>
+    /// <param name="transaction">Транзакция базы данных</param>
+    /// <returns>Количество записей</returns>
+    Task<int> GetCountAsync(
+        IDbConnection connection,
+        CancellationToken cancellationToken,
+        IList<IFilter>? filers = null,
+        bool withDeleted = false,
+        string? orderColumn = null,
+        bool orderDesc = false,
+        int? offset = null,
+        int? limit = null,
+        IDbTransaction? transaction = null);
 }
 
 

@@ -12,6 +12,8 @@ public interface IGroupService
     Task<GroupCreateResponse> CreateAsync(GroupCreateRequest item, CancellationToken cancellationToken);
     
     Task UpdateAsync(Guid id, GroupUpdateRequest item, CancellationToken cancellationToken);
+    
+    Task<IEnumerable<GroupSummaryResponse>> GetGroupShortCardByAreaAsync(Guid areaId, CancellationToken cancellationToken);
 }
 
 

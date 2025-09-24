@@ -4,43 +4,70 @@ import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
 import type { WidgetSizeProps } from '../../../types/widget-size';
-import type { AreaWithGroups } from '../../../types/area-group';
-import { fetchAreasWithGroups } from '../../../services/api/areas-groups';
+import type { AreaShortCard, GroupSummary } from '../../../types/area-group';
+import { fetchAreaShortCard } from '../../../services/api/areas';
+import { fetchGroupShortCardByAreaForTree } from '../../../services/api/groups';
 import css from '../../../styles/tree.module.css';
 import { EyeIcon } from '../../../components/icons/EyeIcon';
 import { PlusIcon } from '../../../components/icons/PlusIcon';
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
-  const [areasWithGroups, setAreasWithGroups] = useState<AreaWithGroups[]>([]);
+  const [areas, setAreas] = useState<AreaShortCard[]>([]);
+  const [groupsByArea, setGroupsByArea] = useState<Map<string, GroupSummary[]>>(new Map());
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
+  const [loadingGroups, setLoadingGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
-    const loadData = async () => {
+    const loadAreas = async () => {
       try {
         setLoading(true);
-        const data = await fetchAreasWithGroups();
-        setAreasWithGroups(data);
+        const data = await fetchAreaShortCard();
+        setAreas(data);
+        console.log('Области загружены успешно:', data);
       } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
+        console.error('Ошибка загрузки областей:', error);
+        setAreas([]);
       } finally {
         setLoading(false);
       }
     };
 
-    loadData();
+    loadAreas();
   }, []);
 
-  const toggleArea = (areaId: string) => {
+  const toggleArea = async (areaId: string) => {
     setExpandedAreas(prev => {
       const newSet = new Set(prev);
       if (newSet.has(areaId)) {
         newSet.delete(areaId);
       } else {
         newSet.add(areaId);
+        // Загружаем группы для области, если их еще нет
+        if (!groupsByArea.has(areaId)) {
+          loadGroupsForArea(areaId);
+        }
       }
       return newSet;
     });
+  };
+
+  const loadGroupsForArea = async (areaId: string) => {
+    try {
+      setLoadingGroups(prev => new Set(prev).add(areaId));
+      const groups = await fetchGroupShortCardByAreaForTree(areaId);
+      setGroupsByArea(prev => new Map(prev).set(areaId, groups));
+      console.log(`Группы для области ${areaId} загружены:`, groups);
+    } catch (error) {
+      console.error(`Ошибка загрузки групп для области ${areaId}:`, error);
+      setGroupsByArea(prev => new Map(prev).set(areaId, []));
+    } finally {
+      setLoadingGroups(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(areaId);
+        return newSet;
+      });
+    }
   };
 
   // Обработчики для областей
@@ -91,7 +118,12 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         </div>
 
         <div className={css.widgetContent}>
-          {areasWithGroups.map((area) => (
+          {areas.length === 0 ? (
+            <div className={styles.placeholder}>
+              Нет доступных областей
+            </div>
+          ) : (
+            areas.map((area) => (
             <div key={area.id} className={css.areaSection}>
               <div 
                 className={`${css.areaCard} ${expandedAreas.has(area.id) ? css.expanded : ''}`}
@@ -105,7 +137,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                         size="xs"
                         className={css.areaGroupsCount}
                       >
-                        {area.groups.length}
+                        {area.groupsCount}
                       </GlassTag>
                       <div className={css.areaTitle}>{area.title}</div>
                     </div>
@@ -131,30 +163,45 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
               
               {expandedAreas.has(area.id) && (
                 <div className={css.groupsSection}>
-                  {area.groups.map((group) => (
-                    <div key={group.id} className={css.groupItem}>
-                      <div className={css.groupCard}>
-                      <div className={css.groupContent}>
-                        <div className={css.groupInfo}>
-                          <div className={css.groupTitle}>{group.title}</div>
-                        </div>
-                        <div className={css.groupActions}>
-                          <GlassButton 
-                            variant="subtle"
-                            size="xs"
-                            onClick={(e) => handleViewGroupDetails(group.id, e)}
-                          >
-                            <EyeIcon />
-                          </GlassButton>
-                        </div>
-                      </div>
-                      </div>
-                    </div>
-                  ))}
+                  {loadingGroups.has(area.id) ? (
+                    <div className={styles.placeholder}>Загрузка групп...</div>
+                  ) : (
+                    (() => {
+                      const groups = groupsByArea.get(area.id) || [];
+                      return groups.length === 0 ? (
+                        <div className={styles.placeholder}>Нет групп в этой области</div>
+                      ) : (
+                        groups.map((group) => (
+                          <div key={group.id} className={css.groupItem}>
+                            <div className={css.groupCard}>
+                              <div className={css.groupContent}>
+                                <div className={css.groupInfo}>
+                                  <div className={css.groupTitle}>{group.title}</div>
+                                  {group.description && (
+                                    <div className="text-sm text-gray-600 mt-1">{group.description}</div>
+                                  )}
+                                </div>
+                                <div className={css.groupActions}>
+                                  <GlassButton 
+                                    variant="subtle"
+                                    size="xs"
+                                    onClick={(e) => handleViewGroupDetails(group.id, e)}
+                                  >
+                                    <EyeIcon />
+                                  </GlassButton>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ))
+                      );
+                    })()
+                  )}
                 </div>
               )}
             </div>
-          ))}
+          ))
+          )}
         </div>
       </div>
     </GlassWidget>

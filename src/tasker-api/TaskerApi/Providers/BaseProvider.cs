@@ -25,6 +25,56 @@ public class BaseProvider<TEntity, TKey>(
     private IBaseProvider<TEntity, TKey> _baseProviderImplementation;
 
     /// <summary>
+    /// Генерирует полный SQL запрос с WHERE, ORDER BY, LIMIT, OFFSET
+    /// </summary>
+    /// <param name="filters">Список фильтров</param>
+    /// <param name="withDeleted">Включить удаленные записи</param>
+    /// <param name="orderColumn">Колонка для сортировки</param>
+    /// <param name="orderDesc">Сортировка по убыванию</param>
+    /// <param name="offset">Смещение</param>
+    /// <param name="limit">Лимит</param>
+    /// <param name="additionalFilters">Дополнительные фильтры</param>
+    /// <returns>Кортеж с SQL запросом и параметрами</returns>
+    private (string sql, DynamicParameters parameters) BuildSelectQuery(
+        IList<IFilter>? filters = null,
+        bool withDeleted = false,
+        string? orderColumn = null,
+        bool orderDesc = false,
+        int? offset = null,
+        int? limit = null,
+        IList<IFilter>? additionalFilters = null)
+    {
+        var additionalFiltersList = new List<IFilter>();
+        
+        if (!withDeleted && table.HasSoftDelete) 
+        {
+            additionalFiltersList.Add(new SimpleFilter<bool>(table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName, true));
+        }
+
+        if (additionalFilters is { Count: > 0 })
+        {
+            additionalFiltersList.AddRange(additionalFilters);
+        }
+
+        var (whereSql, parameters) = BuildWhereClause(filters, additionalFiltersList);
+
+        var orderBy = !string.IsNullOrEmpty(orderColumn)
+            ? $"\nORDER BY {table[orderColumn].DbName}" + (orderDesc ? " DESC" : " ASC")
+            : string.Empty;
+        
+        var limitOffset = limit.HasValue
+            ? $"\nLIMIT {limit.Value} OFFSET {offset ?? 0}"
+            : string.Empty;
+        
+        var sql = $"""
+                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} AS {c.SrcName}"))}
+                   FROM {table.DbName}{whereSql}{orderBy}{limitOffset}
+                   """;
+
+        return (sql, parameters);
+    }
+
+    /// <summary>
     /// Генерирует WHERE-условия и параметры на основе фильтров
     /// </summary>
     /// <param name="filters">Список фильтров</param>
@@ -139,27 +189,13 @@ public class BaseProvider<TEntity, TKey>(
         int? limit = null, 
         IDbTransaction? transaction = null)
     {
-        var additionalFilters = new List<IFilter>();
-        
-        if (!withDeleted && table.HasSoftDelete) 
-        {
-            additionalFilters.Add(new SimpleFilter<bool>(table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName, true));
-        }
-
-        var (whereSql, parameters) = BuildWhereClause(filers, additionalFilters);
-
-        var orderBy = !string.IsNullOrEmpty(orderColumn)
-            ? $"\nORDER BY {table[orderColumn].DbName}" + (orderDesc ? " DESC" : " ASC")
-            : string.Empty;
-        
-        var limitOffset = limit.HasValue
-            ? $"\nLIMIT {limit.Value} OFFSET {offset ?? 0}"
-            : string.Empty;
-        
-        var sql = $"""
-                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} AS {c.SrcName}"))}
-                   FROM {table.DbName}{whereSql}{orderBy}{limitOffset}
-                   """;
+        var (sql, parameters) = BuildSelectQuery(
+            filters: filers,
+            withDeleted: withDeleted,
+            orderColumn: orderColumn,
+            orderDesc: orderDesc,
+            offset: offset,
+            limit: limit);
         
         var rows = await connection.QueryAsync<TEntity>(new CommandDefinition(
             commandText: sql, 
@@ -331,6 +367,37 @@ public class BaseProvider<TEntity, TKey>(
         
         var affected = await connection.ExecuteAsync(new CommandDefinition(sql, parameters, transaction, cancellationToken: cancellationToken));
         return affected;
+    }
+
+    public async Task<int> GetCountAsync(
+        IDbConnection connection,
+        CancellationToken cancellationToken,
+        IList<IFilter>? filers = null,
+        bool withDeleted = false,
+        string? orderColumn = null,
+        bool orderDesc = false,
+        int? offset = null,
+        int? limit = null,
+        IDbTransaction? transaction = null)
+    {
+        var (selectSql, parameters) = BuildSelectQuery(
+            filters: filers,
+            withDeleted: withDeleted,
+            orderColumn: orderColumn,
+            orderDesc: orderDesc,
+            offset: offset,
+            limit: limit);
+
+        // Оборачиваем SELECT запрос в COUNT(*)
+        var countSql = $"SELECT COUNT(*) FROM ({selectSql}) AS count_query";
+
+        var count = await connection.QuerySingleAsync<int>(new CommandDefinition(
+            commandText: countSql,
+            parameters: parameters,
+            transaction: transaction,
+            cancellationToken: cancellationToken));
+        
+        return count;
     }
 }
 

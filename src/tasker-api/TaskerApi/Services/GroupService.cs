@@ -2,6 +2,7 @@ using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Models.Common;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
@@ -14,7 +15,8 @@ public class GroupService(
     IUnitOfWorkFactory uowFactory,
     ICurrentUserService currentUser,
     IGroupProvider groupProvider,
-    IUserAreaAccessProvider userAreaAccessProvider)
+    IUserAreaAccessProvider userAreaAccessProvider,
+    TableMetaInfo<GroupEntity> groupsTable)
     : IGroupService
 {
     public async Task<IEnumerable<GroupResponse>> GetAsync(CancellationToken cancellationToken)
@@ -26,7 +28,7 @@ public class GroupService(
             var items = await groupProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(nameof(GroupEntity.AreaId), currentUser.AccessibleAreas.ToArray())],
+                filers: [new ArraySqlFilter<Guid>(groupsTable[nameof(GroupEntity.Id)].DbName, currentUser.AccessibleAreas.ToArray())],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
@@ -160,6 +162,39 @@ public class GroupService(
                 setDefaultValues: true);
 
             await uow.CommitAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<GroupSummaryResponse>> GetGroupShortCardByAreaAsync(Guid areaId, CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            // Проверяем доступ к области
+            if (!currentUser.AccessibleAreas.Contains(areaId))
+            {
+                throw new UnauthorizedAccessException("Нет доступа к указанной области");
+            }
+
+            var groups = await groupProvider.GetListAsync(
+                uow.Connection,
+                cancellationToken,
+                filers: [new SimpleFilter<Guid>(groupsTable[nameof(GroupEntity.AreaId)].DbName, areaId)],
+                transaction: uow.Transaction);
+
+            await uow.CommitAsync(cancellationToken);
+            return groups.Select(x => new GroupSummaryResponse
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Description = x.Description
+            });
         }
         catch (Exception e)
         {

@@ -24,3 +24,17 @@ export interface Group {
 export interface AreaWithGroups extends Area {
   groups: Group[];
 }
+
+// Типы для Tree виджета
+export interface AreaShortCard {
+  id: string;
+  title: string;
+  description?: string;
+  groupsCount: number;
+}
+
+export interface GroupSummary {
+  id: string;
+  title: string;
+  description?: string;
+}

@@ -2,6 +2,7 @@ using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Models.Common;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
@@ -14,7 +15,10 @@ public class AreaService(
     IUnitOfWorkFactory uowFactory,
     ICurrentUserService currentUser,
     IAreaProvider areaProvider,
-    IUserAreaAccessProvider userAreaAccessProvider)
+    IGroupProvider groupProvider,
+    IUserAreaAccessProvider userAreaAccessProvider,
+    TableMetaInfo<AreaEntity> areasTable,
+    TableMetaInfo<GroupEntity> groupsTable)
     : IAreaService
 {
     public async Task<IEnumerable<AreaResponse>> GetAllAsync(CancellationToken cancellationToken)
@@ -26,7 +30,7 @@ public class AreaService(
             var items = await areaProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(nameof(AreaEntity.Id), currentUser.AccessibleAreas.ToArray())],
+                filers: [new ArraySqlFilter<Guid>(areasTable[nameof(AreaEntity.Id)].DbName, currentUser.AccessibleAreas.ToArray())],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
@@ -166,6 +170,47 @@ public class AreaService(
                 setDefaultValues: true);
 
             await uow.CommitAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task<IEnumerable<AreaShortCardResponse>> GetAreaShortCardAsync(CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            var areas = await areaProvider.GetListAsync(
+                uow.Connection,
+                cancellationToken,
+                filers: [new ArraySqlFilter<Guid>(areasTable[nameof(AreaEntity.Id)].DbName, currentUser.AccessibleAreas.ToArray())],
+                transaction: uow.Transaction);
+
+            var result = new List<AreaShortCardResponse>();
+
+            foreach (var area in areas)
+            {
+                var groupsCount = await groupProvider.GetCountAsync(
+                    uow.Connection,
+                    cancellationToken,
+                    filers: [new SimpleFilter<Guid>(groupsTable[nameof(GroupEntity.AreaId)].DbName, area.Id)],
+                    transaction: uow.Transaction);
+
+                result.Add(new AreaShortCardResponse
+                {
+                    Id = area.Id,
+                    Title = area.Title,
+                    Description = area.Description,
+                    GroupsCount = groupsCount
+                });
+            }
+
+            await uow.CommitAsync(cancellationToken);
+            return result;
         }
         catch (Exception e)
         {

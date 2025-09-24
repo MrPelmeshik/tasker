@@ -79,4 +79,18 @@ public class AreaController(IAreaService service) : ControllerBase
             return BadRequest(e.Message);
         }
     }
+
+    [HttpGet]
+    [UserLog("Получение кратких карточек областей")]
+    public async Task<IActionResult> GetAreaShortCard(CancellationToken cancellationToken)
+    { 
+        try 
+        {
+            return Ok(await service.GetAreaShortCardAsync(cancellationToken));
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

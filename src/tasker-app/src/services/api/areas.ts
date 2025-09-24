@@ -1,8 +1,10 @@
 import { BaseApiClient } from './base';
+import { apiFetch } from './client';
 import type { 
   AreaResponse, 
   AreaCreateRequest, 
-  AreaUpdateRequest 
+  AreaUpdateRequest,
+  AreaShortCardResponse
 } from '../../types/api';
 
 // API клиент для работы с областями
@@ -22,6 +24,11 @@ export class AreaApiClient extends BaseApiClient<AreaResponse, AreaCreateRequest
     const areas = await this.getAll();
     return areas.filter(area => area.creatorUserId === creatorUserId);
   }
+
+  // Получить краткие карточки областей для Tree виджета
+  async getAreaShortCard(): Promise<AreaShortCardResponse[]> {
+    return apiFetch<AreaShortCardResponse[]>(`/area/getAreaShortCard`);
+  }
 }
 
 // Экспорт экземпляра для использования
@@ -34,3 +41,4 @@ export const createArea = (data: AreaCreateRequest) => areaApi.create(data);
 export const updateArea = (id: string, data: AreaUpdateRequest) => areaApi.update(id, data);
 export const fetchActiveAreas = () => areaApi.getActiveAreas();
 export const fetchAreasByCreator = (creatorUserId: string) => areaApi.getAreasByCreator(creatorUserId);
+export const fetchAreaShortCard = () => areaApi.getAreaShortCard();

@@ -12,7 +12,7 @@ public class GroupController(IGroupService service) : ControllerBase
 {
     [HttpGet]
     [UserLog("Получение списка групп")]
-    public async Task<IActionResult> Get(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
     { 
         try 
         {
@@ -73,6 +73,24 @@ public class GroupController(IGroupService service) : ControllerBase
         catch (UnauthorizedAccessException)
         {
             return Forbid("Нет доступа к указанной группе");
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
+    [HttpGet("{areaId}")]
+    [UserLog("Получение кратких карточек групп по области")]
+    public async Task<IActionResult> GetGroupShortCardByArea(Guid areaId, CancellationToken cancellationToken)
+    { 
+        try 
+        {
+            return Ok(await service.GetGroupShortCardByAreaAsync(areaId, cancellationToken));
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Нет доступа к указанной области");
         }
         catch (Exception e)
         {

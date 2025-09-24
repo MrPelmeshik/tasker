@@ -55,6 +55,20 @@ export interface GroupCreateResponse {
   groupId: string;
 }
 
+// Типы для Tree виджета
+export interface AreaShortCardResponse {
+  id: string;
+  title: string;
+  description?: string;
+  groupsCount: number;
+}
+
+export interface GroupSummaryResponse {
+  id: string;
+  title: string;
+  description?: string;
+}
+
 // Общие типы для CRUD операций
 export interface BaseEntity {
   id: string;
