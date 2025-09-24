@@ -38,31 +38,65 @@
 }
 
 .areaCard {
-  background: var(--glass-bg-1);
+  position: relative;
+  background: var(--glass-gradient-bg-subtle);
   border: var(--border-1) solid var(--glass-border-1);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   cursor: pointer;
   transition: all var(--transition-normal);
   backdrop-filter: var(--glass-backdrop-blur-8);
-  position: relative;
-  overflow: hidden;
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
   width: 100%;
   min-height: var(--tree-min-height);
   box-sizing: border-box;
   animation: fadeInUp var(--transition-slow) ease-out;
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
+  overflow: hidden;
+}
+
+.areaCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--glass-radial-subtle);
+}
+
+.areaCard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  transition: box-shadow var(--transition-normal);
 }
 
 .areaCard:hover {
-  background: var(--glass-bg-2);
+  background: var(--glass-gradient-bg);
   border-color: var(--glass-border-2);
-  box-shadow: var(--shadow-hover);
+  box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
+  filter: saturate(1.04) brightness(1.03);
+}
+
+.areaCard:hover::after {
+  box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
 }
 
 .areaCard.expanded {
-  background: var(--glass-accent-bg);
+  background: var(--glass-gradient-primary);
   border-color: var(--glass-accent-border);
-  box-shadow: var(--shadow-accent);
+  box-shadow: 
+    var(--shadow-elev-2),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(0,200,255,0.15);
+  filter: saturate(1.1) brightness(1.05);
+}
+
+.areaCard.expanded::before {
+  background: var(--glass-radial-primary);
 }
 
 .areaCard.expanded::after {
@@ -84,6 +118,8 @@
 /* Общие стили для контента карточек */
 .areaContent,
 .groupContent {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -190,13 +226,15 @@
 }
 
 .groupCard {
-  background: var(--glass-bg-1);
+  position: relative;
+  background: var(--glass-gradient-bg-subtle);
   border: var(--border-1) solid var(--glass-border-1);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   flex: 1;
   transition: all var(--transition-fast);
   backdrop-filter: var(--glass-backdrop-blur-8);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
   min-height: var(--tree-min-height);
   display: flex;
   flex-direction: column;
@@ -204,12 +242,37 @@
   box-sizing: border-box;
   max-width: 100%;
   overflow: hidden;
-  position: relative;
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
+}
+
+.groupCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: var(--glass-radial-subtle);
+}
+
+.groupCard::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  transition: box-shadow var(--transition-fast);
 }
 
 .groupCard:hover {
-  background: var(--glass-bg-2);
+  background: var(--glass-gradient-bg);
   border-color: var(--glass-border-2);
+  box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
+  filter: saturate(1.04) brightness(1.03);
+}
+
+.groupCard:hover::after {
+  box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
 }
 
 /* Общие стили для кнопок действий */
