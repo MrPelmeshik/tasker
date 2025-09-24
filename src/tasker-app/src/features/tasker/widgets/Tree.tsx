@@ -3,20 +3,24 @@ import styles from '../../../styles/home.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
+import { useModal } from '../../../context/ModalContext';
 import type { WidgetSizeProps } from '../../../types/widget-size';
 import type { AreaShortCard, GroupSummary } from '../../../types/area-group';
-import { fetchAreaShortCard } from '../../../services/api/areas';
-import { fetchGroupShortCardByAreaForTree } from '../../../services/api/groups';
+import type { AreaResponse, GroupResponse, AreaCreateRequest, AreaUpdateRequest, GroupCreateRequest, GroupUpdateRequest } from '../../../types/api';
+import { fetchAreaShortCard, fetchAreaById, createArea, updateArea } from '../../../services/api/areas';
+import { fetchGroupShortCardByAreaForTree, fetchGroupById, createGroup, updateGroup } from '../../../services/api/groups';
 import css from '../../../styles/tree.module.css';
 import { EyeIcon } from '../../../components/icons/EyeIcon';
 import { PlusIcon } from '../../../components/icons/PlusIcon';
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
+  const { openAreaModal, openGroupModal } = useModal();
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
   const [groupsByArea, setGroupsByArea] = useState<Map<string, GroupSummary[]>>(new Map());
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [loadingGroups, setLoadingGroups] = useState<Set<string>>(new Set());
+
 
   useEffect(() => {
     const loadAreas = async () => {
@@ -72,28 +76,107 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
 
   // Обработчики для областей
   const handleCreateArea = () => {
-    console.log('Создание новой области');
-    // TODO: Открыть модальное окно создания области
+    openAreaModal(null, 'create', handleAreaSave);
   };
 
-  const handleViewAreaDetails = (areaId: string, event: React.MouseEvent) => {
+  const handleViewAreaDetails = async (areaId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    console.log('Просмотр деталей области:', areaId);
-    // TODO: Открыть модальное окно просмотра деталей области
+    try {
+      const area = await fetchAreaById(areaId);
+      if (area) {
+        openAreaModal(area, 'edit', handleAreaSave);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки области:', error);
+    }
   };
 
   const handleCreateGroupForArea = (areaId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    console.log('Создание новой группы для области:', areaId);
-    // TODO: Открыть модальное окно создания группы
+    const areasForModal = areas.map(area => ({
+      id: area.id,
+      title: area.title,
+      description: area.description,
+      creatorUserId: '',
+      createdAt: '',
+      updatedAt: '',
+      isActive: true,
+    }));
+    openGroupModal(null, 'create', areasForModal, handleGroupSave, areaId);
   };
 
   // Обработчики для групп
-  const handleViewGroupDetails = (groupId: string, event: React.MouseEvent) => {
+  const handleViewGroupDetails = async (groupId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    console.log('Просмотр деталей группы:', groupId);
-    // TODO: Открыть модальное окно просмотра деталей группы
+    try {
+      const group = await fetchGroupById(groupId);
+      if (group) {
+        const areasForModal = areas.map(area => ({
+          id: area.id,
+          title: area.title,
+          description: area.description,
+          creatorUserId: '',
+          createdAt: '',
+          updatedAt: '',
+          isActive: true,
+        }));
+        openGroupModal(group, 'edit', areasForModal, handleGroupSave);
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки группы:', error);
+    }
   };
+
+  // Обработчики сохранения
+  const handleAreaSave = async (data: any) => {
+    try {
+      // Определяем режим по наличию ID в данных
+      const isCreate = !data.id;
+      
+      if (isCreate) {
+        await createArea(data as AreaCreateRequest);
+      } else {
+        await updateArea(data.id, data as AreaUpdateRequest);
+      }
+      
+      // Перезагружаем список областей
+      const updatedAreas = await fetchAreaShortCard();
+      setAreas(updatedAreas);
+    } catch (error) {
+      console.error('Ошибка сохранения области:', error);
+      throw error;
+    }
+  };
+
+  const handleGroupSave = async (data: any) => {
+    try {
+      // Определяем режим по наличию ID в данных
+      const isCreate = !data.id;
+      
+      if (isCreate) {
+        await createGroup(data as GroupCreateRequest);
+        // Перезагружаем группы для соответствующей области
+        const areaId = data.areaId;
+        if (areaId) {
+          const updatedGroups = await fetchGroupShortCardByAreaForTree(areaId);
+          setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
+        }
+      } else {
+        await updateGroup(data.id, data as GroupUpdateRequest);
+        // Перезагружаем группы для соответствующей области
+        const areaId = data.areaId;
+        if (areaId) {
+          const updatedGroups = await fetchGroupShortCardByAreaForTree(areaId);
+          setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения группы:', error);
+      throw error;
+    }
+  };
+
+
 
   if (loading) {
     return (

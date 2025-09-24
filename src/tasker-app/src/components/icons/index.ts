@@ -4,3 +4,6 @@ export { EditIcon } from './EditIcon';
 export { DeleteIcon } from './DeleteIcon';
 export { CloseIcon } from './CloseIcon';
 export { PlusIcon } from './PlusIcon';
+export { XIcon } from './XIcon';
+export { SaveIcon } from './SaveIcon';
+export { ResetIcon } from './ResetIcon';

@@ -76,50 +76,75 @@
   gap: var(--space-5);
 }
 
-/* Варианты цветов */
+/* Варианты цветов - более ярковыраженные */
 .primary { 
-  border-color: rgb(var(--color-accent) / 0.28);
-  background: linear-gradient(180deg, rgba(0,200,255,0.15), rgba(0,200,255,0.08));
+  border-color: rgb(var(--color-accent) / 0.40);
+  background: linear-gradient(180deg, rgba(0,200,255,0.25), rgba(0,200,255,0.15));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(0,200,255,0.20);
 }
 
 .primary::before {
-  background: radial-gradient(120% 80% at -10% -20%, rgba(0,200,255,0.25), transparent 60%);
+  background: radial-gradient(120% 80% at -10% -20%, rgba(0,200,255,0.35), transparent 60%);
 }
 
 .danger { 
-  border-color: rgb(var(--color-danger) / 0.28);
-  background: linear-gradient(180deg, rgba(255,64,64,0.15), rgba(255,64,64,0.08));
+  border-color: rgb(var(--color-danger) / 0.40);
+  background: linear-gradient(180deg, rgba(255,64,64,0.25), rgba(255,64,64,0.15));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(255,64,64,0.20);
 }
 
 .danger::before {
-  background: radial-gradient(120% 80% at -10% -20%, rgba(255,64,64,0.25), transparent 60%);
+  background: radial-gradient(120% 80% at -10% -20%, rgba(255,64,64,0.35), transparent 60%);
 }
 
 .success { 
-  border-color: rgba(34, 197, 94, 0.28);
-  background: linear-gradient(180deg, rgba(34,197,94,0.15), rgba(34,197,94,0.08));
+  border-color: rgba(34, 197, 94, 0.40);
+  background: linear-gradient(180deg, rgba(34,197,94,0.25), rgba(34,197,94,0.15));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(34,197,94,0.20);
 }
 
 .success::before {
-  background: radial-gradient(120% 80% at -10% -20%, rgba(34,197,94,0.25), transparent 60%);
+  background: radial-gradient(120% 80% at -10% -20%, rgba(34,197,94,0.35), transparent 60%);
 }
 
 .warning { 
-  border-color: rgba(245, 158, 11, 0.28);
-  background: linear-gradient(180deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
+  border-color: rgba(245, 158, 11, 0.40);
+  background: linear-gradient(180deg, rgba(245,158,11,0.25), rgba(245,158,11,0.15));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(245,158,11,0.20);
 }
 
 .warning::before {
-  background: radial-gradient(120% 80% at -10% -20%, rgba(245,158,11,0.25), transparent 60%);
+  background: radial-gradient(120% 80% at -10% -20%, rgba(245,158,11,0.35), transparent 60%);
 }
 
 .info { 
-  border-color: rgba(59, 130, 246, 0.28);
-  background: linear-gradient(180deg, rgba(59,130,246,0.15), rgba(59,130,246,0.08));
+  border-color: rgba(59, 130, 246, 0.40);
+  background: linear-gradient(180deg, rgba(59,130,246,0.25), rgba(59,130,246,0.15));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(59,130,246,0.20);
 }
 
 .info::before {
-  background: radial-gradient(120% 80% at -10% -20%, rgba(59,130,246,0.25), transparent 60%);
+  background: radial-gradient(120% 80% at -10% -20%, rgba(59,130,246,0.35), transparent 60%);
 }
 
 /* Subtle вариант - менее заметный */

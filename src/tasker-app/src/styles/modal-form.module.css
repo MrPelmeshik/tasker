@@ -1,0 +1,55 @@
+/* Стили для форм в модальных окнах */
+.formContainer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-20);
+}
+
+.fieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.fieldLabel {
+  font-size: var(--font-14);
+  font-weight: 500;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.fieldContainer {
+  position: relative;
+}
+
+.resetButton {
+  position: absolute;
+  right: var(--space-8);
+  top: 50%;
+  transform: translateY(-50%);
+  min-width: auto;
+  padding: var(--space-4);
+  z-index: 2;
+}
+
+.resetButtonTextarea {
+  position: absolute;
+  right: var(--space-8);
+  top: var(--space-8);
+  min-width: auto;
+  padding: var(--space-4);
+  z-index: 2;
+}
+
+/* Убираем лишние фоны для соответствия общей стилистике */
+.modalBody {
+  background: transparent;
+}
+
+.modalHeader {
+  background: transparent;
+}
+
+.modalFooter {
+  background: transparent;
+}

@@ -66,12 +66,165 @@
 
 .fullWidth { display: flex; width: 100%; }
 
-.primary { border-color: rgb(var(--color-accent) / 0.28); }
-.primary:hover { border-color: rgb(var(--color-accent) / 0.42); }
-.primary:active { border-color: rgb(var(--color-accent) / 0.52); }
-.danger { border-color: rgb(var(--color-danger) / 0.28); }
-.danger:hover { border-color: rgb(var(--color-danger) / 0.42); }
-.danger:active { border-color: rgb(var(--color-danger) / 0.52); }
+/* Primary variant - яркий акцентный цвет */
+.primary { 
+  border-color: rgb(var(--color-accent) / 0.35);
+  background: linear-gradient(180deg, rgba(0,200,255,0.20), rgba(0,200,255,0.12));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(0,200,255,0.15);
+}
+
+.primary::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(0,200,255,0.30), transparent 60%);
+}
+
+.primary:hover { 
+  border-color: rgb(var(--color-accent) / 0.50);
+  background: linear-gradient(180deg, rgba(0,200,255,0.28), rgba(0,200,255,0.18));
+  box-shadow: 
+    var(--shadow-elev-2),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(0,200,255,0.25),
+    0 0 20px rgba(0,200,255,0.15);
+  filter: saturate(1.1) brightness(1.05);
+}
+
+.primary:hover::after {
+  box-shadow: 0 0 0 var(--border-2) rgba(0,200,255,0.20);
+}
+
+.primary:active { 
+  border-color: rgb(var(--color-accent) / 0.60);
+  background: linear-gradient(180deg, rgba(0,200,255,0.15), rgba(0,200,255,0.08));
+  box-shadow: 
+    var(--shadow-elev-4),
+    inset 0 2px 6px rgba(0,0,0,0.28),
+    0 0 0 1px rgba(0,200,255,0.30);
+  filter: saturate(1.0) brightness(0.95);
+}
+
+/* Danger variant - яркий красный цвет */
+.danger { 
+  border-color: rgb(var(--color-danger) / 0.35);
+  background: linear-gradient(180deg, rgba(255,64,64,0.20), rgba(255,64,64,0.12));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(255,64,64,0.15);
+}
+
+.danger::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(255,64,64,0.30), transparent 60%);
+}
+
+.danger:hover { 
+  border-color: rgb(var(--color-danger) / 0.50);
+  background: linear-gradient(180deg, rgba(255,64,64,0.28), rgba(255,64,64,0.18));
+  box-shadow: 
+    var(--shadow-elev-2),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(255,64,64,0.25),
+    0 0 20px rgba(255,64,64,0.15);
+  filter: saturate(1.1) brightness(1.05);
+}
+
+.danger:hover::after {
+  box-shadow: 0 0 0 var(--border-2) rgba(255,64,64,0.20);
+}
+
+.danger:active { 
+  border-color: rgb(var(--color-danger) / 0.60);
+  background: linear-gradient(180deg, rgba(255,64,64,0.15), rgba(255,64,64,0.08));
+  box-shadow: 
+    var(--shadow-elev-4),
+    inset 0 2px 6px rgba(0,0,0,0.28),
+    0 0 0 1px rgba(255,64,64,0.30);
+  filter: saturate(1.0) brightness(0.95);
+}
+
+/* Success variant - яркий зеленый цвет */
+.success { 
+  border-color: rgba(34, 197, 94, 0.35);
+  background: linear-gradient(180deg, rgba(34,197,94,0.20), rgba(34,197,94,0.12));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(34,197,94,0.15);
+}
+
+.success::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(34,197,94,0.30), transparent 60%);
+}
+
+.success:hover { 
+  border-color: rgba(34, 197, 94, 0.50);
+  background: linear-gradient(180deg, rgba(34,197,94,0.28), rgba(34,197,94,0.18));
+  box-shadow: 
+    var(--shadow-elev-2),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(34,197,94,0.25),
+    0 0 20px rgba(34,197,94,0.15);
+  filter: saturate(1.1) brightness(1.05);
+}
+
+.success:hover::after {
+  box-shadow: 0 0 0 var(--border-2) rgba(34,197,94,0.20);
+}
+
+.success:active { 
+  border-color: rgba(34, 197, 94, 0.60);
+  background: linear-gradient(180deg, rgba(34,197,94,0.15), rgba(34,197,94,0.08));
+  box-shadow: 
+    var(--shadow-elev-4),
+    inset 0 2px 6px rgba(0,0,0,0.28),
+    0 0 0 1px rgba(34,197,94,0.30);
+  filter: saturate(1.0) brightness(0.95);
+}
+
+/* Warning variant - яркий оранжевый цвет */
+.warning { 
+  border-color: rgba(245, 158, 11, 0.35);
+  background: linear-gradient(180deg, rgba(245,158,11,0.20), rgba(245,158,11,0.12));
+  color: rgba(255,255,255,0.95);
+  box-shadow: 
+    var(--shadow-elev-1),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(245,158,11,0.15);
+}
+
+.warning::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(245,158,11,0.30), transparent 60%);
+}
+
+.warning:hover { 
+  border-color: rgba(245, 158, 11, 0.50);
+  background: linear-gradient(180deg, rgba(245,158,11,0.28), rgba(245,158,11,0.18));
+  box-shadow: 
+    var(--shadow-elev-2),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(245,158,11,0.25),
+    0 0 20px rgba(245,158,11,0.15);
+  filter: saturate(1.1) brightness(1.05);
+}
+
+.warning:hover::after {
+  box-shadow: 0 0 0 var(--border-2) rgba(245,158,11,0.20);
+}
+
+.warning:active { 
+  border-color: rgba(245, 158, 11, 0.60);
+  background: linear-gradient(180deg, rgba(245,158,11,0.15), rgba(245,158,11,0.08));
+  box-shadow: 
+    var(--shadow-elev-4),
+    inset 0 2px 6px rgba(0,0,0,0.28),
+    0 0 0 1px rgba(245,158,11,0.30);
+  filter: saturate(1.0) brightness(0.95);
+}
 
 /* Subtle variant - less prominent by default, highlights on hover */
 .subtle {

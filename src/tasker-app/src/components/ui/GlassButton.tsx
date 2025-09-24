@@ -2,7 +2,7 @@ import React from 'react';
 import css from '../../styles/glass-button.module.css';
 
 type GlassButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
-  variant?: 'default' | 'primary' | 'danger' | 'subtle';
+  variant?: 'default' | 'primary' | 'danger' | 'success' | 'warning' | 'subtle';
   size?: 'xxs' | 'xs' | 's' | 'm' | 'l' | 'xl' | 'xxl' | 'xxxl';
   fullWidth?: boolean;
 };
