@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { ApiResponse, BaseEntity, CreateRequest, UpdateRequest } from '../../types/api';
+import type { ApiResponse, BaseEntity, CreateRequest, UpdateRequest } from '../../types';
 
 // Универсальный базовый API клиент для CRUD операций
 export class BaseApiClient<TEntity extends BaseEntity, TCreateRequest extends CreateRequest, TUpdateRequest extends UpdateRequest> {

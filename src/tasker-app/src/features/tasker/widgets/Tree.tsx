@@ -3,15 +3,30 @@ import glassWidgetStyles from '../../../styles/glass-widget.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
-import { useModal } from '../../../context/ModalContext';
-import type { WidgetSizeProps } from '../../../types/widget-size';
-import type { AreaShortCard, GroupSummary } from '../../../types/area-group';
-import type { AreaResponse, GroupResponse, AreaCreateRequest, AreaUpdateRequest, GroupCreateRequest, GroupUpdateRequest } from '../../../types/api';
-import { fetchAreaShortCard, fetchAreaById, createArea, updateArea } from '../../../services/api/areas';
-import { fetchGroupShortCardByAreaForTree, fetchGroupById, createGroup, updateGroup } from '../../../services/api/groups';
+import { useModal } from '../../../context';
+import type { 
+  WidgetSizeProps, 
+  AreaShortCard, 
+  GroupSummary,
+  AreaResponse, 
+  GroupResponse, 
+  AreaCreateRequest, 
+  AreaUpdateRequest, 
+  GroupCreateRequest, 
+  GroupUpdateRequest 
+} from '../../../types';
+import { 
+  fetchAreaShortCard, 
+  fetchAreaById, 
+  createArea, 
+  updateArea,
+  fetchGroupShortCardByAreaForTree, 
+  fetchGroupById, 
+  createGroup, 
+  updateGroup 
+} from '../../../services/api';
 import css from '../../../styles/tree.module.css';
-import { EyeIcon } from '../../../components/icons/EyeIcon';
-import { PlusIcon } from '../../../components/icons/PlusIcon';
+import { EyeIcon, PlusIcon } from '../../../components/icons';
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { openAreaModal, openGroupModal } = useModal();
@@ -229,14 +244,14 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                     <GlassButton 
                       variant="subtle"
                       size="xs"
-                      onClick={(e) => handleViewAreaDetails(area.id, e)}
+                      onClick={(e: React.MouseEvent) => handleViewAreaDetails(area.id, e)}
                     >
                       <EyeIcon />
                     </GlassButton>
                     <GlassButton 
                       variant="subtle"
                       size="xs"
-                      onClick={(e) => handleCreateGroupForArea(area.id, e)}
+                      onClick={(e: React.MouseEvent) => handleCreateGroupForArea(area.id, e)}
                     >
                       <PlusIcon />
                     </GlassButton>
@@ -268,7 +283,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                                   <GlassButton 
                                     variant="subtle"
                                     size="xs"
-                                    onClick={(e) => handleViewGroupDetails(group.id, e)}
+                                    onClick={(e: React.MouseEvent) => handleViewGroupDetails(group.id, e)}
                                   >
                                     <EyeIcon />
                                   </GlassButton>

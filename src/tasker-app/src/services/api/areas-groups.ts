@@ -1,7 +1,6 @@
-import type { Area, Group, AreaWithGroups } from '../../types/area-group';
+import type { Area, Group, AreaWithGroups, AreaResponse, GroupResponse } from '../../types';
 import { areaApi } from './areas';
 import { groupApi } from './groups';
-import type { AreaResponse, GroupResponse } from '../../types/api';
 
 // Функции для работы с областями (используют новый API)
 export async function fetchAreas(): Promise<Area[]> {

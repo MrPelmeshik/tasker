@@ -1,6 +1,6 @@
 import React, { PropsWithChildren, useEffect, useState } from 'react';
 import css from '../../styles/glass-widget.module.css';
-import type { ColumnSpan, RowSpan } from '../../types/widget-size';
+import type { ColumnSpan, RowSpan } from '../../types';
 
 type GlassWidgetProps = PropsWithChildren<{
   title?: string;

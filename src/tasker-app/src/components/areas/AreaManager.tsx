@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useAreas } from '../../hooks/useAreasAndGroups';
-import type { AreaCreateRequest, AreaUpdateRequest } from '../../types/api';
+import type { AreaCreateRequest, AreaUpdateRequest } from '../../types';
 
 interface AreaManagerProps {
   className?: string;

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAreasAndGroups } from '../../hooks/useAreasAndGroups';
-import type { GroupCreateRequest, GroupUpdateRequest } from '../../types/api';
+import type { GroupCreateRequest, GroupUpdateRequest } from '../../types';
 
 interface GroupManagerProps {
   className?: string;

@@ -9,7 +9,7 @@ import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
-import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest } from '../../types/api';
+import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest } from '../../types';
 
 export interface AreaModalProps {
   isOpen: boolean;

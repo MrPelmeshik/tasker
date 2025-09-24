@@ -1,5 +1,5 @@
 import { getStoredTokens, isAccessTokenExpiredOrMissing, setStoredTokens, clearStoredTokens } from '../storage/token';
-import type { ApiResponse, AuthResponse, RefreshTokenResponse, RegisterRequest, RegisterResponse } from '../../types/auth';
+import type { ApiResponse, AuthResponse, RefreshTokenResponse, RegisterRequest, RegisterResponse } from '../../types';
 
 const API_BASE = process.env.REACT_APP_API_BASE + '/api';
 

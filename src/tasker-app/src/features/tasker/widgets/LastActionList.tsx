@@ -1,7 +1,7 @@
 import React from 'react';
 import glassWidgetStyles from '../../../styles/glass-widget.module.css';
-import { GlassWidget } from '../../../components/common/GlassWidget';
-import type { WidgetSizeProps } from '../../../types/widget-size';
+import { GlassWidget } from '../../../components';
+import type { WidgetSizeProps } from '../../../types';
 
 export const LastActionList: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   return (

@@ -1,10 +1,8 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { GlassWidget } from '../../../components/common/GlassWidget';
-import { GlassButton } from '../../../components/ui/GlassButton';
-import { GlassTag } from '../../../components/ui/GlassTag';
-import type { WidgetSizeProps } from '../../../types/widget-size';
+import { GlassWidget, GlassButton, GlassTag } from '../../../components';
+import type { WidgetSizeProps } from '../../../types';
 import css from '../../../styles/task-table.module.css';
-import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity } from '../../../services/api/tasks';
+import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity } from '../../../services/api';
 
 type WeekNav = 'prev' | 'next' | 'current' | 'latest';
 

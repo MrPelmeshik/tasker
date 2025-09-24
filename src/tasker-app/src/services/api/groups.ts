@@ -6,7 +6,7 @@ import type {
   GroupUpdateRequest,
   GroupCreateResponse,
   GroupSummaryResponse
-} from '../../types/api';
+} from '../../types';
 
 // API клиент для работы с группами
 export class GroupApiClient {

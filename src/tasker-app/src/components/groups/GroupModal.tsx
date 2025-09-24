@@ -10,7 +10,7 @@ import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
-import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaResponse } from '../../types/api';
+import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaResponse } from '../../types';
 
 export interface GroupModalProps {
   isOpen: boolean;

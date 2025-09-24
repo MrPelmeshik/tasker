@@ -5,7 +5,7 @@ import type {
   AreaCreateRequest, 
   AreaUpdateRequest,
   AreaShortCardResponse
-} from '../../types/api';
+} from '../../types';
 
 // API клиент для работы с областями
 export class AreaApiClient extends BaseApiClient<AreaResponse, AreaCreateRequest, AreaUpdateRequest> {

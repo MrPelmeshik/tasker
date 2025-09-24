@@ -1,9 +1,5 @@
-export type ApiResponse<T> = {
-	success: boolean;
-	message: string;
-	data?: T | null;
-	errors: string[];
-};
+// ApiResponse импортируется из ./api
+import type { ApiResponse } from './api';
 
 export type UserInfo = {
 	id: string;
