@@ -39,8 +39,8 @@
 
 .areaCard {
   position: relative;
-  background: var(--glass-gradient-bg-subtle);
-  border: var(--border-1) solid var(--glass-border-1);
+  background: var(--glass-card-bg-transparent);
+  border: var(--border-1) solid var(--glass-card-border-default);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   cursor: pointer;
@@ -75,8 +75,8 @@
 }
 
 .areaCard:hover {
-  background: var(--glass-gradient-bg);
-  border-color: var(--glass-border-2);
+  background: var(--glass-card-bg-hover);
+  border-color: var(--glass-card-border-default-hover);
   box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
   filter: saturate(1.04) brightness(1.03);
 }
@@ -86,17 +86,13 @@
 }
 
 .areaCard.expanded {
-  background: var(--glass-gradient-primary);
-  border-color: var(--glass-accent-border);
+  background: var(--glass-card-bg-selected);
+  border-color: var(--glass-card-border-default-selected);
   box-shadow: 
     var(--shadow-elev-2),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(0,200,255,0.15);
+    0 0 0 1px rgba(255,255,255,0.15);
   filter: saturate(1.1) brightness(1.05);
-}
-
-.areaCard.expanded::before {
-  background: var(--glass-radial-primary);
 }
 
 .areaCard.expanded::after {
@@ -113,6 +109,29 @@
   );
   border-radius: 0 0 var(--radius-2xs) var(--radius-2xs);
   z-index: 1;
+}
+
+/* Custom color support for area cards */
+.areaCard[data-custom-color] {
+  --custom-color: var(--card-custom-color);
+  --custom-color-rgb: var(--card-custom-color-rgb);
+  
+  background: rgba(var(--custom-color-rgb), 0.02);
+  border-color: rgba(var(--custom-color-rgb), 0.15);
+}
+
+.areaCard[data-custom-color]:hover {
+  background: rgba(var(--custom-color-rgb), 0.05);
+  border-color: rgba(var(--custom-color-rgb), 0.25);
+}
+
+.areaCard[data-custom-color].expanded {
+  background: rgba(var(--custom-color-rgb), 0.08);
+  border-color: rgba(var(--custom-color-rgb), 0.35);
+  box-shadow: 
+    var(--shadow-elev-2),
+    var(--shadow-inset-1),
+    0 0 0 1px rgba(var(--custom-color-rgb), 0.20);
 }
 
 /* Общие стили для контента карточек */
@@ -227,8 +246,8 @@
 
 .groupCard {
   position: relative;
-  background: var(--glass-gradient-bg-subtle);
-  border: var(--border-1) solid var(--glass-border-1);
+  background: var(--glass-card-bg-transparent);
+  border: var(--border-1) solid var(--glass-card-border-default);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   flex: 1;
@@ -265,14 +284,28 @@
 }
 
 .groupCard:hover {
-  background: var(--glass-gradient-bg);
-  border-color: var(--glass-border-2);
+  background: var(--glass-card-bg-hover);
+  border-color: var(--glass-card-border-default-hover);
   box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
   filter: saturate(1.04) brightness(1.03);
 }
 
 .groupCard:hover::after {
   box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
+}
+
+/* Custom color support for group cards */
+.groupCard[data-custom-color] {
+  --custom-color: var(--card-custom-color);
+  --custom-color-rgb: var(--card-custom-color-rgb);
+  
+  background: rgba(var(--custom-color-rgb), 0.02);
+  border-color: rgba(var(--custom-color-rgb), 0.15);
+}
+
+.groupCard[data-custom-color]:hover {
+  background: rgba(var(--custom-color-rgb), 0.05);
+  border-color: rgba(var(--custom-color-rgb), 0.25);
 }
 
 /* Общие стили для кнопок действий */

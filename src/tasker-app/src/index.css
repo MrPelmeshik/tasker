@@ -70,6 +70,16 @@ body {
   --glass-scrollbar-track: rgba(255, 255, 255, 0.05);
   --glass-scrollbar-thumb: rgba(255, 255, 255, 0.2);
   --glass-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
+  
+  /* Ultra transparent card backgrounds */
+  --glass-card-bg-transparent: rgba(255, 255, 255, 0.01);
+  --glass-card-bg-hover: rgba(255, 255, 255, 0.03);
+  --glass-card-bg-selected: rgba(255, 255, 255, 0.05);
+  
+  /* Default card colors */
+  --glass-card-border-default: rgba(255, 255, 255, 0.08);
+  --glass-card-border-default-hover: rgba(255, 255, 255, 0.15);
+  --glass-card-border-default-selected: rgba(255, 255, 255, 0.25);
 
   /* Common glass gradients */
   --glass-gradient-bg: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));

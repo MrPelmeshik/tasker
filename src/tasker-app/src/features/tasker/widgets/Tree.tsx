@@ -28,6 +28,18 @@ import {
 import css from '../../../styles/tree.module.css';
 import { EyeIcon, PlusIcon } from '../../../components/icons';
 
+// Утилитарная функция для конвертации hex в RGB
+function hexToRgb(hex: string): string {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  if (!result) return '255, 255, 255'; // fallback to white
+  
+  const r = parseInt(result[1], 16);
+  const g = parseInt(result[2], 16);
+  const b = parseInt(result[3], 16);
+  
+  return `${r}, ${g}, ${b}`;
+}
+
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { openAreaModal, openGroupModal } = useModal();
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
@@ -221,12 +233,20 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
               Нет доступных областей
             </div>
           ) : (
-            areas.map((area) => (
-            <div key={area.id} className={css.areaSection}>
-              <div 
-                className={`${css.areaCard} ${expandedAreas.has(area.id) ? css.expanded : ''}`}
-                onClick={() => toggleArea(area.id)}
-              >
+            areas.map((area) => {
+              const customColorStyle = area.customColor ? {
+                '--card-custom-color': area.customColor,
+                '--card-custom-color-rgb': hexToRgb(area.customColor)
+              } as React.CSSProperties : {};
+              
+              return (
+              <div key={area.id} className={css.areaSection}>
+                <div 
+                  className={`${css.areaCard} ${expandedAreas.has(area.id) ? css.expanded : ''}`}
+                  onClick={() => toggleArea(area.id)}
+                  data-custom-color={area.customColor ? 'true' : undefined}
+                  style={customColorStyle}
+                >
                 <div className={css.areaContent}>
                   <div className={css.areaInfo}>
                     <div className={css.areaTitleRow}>
@@ -269,9 +289,19 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       return groups.length === 0 ? (
                         <div className={glassWidgetStyles.placeholder}>Нет групп в этой области</div>
                       ) : (
-                        groups.map((group) => (
+                        groups.map((group) => {
+                          const groupCustomColorStyle = group.customColor ? {
+                            '--card-custom-color': group.customColor,
+                            '--card-custom-color-rgb': hexToRgb(group.customColor)
+                          } as React.CSSProperties : {};
+                          
+                          return (
                           <div key={group.id} className={css.groupItem}>
-                            <div className={css.groupCard}>
+                            <div 
+                              className={css.groupCard}
+                              data-custom-color={group.customColor ? 'true' : undefined}
+                              style={groupCustomColorStyle}
+                            >
                               <div className={css.groupContent}>
                                 <div className={css.groupInfo}>
                                   <div className={css.groupTitle}>{group.title}</div>
@@ -291,14 +321,16 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                               </div>
                             </div>
                           </div>
-                        ))
+                          );
+                        })
                       );
                     })()
                   )}
                 </div>
               )}
             </div>
-          ))
+            );
+            })
           )}
         </div>
       </div>

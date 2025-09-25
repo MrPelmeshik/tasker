@@ -7,6 +7,7 @@ export interface Area {
   deactivatedAt?: string;
   isActive: boolean;
   updatedAt: string;
+  customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
 export interface Group {
@@ -19,6 +20,7 @@ export interface Group {
   deactivatedAt?: string;
   isActive: boolean;
   updatedAt: string;
+  customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
 export interface AreaWithGroups extends Area {
@@ -31,10 +33,12 @@ export interface AreaShortCard {
   title: string;
   description?: string;
   groupsCount: number;
+  customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
 export interface GroupSummary {
   id: string;
   title: string;
   description?: string;
+  customColor?: string; // Hex цвет для кастомной окраски карточки
 }
