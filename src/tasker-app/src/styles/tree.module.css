@@ -53,6 +53,8 @@
   animation: fadeInUp var(--transition-slow) ease-out;
   box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
   overflow: hidden;
+  display: flex;
+  align-items: center;
 }
 
 .areaCard::before {
@@ -141,7 +143,7 @@
   z-index: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
   width: 100%;
   gap: var(--space-4);
   box-sizing: border-box;
@@ -256,8 +258,7 @@
   -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
   min-height: var(--tree-min-height);
   display: flex;
-  flex-direction: column;
-  justify-content: center;
+  align-items: center;
   box-sizing: border-box;
   max-width: 100%;
   overflow: hidden;
@@ -313,9 +314,11 @@
 .groupActions {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: var(--space-4);
   opacity: 0;
   transition: opacity var(--transition-fast);
+  flex-shrink: 0;
 }
 
 .areaCard:hover .areaActions,

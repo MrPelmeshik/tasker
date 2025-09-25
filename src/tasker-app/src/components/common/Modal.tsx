@@ -73,6 +73,8 @@ export const Modal: React.FC<ModalProps> = ({
         return css.modalMedium;
       case 'large':
         return css.modalLarge;
+      case 'confirm':
+        return css.modalConfirm;
       default:
         return css.modalLarge;
     }

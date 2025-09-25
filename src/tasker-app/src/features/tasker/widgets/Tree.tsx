@@ -187,6 +187,13 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         if (areaId) {
           const updatedGroups = await fetchGroupShortCardByAreaForTree(areaId);
           setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
+          
+          // Обновляем счетчик групп в карточке области
+          setAreas(prev => prev.map(area => 
+            area.id === areaId 
+              ? { ...area, groupsCount: updatedGroups.length }
+              : area
+          ));
         }
       } else {
         // Получаем текущую группу для определения старой области
@@ -200,12 +207,26 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         if (newAreaId) {
           const updatedGroups = await fetchGroupShortCardByAreaForTree(newAreaId);
           setGroupsByArea(prev => new Map(prev).set(newAreaId, updatedGroups));
+          
+          // Обновляем счетчик групп в карточке новой области
+          setAreas(prev => prev.map(area => 
+            area.id === newAreaId 
+              ? { ...area, groupsCount: updatedGroups.length }
+              : area
+          ));
         }
         
         // Перезагружаем группы для старой области, если она отличается от новой
         if (oldAreaId && oldAreaId !== newAreaId) {
           const updatedOldGroups = await fetchGroupShortCardByAreaForTree(oldAreaId);
           setGroupsByArea(prev => new Map(prev).set(oldAreaId, updatedOldGroups));
+          
+          // Обновляем счетчик групп в карточке старой области
+          setAreas(prev => prev.map(area => 
+            area.id === oldAreaId 
+              ? { ...area, groupsCount: updatedOldGroups.length }
+              : area
+          ));
         }
       }
     } catch (error) {

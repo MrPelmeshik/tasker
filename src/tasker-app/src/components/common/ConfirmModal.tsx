@@ -33,7 +33,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   showDiscard = false,
 }) => {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false} closeOnEscape={false}>
+    <Modal isOpen={isOpen} onClose={onClose} closeOnOverlayClick={false} closeOnEscape={false} size="confirm">
       <div className={css.modalContent}>
         <div className={css.modalHeader}>
           <h3 className={css.modalTitle}>{title}</h3>

@@ -1,4 +1,4 @@
-export type ModalSize = 'small' | 'medium' | 'large';
+export type ModalSize = 'small' | 'medium' | 'large' | 'confirm';
 
 export type ModalSizeProps = {
   size?: ModalSize;
@@ -22,5 +22,11 @@ export const MODAL_SIZE_CONFIG = {
     maxHeight: '90vh',
     width: '90vw',
     height: '90vh',
+  },
+  confirm: {
+    maxWidth: 'calc(var(--space-24) * 20)', // 480px
+    maxHeight: 'calc(var(--space-24) * 12.5)', // 300px
+    width: '90vw',
+    height: 'auto',
   },
 } as const;
