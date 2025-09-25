@@ -8,6 +8,7 @@ type GlassButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: 'default' | 'primary' | 'danger' | 'success' | 'warning' | 'subtle';
   size?: Size;
   fullWidth?: boolean;
+  disabled?: boolean;
   // Toggle group props
   toggleGroup?: boolean;
   value?: string;
@@ -20,6 +21,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   variant = 'default', 
   size = 'm', 
   fullWidth, 
+  disabled = false,
   className, 
   children, 
   toggleGroup = false,
@@ -59,6 +61,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   }, [updateIndicator, toggleGroup]);
 
   const handleClick = (key: string) => {
+    if (disabled) return;
     if (toggleGroup && onChange && key !== value) {
       onChange(key);
     }
@@ -66,7 +69,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
 
   const renderOption = (key: string, label: React.ReactNode) => {
     const selected = key === value;
-    const btnClass = [css.btn, css[variant], css[size], selected ? css.selected : '', className]
+    const btnClass = [css.btn, css[variant], css[size], selected ? css.selected : '', disabled ? css.disabled : '', className]
       .filter(Boolean)
       .join(' ');
     return (
@@ -75,6 +78,7 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
         type="button"
         className={btnClass}
         onClick={() => handleClick(key)}
+        disabled={disabled}
         ref={(el) => { btnRefs.current[key] = el; }}
         {...rest}
       >
@@ -131,11 +135,11 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   }
 
   // Regular button mode
-  const classes = [css.btn, css[variant], css[size], fullWidth ? css.fullWidth : '', className]
+  const classes = [css.btn, css[variant], css[size], fullWidth ? css.fullWidth : '', disabled ? css.disabled : '', className]
     .filter(Boolean)
     .join(' ');
   return (
-    <button className={classes} {...rest}>
+    <button className={classes} disabled={disabled} {...rest}>
       <span className={css.inner}>{children}</span>
     </button>
   );

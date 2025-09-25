@@ -361,6 +361,127 @@
 .toggleRoot.m .indicator { border-radius: var(--radius-m); }
 .toggleRoot.l .indicator { border-radius: var(--radius-m); }
 
+/* Disabled state - base styles */
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
+}
+
+.disabled:hover,
+.disabled:active,
+.disabled:focus {
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
+}
+
+.disabled:hover::after,
+.disabled:active::after,
+.disabled:focus::after {
+  box-shadow: none;
+}
+
+/* Disabled state for default variant */
+.default.disabled {
+  background: var(--glass-gradient-bg-subtle);
+  border-color: var(--glass-border-1);
+}
+
+/* Disabled state for primary variant */
+.primary.disabled {
+  background: var(--glass-gradient-primary-active);
+  border-color: rgb(var(--color-accent) / 0.15);
+  color: var(--glass-text-muted);
+}
+
+.primary.disabled::before {
+  background: var(--glass-radial-primary);
+  opacity: 0.3;
+}
+
+/* Disabled state for danger variant */
+.danger.disabled {
+  background: var(--glass-gradient-danger-active);
+  border-color: rgb(var(--color-danger) / 0.15);
+  color: var(--glass-text-muted);
+}
+
+.danger.disabled::before {
+  background: var(--glass-radial-danger);
+  opacity: 0.3;
+}
+
+/* Disabled state for success variant */
+.success.disabled {
+  background: var(--glass-gradient-success-active);
+  border-color: rgb(var(--color-success) / 0.15);
+  color: var(--glass-text-muted);
+}
+
+.success.disabled::before {
+  background: var(--glass-radial-success);
+  opacity: 0.3;
+}
+
+/* Disabled state for warning variant */
+.warning.disabled {
+  background: var(--glass-gradient-warning-active);
+  border-color: rgb(var(--color-warning) / 0.15);
+  color: var(--glass-text-muted);
+}
+
+.warning.disabled::before {
+  background: var(--glass-radial-warning);
+  opacity: 0.3;
+}
+
+/* Disabled state for subtle variant */
+.subtle.disabled {
+  background: var(--glass-gradient-bg-subtle);
+  border-color: var(--glass-border-1);
+  color: var(--color-text-subtle);
+}
+
+/* Disabled state for toggle group */
+.toggleRoot .disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
+  background: transparent;
+  border-color: transparent;
+  color: rgb(var(--white) / 0.4);
+}
+
+.toggleRoot .disabled:hover {
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
+  background: transparent;
+  border-color: transparent;
+}
+
+/* Disabled state for toggle group variants */
+.toggleRoot .primary.disabled {
+  color: rgb(var(--color-accent) / 0.5);
+}
+
+.toggleRoot .danger.disabled {
+  color: rgb(var(--color-danger) / 0.5);
+}
+
+.toggleRoot .success.disabled {
+  color: rgb(var(--color-success) / 0.5);
+}
+
+.toggleRoot .warning.disabled {
+  color: rgb(var(--color-warning) / 0.5);
+}
+
+.toggleRoot .subtle.disabled {
+  color: var(--color-text-subtle);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .btn { transition: none; }
   .indicator { transition: none; }

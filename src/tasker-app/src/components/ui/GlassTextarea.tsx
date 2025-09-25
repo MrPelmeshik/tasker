@@ -7,6 +7,7 @@ type GlassTextareaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>
   errorText?: string;
   fullWidth?: boolean;
   size?: 's' | 'm' | 'l';
+  disabled?: boolean;
 };
 
 export const GlassTextarea: React.FC<GlassTextareaProps> = ({
@@ -15,20 +16,21 @@ export const GlassTextarea: React.FC<GlassTextareaProps> = ({
   errorText,
   fullWidth,
   size = 'm',
+  disabled = false,
   className,
   ...rest
 }) => {
   const wrapperClass = [css.wrapper, fullWidth ? css.fullWidth : '', className]
     .filter(Boolean)
     .join(' ');
-  const textareaClass = [css.input, css[size], errorText ? css.error : '']
+  const textareaClass = [css.input, css[size], errorText ? css.error : '', disabled ? css.disabled : '']
     .filter(Boolean)
     .join(' ');
 
   return (
     <label className={wrapperClass}>
       {label && <span className={css.label}>{label}</span>}
-      <textarea className={textareaClass} {...rest} />
+      <textarea className={textareaClass} disabled={disabled} {...rest} />
       {errorText ? (
         <span className={css.errorRow}>
           <span className={css.errorText}>{errorText}</span>

@@ -74,6 +74,28 @@
     0 0 0 2px rgb(var(--color-danger) / 0.20);
 }
 
+/* Disabled state */
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
+  background: var(--glass-gradient-bg-subtle);
+  border-color: var(--glass-border-1);
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
+}
+
+.disabled::placeholder {
+  color: var(--color-text-subtle);
+}
+
+.disabled:hover,
+.disabled:focus {
+  border-color: var(--glass-border-1);
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
+}
+
 .helperText { color: var(--color-text-secondary); font-size: var(--font-12); }
 .errorText { color: var(--color-danger-text); font-size: var(--font-12); }
 
@@ -121,9 +143,24 @@
   user-select: none;
 }
 
-.customSelect:disabled {
+.customSelect:disabled,
+.customSelect.disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  pointer-events: none;
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
+  background: var(--glass-gradient-bg-subtle);
+  border-color: var(--glass-border-1);
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
+}
+
+.customSelect:disabled:hover,
+.customSelect:disabled:focus,
+.customSelect.disabled:hover,
+.customSelect.disabled:focus {
+  border-color: var(--glass-border-1);
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
+  filter: grayscale(0.2) brightness(0.8) saturate(0.6);
 }
 
 .selectValue {

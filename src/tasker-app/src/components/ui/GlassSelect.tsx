@@ -40,7 +40,7 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({
     .filter(Boolean)
     .join(' ');
   
-  const buttonClass = [css.input, css[size], errorText ? css.error : '', css.customSelect]
+  const buttonClass = [css.input, css[size], errorText ? css.error : '', disabled ? css.disabled : '', css.customSelect]
     .filter(Boolean)
     .join(' ');
 
