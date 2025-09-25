@@ -2,10 +2,11 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AreaModal } from '../components/areas/AreaModal';
 import { GroupModal } from '../components/groups/GroupModal';
 import type { AreaResponse, GroupResponse, AreaCreateRequest, AreaUpdateRequest, GroupCreateRequest, GroupUpdateRequest } from '../types/api';
+import type { ModalSize } from '../types/modal-size';
 
 interface ModalContextType {
-  openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>) => void;
-  openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string) => void;
+  openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size?: ModalSize) => void;
+  openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string, size?: ModalSize) => void;
   closeAreaModal: () => void;
   closeGroupModal: () => void;
 }
@@ -30,7 +31,8 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     area: AreaResponse | null;
     mode: 'create' | 'edit';
     onSave: ((data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>) | null;
-  }>({ isOpen: false, area: null, mode: 'create', onSave: null });
+    size: ModalSize;
+  }>({ isOpen: false, area: null, mode: 'create', onSave: null, size: 'medium' });
 
   const [groupModal, setGroupModal] = useState<{
     isOpen: boolean;
@@ -39,22 +41,23 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     areas: AreaResponse[];
     onSave: ((data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>) | null;
     areaId?: string;
-  }>({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null });
+    size: ModalSize;
+  }>({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, size: 'medium' });
 
-  const openAreaModal = (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>) => {
-    setAreaModal({ isOpen: true, area, mode, onSave });
+  const openAreaModal = (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size: ModalSize = 'medium') => {
+    setAreaModal({ isOpen: true, area, mode, onSave, size });
   };
 
-  const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string) => {
-    setGroupModal({ isOpen: true, group, mode, areas, onSave, areaId });
+  const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string, size: ModalSize = 'medium') => {
+    setGroupModal({ isOpen: true, group, mode, areas, onSave, areaId, size });
   };
 
   const closeAreaModal = () => {
-    setAreaModal({ isOpen: false, area: null, mode: 'create', onSave: null });
+    setAreaModal({ isOpen: false, area: null, mode: 'create', onSave: null, size: 'medium' });
   };
 
   const closeGroupModal = () => {
-    setGroupModal({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null });
+    setGroupModal({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, size: 'medium' });
   };
 
   return (
@@ -68,6 +71,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         onSave={areaModal.onSave || (() => Promise.resolve())}
         area={areaModal.area}
         title={areaModal.mode === 'create' ? 'Создание области' : 'Редактирование области'}
+        size={areaModal.size}
       />
 
       <GroupModal
@@ -77,6 +81,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         group={groupModal.group}
         areas={groupModal.areas}
         title={groupModal.mode === 'create' ? 'Создание группы' : 'Редактирование группы'}
+        size={groupModal.size}
       />
     </ModalContext.Provider>
   );

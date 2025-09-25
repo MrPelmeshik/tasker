@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import css from '../../styles/modal.module.css';
+import type { ModalSize } from '../../types/modal-size';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ export interface ModalProps {
   closeOnEscape?: boolean;
   hasUnsavedChanges?: boolean;
   onUnsavedChangesClose?: () => void;
+  size?: ModalSize;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -21,6 +23,7 @@ export const Modal: React.FC<ModalProps> = ({
   closeOnEscape = true,
   hasUnsavedChanges = false,
   onUnsavedChangesClose,
+  size = 'large',
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -62,9 +65,28 @@ export const Modal: React.FC<ModalProps> = ({
 
   if (!isOpen) return null;
 
+  const getSizeClass = (size: ModalSize) => {
+    switch (size) {
+      case 'small':
+        return css.modalSmall;
+      case 'medium':
+        return css.modalMedium;
+      case 'large':
+        return css.modalLarge;
+      default:
+        return css.modalLarge;
+    }
+  };
+
+  const modalClass = [
+    css.modal,
+    getSizeClass(size),
+    className
+  ].filter(Boolean).join(' ');
+
   return (
     <div className={css.overlay} ref={modalRef}>
-      <div className={`${css.modal} ${className}`}>
+      <div className={modalClass}>
         {children}
       </div>
     </div>

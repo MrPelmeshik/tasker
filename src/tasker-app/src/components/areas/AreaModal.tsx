@@ -10,6 +10,7 @@ import { ResetIcon } from '../icons/ResetIcon';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest } from '../../types';
+import type { ModalSize } from '../../types/modal-size';
 
 export interface AreaModalProps {
   isOpen: boolean;
@@ -17,6 +18,7 @@ export interface AreaModalProps {
   onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>;
   area?: AreaResponse | null; // null для создания новой области
   title?: string;
+  size?: ModalSize;
 }
 
 export const AreaModal: React.FC<AreaModalProps> = ({
@@ -25,6 +27,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   onSave,
   area = null,
   title = 'Область',
+  size = 'medium',
 }) => {
   const [formData, setFormData] = useState<AreaCreateRequest>({
     title: '',
@@ -116,6 +119,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       isOpen={isOpen} 
       onClose={handleClose}
       hasUnsavedChanges={hasUnsavedChanges}
+      size={size}
     >
       <div className={css.modalContent}>
         <div className={css.modalHeader}>
@@ -146,16 +150,10 @@ export const AreaModal: React.FC<AreaModalProps> = ({
           <div className={formCss.formContainer}>
             {/* Поле названия */}
             <div className={formCss.fieldGroup}>
-              <label className={formCss.fieldLabel}>
-                Название области *
-              </label>
-              <div className={formCss.fieldContainer}>
-                <GlassInput
-                  value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
-                  placeholder="Введите название области"
-                  disabled={isLoading}
-                />
+              <div className={formCss.fieldHeader}>
+                <label className={formCss.fieldLabel}>
+                  Название области *
+                </label>
                 {fieldChanges.title && (
                   <GlassButton
                     variant="subtle"
@@ -167,13 +165,34 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   </GlassButton>
                 )}
               </div>
+              <div className={formCss.fieldContainer}>
+                <GlassInput
+                  value={formData.title}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
+                  placeholder="Введите название области"
+                  disabled={isLoading}
+                  fullWidth
+                />
+              </div>
             </div>
 
             {/* Поле описания */}
             <div className={formCss.fieldGroup}>
-              <label className={formCss.fieldLabel}>
-                Описание
-              </label>
+              <div className={formCss.fieldHeader}>
+                <label className={formCss.fieldLabel}>
+                  Описание
+                </label>
+                {fieldChanges.description && (
+                  <GlassButton
+                    variant="subtle"
+                    size="xxs"
+                    onClick={() => handleResetField('description')}
+                    className={formCss.resetButton}
+                  >
+                    <ResetIcon />
+                  </GlassButton>
+                )}
+              </div>
               <div className={formCss.fieldContainer}>
                 <GlassTextarea
                   value={formData.description}
@@ -181,17 +200,8 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   placeholder="Введите описание области"
                   rows={4}
                   disabled={isLoading}
+                  fullWidth
                 />
-                {fieldChanges.description && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
-                    onClick={() => handleResetField('description')}
-                    className={formCss.resetButtonTextarea}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
-                )}
               </div>
             </div>
           </div>

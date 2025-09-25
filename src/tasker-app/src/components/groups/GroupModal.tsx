@@ -11,6 +11,7 @@ import { ResetIcon } from '../icons/ResetIcon';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaResponse } from '../../types';
+import type { ModalSize } from '../../types/modal-size';
 
 export interface GroupModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export interface GroupModalProps {
   group?: GroupResponse | null; // null для создания новой группы
   areas: AreaResponse[];
   title?: string;
+  size?: ModalSize;
 }
 
 export const GroupModal: React.FC<GroupModalProps> = ({
@@ -28,6 +30,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   group = null,
   areas,
   title = 'Группа',
+  size = 'medium',
 }) => {
   const [formData, setFormData] = useState<GroupCreateRequest>({
     title: '',
@@ -123,6 +126,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
       isOpen={isOpen} 
       onClose={handleClose}
       hasUnsavedChanges={hasUnsavedChanges}
+      size={size}
     >
       <div className={css.modalContent}>
         <div className={css.modalHeader}>
@@ -153,9 +157,21 @@ export const GroupModal: React.FC<GroupModalProps> = ({
           <div className={formCss.formContainer}>
             {/* Поле области */}
             <div className={formCss.fieldGroup}>
-              <label className={formCss.fieldLabel}>
-                Область *
-              </label>
+              <div className={formCss.fieldHeader}>
+                <label className={formCss.fieldLabel}>
+                  Область *
+                </label>
+                {fieldChanges.areaId && (
+                  <GlassButton
+                    variant="subtle"
+                    size="xxs"
+                    onClick={() => handleResetField('areaId')}
+                    className={formCss.resetButton}
+                  >
+                    <ResetIcon />
+                  </GlassButton>
+                )}
+              </div>
               <div className={formCss.fieldContainer}>
                 <GlassSelect
                   value={formData.areaId}
@@ -168,32 +184,17 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                     }))
                   ]}
                   disabled={isLoading}
+                  fullWidth
                 />
-                {fieldChanges.areaId && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
-                    onClick={() => handleResetField('areaId')}
-                    className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
-                )}
               </div>
             </div>
 
             {/* Поле названия */}
             <div className={formCss.fieldGroup}>
-              <label className={formCss.fieldLabel}>
-                Название группы *
-              </label>
-              <div className={formCss.fieldContainer}>
-                <GlassInput
-                  value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
-                  placeholder="Введите название группы"
-                  disabled={isLoading}
-                />
+              <div className={formCss.fieldHeader}>
+                <label className={formCss.fieldLabel}>
+                  Название группы *
+                </label>
                 {fieldChanges.title && (
                   <GlassButton
                     variant="subtle"
@@ -205,13 +206,34 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                   </GlassButton>
                 )}
               </div>
+              <div className={formCss.fieldContainer}>
+                <GlassInput
+                  value={formData.title}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
+                  placeholder="Введите название группы"
+                  disabled={isLoading}
+                  fullWidth
+                />
+              </div>
             </div>
 
             {/* Поле описания */}
             <div className={formCss.fieldGroup}>
-              <label className={formCss.fieldLabel}>
-                Описание
-              </label>
+              <div className={formCss.fieldHeader}>
+                <label className={formCss.fieldLabel}>
+                  Описание
+                </label>
+                {fieldChanges.description && (
+                  <GlassButton
+                    variant="subtle"
+                    size="xxs"
+                    onClick={() => handleResetField('description')}
+                    className={formCss.resetButton}
+                  >
+                    <ResetIcon />
+                  </GlassButton>
+                )}
+              </div>
               <div className={formCss.fieldContainer}>
                 <GlassTextarea
                   value={formData.description}
@@ -219,17 +241,8 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                   placeholder="Введите описание группы"
                   rows={4}
                   disabled={isLoading}
+                  fullWidth
                 />
-                {fieldChanges.description && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
-                    onClick={() => handleResetField('description')}
-                    className={formCss.resetButtonTextarea}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
-                )}
               </div>
             </div>
           </div>

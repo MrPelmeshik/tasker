@@ -5,7 +5,6 @@ import styles from '../styles/login-page.module.css';
 import { GlassInput } from '../components/ui/GlassInput';
 import { GlassButton } from '../components/ui/GlassButton';
 import { GlassWidget } from '../components/common/GlassWidget';
-import { GlassToggle } from '../components/ui/GlassToggle';
 import { useAuth } from '../context/AuthContext';
 
 export const LoginPage: React.FC = () => {
@@ -88,7 +87,8 @@ export const LoginPage: React.FC = () => {
       <div className={styles.centerWrap}>
         <GlassWidget className={styles.card}>
           <div className={styles.toggleWrap}>
-            <GlassToggle
+            <GlassButton
+              toggleGroup
               value={isRegister ? 'register' : 'login'}
               onChange={(v) => { setIsRegister(v === 'register'); clearError(); }}
               options={[

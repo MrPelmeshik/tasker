@@ -3,3 +3,4 @@ export * from './api';
 export * from './area-group';
 export * from './auth';
 export * from './widget-size';
+export * from './modal-size';

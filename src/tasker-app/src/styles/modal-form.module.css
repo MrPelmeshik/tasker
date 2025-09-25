@@ -11,11 +11,19 @@
   gap: var(--space-8);
 }
 
+.fieldHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+}
+
 .fieldLabel {
   font-size: var(--font-14);
   font-weight: 500;
   color: var(--color-text);
   margin: 0;
+  flex: 1;
 }
 
 .fieldContainer {
@@ -23,22 +31,9 @@
 }
 
 .resetButton {
-  position: absolute;
-  right: var(--space-8);
-  top: 50%;
-  transform: translateY(-50%);
   min-width: auto;
   padding: var(--space-4);
-  z-index: 2;
-}
-
-.resetButtonTextarea {
-  position: absolute;
-  right: var(--space-8);
-  top: var(--space-8);
-  min-width: auto;
-  padding: var(--space-4);
-  z-index: 2;
+  flex-shrink: 0;
 }
 
 /* Убираем лишние фоны для соответствия общей стилистике */
