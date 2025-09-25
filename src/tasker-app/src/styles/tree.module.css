@@ -177,22 +177,6 @@
   min-width: 0;
 }
 
-.areaGroupsCount {
-  font-size: var(--font-10);
-  font-weight: 400;
-  color: var(--glass-text-muted);
-  background: rgba(255, 255, 255, 0.04);
-  padding: var(--space-2);
-  border-radius: var(--radius-round);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: var(--size-18);
-  height: var(--size-18);
-  white-space: nowrap;
-  flex-shrink: 0;
-}
-
 .groupsSection {
   position: relative;
   margin-top: var(--space-4);

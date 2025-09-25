@@ -285,7 +285,6 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       <GlassTag 
                         variant="subtle" 
                         size="xs"
-                        className={css.areaGroupsCount}
                       >
                         {area.groupsCount}
                       </GlassTag>
@@ -305,7 +304,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       size="xs"
                       onClick={(e: React.MouseEvent) => handleCreateGroupForArea(area.id, e)}
                     >
-                      <PlusIcon />
+                      Cоздать группу
                     </GlassButton>
                   </div>
                 </div>
@@ -337,9 +336,6 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                               <div className={css.groupContent}>
                                 <div className={css.groupInfo}>
                                   <div className={css.groupTitle}>{group.title}</div>
-                                  {group.description && (
-                                    <div className="text-sm text-gray-600 mt-1">{group.description}</div>
-                                  )}
                                 </div>
                                 <div className={css.groupActions}>
                                   <GlassButton 

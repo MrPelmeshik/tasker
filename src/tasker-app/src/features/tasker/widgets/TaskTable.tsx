@@ -96,7 +96,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                   <td className={`${css.td} ${css.colCarry}`} title={`Перенос: ${task.carryWeeks}`}>
                     {task.carryWeeks > 0 ? (
                       <GlassTag 
-                        variant="info" 
+                        variant="subtle" 
                         size="xs"
                       >
                         {task.carryWeeks}
@@ -113,7 +113,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                   <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>
                     {task.hasFutureActivities ? (
                       <GlassTag 
-                        variant="info" 
+                        variant="subtle" 
                         size="xs"
                       >
                         →
