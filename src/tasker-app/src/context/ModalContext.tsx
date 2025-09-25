@@ -5,7 +5,7 @@ import type { AreaResponse, GroupResponse, AreaCreateRequest, AreaUpdateRequest,
 
 interface ModalContextType {
   openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>) => void;
-  openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest) => Promise<void>, areaId?: string) => void;
+  openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string) => void;
   closeAreaModal: () => void;
   closeGroupModal: () => void;
 }
@@ -37,7 +37,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     group: GroupResponse | null;
     mode: 'create' | 'edit';
     areas: AreaResponse[];
-    onSave: ((data: GroupCreateRequest | GroupUpdateRequest) => Promise<void>) | null;
+    onSave: ((data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>) | null;
     areaId?: string;
   }>({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null });
 
@@ -45,7 +45,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setAreaModal({ isOpen: true, area, mode, onSave });
   };
 
-  const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest) => Promise<void>, areaId?: string) => {
+  const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string) => {
     setGroupModal({ isOpen: true, group, mode, areas, onSave, areaId });
   };
 

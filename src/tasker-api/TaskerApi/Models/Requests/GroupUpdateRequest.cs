@@ -19,4 +19,10 @@ public class GroupUpdateRequest
     /// </summary>
     [StringLength(1000, ErrorMessage = "Описание группы не может быть длиннее 1000 символов")]
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Идентификатор области
+    /// </summary>
+    [Required(ErrorMessage = "Идентификатор области обязателен")]
+    public Guid AreaId { get; set; }
 }

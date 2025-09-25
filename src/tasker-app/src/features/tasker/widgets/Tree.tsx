@@ -129,7 +129,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       updatedAt: '',
       isActive: true,
     }));
-    openGroupModal(null, 'create', areasForModal, handleGroupSave, areaId);
+    openGroupModal(null, 'create', areasForModal, (data, groupId) => handleGroupSave(data, groupId), areaId);
   };
 
   // Обработчики для групп
@@ -147,7 +147,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           updatedAt: '',
           isActive: true,
         }));
-        openGroupModal(group, 'edit', areasForModal, handleGroupSave);
+        openGroupModal(group, 'edit', areasForModal, (data, groupId) => handleGroupSave(data, groupId));
       }
     } catch (error) {
       console.error('Ошибка загрузки группы:', error);
@@ -175,10 +175,10 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     }
   };
 
-  const handleGroupSave = async (data: any) => {
+  const handleGroupSave = async (data: any, groupId?: string) => {
     try {
-      // Определяем режим по наличию ID в данных
-      const isCreate = !data.id;
+      // Определяем режим по наличию groupId
+      const isCreate = !groupId;
       
       if (isCreate) {
         await createGroup(data as GroupCreateRequest);
@@ -189,12 +189,23 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
         }
       } else {
-        await updateGroup(data.id, data as GroupUpdateRequest);
-        // Перезагружаем группы для соответствующей области
-        const areaId = data.areaId;
-        if (areaId) {
-          const updatedGroups = await fetchGroupShortCardByAreaForTree(areaId);
-          setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
+        // Получаем текущую группу для определения старой области
+        const currentGroup = await fetchGroupById(groupId);
+        const oldAreaId = currentGroup?.areaId;
+        
+        await updateGroup(groupId, data as GroupUpdateRequest);
+        
+        // Перезагружаем группы для новой области
+        const newAreaId = data.areaId;
+        if (newAreaId) {
+          const updatedGroups = await fetchGroupShortCardByAreaForTree(newAreaId);
+          setGroupsByArea(prev => new Map(prev).set(newAreaId, updatedGroups));
+        }
+        
+        // Перезагружаем группы для старой области, если она отличается от новой
+        if (oldAreaId && oldAreaId !== newAreaId) {
+          const updatedOldGroups = await fetchGroupShortCardByAreaForTree(oldAreaId);
+          setGroupsByArea(prev => new Map(prev).set(oldAreaId, updatedOldGroups));
         }
       }
     } catch (error) {

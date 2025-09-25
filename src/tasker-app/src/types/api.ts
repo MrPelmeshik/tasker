@@ -38,6 +38,7 @@ export interface GroupCreateRequest {
 export interface GroupUpdateRequest {
   title: string;
   description?: string;
+  areaId: string;
 }
 
 export interface GroupResponse {

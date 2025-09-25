@@ -151,8 +151,15 @@ public class GroupService(
                 throw new UnauthorizedAccessException("Нет доступа к указанной группе");
             }
 
+            // Проверяем доступ к новой области, если она изменилась
+            if (existingItem.AreaId != item.AreaId && !currentUser.AccessibleAreas.Contains(item.AreaId))
+            {
+                throw new UnauthorizedAccessException("Нет доступа к указанной области");
+            }
+
             existingItem.Title = item.Title;
             existingItem.Description = item.Description;
+            existingItem.AreaId = item.AreaId;
 
             await groupProvider.UpdateAsync(
                 uow.Connection,

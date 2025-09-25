@@ -4,7 +4,7 @@ import { ConfirmModal } from '../common/ConfirmModal';
 import { GlassButton } from '../ui/GlassButton';
 import { GlassInput } from '../ui/GlassInput';
 import { GlassTextarea } from '../ui/GlassTextarea';
-import { GlassSelect } from '../ui/GlassSelect';
+import { GlassSelect } from '../ui';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
@@ -15,7 +15,7 @@ import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaRespons
 export interface GroupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: GroupCreateRequest | GroupUpdateRequest) => Promise<void>;
+  onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>;
   group?: GroupResponse | null; // null для создания новой группы
   areas: AreaResponse[];
   title?: string;
@@ -85,9 +85,9 @@ export const GroupModal: React.FC<GroupModalProps> = ({
     
     setIsLoading(true);
     try {
-      // Добавляем ID и areaId для режима редактирования
-      const dataToSave = group ? { ...formData, id: group.id, areaId: group.areaId } : formData;
-      await onSave(dataToSave);
+      // Передаем данные и ID группы отдельно
+      const groupId = group ? group.id : undefined;
+      await onSave(formData, groupId);
       onClose();
     } catch (error) {
       console.error('Ошибка сохранения группы:', error);
@@ -159,17 +159,17 @@ export const GroupModal: React.FC<GroupModalProps> = ({
               <div className={formCss.fieldContainer}>
                 <GlassSelect
                   value={formData.areaId}
-                  onChange={(e: React.ChangeEvent<HTMLSelectElement>) => handleFieldChange('areaId', e.target.value)}
-                  disabled={isLoading || !!group} // Нельзя менять область при редактировании
-                >
-                  <option value="">Выберите область</option>
-                  {areas.map((area) => (
-                    <option key={area.id} value={area.id}>
-                      {area.title}
-                    </option>
-                  ))}
-                </GlassSelect>
-                {fieldChanges.areaId && !group && (
+                  onChange={(value) => handleFieldChange('areaId', value)}
+                  options={[
+                    { value: '', label: 'Выберите область' },
+                    ...areas.map((area) => ({
+                      value: area.id,
+                      label: area.title
+                    }))
+                  ]}
+                  disabled={isLoading}
+                />
+                {fieldChanges.areaId && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
