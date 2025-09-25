@@ -15,8 +15,10 @@ public class GroupService(
     IUnitOfWorkFactory uowFactory,
     ICurrentUserService currentUser,
     IGroupProvider groupProvider,
+    ITaskProvider taskProvider,
     IUserAreaAccessProvider userAreaAccessProvider,
-    TableMetaInfo<GroupEntity> groupsTable)
+    TableMetaInfo<GroupEntity> groupsTable,
+    TableMetaInfo<TaskEntity> tasksTable)
     : IGroupService
 {
     public async Task<IEnumerable<GroupResponse>> GetAsync(CancellationToken cancellationToken)
@@ -195,13 +197,27 @@ public class GroupService(
                 filers: [new SimpleFilter<Guid>(groupsTable[nameof(GroupEntity.AreaId)].DbName, areaId)],
                 transaction: uow.Transaction);
 
-            await uow.CommitAsync(cancellationToken);
-            return groups.Select(x => new GroupSummaryResponse
+            var result = new List<GroupSummaryResponse>();
+
+            foreach (var group in groups)
             {
-                Id = x.Id,
-                Title = x.Title,
-                Description = x.Description
-            });
+                var tasksCount = await taskProvider.GetCountAsync(
+                    uow.Connection,
+                    cancellationToken,
+                    filers: [new SimpleFilter<Guid>(tasksTable[nameof(TaskEntity.GroupId)].DbName, group.Id)],
+                    transaction: uow.Transaction);
+
+                result.Add(new GroupSummaryResponse
+                {
+                    Id = group.Id,
+                    Title = group.Title,
+                    Description = group.Description,
+                    TasksCount = tasksCount
+                });
+            }
+
+            await uow.CommitAsync(cancellationToken);
+            return result;
         }
         catch (Exception e)
         {

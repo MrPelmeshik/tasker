@@ -15,6 +15,8 @@ public class CurrentUserService: ICurrentUserService
     private readonly UserEntity? _user;
 
     public required IReadOnlyList<Guid> AccessibleAreas { get; init; }
+    
+    public required IReadOnlyList<Guid> AccessibleGroups { get; init; }
 
     public CurrentUserService(
         IHttpContextAccessor httpContextAccessor,
@@ -29,7 +31,7 @@ public class CurrentUserService: ICurrentUserService
             : Guid.Empty;
         IsAuthenticated = principal?.Identity?.IsAuthenticated ?? false;
         
-        var (user, accessibleAreas) = GetUserAndAccessibleAreas(
+        var (user, accessibleAreas, accessibleGroups) = GetUserAndAccessibleData(
                 uowFactory, 
                 userProvider, 
                 userAreaAccessProvider)
@@ -38,6 +40,7 @@ public class CurrentUserService: ICurrentUserService
         
         _user = user;
         AccessibleAreas = accessibleAreas;
+        AccessibleGroups = accessibleGroups;
     }
 
     public bool HasAccessToArea(Guid areaId)
@@ -56,7 +59,23 @@ public class CurrentUserService: ICurrentUserService
         return areaIds.Intersect(AccessibleAreas).Any();
     }
     
-    private async Task<(UserEntity?, IReadOnlyList<Guid>)> GetUserAndAccessibleAreas(
+    public bool HasAccessToGroup(Guid groupId)
+    {
+        if (!IsAuthenticated || UserId == Guid.Empty)
+            return false;
+
+        return AccessibleGroups.Contains(groupId);
+    }
+    
+    public bool HasAccessToGroup(IList<Guid> groupIds)
+    {
+        if (!IsAuthenticated || UserId == Guid.Empty || !groupIds.Any())
+            return false;
+
+        return groupIds.Intersect(AccessibleGroups).Any();
+    }
+    
+    private async Task<(UserEntity?, IReadOnlyList<Guid>, IReadOnlyList<Guid>)> GetUserAndAccessibleData(
         IUnitOfWorkFactory uowFactory, 
         IUserProvider userProvider, 
         IUserAreaAccessProvider userAreaAccessProvider)
@@ -75,7 +94,14 @@ public class CurrentUserService: ICurrentUserService
                 UserId,
                 cancellationToken);
 
-        return (user, accessibleAreas.ToArray().AsReadOnly());
+        // Получаем все группы из доступных областей
+        var accessibleGroups = await userAreaAccessProvider
+            .GetUserAccessibleGroupIdsAsync(
+                uow.Connection,
+                UserId,
+                cancellationToken);
+
+        return (user, accessibleAreas.ToArray().AsReadOnly(), accessibleGroups.ToArray().AsReadOnly());
     }
 }
 

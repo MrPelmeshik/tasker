@@ -40,5 +40,26 @@ export interface GroupSummary {
   id: string;
   title: string;
   description?: string;
+  tasksCount: number;
+  customColor?: string; // Hex цвет для кастомной окраски карточки
+}
+
+export interface Task {
+  id: string;
+  title: string;
+  description?: string;
+  groupId: string;
+  creatorUserId: string;
+  createdAt: string;
+  deactivatedAt?: string;
+  isActive: boolean;
+  updatedAt: string;
+  customColor?: string; // Hex цвет для кастомной окраски карточки
+}
+
+export interface TaskSummary {
+  id: string;
+  title: string;
+  description?: string;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }

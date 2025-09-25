@@ -36,6 +36,29 @@ public class UserAreaAccessProvider(
             .AsReadOnly();
     }
 
+    public async Task<IReadOnlyList<Guid>> GetUserAccessibleGroupIdsAsync(
+        IDbConnection connection, 
+        Guid userId, 
+        CancellationToken cancellationToken, 
+        IDbTransaction? transaction = null)
+    {
+        // Получаем все группы из областей, к которым у пользователя есть доступ
+        const string sql = @"
+            SELECT DISTINCT g.id 
+            FROM groups g
+            INNER JOIN user_area_access uaa ON g.area_id = uaa.area_id
+            WHERE uaa.user_id = @UserId 
+              AND uaa.is_active = true 
+              AND g.is_active = true";
+
+        var groupIds = await connection.QueryAsync<Guid>(
+            sql, 
+            new { UserId = userId }, 
+            transaction);
+
+        return groupIds.ToArray().AsReadOnly();
+    }
+
     public async Task<Guid> GrantAccessAsync(
         IDbConnection connection, 
         Guid userId, 

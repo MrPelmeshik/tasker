@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { GlassWidget, GlassButton, GlassTag } from '../../../components';
 import type { WidgetSizeProps } from '../../../types';
 import css from '../../../styles/task-table.module.css';
-import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity } from '../../../services/api';
+import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity, type TaskDayActivity } from '../../../services/api';
 
 type WeekNav = 'prev' | 'next' | 'current' | 'latest';
 
@@ -53,7 +53,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     let alive = true;
     setLoading(true);
     fetchWeeklyTasks({ weekStartIso })
-      .then(res => { if (alive) setData(res); })
+      .then((res: TaskWeeklyActivity[]) => { if (alive) setData(res); })
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };
   }, [weekStartIso]);
@@ -103,7 +103,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       </GlassTag>
                     ) : null}
                   </td>
-                  {task.days.map((day) => (
+                  {task.days.map((day: TaskDayActivity) => (
                     <td key={day.date} className={`${css.td} ${css.colDay}`}>
                       {day.count > 0 ? (
                         <span title={String(day.count)} className={`${css.heatCell} ${intensityClass(day.count)}`} />

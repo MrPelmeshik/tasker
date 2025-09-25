@@ -34,4 +34,29 @@ export {
   fetchGroupShortCardByAreaForTree 
 } from './groups';
 
-// Типы экспортируются через главный index.ts
+// Экспорт отдельных функций из tasks
+export { 
+  taskApi,
+  TaskApiClient
+} from './tasks';
+
+export {
+  fetchTasks,
+  fetchTaskById,
+  createTask,
+  updateTask,
+  fetchActiveTasks,
+  fetchTasksByGroup,
+  fetchActiveTasksByGroup,
+  fetchTasksByCreator,
+  fetchActiveTasksByCreator,
+  fetchTaskSummaryByGroup,
+  fetchWeeklyTasks,
+  getMonday
+} from './tasks';
+
+// Экспорт типов
+export type {
+  TaskWeeklyActivity,
+  TaskDayActivity
+} from '../../types/api';

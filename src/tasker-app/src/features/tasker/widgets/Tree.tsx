@@ -8,12 +8,15 @@ import type {
   WidgetSizeProps, 
   AreaShortCard, 
   GroupSummary,
+  TaskSummary,
   AreaResponse, 
   GroupResponse, 
   AreaCreateRequest, 
   AreaUpdateRequest, 
   GroupCreateRequest, 
-  GroupUpdateRequest 
+  GroupUpdateRequest,
+  TaskCreateRequest,
+  TaskUpdateRequest
 } from '../../../types';
 import { 
   fetchAreaShortCard, 
@@ -23,7 +26,11 @@ import {
   fetchGroupShortCardByAreaForTree, 
   fetchGroupById, 
   createGroup, 
-  updateGroup 
+  updateGroup,
+  fetchTaskSummaryByGroup,
+  fetchTaskById,
+  createTask,
+  updateTask
 } from '../../../services/api';
 import css from '../../../styles/tree.module.css';
 import { EyeIcon, PlusIcon } from '../../../components/icons';
@@ -41,12 +48,15 @@ function hexToRgb(hex: string): string {
 }
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
-  const { openAreaModal, openGroupModal } = useModal();
+  const { openAreaModal, openGroupModal, openTaskModal } = useModal();
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
   const [groupsByArea, setGroupsByArea] = useState<Map<string, GroupSummary[]>>(new Map());
+  const [tasksByGroup, setTasksByGroup] = useState<Map<string, TaskSummary[]>>(new Map());
   const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [loadingGroups, setLoadingGroups] = useState<Set<string>>(new Set());
+  const [loadingTasks, setLoadingTasks] = useState<Set<string>>(new Set());
 
 
   useEffect(() => {
@@ -101,6 +111,40 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     }
   };
 
+  const toggleGroup = async (groupId: string) => {
+    setExpandedGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+        // Загружаем задачи для группы, если их еще нет
+        if (!tasksByGroup.has(groupId)) {
+          loadTasksForGroup(groupId);
+        }
+      }
+      return newSet;
+    });
+  };
+
+  const loadTasksForGroup = async (groupId: string) => {
+    try {
+      setLoadingTasks(prev => new Set(prev).add(groupId));
+      const tasks = await fetchTaskSummaryByGroup(groupId);
+      setTasksByGroup(prev => new Map(prev).set(groupId, tasks));
+      console.log(`Задачи для группы ${groupId} загружены:`, tasks);
+    } catch (error) {
+      console.error(`Ошибка загрузки задач для группы ${groupId}:`, error);
+      setTasksByGroup(prev => new Map(prev).set(groupId, []));
+    } finally {
+      setLoadingTasks(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(groupId);
+        return newSet;
+      });
+    }
+  };
+
   // Обработчики для областей
   const handleCreateArea = () => {
     openAreaModal(null, 'create', handleAreaSave);
@@ -132,6 +176,21 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     openGroupModal(null, 'create', areasForModal, (data, groupId) => handleGroupSave(data, groupId), areaId);
   };
 
+  const handleCreateTaskForGroup = (groupId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    const groupsForModal = Array.from(groupsByArea.values()).flat().map(group => ({
+      id: group.id,
+      title: group.title,
+      description: group.description,
+      areaId: '', // TODO: Получить areaId из контекста
+      creatorUserId: '',
+      createdAt: '',
+      updatedAt: '',
+      isActive: true,
+    }));
+    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), groupId);
+  };
+
   // Обработчики для групп
   const handleViewGroupDetails = async (groupId: string, event: React.MouseEvent) => {
     event.stopPropagation();
@@ -151,6 +210,29 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       }
     } catch (error) {
       console.error('Ошибка загрузки группы:', error);
+    }
+  };
+
+  // Обработчики для задач
+  const handleViewTaskDetails = async (taskId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      const task = await fetchTaskById(taskId);
+      if (task) {
+        const groupsForModal = Array.from(groupsByArea.values()).flat().map(group => ({
+          id: group.id,
+          title: group.title,
+          description: group.description,
+          areaId: '', // TODO: Получить areaId из контекста
+          creatorUserId: '',
+          createdAt: '',
+          updatedAt: '',
+          isActive: true,
+        }));
+        openTaskModal(task, 'edit', groupsForModal, (data, taskId) => handleTaskSave(data, taskId));
+      }
+    } catch (error) {
+      console.error('Ошибка загрузки задачи:', error);
     }
   };
 
@@ -231,6 +313,87 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       }
     } catch (error) {
       console.error('Ошибка сохранения группы:', error);
+      throw error;
+    }
+  };
+
+  const handleTaskSave = async (data: any, taskId?: string) => {
+    try {
+      // Определяем режим по наличию taskId
+      const isCreate = !taskId;
+      
+      if (isCreate) {
+        await createTask(data as TaskCreateRequest);
+        // Перезагружаем задачи для соответствующей группы
+        const groupId = data.groupId;
+        if (groupId) {
+          const updatedTasks = await fetchTaskSummaryByGroup(groupId);
+          setTasksByGroup(prev => new Map(prev).set(groupId, updatedTasks));
+          
+          // Обновляем счетчик задач в карточке группы
+          setGroupsByArea(prev => {
+            const newMap = new Map(prev);
+            newMap.forEach((groups, areaId) => {
+              const updatedGroups = groups.map((group: GroupSummary) => 
+                group.id === groupId 
+                  ? { ...group, tasksCount: updatedTasks.length }
+                  : group
+              );
+              newMap.set(areaId, updatedGroups);
+            });
+            return newMap;
+          });
+        }
+      } else {
+        // Получаем текущую задачу для определения старой группы
+        const currentTask = await fetchTaskById(taskId);
+        const oldGroupId = currentTask?.groupId;
+        
+        await updateTask(taskId, data as TaskUpdateRequest);
+        
+        // Перезагружаем задачи для новой группы
+        const newGroupId = data.groupId;
+        if (newGroupId) {
+          const updatedTasks = await fetchTaskSummaryByGroup(newGroupId);
+          setTasksByGroup(prev => new Map(prev).set(newGroupId, updatedTasks));
+          
+          // Обновляем счетчик задач в карточке новой группы
+          setGroupsByArea(prev => {
+            const newMap = new Map(prev);
+            newMap.forEach((groups, areaId) => {
+              const updatedGroups = groups.map((group: GroupSummary) => 
+                group.id === newGroupId 
+                  ? { ...group, tasksCount: updatedTasks.length }
+                  : group
+              );
+              newMap.set(areaId, updatedGroups);
+            });
+            return newMap;
+          });
+        }
+        
+        // Перезагружаем задачи для старой группы, если она отличается от новой
+        if (oldGroupId && oldGroupId !== newGroupId) {
+          const updatedOldTasks = await fetchTaskSummaryByGroup(oldGroupId);
+          setTasksByGroup(prev => new Map(prev).set(oldGroupId, updatedOldTasks));
+          
+          // Обновляем счетчик задач в карточке старой группы
+          setGroupsByArea(prev => {
+            const newMap = new Map(prev);
+            newMap.forEach((groups, areaId) => {
+              const updatedGroups = groups.map((group: GroupSummary) => 
+                group.id === oldGroupId 
+                  ? { ...group, tasksCount: updatedOldTasks.length }
+                  : group
+              );
+              newMap.set(areaId, updatedGroups);
+            });
+            return newMap;
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Ошибка сохранения задачи:', error);
       throw error;
     }
   };
@@ -329,13 +492,22 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                           return (
                           <div key={group.id} className={css.groupItem}>
                             <div 
-                              className={css.groupCard}
+                              className={`${css.groupCard} ${expandedGroups.has(group.id) ? css.expanded : ''}`}
+                              onClick={() => toggleGroup(group.id)}
                               data-custom-color={group.customColor ? 'true' : undefined}
                               style={groupCustomColorStyle}
                             >
                               <div className={css.groupContent}>
                                 <div className={css.groupInfo}>
-                                  <div className={css.groupTitle}>{group.title}</div>
+                                  <div className={css.groupTitleRow}>
+                                    <GlassTag 
+                                      variant="subtle" 
+                                      size="xs"
+                                    >
+                                      {group.tasksCount}
+                                    </GlassTag>
+                                    <div className={css.groupTitle}>{group.title}</div>
+                                  </div>
                                 </div>
                                 <div className={css.groupActions}>
                                   <GlassButton 
@@ -345,9 +517,63 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                                   >
                                     <EyeIcon />
                                   </GlassButton>
+                                  <GlassButton 
+                                    variant="subtle"
+                                    size="xs"
+                                    onClick={(e: React.MouseEvent) => handleCreateTaskForGroup(group.id, e)}
+                                  >
+                                    Cоздать задачу
+                                  </GlassButton>
                                 </div>
                               </div>
                             </div>
+                            
+                            {expandedGroups.has(group.id) && (
+                              <div className={css.tasksSection}>
+                                {loadingTasks.has(group.id) ? (
+                                  <div className={glassWidgetStyles.placeholder}>Загрузка задач...</div>
+                                ) : (
+                                  (() => {
+                                    const tasks = tasksByGroup.get(group.id) || [];
+                                    return tasks.length === 0 ? (
+                                      <div className={glassWidgetStyles.placeholder}>Нет задач в этой группе</div>
+                                    ) : (
+                                      tasks.map((task) => {
+                                        const taskCustomColorStyle = task.customColor ? {
+                                          '--card-custom-color': task.customColor,
+                                          '--card-custom-color-rgb': hexToRgb(task.customColor)
+                                        } as React.CSSProperties : {};
+                                        
+                                        return (
+                                        <div key={task.id} className={css.taskItem}>
+                                          <div 
+                                            className={css.taskCard}
+                                            data-custom-color={task.customColor ? 'true' : undefined}
+                                            style={taskCustomColorStyle}
+                                          >
+                                            <div className={css.taskContent}>
+                                              <div className={css.taskInfo}>
+                                                <div className={css.taskTitle}>{task.title}</div>
+                                              </div>
+                                              <div className={css.taskActions}>
+                                                <GlassButton 
+                                                  variant="subtle"
+                                                  size="xs"
+                                                  onClick={(e: React.MouseEvent) => handleViewTaskDetails(task.id, e)}
+                                                >
+                                                  <EyeIcon />
+                                                </GlassButton>
+                                              </div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                        );
+                                      })
+                                    );
+                                  })()
+                                )}
+                              </div>
+                            )}
                           </div>
                           );
                         })

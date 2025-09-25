@@ -69,6 +69,56 @@ export interface GroupSummaryResponse {
   id: string;
   title: string;
   description?: string;
+  tasksCount: number;
+}
+
+// Типы для Task API
+export interface TaskCreateRequest {
+  title: string;
+  description?: string;
+  groupId: string;
+}
+
+export interface TaskUpdateRequest {
+  title: string;
+  description?: string;
+  groupId: string;
+}
+
+export interface TaskResponse {
+  id: string;
+  title: string;
+  description?: string;
+  groupId: string;
+  creatorUserId: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  deactivatedAt?: string;
+}
+
+export interface TaskCreateResponse {
+  taskId: string;
+}
+
+export interface TaskSummaryResponse {
+  id: string;
+  title: string;
+  description?: string;
+}
+
+// Типы для недельной активности задач
+export interface TaskWeeklyActivity {
+  taskId: string;
+  taskName: string;
+  carryWeeks: number;
+  hasFutureActivities: boolean;
+  days: TaskDayActivity[];
+}
+
+export interface TaskDayActivity {
+  date: string;
+  count: number;
 }
 
 // Общие типы для CRUD операций

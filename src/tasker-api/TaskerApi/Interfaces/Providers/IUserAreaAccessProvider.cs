@@ -23,6 +23,20 @@ public interface IUserAreaAccessProvider : IBaseProvider<UserAreaAccessEntity, G
         IDbTransaction? transaction = null);
 
     /// <summary>
+    /// Получить список групп, к которым у пользователя есть доступ (через области)
+    /// </summary>
+    /// <param name="connection">Соединение с БД</param>
+    /// <param name="userId">ID пользователя</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    /// <param name="transaction">Транзакция</param>
+    /// <returns>Список ID групп</returns>
+    Task<IReadOnlyList<Guid>> GetUserAccessibleGroupIdsAsync(
+        IDbConnection connection, 
+        Guid userId, 
+        CancellationToken cancellationToken, 
+        IDbTransaction? transaction = null);
+
+    /// <summary>
     /// Предоставить доступ пользователю к области
     /// </summary>
     /// <param name="connection">Соединение с БД</param>

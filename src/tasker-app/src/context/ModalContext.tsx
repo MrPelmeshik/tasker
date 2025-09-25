@@ -1,14 +1,17 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { AreaModal } from '../components/areas/AreaModal';
 import { GroupModal } from '../components/groups/GroupModal';
-import type { AreaResponse, GroupResponse, AreaCreateRequest, AreaUpdateRequest, GroupCreateRequest, GroupUpdateRequest } from '../types/api';
+import { TaskModal } from '../components/tasks/TaskModal';
+import type { AreaResponse, GroupResponse, TaskResponse, AreaCreateRequest, AreaUpdateRequest, GroupCreateRequest, GroupUpdateRequest, TaskCreateRequest, TaskUpdateRequest } from '../types/api';
 import type { ModalSize } from '../types/modal-size';
 
 interface ModalContextType {
   openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size?: ModalSize) => void;
   openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string, size?: ModalSize) => void;
+  openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, groupId?: string, size?: ModalSize) => void;
   closeAreaModal: () => void;
   closeGroupModal: () => void;
+  closeTaskModal: () => void;
 }
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
@@ -44,12 +47,26 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     size: ModalSize;
   }>({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, size: 'medium' });
 
+  const [taskModal, setTaskModal] = useState<{
+    isOpen: boolean;
+    task: TaskResponse | null;
+    mode: 'create' | 'edit';
+    groups: GroupResponse[];
+    onSave: ((data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>) | null;
+    groupId?: string;
+    size: ModalSize;
+  }>({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, size: 'medium' });
+
   const openAreaModal = (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size: ModalSize = 'medium') => {
     setAreaModal({ isOpen: true, area, mode, onSave, size });
   };
 
   const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string, size: ModalSize = 'medium') => {
     setGroupModal({ isOpen: true, group, mode, areas, onSave, areaId, size });
+  };
+
+  const openTaskModal = (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, groupId?: string, size: ModalSize = 'medium') => {
+    setTaskModal({ isOpen: true, task, mode, groups, onSave, groupId, size });
   };
 
   const closeAreaModal = () => {
@@ -60,8 +77,12 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setGroupModal({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, size: 'medium' });
   };
 
+  const closeTaskModal = () => {
+    setTaskModal({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, size: 'medium' });
+  };
+
   return (
-    <ModalContext.Provider value={{ openAreaModal, openGroupModal, closeAreaModal, closeGroupModal }}>
+    <ModalContext.Provider value={{ openAreaModal, openGroupModal, openTaskModal, closeAreaModal, closeGroupModal, closeTaskModal }}>
       {children}
       
       {/* Модальные окна на уровне приложения */}
@@ -82,6 +103,16 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         areas={groupModal.areas}
         title={groupModal.mode === 'create' ? 'Создание группы' : 'Редактирование группы'}
         size={groupModal.size}
+      />
+
+      <TaskModal
+        isOpen={taskModal.isOpen}
+        onClose={closeTaskModal}
+        onSave={taskModal.onSave || (() => Promise.resolve())}
+        task={taskModal.task}
+        groups={taskModal.groups}
+        title={taskModal.mode === 'create' ? 'Создание задачи' : 'Редактирование задачи'}
+        size={taskModal.size}
       />
     </ModalContext.Provider>
   );
