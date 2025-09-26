@@ -19,8 +19,7 @@ namespace TaskerApi.Providers;
 /// </summary>
 public class BaseProvider<TEntity, TKey>(
     ILogger<BaseProvider<TEntity, TKey>> logger, 
-    TableMetaInfo<TEntity> table,
-    ICurrentUserService currentUserService) 
+    TableMetaInfo<TEntity> table) 
     : IBaseProvider<TEntity, TKey>
     where TEntity : class, IIdBaseEntity<TKey>, IDbEntity
 {
@@ -154,11 +153,6 @@ public class BaseProvider<TEntity, TKey>(
                 softDeleteEntity.IsActive = true;
             }
             
-            if (typeof(ICreatorUserBaseEntity).IsAssignableFrom(typeof(TEntity))
-                && entity is ICreatorUserBaseEntity creatorUserEntity)
-            {
-                creatorUserEntity.CreatorUserId = currentUserService.UserId;
-            }
         }
 
         var id = await connection.QueryFirstAsync<TKey>(new CommandDefinition(

@@ -2,7 +2,6 @@ using System.Data;
 using Dapper;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Providers;
-using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
@@ -15,9 +14,8 @@ namespace TaskerApi.Providers;
 /// </summary>
 public class UserAreaAccessProvider(
     ILogger<UserAreaAccessProvider> logger, 
-    TableMetaInfo<UserAreaAccessEntity> table,
-    ICurrentUserService currentUserService) 
-    : BaseProvider<UserAreaAccessEntity, Guid>(logger, table, currentUserService), IUserAreaAccessProvider
+    TableMetaInfo<UserAreaAccessEntity> table) 
+    : BaseProvider<UserAreaAccessEntity, Guid>(logger, table), IUserAreaAccessProvider
 {
     public async Task<IReadOnlyList<Guid>> GetUserAccessibleAreaIdsAsync(
         IDbConnection connection, 

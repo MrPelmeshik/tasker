@@ -1,7 +1,6 @@
 using System.Data;
 using Dapper;
 using TaskerApi.Interfaces.Providers;
-using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
@@ -10,9 +9,8 @@ namespace TaskerApi.Providers;
 
 public class UserProvider(
     ILogger<UserProvider> logger, 
-    TableMetaInfo<UserEntity> table,
-    ICurrentUserService currentUserService) 
-    : BaseProvider<UserEntity, Guid>(logger, table, currentUserService), IUserProvider
+    TableMetaInfo<UserEntity> table) 
+    : BaseProvider<UserEntity, Guid>(logger, table), IUserProvider
 {
     public async Task<UserEntity?> GetByNameAsync(
         IDbConnection connection,

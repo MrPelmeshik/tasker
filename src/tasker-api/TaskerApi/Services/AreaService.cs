@@ -110,6 +110,7 @@ public class AreaService(
                     Id = Guid.NewGuid(),
                     Title = item.Title,
                     Description = item.Description,
+                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,

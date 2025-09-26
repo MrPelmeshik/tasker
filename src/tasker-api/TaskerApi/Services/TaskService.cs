@@ -126,6 +126,7 @@ public class TaskService(
                     Title = request.Title,
                     Description = request.Description,
                     GroupId = request.GroupId,
+                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,

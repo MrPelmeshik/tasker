@@ -77,7 +77,6 @@ foreach (var tableMetaInfoType in dbEntityTypes
 	builder.Services.AddSingleton(tableMetaInfoType);
 }
 
-
 // Регистрация провайдеров (Dapper)
 builder.Services.AddScoped<IUserLogProvider, UserLogProvider>();
 builder.Services.AddScoped<IUserProvider, UserProvider>();

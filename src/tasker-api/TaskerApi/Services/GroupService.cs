@@ -113,6 +113,7 @@ public class GroupService(
                     Title = item.Title,
                     Description = item.Description,
                     AreaId = item.AreaId,
+                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,
