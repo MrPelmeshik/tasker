@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Models.Entities;
@@ -15,6 +16,12 @@ public class EventEntity :
     ICreatedDateBaseEntity, 
     ICreatorUserBaseEntity
 {
+    /// <summary>
+    /// Тип события
+    /// </summary>
+    [Column("type")]
+    public EventType Type { get; set; }
+    
     /// <summary>
     /// Заголовок события
     /// </summary>

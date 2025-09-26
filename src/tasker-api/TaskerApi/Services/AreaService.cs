@@ -11,12 +11,13 @@ using TaskerApi.Models.Responses;
 namespace TaskerApi.Services;
 
 public class AreaService(
-    ILogger<EventService> logger,
+    ILogger<AreaService> logger,
     IUnitOfWorkFactory uowFactory,
     ICurrentUserService currentUser,
     IAreaProvider areaProvider,
     IGroupProvider groupProvider,
     IUserAreaAccessProvider userAreaAccessProvider,
+    EventEntityBaseService<EventToAreaByEventEntity> eventService,
     TableMetaInfo<AreaEntity> areasTable,
     TableMetaInfo<GroupEntity> groupsTable)
     : IAreaService
@@ -109,7 +110,6 @@ public class AreaService(
                     Id = Guid.NewGuid(),
                     Title = item.Title,
                     Description = item.Description,
-                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,
@@ -123,6 +123,8 @@ public class AreaService(
                     currentUser.UserId,
                     cancellationToken,
                     uow.Transaction);
+
+            await eventService.AddEventCreateEntityAsync(uow, id, cancellationToken);
             
             await uow.CommitAsync(cancellationToken);
             return new AreaCreateResponse()
@@ -159,6 +161,9 @@ public class AreaService(
                 throw new UnauthorizedAccessException("Нет доступа к указанной области");
             }
 
+            var oldTitle = existingItem.Title;
+            var oldDescription = existingItem.Description;
+
             existingItem.Title = item.Title;
             existingItem.Description = item.Description;
 
@@ -168,6 +173,18 @@ public class AreaService(
                 cancellationToken,
                 transaction: uow.Transaction,
                 setDefaultValues: true);
+
+            var changes = new List<string>();
+            if (oldTitle != item.Title)
+                changes.Add($"Заголовок: '{oldTitle}' → '{item.Title}'");
+            if (oldDescription != item.Description)
+                changes.Add($"Описание: '{oldDescription}' → '{item.Description}'");
+
+            await eventService.AddEventUpdateEntityAsync(
+                uow,
+                id, 
+                string.Join(", ", changes),
+                cancellationToken);
 
             await uow.CommitAsync(cancellationToken);
         }
@@ -211,6 +228,45 @@ public class AreaService(
 
             await uow.CommitAsync(cancellationToken);
             return result;
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            var existingItem = await areaProvider.GetByIdAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
+
+            if (existingItem == null)
+            {
+                throw new KeyNotFoundException("Область не найдена");
+            }
+
+            if (!currentUser.AccessibleAreas.Contains(existingItem.Id))
+            {
+                throw new UnauthorizedAccessException("Нет доступа к указанной области");
+            }
+
+            await eventService.AddEventDeleteEntityAsync(uow, id, cancellationToken);
+
+            await areaProvider.DeleteAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
+
+            await uow.CommitAsync(cancellationToken);
         }
         catch (Exception e)
         {

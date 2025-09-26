@@ -13,6 +13,8 @@ public interface IGroupService
     
     Task UpdateAsync(Guid id, GroupUpdateRequest item, CancellationToken cancellationToken);
     
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+    
     Task<IEnumerable<GroupSummaryResponse>> GetGroupShortCardByAreaAsync(Guid areaId, CancellationToken cancellationToken);
 }
 

@@ -26,6 +26,11 @@ public interface ITaskService
     Task UpdateAsync(Guid id, TaskUpdateRequest request, CancellationToken cancellationToken);
 
     /// <summary>
+    /// Удалить задачу
+    /// </summary>
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
     /// Получить краткие карточки задач по группе
     /// </summary>
     Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByGroupAsync(Guid groupId, CancellationToken cancellationToken);

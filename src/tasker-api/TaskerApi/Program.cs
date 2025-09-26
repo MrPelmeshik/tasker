@@ -10,6 +10,7 @@ using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
+using TaskerApi.Models.Entities;
 using TaskerApi.Providers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,7 +25,7 @@ builder.Services.AddControllers();
 builder.Services.AddAutoMapper(typeof(Program));
 
 // Конфигурация CORS из переменных окружения/конфига
-var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? Array.Empty<string>();
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
 var allowedOriginsCsv = builder.Configuration["Cors:AllowedOriginsCsv"];
 if (!string.IsNullOrWhiteSpace(allowedOriginsCsv))
 {
@@ -81,16 +82,12 @@ foreach (var tableMetaInfoType in dbEntityTypes
 builder.Services.AddScoped<IUserLogProvider, UserLogProvider>();
 builder.Services.AddScoped<IUserProvider, UserProvider>();
 builder.Services.AddScoped<IEventProvider, EventProvider>();
-builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
 builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
-builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
+builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
 builder.Services.AddScoped<IEventToGroupByGroupProvider, EventToGroupByGroupProvider>();
-builder.Services.AddScoped<IEventToPurposeByEventProvider, EventToPurposeByEventProvider>();
-builder.Services.AddScoped<IEventToPurposeByPurposeProvider, EventToPurposeByPurposeProvider>();
-builder.Services.AddScoped<IEventToSubtaskByEventProvider, EventToSubtaskByEventProvider>();
-builder.Services.AddScoped<IEventToSubtaskBySubtaskProvider, EventToSubtaskBySubtaskProvider>();
-builder.Services.AddScoped<IEventToTaskByEventProvider, EventToTaskByEventProvider>();
+builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
 builder.Services.AddScoped<IEventToTaskByTaskProvider, EventToTaskByTaskProvider>();
+builder.Services.AddScoped<IEventToTaskByEventProvider, EventToTaskByEventProvider>();
 builder.Services.AddScoped<IAreaProvider, AreaProvider>();
 builder.Services.AddScoped<IGroupProvider, GroupProvider>();
 builder.Services.AddScoped<IPurposeProvider, PurposeProvider>();
@@ -98,14 +95,14 @@ builder.Services.AddScoped<ITaskProvider, TaskProvider>();
 builder.Services.AddScoped<ISubtaskProvider, SubtaskProvider>();
 builder.Services.AddScoped<IUserAreaAccessProvider, UserAreaAccessProvider>();
 
-//
-
 // Регистрация сервисов
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IEventService, EventService>();
+builder.Services.AddScoped<IEventAreaService, EventAreaService>();
+builder.Services.AddScoped<IEventGroupService, EventGroupService>();
+builder.Services.AddScoped<IEventTaskService, EventTaskService>();
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IPurposeService, PurposeService>();

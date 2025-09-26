@@ -17,6 +17,7 @@ public class GroupService(
     IGroupProvider groupProvider,
     ITaskProvider taskProvider,
     IUserAreaAccessProvider userAreaAccessProvider,
+    IEventGroupService eventService,
     TableMetaInfo<GroupEntity> groupsTable,
     TableMetaInfo<TaskEntity> tasksTable)
     : IGroupService
@@ -112,11 +113,12 @@ public class GroupService(
                     Title = item.Title,
                     Description = item.Description,
                     AreaId = item.AreaId,
-                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,
                 setDefaultValues: true);
+
+            await eventService.AddEventCreateEntityAsync(uow, id, cancellationToken);
 
             await uow.CommitAsync(cancellationToken);
             return new GroupCreateResponse()
@@ -159,6 +161,10 @@ public class GroupService(
                 throw new UnauthorizedAccessException("Нет доступа к указанной области");
             }
 
+            var oldTitle = existingItem.Title;
+            var oldDescription = existingItem.Description;
+            var oldAreaId = existingItem.AreaId;
+
             existingItem.Title = item.Title;
             existingItem.Description = item.Description;
             existingItem.AreaId = item.AreaId;
@@ -169,6 +175,20 @@ public class GroupService(
                 cancellationToken,
                 transaction: uow.Transaction,
                 setDefaultValues: true);
+
+            var changes = new List<string>();
+            if (oldTitle != item.Title)
+                changes.Add($"Заголовок: '{oldTitle}' → '{item.Title}'");
+            if (oldDescription != item.Description)
+                changes.Add($"Описание: '{oldDescription}' → '{item.Description}'");
+            if (oldAreaId != item.AreaId)
+                changes.Add($"Область: {oldAreaId} → {item.AreaId}");
+
+            await eventService.AddEventUpdateEntityAsync(
+                uow,
+                id,
+                string.Join(", ", changes),
+                cancellationToken);
 
             await uow.CommitAsync(cancellationToken);
         }
@@ -219,6 +239,45 @@ public class GroupService(
 
             await uow.CommitAsync(cancellationToken);
             return result;
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            var existingItem = await groupProvider.GetByIdAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
+
+            if (existingItem == null)
+            {
+                throw new KeyNotFoundException("Группа не найдена");
+            }
+
+            if (!currentUser.AccessibleAreas.Contains(existingItem.AreaId))
+            {
+                throw new UnauthorizedAccessException("Нет доступа к указанной группе");
+            }
+
+            await eventService.AddEventDeleteEntityAsync(uow, id, cancellationToken);
+
+            await groupProvider.DeleteAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
+
+            await uow.CommitAsync(cancellationToken);
         }
         catch (Exception e)
         {

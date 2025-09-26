@@ -16,7 +16,9 @@ public class TaskService(
     ICurrentUserService currentUser,
     ITaskProvider taskProvider,
     IGroupProvider groupProvider,
-    TableMetaInfo<TaskEntity> tasksTable)
+    IEventTaskService eventService,
+    TableMetaInfo<TaskEntity> tasksTable
+    )
     : ITaskService
 {
     public async Task<IEnumerable<TaskResponse>> GetAsync(CancellationToken cancellationToken)
@@ -124,11 +126,12 @@ public class TaskService(
                     Title = request.Title,
                     Description = request.Description,
                     GroupId = request.GroupId,
-                    CreatorUserId = currentUser.UserId,
                 },
                 cancellationToken,
                 uow.Transaction,
                 setDefaultValues: true);
+
+            await eventService.AddEventCreateEntityAsync(uow, id, cancellationToken);
 
             await uow.CommitAsync(cancellationToken);
             return new TaskCreateResponse()
@@ -186,6 +189,10 @@ public class TaskService(
                 }
             }
 
+            var oldTitle = existingItem.Title;
+            var oldDescription = existingItem.Description;
+            var oldGroupId = existingItem.GroupId;
+
             existingItem.Title = request.Title;
             existingItem.Description = request.Description;
             existingItem.GroupId = request.GroupId;
@@ -196,6 +203,59 @@ public class TaskService(
                 cancellationToken,
                 transaction: uow.Transaction,
                 setDefaultValues: true);
+
+            var changes = new List<string>();
+            if (oldTitle != request.Title)
+                changes.Add($"Заголовок: '{oldTitle}' → '{request.Title}'");
+            if (oldDescription != request.Description)
+                changes.Add($"Описание: '{oldDescription}' → '{request.Description}'");
+            if (oldGroupId != request.GroupId)
+                changes.Add($"Группа: {oldGroupId} → {request.GroupId}");
+
+            await eventService.AddEventUpdateEntityAsync(
+                uow, 
+                id, 
+                string.Join(", ", changes), 
+                cancellationToken);
+
+            await uow.CommitAsync(cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            var existingItem = await taskProvider.GetByIdAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
+
+            if (existingItem == null)
+            {
+                throw new KeyNotFoundException("Задача не найдена");
+            }
+
+            if (!currentUser.AccessibleGroups.Contains(existingItem.GroupId))
+            {
+                throw new UnauthorizedAccessException("Нет доступа к указанной задаче");
+            }
+
+            await eventService.AddEventDeleteEntityAsync(uow, id, cancellationToken);
+
+            await taskProvider.DeleteAsync(
+                uow.Connection,
+                id,
+                cancellationToken,
+                transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
         }

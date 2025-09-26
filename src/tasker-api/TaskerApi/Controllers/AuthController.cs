@@ -16,21 +16,13 @@ namespace TaskerApi.Controllers;
 [ApiController]
 [Route("api/[controller]")]
 [Produces("application/json")]
-public class AuthController : ControllerBase
+public class AuthController(
+    IAuthService authService,
+    ILogger<AuthController> logger,
+    IOptions<JwtSettings> jwtOptions)
+    : ControllerBase
 {
-    private readonly IAuthService _authService;
-    private readonly ILogger<AuthController> _logger;
-    private readonly JwtSettings _jwt;
-
-    public AuthController(
-        IAuthService authService,
-        ILogger<AuthController> logger,
-        IOptions<JwtSettings> jwtOptions)
-    {
-        _authService = authService;
-        _logger = logger;
-        _jwt = jwtOptions.Value;
-    }
+    private readonly JwtSettings _jwt = jwtOptions.Value;
 
     /// <summary>
     /// Авторизация пользователя
@@ -59,7 +51,7 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<AuthResponse>.ErrorResult("Ошибка валидации", errors));
             }
 
-            var (result, refreshToken) = await _authService.LoginAsync(request);
+            var (result, refreshToken) = await authService.LoginAsync(request);
 
             if (result.Success && result.Data != null)
             {
@@ -80,7 +72,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error during login");
+            logger.LogError(ex, "Unexpected error during login");
             return StatusCode(500, ApiResponse<AuthResponse>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -112,7 +104,7 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<RegisterResponse>.ErrorResult("Ошибка валидации", errors));
             }
 
-            var result = await _authService.RegisterAsync(request);
+            var result = await authService.RegisterAsync(request);
 
             if (result.Success)
             {
@@ -123,7 +115,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error during registration");
+            logger.LogError(ex, "Unexpected error during registration");
             return StatusCode(500, ApiResponse<RegisterResponse>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -156,7 +148,7 @@ public class AuthController : ControllerBase
                 return BadRequest(ApiResponse<RefreshTokenResponse>.ErrorResult("Refresh токен отсутствует"));
             }
 
-            var (result, newRefresh) = await _authService.RefreshTokenAsync(request);
+            var (result, newRefresh) = await authService.RefreshTokenAsync(request);
 
             if (result.Success && result.Data != null)
             {
@@ -177,7 +169,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error during token refresh");
+            logger.LogError(ex, "Unexpected error during token refresh");
             return StatusCode(500, ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -213,7 +205,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error during logout");
+            logger.LogError(ex, "Unexpected error during logout");
             return StatusCode(500, ApiResponse<object>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -243,7 +235,7 @@ public class AuthController : ControllerBase
 
             var accessToken = authHeader.Substring("Bearer ".Length);
 
-            var result = await _authService.GetUserInfoAsync(accessToken);
+            var result = await authService.GetUserInfoAsync(accessToken);
 
             if (result.Success)
             {
@@ -254,7 +246,7 @@ public class AuthController : ControllerBase
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Unexpected error getting current user info");
+            logger.LogError(ex, "Unexpected error getting current user info");
             return StatusCode(500, ApiResponse<UserInfo>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }

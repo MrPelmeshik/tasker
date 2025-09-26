@@ -5,6 +5,7 @@ using Dapper;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Models.Common;
 using TaskerApi.Interfaces.Providers;
+using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities.Contracts;
@@ -18,12 +19,11 @@ namespace TaskerApi.Providers;
 /// </summary>
 public class BaseProvider<TEntity, TKey>(
     ILogger<BaseProvider<TEntity, TKey>> logger, 
-    TableMetaInfo<TEntity> table) 
+    TableMetaInfo<TEntity> table,
+    ICurrentUserService currentUserService) 
     : IBaseProvider<TEntity, TKey>
     where TEntity : class, IIdBaseEntity<TKey>, IDbEntity
 {
-    private IBaseProvider<TEntity, TKey> _baseProviderImplementation;
-
     /// <summary>
     /// Генерирует полный SQL запрос с WHERE, ORDER BY, LIMIT, OFFSET
     /// </summary>
@@ -152,6 +152,12 @@ public class BaseProvider<TEntity, TKey>(
             if (table.HasSoftDelete && entity is ISoftDeleteBaseEntity softDeleteEntity)
             {
                 softDeleteEntity.IsActive = true;
+            }
+            
+            if (typeof(ICreatorUserBaseEntity).IsAssignableFrom(typeof(TEntity))
+                && entity is ICreatorUserBaseEntity creatorUserEntity)
+            {
+                creatorUserEntity.CreatorUserId = currentUserService.UserId;
             }
         }
 

@@ -2,5 +2,5 @@ using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Interfaces.Providers;
 
-public interface IEventToGroupByEventProvider : IBaseProvider<EventToGroupByEventEntity, Guid>;
+public interface IEventToGroupByEventProvider : IEventToEntityBaseProvider<EventToGroupByEventEntity>;
 

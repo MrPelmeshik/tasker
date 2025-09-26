@@ -13,5 +13,7 @@ public interface IAreaService
     
     Task UpdateAsync(Guid id, AreaUpdateRequest item, CancellationToken cancellationToken);
     
+    Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+    
     Task<IEnumerable<AreaShortCardResponse>> GetAreaShortCardAsync(CancellationToken cancellationToken);
 }
