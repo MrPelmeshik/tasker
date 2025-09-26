@@ -75,9 +75,11 @@ public abstract class EventEntityBaseService<TEventToEntity>(
             uow.Connection,
             new EventEntity
             {
-                Type = item.EventType,
+                Id = Guid.NewGuid(),
+                EventType = item.EventType,
                 Title = item.Title,
                 Description = item.Description,
+                CreatorUserId = currentUser.UserId,
             },
             cancellationToken,
             uow.Transaction,

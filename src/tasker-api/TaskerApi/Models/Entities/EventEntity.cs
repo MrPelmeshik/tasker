@@ -19,8 +19,8 @@ public class EventEntity :
     /// <summary>
     /// Тип события
     /// </summary>
-    [Column("type")]
-    public EventType Type { get; set; }
+    [Column("event_type")]
+    public EventType EventType { get; set; }
     
     /// <summary>
     /// Заголовок события

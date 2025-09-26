@@ -31,6 +31,7 @@ public class EventAreaService(
         {
             Id = eventId,
             AreaId = item.EntityId,
+            CreatorUserId = currentUser.UserId,
         };
     }
 }

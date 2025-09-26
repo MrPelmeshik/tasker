@@ -31,6 +31,7 @@ public class EventGroupService(
         {
             Id = eventId,
             GroupId = item.EntityId,
+            CreatorUserId = currentUser.UserId,
         };
     }
 }

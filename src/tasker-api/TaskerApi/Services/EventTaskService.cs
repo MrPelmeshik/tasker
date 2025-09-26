@@ -31,6 +31,7 @@ public class EventTaskService(
         {
             Id = eventId,
             TaskId = item.EntityId,
+            CreatorUserId = currentUser.UserId,
         };
     }
 }

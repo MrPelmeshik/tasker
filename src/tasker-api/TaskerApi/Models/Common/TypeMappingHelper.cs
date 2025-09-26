@@ -50,6 +50,9 @@ public static class TypeMappingHelper
             // Байтовые типы
             not null when underlyingType == typeof(byte[]) => "bytea",
             
+            // Enum типы
+            not null when underlyingType.IsEnum => "integer",
+            
             // JSON типы (если нужно автоматически определять)
             not null when underlyingType == typeof(object) => "jsonb",
             
