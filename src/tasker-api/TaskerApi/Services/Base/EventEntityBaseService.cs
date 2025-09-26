@@ -92,8 +92,6 @@ public abstract class EventEntityBaseService<TEventToEntity>(
             uow.Transaction,
             true);
 
-        await uow.CommitAsync(cancellationToken);
-        logger.LogInformation("Event created");
         return new EventCreateResponse
         {
             Id = eventId,

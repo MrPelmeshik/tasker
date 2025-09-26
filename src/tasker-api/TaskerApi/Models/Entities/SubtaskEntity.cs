@@ -9,7 +9,7 @@ namespace TaskerApi.Models.Entities;
 [Table("subtasks")]
 public class SubtaskEntity : 
     IDbEntity,
-    IIdBaseEntity<Guid>, 
+    IAutoIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity,

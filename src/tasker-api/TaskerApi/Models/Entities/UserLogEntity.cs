@@ -9,7 +9,7 @@ namespace TaskerApi.Models.Entities;
 [Table("user_logs")]
 public class UserLogEntity :
     IDbEntity,
-    IIdBaseEntity<int>,
+    IAutoIdBaseEntity<int>,
     ICreatedDateBaseEntity
 {
     public int Id { get; set; }

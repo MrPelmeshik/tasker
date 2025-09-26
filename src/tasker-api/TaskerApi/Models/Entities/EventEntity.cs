@@ -10,7 +10,7 @@ namespace TaskerApi.Models.Entities;
 [Table("events")]
 public class EventEntity : 
     IDbEntity,
-    IIdBaseEntity<Guid>, 
+    IAutoIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity, 

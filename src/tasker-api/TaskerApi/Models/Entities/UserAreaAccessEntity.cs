@@ -9,7 +9,7 @@ namespace TaskerApi.Models.Entities;
 [Table("user_area_access")]
 public class UserAreaAccessEntity : 
     IDbEntity,
-    IIdBaseEntity<Guid>, 
+    IAutoIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity

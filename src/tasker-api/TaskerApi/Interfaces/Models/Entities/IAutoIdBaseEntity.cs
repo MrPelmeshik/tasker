@@ -6,12 +6,12 @@ namespace TaskerApi.Models.Entities.Contracts;
 /// <summary>
 /// Базовая сущность с ID
 /// </summary>
-public interface IIdBaseEntity<T>
+public interface IAutoIdBaseEntity<T> : IIdBaseEntity<T>
 {
     /// <summary>
     /// ID
     /// </summary>
-    [Key, Column("id")]
+    [Key, Editable(false), DatabaseGenerated(DatabaseGeneratedOption.Identity), Column("id")]
     T Id { get; set; }
 }
 

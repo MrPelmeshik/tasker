@@ -9,7 +9,7 @@ namespace TaskerApi.Models.Entities;
 [Table("areas")]
 public class AreaEntity : 
     IDbEntity,
-    IIdBaseEntity<Guid>, 
+    IAutoIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity,

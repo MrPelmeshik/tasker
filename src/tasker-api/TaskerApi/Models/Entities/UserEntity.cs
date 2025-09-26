@@ -9,7 +9,7 @@ namespace TaskerApi.Models.Entities;
 [Table("users")]
 public class UserEntity : 
     IDbEntity,
-    IIdBaseEntity<Guid>, 
+    IAutoIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity

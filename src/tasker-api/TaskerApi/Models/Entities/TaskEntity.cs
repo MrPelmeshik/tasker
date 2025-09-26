@@ -9,7 +9,7 @@ namespace TaskerApi.Models.Entities;
 [Table("tasks")]
 public class TaskEntity : 
     IDbEntity,
-    IIdBaseEntity<Guid>, 
+    IAutoIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity,

@@ -9,7 +9,7 @@ namespace TaskerApi.Models.Entities;
 [Table("groups")]
 public class GroupEntity : 
     IDbEntity,
-    IIdBaseEntity<Guid>, 
+    IAutoIdBaseEntity<Guid>, 
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity, 
