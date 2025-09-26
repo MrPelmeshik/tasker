@@ -521,40 +521,42 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                           } as React.CSSProperties : {};
                           
                           return (
-                          <div key={group.id} className={css.groupItem}>
-                            <div 
-                              className={`${css.groupCard} ${expandedGroups.has(group.id) ? css.expanded : ''}`}
-                              onClick={() => toggleGroup(group.id)}
-                              data-custom-color={group.customColor ? 'true' : undefined}
-                              style={groupCustomColorStyle}
-                            >
-                              <div className={css.groupContent}>
-                                <div className={css.groupInfo}>
-                                  <div className={css.groupTitleRow}>
-                                    <GlassTag 
-                                      variant="subtle" 
-                                      size="xs"
-                                    >
-                                      {group.tasksCount}
-                                    </GlassTag>
-                                    <div className={css.groupTitle}>{group.title}</div>
+                          <React.Fragment key={group.id}>
+                            <div className={css.groupItem}>
+                              <div 
+                                className={`${css.groupCard} ${expandedGroups.has(group.id) ? css.expanded : ''}`}
+                                onClick={() => toggleGroup(group.id)}
+                                data-custom-color={group.customColor ? 'true' : undefined}
+                                style={groupCustomColorStyle}
+                              >
+                                <div className={css.groupContent}>
+                                  <div className={css.groupInfo}>
+                                    <div className={css.groupTitleRow}>
+                                      <GlassTag 
+                                        variant="subtle" 
+                                        size="xs"
+                                      >
+                                        {group.tasksCount}
+                                      </GlassTag>
+                                      <div className={css.groupTitle}>{group.title}</div>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className={css.groupActions}>
-                                  <GlassButton 
-                                    variant="subtle"
-                                    size="xs"
-                                    onClick={(e: React.MouseEvent) => handleViewGroupDetails(group.id, e)}
-                                  >
-                                    <EyeIcon />
-                                  </GlassButton>
-                                  <GlassButton 
-                                    variant="subtle"
-                                    size="xs"
-                                    onClick={(e: React.MouseEvent) => handleCreateTaskForGroup(group.id, e)}
-                                  >
-                                    Cоздать задачу
-                                  </GlassButton>
+                                  <div className={css.groupActions}>
+                                    <GlassButton 
+                                      variant="subtle"
+                                      size="xs"
+                                      onClick={(e: React.MouseEvent) => handleViewGroupDetails(group.id, e)}
+                                    >
+                                      <EyeIcon />
+                                    </GlassButton>
+                                    <GlassButton 
+                                      variant="subtle"
+                                      size="xs"
+                                      onClick={(e: React.MouseEvent) => handleCreateTaskForGroup(group.id, e)}
+                                    >
+                                      Cоздать задачу
+                                    </GlassButton>
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -605,7 +607,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                                 )}
                               </div>
                             )}
-                          </div>
+                          </React.Fragment>
                           );
                         })
                       );

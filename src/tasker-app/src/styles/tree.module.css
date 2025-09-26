@@ -27,13 +27,13 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
   box-sizing: border-box;
 }
 
 .areaSection {
   position: relative;
   width: 100%;
+  margin-bottom: var(--space-4);
   box-sizing: border-box;
 }
 
@@ -161,12 +161,19 @@
 .groupTitleRow {
   display: flex;
   align-items: center;
-  justify-content: center;
   gap: var(--space-6);
 }
 
 .areaTitle,
-.groupTitle,
+.groupTitle {
+  font-size: var(--font-12);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
 .taskTitle {
   font-size: var(--font-12);
   font-weight: 500;
@@ -183,10 +190,10 @@
 
 .groupsSection {
   position: relative;
-  margin-top: var(--space-4);
   margin-left: var(--tree-indent);
-  width: calc(66.666% - var(--tree-indent));
-  max-width: calc(100% - 32px);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
 }
@@ -209,7 +216,6 @@
 
 .groupItem {
   position: relative;
-  margin-bottom: var(--space-4);
   display: flex;
   align-items: center;
   min-height: var(--size-44);
@@ -297,7 +303,6 @@
   border-color: rgba(var(--custom-color-rgb), 0.25);
 }
 
-/* Стили для задач */
 .groupCard.expanded {
   background: var(--glass-card-bg-selected);
   border-color: var(--glass-card-border-default-selected);
@@ -324,12 +329,14 @@
   z-index: 1;
 }
 
+/* Стили для задач */
+
 .tasksSection {
   position: relative;
-  margin-top: var(--space-4);
-  margin-left: var(--tree-indent);
-  width: calc(50% - var(--tree-indent));
-  max-width: calc(100% - 32px);
+  margin-left: calc(var(--tree-indent) * 2);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
 }
@@ -352,7 +359,6 @@
 
 .taskItem {
   position: relative;
-  margin-bottom: var(--space-4);
   display: flex;
   align-items: center;
   min-height: var(--size-44);
