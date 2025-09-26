@@ -107,4 +107,18 @@ public class TaskController(ITaskService service) : ControllerBase
             return BadRequest(e.Message);
         }
     }
+
+    [HttpPost]
+    [UserLog("Получение недельной активности задач")]
+    public async Task<IActionResult> GetWeeklyActivity([FromBody]TaskWeeklyActivityRequest request, CancellationToken cancellationToken)
+    { 
+        try 
+        {
+            return Ok(await service.GetWeeklyActivityAsync(request, cancellationToken));
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
 }

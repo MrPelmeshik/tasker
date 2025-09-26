@@ -212,6 +212,7 @@ public class GroupService(
                     Id = group.Id,
                     Title = group.Title,
                     Description = group.Description,
+                    AreaId = group.AreaId,
                     TasksCount = tasksCount
                 });
             }

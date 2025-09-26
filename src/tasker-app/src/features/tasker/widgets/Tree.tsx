@@ -3,7 +3,7 @@ import glassWidgetStyles from '../../../styles/glass-widget.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
-import { useModal } from '../../../context';
+import { useModal, useTaskUpdate } from '../../../context';
 import type { 
   WidgetSizeProps, 
   AreaShortCard, 
@@ -49,6 +49,7 @@ function hexToRgb(hex: string): string {
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { openAreaModal, openGroupModal, openTaskModal } = useModal();
+  const { notifyTaskUpdate } = useTaskUpdate();
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
   const [groupsByArea, setGroupsByArea] = useState<Map<string, GroupSummary[]>>(new Map());
   const [tasksByGroup, setTasksByGroup] = useState<Map<string, TaskSummary[]>>(new Map());
@@ -65,7 +66,6 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         setLoading(true);
         const data = await fetchAreaShortCard();
         setAreas(data);
-        console.log('Области загружены успешно:', data);
       } catch (error) {
         console.error('Ошибка загрузки областей:', error);
         setAreas([]);
@@ -98,7 +98,6 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       setLoadingGroups(prev => new Set(prev).add(areaId));
       const groups = await fetchGroupShortCardByAreaForTree(areaId);
       setGroupsByArea(prev => new Map(prev).set(areaId, groups));
-      console.log(`Группы для области ${areaId} загружены:`, groups);
     } catch (error) {
       console.error(`Ошибка загрузки групп для области ${areaId}:`, error);
       setGroupsByArea(prev => new Map(prev).set(areaId, []));
@@ -132,7 +131,6 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       setLoadingTasks(prev => new Set(prev).add(groupId));
       const tasks = await fetchTaskSummaryByGroup(groupId);
       setTasksByGroup(prev => new Map(prev).set(groupId, tasks));
-      console.log(`Задачи для группы ${groupId} загружены:`, tasks);
     } catch (error) {
       console.error(`Ошибка загрузки задач для группы ${groupId}:`, error);
       setTasksByGroup(prev => new Map(prev).set(groupId, []));
@@ -178,17 +176,31 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
 
   const handleCreateTaskForGroup = (groupId: string, event: React.MouseEvent) => {
     event.stopPropagation();
-    const groupsForModal = Array.from(groupsByArea.values()).flat().map(group => ({
-      id: group.id,
-      title: group.title,
-      description: group.description,
-      areaId: '', // TODO: Получить areaId из контекста
-      creatorUserId: '',
-      createdAt: '',
-      updatedAt: '',
-      isActive: true,
-    }));
-    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), groupId);
+    
+    // Находим область, к которой принадлежит группа
+    let targetAreaId = '';
+    for (const [areaId, groups] of Array.from(groupsByArea.entries())) {
+      if (groups.some((group: GroupSummary) => group.id === groupId)) {
+        targetAreaId = areaId;
+        break;
+      }
+    }
+    
+    // Показываем только группы из той же области
+    const groupsForModal = targetAreaId 
+      ? (groupsByArea.get(targetAreaId) || []).map(group => ({
+          id: group.id,
+          title: group.title,
+          description: group.description,
+          areaId: group.areaId,
+          creatorUserId: '',
+          createdAt: '',
+          updatedAt: '',
+          isActive: true,
+        }))
+      : [];
+      
+    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), groupId, targetAreaId);
   };
 
   // Обработчики для групп
@@ -219,16 +231,29 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     try {
       const task = await fetchTaskById(taskId);
       if (task) {
-        const groupsForModal = Array.from(groupsByArea.values()).flat().map(group => ({
-          id: group.id,
-          title: group.title,
-          description: group.description,
-          areaId: '', // TODO: Получить areaId из контекста
-          creatorUserId: '',
-          createdAt: '',
-          updatedAt: '',
-          isActive: true,
-        }));
+        // Находим область, к которой принадлежит группа задачи
+        let targetAreaId = '';
+        for (const [areaId, groups] of Array.from(groupsByArea.entries())) {
+          if (groups.some((group: GroupSummary) => group.id === task.groupId)) {
+            targetAreaId = areaId;
+            break;
+          }
+        }
+        
+        // Показываем только группы из той же области
+        const groupsForModal = targetAreaId 
+          ? (groupsByArea.get(targetAreaId) || []).map(group => ({
+              id: group.id,
+              title: group.title,
+              description: group.description,
+              areaId: group.areaId,
+              creatorUserId: '',
+              createdAt: '',
+              updatedAt: '',
+              isActive: true,
+            }))
+          : [];
+          
         openTaskModal(task, 'edit', groupsForModal, (data, taskId) => handleTaskSave(data, taskId));
       }
     } catch (error) {
@@ -344,6 +369,9 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
             return newMap;
           });
         }
+        
+        // Уведомляем об обновлении задачи
+        notifyTaskUpdate(undefined, data.groupId);
       } else {
         // Получаем текущую задачу для определения старой группы
         const currentTask = await fetchTaskById(taskId);
@@ -391,6 +419,9 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
             return newMap;
           });
         }
+        
+        // Уведомляем об обновлении задачи
+        notifyTaskUpdate(taskId, data.groupId);
       }
     } catch (error) {
       console.error('Ошибка сохранения задачи:', error);

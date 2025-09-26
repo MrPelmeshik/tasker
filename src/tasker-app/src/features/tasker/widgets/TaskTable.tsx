@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { GlassWidget, GlassButton, GlassTag } from '../../../components';
 import type { WidgetSizeProps } from '../../../types';
 import css from '../../../styles/task-table.module.css';
 import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity, type TaskDayActivity } from '../../../services/api';
+import { useTaskUpdate } from '../../../context';
 
 type WeekNav = 'prev' | 'next' | 'current' | 'latest';
 
@@ -48,15 +49,38 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { weekStartIso, go } = useWeek();
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState<TaskWeeklyActivity[]>([]);
+  const { subscribeToTaskUpdates } = useTaskUpdate();
 
-  useEffect(() => {
+  // Функция для загрузки данных
+  const loadData = useCallback(async () => {
     let alive = true;
     setLoading(true);
-    fetchWeeklyTasks({ weekStartIso })
-      .then((res: TaskWeeklyActivity[]) => { if (alive) setData(res); })
-      .finally(() => { if (alive) setLoading(false); });
+    try {
+      const res = await fetchWeeklyTasks({ weekStartIso });
+      if (alive) setData(res);
+    } catch (error) {
+      console.error('Ошибка загрузки недельных задач:', error);
+      if (alive) setData([]);
+    } finally {
+      if (alive) setLoading(false);
+    }
     return () => { alive = false; };
   }, [weekStartIso]);
+
+  // Загрузка данных при изменении недели
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Подписка на обновления задач
+  useEffect(() => {
+    const unsubscribe = subscribeToTaskUpdates((taskId, groupId) => {
+      // Перезагружаем данные при любом обновлении задачи
+      loadData();
+    });
+
+    return unsubscribe;
+  }, [subscribeToTaskUpdates, loadData]);
 
   const daysHeader = useMemo(() => buildWeekDays(weekStartIso), [weekStartIso]);
 

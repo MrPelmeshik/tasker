@@ -69,6 +69,7 @@ export interface GroupSummaryResponse {
   id: string;
   title: string;
   description?: string;
+  areaId: string;
   tasksCount: number;
 }
 

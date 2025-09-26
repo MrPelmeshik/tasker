@@ -75,9 +75,29 @@ export class TaskApiClient {
 
   // Получить недельную активность задач
   async getWeeklyTasks(params: { weekStartIso: string }): Promise<TaskWeeklyActivity[]> {
-    // TODO: Реализовать API endpoint для недельной активности
-    // Пока возвращаем пустой массив
-    return [];
+    // Преобразуем ISO дату в год и номер недели
+    const date = new Date(params.weekStartIso + 'T00:00:00Z');
+    const year = date.getFullYear();
+    const weekNumber = this.getWeekNumber(date);
+    
+    const request = {
+      year,
+      weekNumber
+    };
+    
+    return apiFetch<TaskWeeklyActivity[]>(`/task/getWeeklyActivity`, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  }
+
+  // Получить номер недели по ISO 8601
+  private getWeekNumber(date: Date): number {
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
   }
 }
 

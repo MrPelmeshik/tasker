@@ -21,6 +21,7 @@ export interface GroupModalProps {
   areas: AreaResponse[];
   title?: string;
   size?: ModalSize;
+  defaultAreaId?: string; // ID области по умолчанию для создания
 }
 
 export const GroupModal: React.FC<GroupModalProps> = ({
@@ -31,6 +32,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   areas,
   title = 'Группа',
   size = 'medium',
+  defaultAreaId,
 }) => {
   const [formData, setFormData] = useState<GroupCreateRequest>({
     title: '',
@@ -56,14 +58,14 @@ export const GroupModal: React.FC<GroupModalProps> = ({
       } : {
         title: '',
         description: '',
-        areaId: areas.length > 0 ? areas[0].id : '',
+        areaId: defaultAreaId || (areas.length > 0 ? areas[0].id : ''),
       };
       
       setFormData(initialData);
       setOriginalData(initialData);
       setFieldChanges({});
     }
-  }, [isOpen, group, areas]);
+  }, [isOpen, group, areas, defaultAreaId]);
 
   // Проверка изменений в полях
   const hasChanges = Object.values(fieldChanges).some(hasChange => hasChange);

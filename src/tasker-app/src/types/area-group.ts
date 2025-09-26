@@ -40,6 +40,7 @@ export interface GroupSummary {
   id: string;
   title: string;
   description?: string;
+  areaId: string;
   tasksCount: number;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }

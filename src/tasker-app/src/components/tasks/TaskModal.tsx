@@ -21,6 +21,8 @@ export interface TaskModalProps {
   groups: GroupResponse[];
   title?: string;
   size?: ModalSize;
+  defaultGroupId?: string; // ID группы по умолчанию для создания
+  defaultAreaId?: string; // ID области по умолчанию для создания (для будущего расширения)
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({
@@ -31,6 +33,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   groups,
   title = 'Задача',
   size = 'medium',
+  defaultGroupId,
+  defaultAreaId,
 }) => {
   const [formData, setFormData] = useState<TaskCreateRequest>({
     title: '',
@@ -56,14 +60,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       } : {
         title: '',
         description: '',
-        groupId: groups.length > 0 ? groups[0].id : '',
+        groupId: defaultGroupId || (groups.length > 0 ? groups[0].id : ''),
       };
       
       setFormData(initialData);
       setOriginalData(initialData);
       setFieldChanges({});
     }
-  }, [isOpen, task, groups]);
+  }, [isOpen, task, groups, defaultGroupId]);
 
   // Проверка изменений в полях
   const hasChanges = Object.values(fieldChanges).some(hasChange => hasChange);

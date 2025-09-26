@@ -29,6 +29,11 @@ public interface ITaskService
     /// Получить краткие карточки задач по группе
     /// </summary>
     Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByGroupAsync(Guid groupId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Получить недельную активность задач
+    /// </summary>
+    Task<IEnumerable<TaskWeeklyActivityResponse>> GetWeeklyActivityAsync(TaskWeeklyActivityRequest request, CancellationToken cancellationToken);
 }
 
 

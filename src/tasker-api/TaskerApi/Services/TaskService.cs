@@ -238,6 +238,117 @@ public class TaskService(
             throw;
         }
     }
+
+    public async Task<IEnumerable<TaskWeeklyActivityResponse>> GetWeeklyActivityAsync(TaskWeeklyActivityRequest request, CancellationToken cancellationToken)
+    {
+        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+
+        try
+        {
+            // Получаем все задачи из доступных пользователю групп
+            var tasks = await taskProvider.GetListAsync(
+                uow.Connection,
+                cancellationToken,
+                filers: [new ArraySqlFilter<Guid>(tasksTable[nameof(TaskEntity.GroupId)].DbName, currentUser.AccessibleGroups.ToArray())],
+                transaction: uow.Transaction);
+
+            await uow.CommitAsync(cancellationToken);
+
+            // Генерируем случайные мок данные для активностей
+            var random = new Random();
+            var result = new List<TaskWeeklyActivityResponse>();
+
+            foreach (var task in tasks.Where(t => t.IsActive))
+            {
+                var weekStart = GetFirstDayOfWeek(request.Year, request.WeekNumber);
+                var days = new List<TaskDayActivityResponse>();
+
+                // Генерируем активности для каждого дня недели
+                for (int i = 0; i < 7; i++)
+                {
+                    var date = weekStart.AddDays(i);
+                    var count = random.Next(0, 8); // 0-7 активностей в день
+                    
+                    days.Add(new TaskDayActivityResponse
+                    {
+                        Date = date.ToString("yyyy-MM-dd"),
+                        Count = count
+                    });
+                }
+
+                // Генерируем случайные значения для переноса и будущих активностей
+                var carryWeeks = random.Next(0, 4); // 0-3 недели переноса
+                var hasFutureActivities = random.Next(0, 2) == 1; // 50% вероятность
+
+                result.Add(new TaskWeeklyActivityResponse
+                {
+                    TaskId = task.Id,
+                    TaskName = task.Title,
+                    CarryWeeks = carryWeeks,
+                    HasFutureActivities = hasFutureActivities,
+                    Days = days
+                });
+            }
+
+            return result;
+        }
+        catch (Exception e)
+        {
+            await uow.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Получить первый день недели (понедельник) для указанного года и номера недели
+    /// </summary>
+    private static DateTime GetFirstDayOfWeek(int year, int weekNumber)
+    {
+        // Используем ISO 8601 стандарт для недель
+        var jan1 = new DateTime(year, 1, 1);
+        var daysOffset = DayOfWeek.Monday - jan1.DayOfWeek;
+        
+        // Если 1 января - воскресенье, то первая неделя начинается в предыдущем году
+        if (daysOffset > 0)
+            daysOffset -= 7;
+            
+        var firstMonday = jan1.AddDays(daysOffset);
+        var firstWeek = GetIsoWeekOfYear(firstMonday);
+        
+        // Если первая неделя не содержит 4 января, то это последняя неделя предыдущего года
+        if (firstWeek > 1)
+        {
+            firstMonday = firstMonday.AddDays(-7);
+        }
+        
+        return firstMonday.AddDays((weekNumber - 1) * 7);
+    }
+
+    /// <summary>
+    /// Получить номер недели по ISO 8601
+    /// </summary>
+    private static int GetIsoWeekOfYear(DateTime date)
+    {
+        var day = (int)date.DayOfWeek;
+        if (day == 0) day = 7; // Воскресенье = 7
+        
+        var jan1 = new DateTime(date.Year, 1, 1);
+        var daysOffset = day - (int)jan1.DayOfWeek;
+        if (daysOffset < 0) daysOffset += 7;
+        
+        var weekNumber = ((date - jan1).Days + daysOffset) / 7 + 1;
+        
+        // Если неделя больше 52 и содержит менее 4 дней нового года, то это первая неделя
+        if (weekNumber > 52)
+        {
+            var nextYearJan1 = new DateTime(date.Year + 1, 1, 1);
+            var daysInWeek = 7 - day + 1;
+            if (daysInWeek < 4)
+                weekNumber = 1;
+        }
+        
+        return weekNumber;
+    }
 }
 
 
