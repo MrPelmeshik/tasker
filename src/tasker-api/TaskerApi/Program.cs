@@ -81,18 +81,25 @@ foreach (var tableMetaInfoType in dbEntityTypes
 builder.Services.AddScoped<IUserLogProvider, UserLogProvider>();
 builder.Services.AddScoped<IUserProvider, UserProvider>();
 builder.Services.AddScoped<IEventProvider, EventProvider>();
-builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
-builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
-builder.Services.AddScoped<IEventToGroupByGroupProvider, EventToGroupByGroupProvider>();
-builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
-builder.Services.AddScoped<IEventToTaskByTaskProvider, EventToTaskByTaskProvider>();
-builder.Services.AddScoped<IEventToTaskByEventProvider, EventToTaskByEventProvider>();
 builder.Services.AddScoped<IAreaProvider, AreaProvider>();
 builder.Services.AddScoped<IGroupProvider, GroupProvider>();
 builder.Services.AddScoped<IPurposeProvider, PurposeProvider>();
 builder.Services.AddScoped<ITaskProvider, TaskProvider>();
 builder.Services.AddScoped<ISubtaskProvider, SubtaskProvider>();
 builder.Services.AddScoped<IUserAreaAccessProvider, UserAreaAccessProvider>();
+
+builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
+builder.Services.AddScoped<IEventToEntityBaseProvider<EventToAreaByAreaEntity>, EventToAreaByAreaProvider>();
+builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
+builder.Services.AddScoped<IEventToEntityBaseProvider<EventToAreaByEventEntity>, EventToAreaByEventProvider>();
+builder.Services.AddScoped<IEventToGroupByGroupProvider, EventToGroupByGroupProvider>();
+builder.Services.AddScoped<IEventToEntityBaseProvider<EventToGroupByGroupEntity>, EventToGroupByGroupProvider>();
+builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
+builder.Services.AddScoped<IEventToEntityBaseProvider<EventToGroupByEventEntity>, EventToGroupByEventProvider>();
+builder.Services.AddScoped<IEventToTaskByTaskProvider, EventToTaskByTaskProvider>();
+builder.Services.AddScoped<IEventToEntityBaseProvider<EventToTaskByTaskEntity>, EventToTaskByTaskProvider>();
+builder.Services.AddScoped<IEventToTaskByEventProvider, EventToTaskByEventProvider>();
+builder.Services.AddScoped<IEventToEntityBaseProvider<EventToTaskByEventEntity>, EventToTaskByEventProvider>();
 
 // Регистрация сервисов
 builder.Services.AddHttpContextAccessor();

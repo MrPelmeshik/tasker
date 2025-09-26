@@ -17,7 +17,7 @@ public class AreaService(
     IAreaProvider areaProvider,
     IGroupProvider groupProvider,
     IUserAreaAccessProvider userAreaAccessProvider,
-    EventEntityBaseService<EventToAreaByEventEntity> eventService,
+    IEventAreaService eventService,
     TableMetaInfo<AreaEntity> areasTable,
     TableMetaInfo<GroupEntity> groupsTable)
     : IAreaService
