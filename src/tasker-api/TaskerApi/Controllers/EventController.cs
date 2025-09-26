@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Requests;
@@ -7,6 +8,7 @@ namespace TaskerApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize]
 public class EventController(IEventService service) : ControllerBase
 {
     [HttpPost]

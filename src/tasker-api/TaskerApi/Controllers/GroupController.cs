@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Attributes;
 using TaskerApi.Interfaces.Services;
@@ -8,6 +9,7 @@ namespace TaskerApi.Controllers;
 
 [ApiController]
 [Route("api/[controller]/[action]")]
+[Authorize]
 public class GroupController(IGroupService service) : ControllerBase
 {
     [HttpGet]
