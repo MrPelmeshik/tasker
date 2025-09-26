@@ -2,7 +2,6 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Requests;
-using TaskerApi.Models.Requests.Base;
 using TaskerApi.Models.Responses;
 
 namespace TaskerApi.Controllers;

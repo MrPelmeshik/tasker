@@ -1,6 +1,5 @@
 using TaskerApi.Interfaces.Core;
 using TaskerApi.Models.Requests;
-using TaskerApi.Models.Requests.Base;
 using TaskerApi.Models.Responses;
 
 namespace TaskerApi.Interfaces.Services;

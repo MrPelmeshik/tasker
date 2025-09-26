@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace TaskerApi.Models.Entities.Contracts;
+namespace TaskerApi.Interfaces.Models.Entities;
 
 /// <summary>
 /// Базовая сущность с датой деактивации

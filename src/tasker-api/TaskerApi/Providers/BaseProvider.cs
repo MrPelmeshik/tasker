@@ -4,11 +4,11 @@ using System.Reflection;
 using Dapper;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Models.Common;
+using TaskerApi.Interfaces.Models.Entities;
 using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
-using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Providers;
 

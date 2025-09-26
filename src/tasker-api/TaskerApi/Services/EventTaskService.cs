@@ -4,7 +4,7 @@ using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
-using TaskerApi.Models.Requests.Base;
+using TaskerApi.Services.Base;
 
 namespace TaskerApi.Services;
 

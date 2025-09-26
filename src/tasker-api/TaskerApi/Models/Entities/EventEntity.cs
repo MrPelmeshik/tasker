@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
+using TaskerApi.Interfaces.Models.Entities;
 using TaskerApi.Models.Common;
-using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Models.Entities;
 

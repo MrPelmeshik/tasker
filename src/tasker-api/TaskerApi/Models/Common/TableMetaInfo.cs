@@ -1,7 +1,7 @@
 using System.Collections.ObjectModel;
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Reflection;
-using TaskerApi.Models.Entities.Contracts;
+using TaskerApi.Interfaces.Models.Entities;
 
 namespace TaskerApi.Models.Common;
 

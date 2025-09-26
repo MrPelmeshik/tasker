@@ -5,7 +5,6 @@ using TaskerApi.Interfaces.Providers;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
-using TaskerApi.Models.Entities.Contracts;
 
 namespace TaskerApi.Providers;
 

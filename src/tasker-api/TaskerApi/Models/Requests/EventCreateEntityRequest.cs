@@ -1,6 +1,6 @@
 using TaskerApi.Models.Common;
 
-namespace TaskerApi.Models.Requests.Base;
+namespace TaskerApi.Models.Requests;
 
 public class EventCreateEntityRequest
 {

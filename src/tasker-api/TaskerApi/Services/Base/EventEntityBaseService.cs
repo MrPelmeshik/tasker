@@ -5,10 +5,9 @@ using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Entities.Base;
 using TaskerApi.Models.Requests;
-using TaskerApi.Models.Requests.Base;
 using TaskerApi.Models.Responses;
 
-namespace TaskerApi.Services;
+namespace TaskerApi.Services.Base;
 
 public abstract class EventEntityBaseService<TEventToEntity>(
     ILogger<EventEntityBaseService<TEventToEntity>> logger,
