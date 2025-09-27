@@ -4,14 +4,15 @@ public class StringFilter(
     ColumnMetaInfo column,
     string? value,
     bool isStrict = true,
-    bool isExclude = false) : BaseFilter(column, isExclude)
+    string? srcAlias = null,
+    bool isExclude = false) : BaseFilter(column, srcAlias, isExclude)
 {
     public override (string filter, (string name, object? value)? param) GetSql()
     {
         if (value == null)
             return (GetSqlByNullFilter(), null);
         
-        var paramName = $"{column.DbName}_{Guid.NewGuid():N}";
+        var paramName = $"{ParamPrefix}{column.DbName}_{Guid.NewGuid():N}";
 
         string sqlOperator;
         string formattedValue;
@@ -26,7 +27,7 @@ public class StringFilter(
             sqlOperator = $"like";
         }
 
-        var filter = $"{column.DbName} {sqlOperator} @{paramName}";
+        var filter = $"{SrcAlias}{column.DbName} {sqlOperator} @{paramName}";
         return (filter, (paramName, formattedValue));
     }
 }

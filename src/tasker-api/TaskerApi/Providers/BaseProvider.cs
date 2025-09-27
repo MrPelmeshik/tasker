@@ -160,7 +160,7 @@ public class BaseProvider<TEntity, TKey>(
         var allFilters = new List<IFilter>();
         
         // Добавляем фильтр по ID
-        allFilters.Add(new SimpleFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)].DbName, id));
+        allFilters.Add(new SimpleFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)], id));
         
         // Добавляем дополнительные фильтры
         if (filers is { Count: > 0 })
@@ -189,7 +189,7 @@ public class BaseProvider<TEntity, TKey>(
         // Создаем фильтр по ID
         var additionalFilters = new List<IFilter>
         {
-            new SimpleFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)].DbName, entity.Id)
+            new SimpleFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)], entity.Id)
         };
 
         var (sql, parameters) = SqlConstructor.BuildUpdateQuery(Table, filers, additionalFilters);
@@ -245,7 +245,7 @@ public class BaseProvider<TEntity, TKey>(
         // Создаем фильтр по массиву ID
         var additionalFilters = new List<IFilter>
         {
-            new ArraySqlFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)].DbName, ids.ToArray())
+            new ArraySqlFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)], ids.ToArray())
         };
 
         var (sql, parameters) = SqlConstructor.BuildDeleteQuery(Table, filers, additionalFilters);

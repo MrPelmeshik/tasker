@@ -200,4 +200,18 @@ public static class SqlConstructor
         var countSql = $"SELECT COUNT(*) FROM ({sql}) AS count_query";
         return (countSql, parameters);
     }
+
+    /// <summary>
+    /// Объединяет несколько параметров в один
+    /// </summary>
+    /// <param name="pasrameters">Параметры</param>
+    public static DynamicParameters CombineParameters(params DynamicParameters[] pasrameters)
+    {
+        var combinedParameters = new DynamicParameters();
+        foreach (var parameter in pasrameters)
+        {
+            combinedParameters.AddDynamicParams(parameter);
+        }
+        return combinedParameters;
+    }
 }
