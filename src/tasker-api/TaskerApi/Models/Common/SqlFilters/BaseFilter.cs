@@ -5,16 +5,16 @@ namespace TaskerApi.Models.Common.SqlFilters;
 /// <summary>
 /// Базовый фильтр
 /// </summary>
-/// <param name="fieldName"></param>
+/// <param name="column"></param>
 /// <param name="isExclude"></param>
-public abstract class BaseFilter(string fieldName, bool isExclude = false) : IFilter
+public abstract class BaseFilter(ColumnMetaInfo column, bool isExclude = false) : IFilter
 {
     public abstract (string filter, (string name, object? value)? param) GetSql();
     
     protected virtual string GetSqlByNullFilter()
     {
         return isExclude 
-            ? $"{fieldName} is not null"
-            : $"{fieldName} is null";
+            ? $"{column.DbName} is not null"
+            : $"{column.DbName} is null";
     }
 }

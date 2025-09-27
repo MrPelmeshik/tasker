@@ -29,7 +29,7 @@ public class AreaService(
             var items = await areaProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(areaProvider.Table[nameof(AreaEntity.Id)].DbName, currentUser.AccessibleAreas.ToArray())],
+                filers: [new ArraySqlFilter<Guid>(areaProvider.Table[nameof(AreaEntity.Id)], currentUser.AccessibleAreas.ToArray())],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
@@ -203,7 +203,7 @@ public class AreaService(
             var areas = await areaProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(areaProvider.Table[nameof(AreaEntity.Id)].DbName, currentUser.AccessibleAreas.ToArray())],
+                filers: [new ArraySqlFilter<Guid>(areaProvider.Table[nameof(AreaEntity.Id)], currentUser.AccessibleAreas.ToArray())],
                 transaction: uow.Transaction);
 
             var result = new List<AreaShortCardResponse>();
@@ -213,7 +213,7 @@ public class AreaService(
                 var groupsCount = await groupProvider.GetCountAsync(
                     uow.Connection,
                     cancellationToken,
-                    filers: [new SimpleFilter<Guid>(areaProvider.Table[nameof(GroupEntity.AreaId)].DbName, area.Id)],
+                    filers: [new SimpleFilter<Guid>(areaProvider.Table[nameof(GroupEntity.AreaId)], area.Id)],
                     transaction: uow.Transaction);
 
                 result.Add(new AreaShortCardResponse

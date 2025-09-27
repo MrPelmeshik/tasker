@@ -29,7 +29,7 @@ public class GroupService(
             var items = await groupProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(groupProvider.Table[nameof(GroupEntity.Id)].DbName, currentUser.AccessibleAreas.ToArray())],
+                filers: [new ArraySqlFilter<Guid>(groupProvider.Table[nameof(GroupEntity.Id)], currentUser.AccessibleAreas.ToArray())],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
@@ -213,7 +213,7 @@ public class GroupService(
             var groups = await groupProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new SimpleFilter<Guid>(groupProvider.Table[nameof(GroupEntity.AreaId)].DbName, areaId)],
+                filers: [new SimpleFilter<Guid>(groupProvider.Table[nameof(GroupEntity.AreaId)], areaId)],
                 transaction: uow.Transaction);
 
             var result = new List<GroupSummaryResponse>();
@@ -223,7 +223,7 @@ public class GroupService(
                 var tasksCount = await taskProvider.GetCountAsync(
                     uow.Connection,
                     cancellationToken,
-                    filers: [new SimpleFilter<Guid>(taskProvider.Table[nameof(TaskEntity.GroupId)].DbName, group.Id)],
+                    filers: [new SimpleFilter<Guid>(taskProvider.Table[nameof(TaskEntity.GroupId)], group.Id)],
                     transaction: uow.Transaction);
 
                 result.Add(new GroupSummaryResponse

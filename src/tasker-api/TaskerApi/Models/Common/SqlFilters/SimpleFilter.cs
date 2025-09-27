@@ -1,10 +1,10 @@
 namespace TaskerApi.Models.Common.SqlFilters;
 
 public class SimpleFilter<T>(
-    string fieldName, 
+    ColumnMetaInfo column, 
     T? value,
     bool isExclude = false) 
-    : BaseFilter(fieldName, isExclude)
+    : BaseFilter(column, isExclude)
 {
     public override (string filter, (string name, object? value)? param) GetSql()
     {
@@ -15,8 +15,8 @@ public class SimpleFilter<T>(
             ? "<>" 
             : "=";
         
-        var paramName = $"{fieldName}_{Guid.NewGuid():N}";
-        var filter = $"{fieldName} {sqlOperator} @{paramName}::{TypeMappingHelper.GetPostgresTypeName(typeof(T))}";
+        var paramName = $"{column.DbName}_{Guid.NewGuid():N}";
+        var filter = $"{column.DbName} {sqlOperator} @{paramName}::{TypeMappingHelper.GetPostgresTypeName(column.Property.PropertyType)}";
 
         return (filter, (paramName, value));
     }

@@ -26,7 +26,7 @@ public class UserAreaAccessProvider(
             connection,
             cancellationToken,
             filers: [
-                new SimpleFilter<Guid>(table[nameof(UserAreaAccessEntity.UserId)].DbName, userId)
+                new SimpleFilter<Guid>(table[nameof(UserAreaAccessEntity.UserId)], userId)
             ],
             transaction: transaction
         ))
@@ -95,8 +95,8 @@ public class UserAreaAccessProvider(
             },
             cancellationToken,
             filers: [
-                new SimpleFilter<Guid>(nameof(UserAreaAccessEntity.UserId), userId), 
-                new SimpleFilter<Guid>(nameof(UserAreaAccessEntity.AreaId), areaId)
+                new SimpleFilter<Guid>(table[nameof(UserAreaAccessEntity.UserId)], userId), 
+                new SimpleFilter<Guid>(table[nameof(UserAreaAccessEntity.AreaId)], areaId)
             ],
             transaction,
             setDefaultValues: true);

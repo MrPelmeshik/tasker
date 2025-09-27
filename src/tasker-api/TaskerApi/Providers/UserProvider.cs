@@ -21,7 +21,7 @@ public class UserProvider(
         return await GetSimpleAsync(
             connection,
             cancellationToken,
-            filers: [new StringFilter(nameof(UserEntity.Name), name)],
+            filers: [new StringFilter(table[nameof(UserEntity.Name)], name)],
             orderColumn: nameof(UserEntity.Id),
             orderDesc: false,
             withDeleted: false,
@@ -38,7 +38,7 @@ public class UserProvider(
         return await GetSimpleAsync(
             connection,
             cancellationToken,
-            filers: [new StringFilter(nameof(UserEntity.Email), email)],
+            filers: [new StringFilter(table[nameof(UserEntity.Email)], email)],
             orderColumn: nameof(UserEntity.Id),
             orderDesc: false,
             withDeleted: false,

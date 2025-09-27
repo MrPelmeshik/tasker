@@ -34,7 +34,7 @@ public static class SqlConstructor
         
         if (!withDeleted && table.HasSoftDelete) 
         {
-            additionalFiltersList.Add(new SimpleFilter<bool>(table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName, true));
+            additionalFiltersList.Add(new SimpleFilter<bool>(table[nameof(ISoftDeleteBaseEntity.IsActive)], true));
         }
 
         if (additionalFilters is { Count: > 0 })
