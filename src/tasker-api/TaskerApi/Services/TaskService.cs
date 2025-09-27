@@ -7,6 +7,7 @@ using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
+using TaskStatus = TaskerApi.Models.Common.TaskStatus;
 
 namespace TaskerApi.Services;
 
@@ -41,6 +42,7 @@ public class TaskService(
                 Title = x.Title,
                 Description = x.Description,
                 GroupId = x.GroupId,
+                Status = x.Status,
                 CreatorUserId = x.CreatorUserId,
                 CreatedAt = x.CreatedAt,
                 UpdatedAt = x.UpdatedAt,
@@ -80,6 +82,7 @@ public class TaskService(
                 Title = item.Title,
                 Description = item.Description,
                 GroupId = item.GroupId,
+                Status = item.Status,
                 CreatorUserId = item.CreatorUserId,
                 CreatedAt = item.CreatedAt,
                 UpdatedAt = item.UpdatedAt,
@@ -127,6 +130,7 @@ public class TaskService(
                     Description = request.Description,
                     GroupId = request.GroupId,
                     CreatorUserId = currentUser.UserId,
+                    Status = request.Status
                 },
                 cancellationToken,
                 uow.Transaction,
@@ -193,10 +197,12 @@ public class TaskService(
             var oldTitle = existingItem.Title;
             var oldDescription = existingItem.Description;
             var oldGroupId = existingItem.GroupId;
+            var oldStatus = existingItem.Status;
 
             existingItem.Title = request.Title;
             existingItem.Description = request.Description;
             existingItem.GroupId = request.GroupId;
+            existingItem.Status = request.Status;
 
             await taskProvider.UpdateAsync(
                 uow.Connection,
@@ -212,6 +218,8 @@ public class TaskService(
                 changes.Add($"Описание: '{oldDescription}' → '{request.Description}'");
             if (oldGroupId != request.GroupId)
                 changes.Add($"Группа: {oldGroupId} → {request.GroupId}");
+            if (oldStatus != request.Status)
+                changes.Add($"Статус: {oldStatus} → {request.Status}");
 
             await eventService.AddEventUpdateEntityAsync(
                 uow, 
@@ -290,7 +298,8 @@ public class TaskService(
             {
                 Id = x.Id,
                 Title = x.Title,
-                Description = x.Description
+                Description = x.Description,
+                Status = x.Status
             });
         }
         catch (Exception e)

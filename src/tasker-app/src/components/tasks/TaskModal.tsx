@@ -11,6 +11,7 @@ import { ResetIcon } from '../icons/ResetIcon';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, GroupResponse } from '../../types';
+import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 
 export interface TaskModalProps {
@@ -40,11 +41,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     title: '',
     description: '',
     groupId: '',
+    status: TaskStatus.New,
   });
   const [originalData, setOriginalData] = useState<TaskCreateRequest>({
     title: '',
     description: '',
     groupId: '',
+    status: TaskStatus.New,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
@@ -57,10 +60,12 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         title: task.title,
         description: task.description || '',
         groupId: task.groupId,
+        status: task.status || TaskStatus.New,
       } : {
         title: '',
         description: '',
         groupId: defaultGroupId || (groups.length > 0 ? groups[0].id : ''),
+        status: TaskStatus.New,
       };
       
       setFormData(initialData);
@@ -73,7 +78,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const hasChanges = Object.values(fieldChanges).some(hasChange => hasChange);
   const hasUnsavedChanges = hasChanges;
 
-  const handleFieldChange = (field: keyof TaskCreateRequest, value: string) => {
+  const handleFieldChange = (field: keyof TaskCreateRequest, value: string | number) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Проверяем, изменилось ли поле относительно оригинального значения
@@ -215,6 +220,37 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   value={formData.title}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
                   placeholder="Введите название задачи"
+                  disabled={isLoading}
+                  fullWidth
+                />
+              </div>
+            </div>
+
+            {/* Поле статуса */}
+            <div className={formCss.fieldGroup}>
+              <div className={formCss.fieldHeader}>
+                <label className={formCss.fieldLabel}>
+                  Статус
+                </label>
+                {fieldChanges.status && (
+                  <GlassButton
+                    variant="subtle"
+                    size="xxs"
+                    onClick={() => handleResetField('status')}
+                    className={formCss.resetButton}
+                  >
+                    <ResetIcon />
+                  </GlassButton>
+                )}
+              </div>
+              <div className={formCss.fieldContainer}>
+                <GlassSelect
+                  value={formData.status?.toString() || TaskStatus.New.toString()}
+                  onChange={(value) => handleFieldChange('status', parseInt(value))}
+                  options={getTaskStatusOptions().map(option => ({
+                    value: option.value.toString(),
+                    label: option.label
+                  }))}
                   disabled={isLoading}
                   fullWidth
                 />

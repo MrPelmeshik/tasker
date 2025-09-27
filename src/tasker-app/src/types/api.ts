@@ -78,12 +78,14 @@ export interface TaskCreateRequest {
   title: string;
   description?: string;
   groupId: string;
+  status: number; // TaskStatus enum value
 }
 
 export interface TaskUpdateRequest {
   title: string;
   description?: string;
   groupId: string;
+  status: number; // TaskStatus enum value
 }
 
 export interface TaskResponse {
@@ -91,6 +93,7 @@ export interface TaskResponse {
   title: string;
   description?: string;
   groupId: string;
+  status: number; // TaskStatus enum value
   creatorUserId: string;
   createdAt: string;
   updatedAt: string;
@@ -106,6 +109,7 @@ export interface TaskSummaryResponse {
   id: string;
   title: string;
   description?: string;
+  status: number; // TaskStatus enum value
 }
 
 // Типы для недельной активности задач

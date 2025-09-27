@@ -3,6 +3,7 @@ import glassWidgetStyles from '../../../styles/glass-widget.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
+import { TaskStatusBadge } from '../../../components/ui/TaskStatusBadge';
 import { useModal, useTaskUpdate } from '../../../context';
 import type { 
   WidgetSizeProps, 
@@ -16,7 +17,8 @@ import type {
   GroupCreateRequest, 
   GroupUpdateRequest,
   TaskCreateRequest,
-  TaskUpdateRequest
+  TaskUpdateRequest,
+  TaskStatus
 } from '../../../types';
 import { 
   fetchAreaShortCard, 
@@ -587,6 +589,12 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                                             <div className={css.taskContent}>
                                               <div className={css.taskInfo}>
                                                 <div className={css.taskTitle}>{task.title}</div>
+                                                <div className={css.taskStatus}>
+                                                  <TaskStatusBadge 
+                                                    status={task.status as TaskStatus} 
+                                                    size="xs" 
+                                                  />
+                                                </div>
                                               </div>
                                               <div className={css.taskActions}>
                                                 <GlassButton 

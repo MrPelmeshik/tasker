@@ -1,4 +1,6 @@
 using System.ComponentModel.DataAnnotations;
+using TaskerApi.Models.Common;
+using TaskStatus = TaskerApi.Models.Common.TaskStatus;
 
 namespace TaskerApi.Models.Requests;
 
@@ -25,4 +27,9 @@ public class TaskCreateRequest
     /// </summary>
     [Required(ErrorMessage = "ID группы обязателен")]
     public Guid GroupId { get; set; }
+
+    /// <summary>
+    /// Статус задачи
+    /// </summary>
+    public TaskStatus Status { get; set; }
 }

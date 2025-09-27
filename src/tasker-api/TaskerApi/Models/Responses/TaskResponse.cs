@@ -1,3 +1,6 @@
+using TaskerApi.Models.Common;
+using TaskStatus = TaskerApi.Models.Common.TaskStatus;
+
 namespace TaskerApi.Models.Responses;
 
 /// <summary>
@@ -24,6 +27,11 @@ public class TaskResponse
     /// ID группы
     /// </summary>
     public Guid GroupId { get; set; }
+
+    /// <summary>
+    /// Статус задачи
+    /// </summary>
+    public TaskStatus Status { get; set; }
 
     /// <summary>
     /// ID пользователя-создателя

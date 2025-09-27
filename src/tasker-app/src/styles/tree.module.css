@@ -181,6 +181,13 @@
   line-height: 1.2;
   word-wrap: break-word;
   overflow-wrap: break-word;
+  margin-bottom: var(--space-2);
+}
+
+.taskStatus {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .areaTitle {

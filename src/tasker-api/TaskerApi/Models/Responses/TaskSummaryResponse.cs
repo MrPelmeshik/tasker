@@ -1,3 +1,6 @@
+using TaskerApi.Models.Common;
+using TaskStatus = TaskerApi.Models.Common.TaskStatus;
+
 namespace TaskerApi.Models.Responses;
 
 /// <summary>
@@ -19,4 +22,9 @@ public class TaskSummaryResponse
     /// Описание задачи
     /// </summary>
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Статус задачи
+    /// </summary>
+    public TaskStatus Status { get; set; }
 }

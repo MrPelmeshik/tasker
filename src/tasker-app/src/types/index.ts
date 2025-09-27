@@ -4,3 +4,4 @@ export * from './area-group';
 export * from './auth';
 export * from './widget-size';
 export * from './modal-size';
+export * from './task-status';

@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TaskerApi.Interfaces.Models.Entities;
+using TaskerApi.Models.Common;
+using TaskStatus = TaskerApi.Models.Common.TaskStatus;
 
 namespace TaskerApi.Models.Entities;
 
@@ -32,6 +34,12 @@ public class TaskEntity :
     /// </summary>
     [Column("group_id")]
     public Guid GroupId { get; set; }
+
+    /// <summary>
+    /// Статус задачи
+    /// </summary>
+    [Column("status")]
+    public TaskStatus Status { get; set; }
 
     public DateTimeOffset CreatedAt { get; set; }
 

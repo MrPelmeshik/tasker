@@ -50,6 +50,7 @@ export interface Task {
   title: string;
   description?: string;
   groupId: string;
+  status: number; // TaskStatus enum value
   creatorUserId: string;
   createdAt: string;
   deactivatedAt?: string;
@@ -62,5 +63,6 @@ export interface TaskSummary {
   id: string;
   title: string;
   description?: string;
+  status: number; // TaskStatus enum value
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
