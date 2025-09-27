@@ -17,8 +17,7 @@ public class TaskService(
     ICurrentUserService currentUser,
     ITaskProvider taskProvider,
     IGroupProvider groupProvider,
-    IEventTaskService eventService,
-    TableMetaInfo<TaskEntity> tasksTable
+    IEventTaskService eventService
     )
     : ITaskService
 {
@@ -32,7 +31,7 @@ public class TaskService(
             var items = await taskProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(tasksTable[nameof(TaskEntity.GroupId)].DbName, currentUser.AccessibleGroups.ToArray())],
+                filers: [new ArraySqlFilter<Guid>(taskProvider.Table[nameof(TaskEntity.GroupId)].DbName, currentUser.AccessibleGroups.ToArray())],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
@@ -290,7 +289,7 @@ public class TaskService(
             var tasks = await taskProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new SimpleFilter<Guid>(tasksTable[nameof(TaskEntity.GroupId)].DbName, groupId)],
+                filers: [new SimpleFilter<Guid>(taskProvider.Table[nameof(TaskEntity.GroupId)].DbName, groupId)],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);
@@ -319,7 +318,7 @@ public class TaskService(
             var tasks = await taskProvider.GetListAsync(
                 uow.Connection,
                 cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(tasksTable[nameof(TaskEntity.GroupId)].DbName, currentUser.AccessibleGroups.ToArray())],
+                filers: [new ArraySqlFilter<Guid>(taskProvider.Table[nameof(TaskEntity.GroupId)].DbName, currentUser.AccessibleGroups.ToArray())],
                 transaction: uow.Transaction);
 
             await uow.CommitAsync(cancellationToken);

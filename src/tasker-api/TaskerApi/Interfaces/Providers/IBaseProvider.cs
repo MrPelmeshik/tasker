@@ -1,5 +1,6 @@
 using System.Data;
 using TaskerApi.Interfaces.Models.Common;
+using TaskerApi.Interfaces.Models.Entities;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Common.SqlFilters;
 
@@ -10,8 +11,13 @@ namespace TaskerApi.Interfaces.Providers;
 /// </summary>
 /// <typeparam name="TEntity">Тип сущности</typeparam>
 /// <typeparam name="TKey">Тип идентификатора</typeparam>
-public interface IBaseProvider<TEntity, TKey> where TEntity : class
+public interface IBaseProvider<TEntity, TKey> where TEntity : class, IDbEntity
 {
+    /// <summary>
+    /// Метаинформация о таблице
+    /// </summary>
+    TableMetaInfo<TEntity> Table { get; }
+    
     /// <summary>
     /// Создать запись
     /// </summary>

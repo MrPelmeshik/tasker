@@ -23,103 +23,7 @@ public class BaseProvider<TEntity, TKey>(
     : IBaseProvider<TEntity, TKey>
     where TEntity : class, IIdBaseEntity<TKey>, IDbEntity
 {
-    /// <summary>
-    /// Генерирует полный SQL запрос с WHERE, ORDER BY, LIMIT, OFFSET
-    /// </summary>
-    /// <param name="filters">Список фильтров</param>
-    /// <param name="withDeleted">Включить удаленные записи</param>
-    /// <param name="orderColumn">Колонка для сортировки</param>
-    /// <param name="orderDesc">Сортировка по убыванию</param>
-    /// <param name="offset">Смещение</param>
-    /// <param name="limit">Лимит</param>
-    /// <param name="additionalFilters">Дополнительные фильтры</param>
-    /// <returns>Кортеж с SQL запросом и параметрами</returns>
-    private (string sql, DynamicParameters parameters) BuildSelectQuery(
-        IList<IFilter>? filters = null,
-        bool withDeleted = false,
-        string? orderColumn = null,
-        bool orderDesc = false,
-        int? offset = null,
-        int? limit = null,
-        IList<IFilter>? additionalFilters = null)
-    {
-        var additionalFiltersList = new List<IFilter>();
-        
-        if (!withDeleted && table.HasSoftDelete) 
-        {
-            additionalFiltersList.Add(new SimpleFilter<bool>(table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName, true));
-        }
-
-        if (additionalFilters is { Count: > 0 })
-        {
-            additionalFiltersList.AddRange(additionalFilters);
-        }
-
-        var (whereSql, parameters) = BuildWhereClause(filters, additionalFiltersList);
-
-        var orderBy = !string.IsNullOrEmpty(orderColumn)
-            ? $"\nORDER BY {table[orderColumn].DbName}" + (orderDesc ? " DESC" : " ASC")
-            : string.Empty;
-        
-        var limitOffset = limit.HasValue
-            ? $"\nLIMIT {limit.Value} OFFSET {offset ?? 0}"
-            : string.Empty;
-        
-        var sql = $"""
-                   SELECT {string.Join(", ", table.ColumnInfos.Select(c => $"{c.DbName} AS {c.SrcName}"))}
-                   FROM {table.DbName}{whereSql}{orderBy}{limitOffset}
-                   """;
-
-        return (sql, parameters);
-    }
-
-    /// <summary>
-    /// Генерирует WHERE-условия и параметры на основе фильтров
-    /// </summary>
-    /// <param name="filters">Список фильтров</param>
-    /// <param name="additionalFilters">Дополнительные фильтры (например, по ID)</param>
-    /// <returns>Кортеж с WHERE-условием и параметрами</returns>
-    private (string whereSql, DynamicParameters parameters) BuildWhereClause(
-        IList<IFilter>? filters = null, 
-        IList<IFilter>? additionalFilters = null)
-    {
-        var whereList = new List<string>();
-        var parameters = new DynamicParameters();
-        
-        // Добавляем дополнительные фильтры (например, по ID)
-        if (additionalFilters is { Count: > 0 })
-        {
-            var sqlFilters = additionalFilters.Select(filter => filter.GetSql()).ToArray();
-
-            foreach (var sqlFilter in sqlFilters)
-            {
-                whereList.Add(sqlFilter.filter);
-                
-                if (sqlFilter.param.HasValue)
-                    parameters.Add(sqlFilter.param.Value.name, sqlFilter.param.Value.value);
-            }
-        }
-
-        // Добавляем основные фильтры
-        if (filters is { Count: > 0 })
-        {
-            var sqlFilters = filters.Select(filter => filter.GetSql()).ToArray();
-
-            foreach (var sqlFilter in sqlFilters)
-            {
-                whereList.Add(sqlFilter.filter);
-                
-                if (sqlFilter.param.HasValue)
-                    parameters.Add(sqlFilter.param.Value.name, sqlFilter.param.Value.value);
-            }
-        }
-
-        var whereSql = whereList.Count > 0 
-            ? ("\nWHERE " + string.Join(" AND ", whereList)) 
-            : string.Empty;
-
-        return (whereSql, parameters);
-    }
+    public TableMetaInfo<TEntity> Table => table;
 
     public virtual async Task<TKey> CreateAsync(
         IDbConnection connection, 
@@ -128,11 +32,7 @@ public class BaseProvider<TEntity, TKey>(
         IDbTransaction? transaction = null,
         bool setDefaultValues = false)
     {
-        var sql = $"""
-                   INSERT INTO {table.DbName} ({string.Join(", ", table.NotReadOnlyDbColumnNames)})
-                   VALUES ({string.Join(", ", table.NotReadOnlyColumns.Select(c => "@" + c.SrcName + "::" + TypeMappingHelper.GetPostgresTypeName(c.Property.PropertyType)))})
-                   RETURNING {table[nameof(IIdBaseEntity<TKey>.Id)].DbName}
-                   """;
+        var sql = SqlConstructor.BuildInsertQuery(Table, Table[nameof(IIdBaseEntity<TKey>.Id)]);
 
         if (setDefaultValues)
         {
@@ -148,7 +48,7 @@ public class BaseProvider<TEntity, TKey>(
                 updatedEntity.UpdatedAt = DateTime.Now;
             }
 
-            if (table.HasSoftDelete && entity is ISoftDeleteBaseEntity softDeleteEntity)
+            if (Table.HasSoftDelete && entity is ISoftDeleteBaseEntity softDeleteEntity)
             {
                 softDeleteEntity.IsActive = true;
             }
@@ -189,7 +89,8 @@ public class BaseProvider<TEntity, TKey>(
         int? limit = null, 
         IDbTransaction? transaction = null)
     {
-        var (sql, parameters) = BuildSelectQuery(
+        var (sql, parameters) = SqlConstructor.BuildSelectQuery(
+            Table,
             filters: filers,
             withDeleted: withDeleted,
             orderColumn: orderColumn,
@@ -259,7 +160,7 @@ public class BaseProvider<TEntity, TKey>(
         var allFilters = new List<IFilter>();
         
         // Добавляем фильтр по ID
-        allFilters.Add(new SimpleFilter<TKey>(table[nameof(IIdBaseEntity<TKey>.Id)].DbName, id));
+        allFilters.Add(new SimpleFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)].DbName, id));
         
         // Добавляем дополнительные фильтры
         if (filers is { Count: > 0 })
@@ -288,16 +189,10 @@ public class BaseProvider<TEntity, TKey>(
         // Создаем фильтр по ID
         var additionalFilters = new List<IFilter>
         {
-            new SimpleFilter<TKey>(table[nameof(IIdBaseEntity<TKey>.Id)].DbName, entity.Id)
+            new SimpleFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)].DbName, entity.Id)
         };
 
-        var (whereSql, parameters) = BuildWhereClause(filers, additionalFilters);
-
-        var setSql = string.Join(", ", table.NotReadOnlyColumns.Select(c => $"{c.DbName} = {"@" + c.SrcName + "::" + TypeMappingHelper.GetPostgresTypeName(c.Property.PropertyType)}"));
-        var sql = $"""
-                   UPDATE {table.DbName} 
-                   SET {setSql}{whereSql}
-                   """;
+        var (sql, parameters) = SqlConstructor.BuildUpdateQuery(Table, filers, additionalFilters);
         
         if (setDefaultValues)
         {
@@ -350,20 +245,10 @@ public class BaseProvider<TEntity, TKey>(
         // Создаем фильтр по массиву ID
         var additionalFilters = new List<IFilter>
         {
-            new ArraySqlFilter<TKey>(table[nameof(IIdBaseEntity<TKey>.Id)].DbName, ids.ToArray())
+            new ArraySqlFilter<TKey>(Table[nameof(IIdBaseEntity<TKey>.Id)].DbName, ids.ToArray())
         };
 
-        var (whereSql, parameters) = BuildWhereClause(filers, additionalFilters);
-
-        var sql = table.HasSoftDelete
-            ? $"""
-               update {table.DbName}
-               set {table[nameof(ISoftDeleteBaseEntity.IsActive)].DbName} = false
-               ,   {table[nameof(ISoftDeleteBaseEntity.DeactivatedAt)].DbName} = now(){whereSql}
-               """
-            : $"""
-               delete from {table.DbName}{whereSql}
-               """;
+        var (sql, parameters) = SqlConstructor.BuildDeleteQuery(Table, filers, additionalFilters);
         
         var affected = await connection.ExecuteAsync(new CommandDefinition(sql, parameters, transaction, cancellationToken: cancellationToken));
         return affected;
@@ -380,20 +265,20 @@ public class BaseProvider<TEntity, TKey>(
         int? limit = null,
         IDbTransaction? transaction = null)
     {
-        var (selectSql, parameters) = BuildSelectQuery(
+        var (selectSql, parameters) = SqlConstructor.BuildSelectQuery(
+            Table,
             filters: filers,
             withDeleted: withDeleted,
             orderColumn: orderColumn,
             orderDesc: orderDesc,
             offset: offset,
             limit: limit);
-
-        // Оборачиваем SELECT запрос в COUNT(*)
-        var countSql = $"SELECT COUNT(*) FROM ({selectSql}) AS count_query";
+        
+        var (countSql, countParameters) = SqlConstructor.BuildCountQuery(selectSql, parameters);
 
         var count = await connection.QuerySingleAsync<int>(new CommandDefinition(
             commandText: countSql,
-            parameters: parameters,
+            parameters: countParameters,
             transaction: transaction,
             cancellationToken: cancellationToken));
         
