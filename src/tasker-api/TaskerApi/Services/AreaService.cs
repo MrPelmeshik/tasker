@@ -75,16 +75,7 @@ public class AreaService(
                 throw new InvalidOperationException("Область с таким названием уже существует");
             }
 
-            var area = new AreaEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.Title,
-                Description = request.Description,
-                CreatorUserId = CurrentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var area = request.ToAreaEntity(CurrentUser.UserId);
 
             var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
 
@@ -113,9 +104,7 @@ public class AreaService(
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
 
-            existingArea.Title = request.Title;
-            existingArea.Description = request.Description;
-            existingArea.UpdatedAt = DateTime.UtcNow;
+            request.UpdateAreaEntity(existingArea);
 
             await areaRepository.UpdateAsync(existingArea, cancellationToken);
         }
@@ -163,59 +152,28 @@ public class AreaService(
     /// <returns>Созданная область с группой</returns>
     public async Task<CreateAreaWithGroupResponse> CreateWithDefaultGroupAsync(CreateAreaWithGroupRequest request, CancellationToken cancellationToken)
     {
-        using var transaction = await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            var area = new AreaEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.Title,
-                Description = request.Description,
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var area = request.ToAreaEntity(currentUser.UserId);
 
             var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
 
-            var defaultGroup = new GroupEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = "Default Group",
-                Description = "Default group for this area",
-                AreaId = createdArea.Id,
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var defaultGroup = createdArea.ToDefaultGroupEntity(currentUser.UserId);
 
             var createdGroup = await groupRepository.CreateAsync(defaultGroup, cancellationToken);
 
-            var userAccess = new UserAreaAccessEntity
-            {
-                Id = Guid.NewGuid(),
-                UserId = currentUser.UserId,
-                AreaId = createdArea.Id,
-                GrantedByUserId = currentUser.UserId,
-                GrantedAt = DateTime.UtcNow,
-                IsActive = true
-            };
+            var userAccess = createdArea.ToUserAreaAccessEntity(currentUser.UserId, currentUser.UserId);
 
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
 
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
 
-            return new CreateAreaWithGroupResponse
-            {
-                Area = createdArea.ToAreaResponse(),
-                DefaultGroup = createdGroup.ToGroupResponse()
-            };
+            return createdArea.ToCreateAreaWithGroupResponse(createdGroup);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
             logger.LogError(ex, "Ошибка создания области с группой по умолчанию");
             throw;
         }

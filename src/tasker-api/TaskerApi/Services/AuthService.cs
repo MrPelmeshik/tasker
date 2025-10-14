@@ -11,6 +11,7 @@ using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
+using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
 
@@ -88,20 +89,7 @@ public class AuthService(
             }
 
             var tokens = CreateTokens(user);
-            var response = new AuthResponse
-            {
-                AccessToken = tokens.accessToken,
-                ExpiresIn = _jwt.AccessTokenLifetimeMinutes * 60,
-                UserInfo = new UserInfo
-                {
-                    Id = user.Id.ToString(),
-                    Username = user.Name,
-                    Email = user.Email ?? string.Empty,
-                    FirstName = user.FirstName ?? string.Empty,
-                    LastName = user.LastName ?? string.Empty,
-                    Roles = new List<string> { "user" }
-                }
-            };
+            var response = user.ToAuthResponse(tokens.accessToken, _jwt.AccessTokenLifetimeMinutes * 60);
 
             return (ApiResponse<AuthResponse>.SuccessResult(response, "Авторизация выполнена успешно"), tokens.refreshToken);
         }
@@ -134,27 +122,11 @@ public class AuthService(
 
             var (hash, salt) = PasswordHasher.HashPassword(request.Password);
 
-            var user = new UserEntity
-            {
-                Id = Guid.NewGuid(),
-                Name = username,
-                Email = email,
-                FirstName = request.FirstName.Trim(),
-                LastName = request.LastName.Trim(),
-                PasswordHash = hash,
-                PasswordSalt = salt,
-                CreatedAt = DateTimeOffset.Now,
-                UpdatedAt = DateTimeOffset.Now,
-                IsActive = true
-            };
+            var user = request.ToUserEntity(hash, salt);
 
             var createdUser = await userRepository.CreateAsync(user, CancellationToken.None);
 
-            var response = new RegisterResponse
-            {
-                UserId = user.Id.ToString(),
-                Message = "Пользователь успешно зарегистрирован"
-            };
+            var response = createdUser.ToRegisterResponse();
             return ApiResponse<RegisterResponse>.SuccessResult(response);
         }
         catch (Exception ex)
@@ -189,12 +161,7 @@ public class AuthService(
             var accessToken = CreateJwtToken(userId, name, tokenType: "access", TimeSpan.FromMinutes(_jwt.AccessTokenLifetimeMinutes));
             var refreshToken = CreateJwtToken(userId, name, tokenType: "refresh", TimeSpan.FromDays(_jwt.RefreshTokenLifetimeDays));
 
-            var response = new RefreshTokenResponse
-            {
-                AccessToken = accessToken,
-                ExpiresIn = _jwt.AccessTokenLifetimeMinutes * 60,
-                TokenType = "Bearer"
-            };
+            var response = EntityMapper.ToRefreshTokenResponse(accessToken, _jwt.AccessTokenLifetimeMinutes * 60);
             return Task.FromResult((ApiResponse<RefreshTokenResponse>.SuccessResult(response), refreshToken));
         }
         catch (Exception ex)
@@ -229,15 +196,7 @@ public class AuthService(
             if (user == null)
                 return ApiResponse<UserInfo>.ErrorResult("Пользователь не найден");
             
-            var info = new UserInfo
-            {
-                Id = user.Id.ToString(),
-                Username = user.Name,
-                Email = user.Email ?? string.Empty,
-                FirstName = user.FirstName ?? string.Empty,
-                LastName = user.LastName ?? string.Empty,
-                Roles = ["user"]
-            };
+            var info = user.ToUserInfo();
             return ApiResponse<UserInfo>.SuccessResult(info);
         }
         catch (Exception ex)

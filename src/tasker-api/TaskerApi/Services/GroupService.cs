@@ -82,17 +82,7 @@ public class GroupService(
 
             EnsureAccessToArea(area.Id);
 
-            var group = new GroupEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.Title,
-                Description = request.Description,
-                AreaId = request.AreaId,
-                CreatorUserId = CurrentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var group = request.ToGroupEntity(CurrentUser.UserId);
 
             var createdGroup = await groupRepository.CreateAsync(group, cancellationToken);
 
@@ -122,9 +112,7 @@ public class GroupService(
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
 
-            group.Title = request.Title;
-            group.Description = request.Description;
-            group.UpdatedAt = DateTime.UtcNow;
+            request.UpdateGroupEntity(group);
 
             await groupRepository.UpdateAsync(group, cancellationToken);
 
@@ -226,7 +214,7 @@ public class GroupService(
     /// <returns>Созданная группа с задачей</returns>
     public async Task<GroupWithTaskResponse> CreateWithDefaultTaskAsync(CreateGroupWithTaskRequest request, CancellationToken cancellationToken)
     {
-        using var transaction = await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
             var area = await areaRepository.GetByIdAsync(request.AreaId, cancellationToken);
@@ -240,69 +228,23 @@ public class GroupService(
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
 
-            var group = new GroupEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.Title,
-                Description = request.Description,
-                AreaId = request.AreaId,
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
+            var group = request.ToGroupEntity(currentUser.UserId);
 
             var createdGroup = await groupRepository.CreateAsync(group, cancellationToken);
 
-            var task = new TaskEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.TaskTitle,
-                Description = request.TaskDescription,
-                Status = Models.Common.TaskStatus.Pending,
-                GroupId = createdGroup.Id,
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow,
-                IsActive = true
-            };
+            var task = request.ToDefaultTaskEntity(createdGroup.Id, currentUser.UserId);
 
             var createdTask = await taskRepository.CreateAsync(task, cancellationToken);
 
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
 
-            return new GroupWithTaskResponse
-            {
-                Group = createdGroup.ToGroupResponse(),
-                DefaultTask = createdTask.ToTaskResponse()
-            };
+            return createdGroup.ToGroupWithTaskResponse(createdTask);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
             logger.LogError(ex, "Ошибка создания группы с задачей по умолчанию");
             throw;
         }
     }
-}
-
-/// <summary>
-/// Запрос для создания группы с задачей по умолчанию
-/// </summary>
-public class CreateGroupWithTaskRequest
-{
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public Guid AreaId { get; set; }
-    public string TaskTitle { get; set; } = string.Empty;
-    public string TaskDescription { get; set; } = string.Empty;
-}
-
-/// <summary>
-/// Ответ с группой и задачей по умолчанию
-/// </summary>
-public class GroupWithTaskResponse
-{
-    public GroupResponse Group { get; set; } = null!;
-    public TaskResponse DefaultTask { get; set; } = null!;
 }

@@ -72,18 +72,7 @@ public class UserLogService(
     {
         try
         {
-            var userLog = new UserLogEntity
-            {
-                UserId = request.UserId,
-                HttpMethod = request.HttpMethod,
-                Endpoint = request.Endpoint,
-                IpAddress = request.IpAddress,
-                UserAgent = request.UserAgent,
-                RequestParams = request.RequestParams,
-                ResponseCode = request.ResponseCode,
-                ErrorMessage = request.ErrorMessage,
-                CreatedAt = DateTimeOffset.UtcNow
-            };
+            var userLog = request.ToUserLogEntity(request.UserId ?? Guid.Empty);
 
             var createdUserLog = await userLogRepository.CreateAsync(userLog, cancellationToken);
 

@@ -68,16 +68,7 @@ public class PurposeService(
     {
         try
         {
-            var purpose = new PurposeEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.Title,
-                Description = request.Description,
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var purpose = request.ToPurposeEntity(currentUser.UserId);
 
             var createdPurpose = await purposeRepository.CreateAsync(purpose, cancellationToken);
 
@@ -107,9 +98,7 @@ public class PurposeService(
                 throw new InvalidOperationException("Цель не найдена");
             }
 
-            purpose.Title = request.Title;
-            purpose.Description = request.Description;
-            purpose.UpdatedAt = DateTimeOffset.UtcNow;
+            request.UpdatePurposeEntity(purpose);
 
             await purposeRepository.UpdateAsync(purpose, cancellationToken);
 

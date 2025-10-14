@@ -105,18 +105,7 @@ public class TaskService(
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
 
-            var task = new TaskEntity
-                {
-                    Id = Guid.NewGuid(),
-                    Title = request.Title,
-                    Description = request.Description,
-                Status = TaskStatus.Pending,
-                    GroupId = request.GroupId,
-                    CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var task = request.ToTaskEntity(currentUser.UserId);
 
             var createdTask = await taskRepository.CreateAsync(task, cancellationToken);
 
@@ -152,10 +141,7 @@ public class TaskService(
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }
 
-            task.Title = request.Title;
-            task.Description = request.Description;
-            task.Status = request.Status;
-            task.UpdatedAt = DateTimeOffset.UtcNow;
+            request.UpdateTaskEntity(task);
 
             await taskRepository.UpdateAsync(task, cancellationToken);
 
@@ -206,7 +192,7 @@ public class TaskService(
     /// <returns>Созданная задача с событием</returns>
     public async Task<TaskWithEventResponse> CreateWithEventAsync(CreateTaskWithEventRequest request, CancellationToken cancellationToken)
     {
-        using var transaction = await context.Database.BeginTransactionAsync();
+        using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
             var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
@@ -220,46 +206,21 @@ public class TaskService(
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
 
-            var task = new TaskEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.Title,
-                Description = request.Description,
-                Status = TaskStatus.Pending,
-                GroupId = request.GroupId,
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var task = request.ToTaskEntity(currentUser.UserId);
 
             var createdTask = await taskRepository.CreateAsync(task, cancellationToken);
 
-            var eventEntity = new EventEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.EventTitle,
-                Description = request.EventDescription,
-                EventType = (EventType)Enum.Parse(typeof(EventType), request.EventType),
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var eventEntity = request.ToEventEntity(currentUser.UserId);
 
             var createdEvent = await eventRepository.CreateAsync(eventEntity, cancellationToken);
 
-            await transaction.CommitAsync();
+            await transaction.CommitAsync(cancellationToken);
 
-            return new TaskWithEventResponse
-            {
-                Task = createdTask.ToTaskResponse(),
-                Event = createdEvent.ToEventResponse()
-            };
+            return createdTask.ToTaskWithEventResponse(createdEvent);
         }
         catch (Exception ex)
         {
-            await transaction.RollbackAsync();
+            await transaction.RollbackAsync(cancellationToken);
             logger.LogError(ex, "Ошибка создания задачи с событием");
             throw;
         }
@@ -302,25 +263,3 @@ public class TaskService(
         }
     }
     }
-
-    /// <summary>
-/// Запрос для создания задачи с событием
-    /// </summary>
-public class CreateTaskWithEventRequest
-{
-    public string Title { get; set; } = string.Empty;
-    public string Description { get; set; } = string.Empty;
-    public Guid GroupId { get; set; }
-    public string EventTitle { get; set; } = string.Empty;
-    public string EventDescription { get; set; } = string.Empty;
-    public string EventType { get; set; } = string.Empty;
-    }
-
-    /// <summary>
-/// Ответ с задачей и событием
-    /// </summary>
-public class TaskWithEventResponse
-{
-    public TaskResponse Task { get; set; } = null!;
-    public EventResponse Event { get; set; } = null!;
-}

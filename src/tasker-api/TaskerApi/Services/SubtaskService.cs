@@ -114,18 +114,7 @@ public class SubtaskService(
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }
 
-            var subtask = new SubtaskEntity
-            {
-                Id = Guid.NewGuid(),
-                Title = request.Title,
-                Description = request.Description,
-                Status = TaskStatus.Pending,
-                TaskId = request.TaskId,
-                CreatorUserId = currentUser.UserId,
-                CreatedAt = DateTimeOffset.UtcNow,
-                UpdatedAt = DateTimeOffset.UtcNow,
-                IsActive = true
-            };
+            var subtask = request.ToSubtaskEntity(currentUser.UserId);
 
             var createdSubtask = await subtaskRepository.CreateAsync(subtask, cancellationToken);
 
@@ -166,10 +155,7 @@ public class SubtaskService(
                 throw new UnauthorizedAccessException("Доступ к данной подзадаче запрещен");
             }
 
-            subtask.Title = request.Title;
-            subtask.Description = request.Description;
-            subtask.Status = request.Status;
-            subtask.UpdatedAt = DateTimeOffset.UtcNow;
+            request.UpdateSubtaskEntity(subtask);
 
             await subtaskRepository.UpdateAsync(subtask, cancellationToken);
 
