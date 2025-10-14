@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Core;
-using TaskerApi.Interfaces.Providers;
+using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
@@ -14,46 +14,51 @@ using TaskerApi.Models.Responses;
 
 namespace TaskerApi.Services;
 
+/// <summary>
+/// Сервис аутентификации и авторизации
+/// </summary>
 public class AuthService(
     ILogger<AuthService> logger,
     IOptions<JwtSettings> jwtOptions,
-    IUnitOfWorkFactory uowFactory,
-    IUserProvider userProvider) : IAuthService
+    IUserRepository userRepository) : IAuthService
 {
     private readonly JwtSettings _jwt = ValidateJwtSettings(jwtOptions.Value);
 
     private static JwtSettings ValidateJwtSettings(JwtSettings jwt)
     {
         if (string.IsNullOrEmpty(jwt.SecretKey))
-            throw new InvalidOperationException("JWT SecretKey is not configured. Please set JWT_SECRET_KEY environment variable.");
+            throw new InvalidOperationException("JWT SecretKey не настроен. Пожалуйста, установите переменную окружения JWT_SECRET_KEY.");
         if (string.IsNullOrEmpty(jwt.Issuer))
-            throw new InvalidOperationException("JWT Issuer is not configured. Please set JWT_ISSUER environment variable.");
+            throw new InvalidOperationException("JWT Issuer не настроен. Пожалуйста, установите переменную окружения JWT_ISSUER.");
         if (string.IsNullOrEmpty(jwt.Audience))
-            throw new InvalidOperationException("JWT Audience is not configured. Please set JWT_AUDIENCE environment variable.");
+            throw new InvalidOperationException("JWT Audience не настроен. Пожалуйста, установите переменную окружения JWT_AUDIENCE.");
         if (jwt.AccessTokenLifetimeMinutes <= 0)
-            throw new InvalidOperationException("JWT AccessTokenLifetimeMinutes must be greater than 0. Please set JWT_ACCESS_TOKEN_LIFETIME_MINUTES environment variable.");
+            throw new InvalidOperationException("JWT AccessTokenLifetimeMinutes должен быть больше 0. Пожалуйста, установите переменную окружения JWT_ACCESS_TOKEN_LIFETIME_MINUTES.");
         if (jwt.RefreshTokenLifetimeDays <= 0)
-            throw new InvalidOperationException("JWT RefreshTokenLifetimeDays must be greater than 0. Please set JWT_REFRESH_TOKEN_LIFETIME_DAYS environment variable.");
+            throw new InvalidOperationException("JWT RefreshTokenLifetimeDays должен быть больше 0. Пожалуйста, установите переменную окружения JWT_REFRESH_TOKEN_LIFETIME_DAYS.");
         
         return jwt;
     }
 
+    /// <summary>
+    /// Выполнить вход в систему
+    /// </summary>
+    /// <param name="request">Данные для входа</param>
+    /// <returns>Результат аутентификации и refresh токен</returns>
     public async Task<(ApiResponse<AuthResponse> response, string refreshToken)> LoginAsync(LoginRequest request)
     {
         try
         {
-            await using var uow = await uowFactory.CreateAsync(CancellationToken.None);
-
             UserEntity? user;
             var username = request.Username.Trim();
             logger.LogInformation("Попытка входа для имени пользователя/email '{Username}'", username);
             if (username.Contains('@'))
             {
-                user = await userProvider.GetByEmailAsync(uow.Connection, username, CancellationToken.None, uow.Transaction);
+                user = await userRepository.GetByEmailAsync(username, CancellationToken.None);
             }
             else
             {
-                user = await userProvider.GetByNameAsync(uow.Connection, username, CancellationToken.None, uow.Transaction);
+                user = await userRepository.GetByNameAsync(username, CancellationToken.None);
             }
 
             if (user == null || string.IsNullOrWhiteSpace(user.PasswordHash) || string.IsNullOrWhiteSpace(user.PasswordSalt))
@@ -107,20 +112,23 @@ public class AuthService(
         }
     }
 
+    /// <summary>
+    /// Зарегистрировать нового пользователя
+    /// </summary>
+    /// <param name="request">Данные для регистрации</param>
+    /// <returns>Результат регистрации</returns>
     public async Task<ApiResponse<RegisterResponse>> RegisterAsync(RegisterRequest request)
     {
         try
         {
-            await using var uow = await uowFactory.CreateAsync(CancellationToken.None, useTransaction: true);
-
             var username = request.Username.Trim();
             var email = request.Email.Trim();
 
-            var existingByName = await userProvider.GetByNameAsync(uow.Connection, username, CancellationToken.None, uow.Transaction);
+            var existingByName = await userRepository.GetByNameAsync(username, CancellationToken.None);
             if (existingByName != null)
                 return ApiResponse<RegisterResponse>.ErrorResult("Имя пользователя уже занято");
 
-            var existingByEmail = await userProvider.GetByEmailAsync(uow.Connection, email, CancellationToken.None, uow.Transaction);
+            var existingByEmail = await userRepository.GetByEmailAsync(email, CancellationToken.None);
             if (existingByEmail != null)
                 return ApiResponse<RegisterResponse>.ErrorResult("Email уже используется");
 
@@ -140,8 +148,7 @@ public class AuthService(
                 IsActive = true
             };
 
-            user.Id = await userProvider.CreateAsync(uow.Connection, user, CancellationToken.None, uow.Transaction, setDefaultValues: true);
-            await uow.CommitAsync(CancellationToken.None);
+            var createdUser = await userRepository.CreateAsync(user, CancellationToken.None);
 
             var response = new RegisterResponse
             {
@@ -157,6 +164,11 @@ public class AuthService(
         }
     }
 
+    /// <summary>
+    /// Обновить токен доступа
+    /// </summary>
+    /// <param name="request">Данные для обновления токена</param>
+    /// <returns>Новый токен доступа и refresh токен</returns>
     public Task<(ApiResponse<RefreshTokenResponse> response, string refreshToken)> RefreshTokenAsync(RefreshTokenRequest request)
     {
         try
@@ -193,6 +205,11 @@ public class AuthService(
     }
 
 
+    /// <summary>
+    /// Получить информацию о пользователе по токену
+    /// </summary>
+    /// <param name="accessToken">Токен доступа</param>
+    /// <returns>Информация о пользователе</returns>
     public async Task<ApiResponse<UserInfo>> GetUserInfoAsync(string accessToken)
     {
         try
@@ -207,12 +224,7 @@ public class AuthService(
             if (!Guid.TryParse(sub, out var userId))
                 return ApiResponse<UserInfo>.ErrorResult("Неверный токен");
 
-            await using var uow = await uowFactory.CreateAsync(CancellationToken.None);
-            var user = await userProvider.GetByIdAsync(
-                uow.Connection, 
-                userId,
-                CancellationToken.None, 
-                transaction: uow.Transaction);
+            var user = await userRepository.GetByIdAsync(userId, CancellationToken.None);
 
             if (user == null)
                 return ApiResponse<UserInfo>.ErrorResult("Пользователь не найден");
@@ -235,6 +247,11 @@ public class AuthService(
         }
     }
 
+    /// <summary>
+    /// Проверить валидность токена
+    /// </summary>
+    /// <param name="accessToken">Токен доступа</param>
+    /// <returns>True, если токен валиден</returns>
     public Task<bool> ValidateTokenAsync(string accessToken)
     {
         var principal = ValidateTokenInternal(accessToken, validateLifetime: true, expectedTokenType: "access");

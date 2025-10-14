@@ -6,6 +6,9 @@ using TaskerApi.Models.Common.SqlFilters;
 
 namespace TaskerApi.Core;
 
+/// <summary>
+/// Статический класс для построения SQL запросов с поддержкой фильтрации, сортировки и пагинации
+/// </summary>
 public static class SqlConstructor
 {
     /// <summary>
@@ -73,7 +76,6 @@ public static class SqlConstructor
         var whereList = new List<string>();
         var parameters = new DynamicParameters();
         
-        // Добавляем дополнительные фильтры (например, по ID)
         if (additionalFilters is { Count: > 0 })
         {
             var sqlFilters = additionalFilters.Select(filter => filter.GetSql()).ToArray();
@@ -87,7 +89,6 @@ public static class SqlConstructor
             }
         }
 
-        // Добавляем основные фильтры
         if (filters is { Count: > 0 })
         {
             var sqlFilters = filters.Select(filter => filter.GetSql()).ToArray();

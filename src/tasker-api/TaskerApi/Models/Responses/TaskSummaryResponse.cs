@@ -27,4 +27,34 @@ public class TaskSummaryResponse
     /// Статус задачи
     /// </summary>
     public TaskStatus Status { get; set; }
+
+    /// <summary>
+    /// ID группы
+    /// </summary>
+    public Guid GroupId { get; set; }
+
+    /// <summary>
+    /// ID создателя
+    /// </summary>
+    public Guid CreatorUserId { get; set; }
+
+    /// <summary>
+    /// Дата создания
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// Дата обновления
+    /// </summary>
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Признак активности
+    /// </summary>
+    public bool IsActive { get; set; }
+
+    /// <summary>
+    /// Дата деактивации
+    /// </summary>
+    public DateTimeOffset? DeactivatedAt { get; set; }
 }

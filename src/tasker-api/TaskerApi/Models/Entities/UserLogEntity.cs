@@ -12,6 +12,9 @@ public class UserLogEntity :
     IAutoIdBaseEntity<int>,
     ICreatedDateBaseEntity
 {
+    /// <summary>
+    /// Уникальный идентификатор записи лога.
+    /// </summary>
     public int Id { get; set; }
 
     /// <summary>
@@ -62,5 +65,8 @@ public class UserLogEntity :
     [Column("error_message")]
     public string? ErrorMessage { get; set; }
 
+    /// <summary>
+    /// Дата и время создания записи лога.
+    /// </summary>
     public DateTimeOffset CreatedAt { get; set; }
 }

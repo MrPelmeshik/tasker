@@ -1,287 +1,308 @@
-using TaskerApi.Interfaces.Core;
-using TaskerApi.Interfaces.Models.Common;
-using TaskerApi.Interfaces.Providers;
+using TaskerApi.Core;
+using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
-using TaskerApi.Models.Common;
-using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
+using TaskerApi.Services.Base;
+using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
 
+/// <summary>
+/// Сервис для работы с группами с использованием Entity Framework
+/// </summary>
 public class GroupService(
     ILogger<GroupService> logger,
-    IUnitOfWorkFactory uowFactory,
     ICurrentUserService currentUser,
-    IGroupProvider groupProvider,
-    ITaskProvider taskProvider,
-    IUserAreaAccessProvider userAreaAccessProvider,
-    IEventGroupService eventService)
-    : IGroupService
+    IGroupRepository groupRepository,
+    IAreaRepository areaRepository,
+    ITaskRepository taskRepository,
+    TaskerDbContext context)
+    : BaseService(logger, currentUser), IGroupService
 {
+    /// <summary>
+    /// Получить все группы
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Список всех доступных групп</returns>
     public async Task<IEnumerable<GroupResponse>> GetAsync(CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            var items = await groupProvider.GetListAsync(
-                uow.Connection,
-                cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(groupProvider.Table[nameof(GroupEntity.Id)], currentUser.AccessibleAreas.ToArray())],
-                transaction: uow.Transaction);
+            var groups = await groupRepository.GetAllAsync(cancellationToken);
+            
+            var accessibleGroups = groups.Where(g => 
+                CurrentUser.AccessibleAreas.Contains(g.AreaId));
 
-            await uow.CommitAsync(cancellationToken);
-            return items.Select(x => new GroupResponse
-            {
-                Id = x.Id,
-                Title = x.Title,
-                Description = x.Description,
-                AreaId = x.AreaId,
-                CreatorUserId = x.CreatorUserId,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt,
-                IsActive = x.IsActive,
-                DeactivatedAt = x.DeactivatedAt
-            });
-        }
-        catch (Exception e)
-        {
-            await uow.RollbackAsync(cancellationToken);
-            throw;
-        }
+            return accessibleGroups.Select(g => g.ToGroupResponse());
+        }, nameof(GetAsync));
     }
 
+    /// <summary>
+    /// Получить группу по идентификатору
+    /// </summary>
+    /// <param name="id">Идентификатор группы</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Группа или null, если не найдена</returns>
     public async Task<GroupResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            var item = await groupProvider.GetByIdAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
-
-            if (item == null || !currentUser.AccessibleAreas.Contains(item.AreaId))
+            var group = await groupRepository.GetByIdAsync(id, cancellationToken);
+            if (group == null)
             {
-                await uow.CommitAsync(cancellationToken);
                 return null;
             }
 
-            await uow.CommitAsync(cancellationToken);
-            return new GroupResponse
+            if (!CurrentUser.AccessibleAreas.Contains(group.AreaId))
             {
-                Id = item.Id,
-                Title = item.Title,
-                Description = item.Description,
-                AreaId = item.AreaId,
-                CreatorUserId = item.CreatorUserId,
-                CreatedAt = item.CreatedAt,
-                UpdatedAt = item.UpdatedAt,
-                IsActive = item.IsActive,
-                DeactivatedAt = item.DeactivatedAt
+                return null;
+            }
+
+            return group.ToGroupResponse();
+        }, nameof(GetByIdAsync), new { id });
+    }
+
+    /// <summary>
+    /// Создать новую группу
+    /// </summary>
+    /// <param name="request">Данные для создания группы</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Созданная группа</returns>
+    public async Task<GroupResponse> CreateAsync(GroupCreateRequest request, CancellationToken cancellationToken)
+    {
+        return await ExecuteWithErrorHandling(async () =>
+        {
+            var area = await areaRepository.GetByIdAsync(request.AreaId, cancellationToken);
+            if (area == null)
+            {
+                throw new InvalidOperationException("Область не найдена");
+            }
+
+            EnsureAccessToArea(area.Id);
+
+            var group = new GroupEntity
+            {
+                Id = Guid.NewGuid(),
+                Title = request.Title,
+                Description = request.Description,
+                AreaId = request.AreaId,
+                CreatorUserId = CurrentUser.UserId,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                IsActive = true
             };
-        }
-        catch (Exception e)
-        {
-            await uow.RollbackAsync(cancellationToken);
-            throw;
-        }
+
+            var createdGroup = await groupRepository.CreateAsync(group, cancellationToken);
+
+            return createdGroup.ToGroupResponse();
+        }, nameof(CreateAsync), request);
     }
 
-    public async Task<GroupCreateResponse> CreateAsync(GroupCreateRequest item, CancellationToken cancellationToken)
+    /// <summary>
+    /// Обновить группу
+    /// </summary>
+    /// <param name="id">Идентификатор группы</param>
+    /// <param name="request">Данные для обновления</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Обновленная группа</returns>
+    public async Task<GroupResponse> UpdateAsync(Guid id, GroupUpdateRequest request, CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
         try
         {
-            if (!currentUser.AccessibleAreas.Contains(item.AreaId))
+            var group = await groupRepository.GetByIdAsync(id, cancellationToken);
+            if (group == null)
             {
-                throw new UnauthorizedAccessException("Нет доступа к указанной области");
+                throw new InvalidOperationException("Группа не найдена");
             }
 
-            var id = await groupProvider.CreateAsync(
-                uow.Connection,
-                new GroupEntity()
-                {
-                    Id = Guid.NewGuid(),
-                    Title = item.Title,
-                    Description = item.Description,
-                    AreaId = item.AreaId,
-                    CreatorUserId = currentUser.UserId,
-                },
-                cancellationToken,
-                uow.Transaction,
-                setDefaultValues: true);
-
-            await eventService.AddEventCreateEntityAsync(uow, id, cancellationToken);
-
-            await uow.CommitAsync(cancellationToken);
-            return new GroupCreateResponse()
+            if (!currentUser.AccessibleAreas.Contains(group.AreaId))
             {
-                GroupId = id,
-            };
+                throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
+            }
+
+            group.Title = request.Title;
+            group.Description = request.Description;
+            group.UpdatedAt = DateTime.UtcNow;
+
+            await groupRepository.UpdateAsync(group, cancellationToken);
+
+            return group.ToGroupResponse();
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            await uow.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Ошибка обновления группы {GroupId}", id);
             throw;
         }
     }
 
-    public async Task UpdateAsync(Guid id, GroupUpdateRequest item, CancellationToken cancellationToken)
-    {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
-        try
-        {
-            var existingItem = await groupProvider.GetByIdAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
-
-            if (existingItem == null)
-            {
-                throw new KeyNotFoundException("Группа не найдена");
-            }
-
-            if (!currentUser.AccessibleAreas.Contains(existingItem.AreaId))
-            {
-                throw new UnauthorizedAccessException("Нет доступа к указанной группе");
-            }
-
-            // Проверяем доступ к новой области, если она изменилась
-            if (existingItem.AreaId != item.AreaId && !currentUser.AccessibleAreas.Contains(item.AreaId))
-            {
-                throw new UnauthorizedAccessException("Нет доступа к указанной области");
-            }
-
-            var oldTitle = existingItem.Title;
-            var oldDescription = existingItem.Description;
-            var oldAreaId = existingItem.AreaId;
-
-            existingItem.Title = item.Title;
-            existingItem.Description = item.Description;
-            existingItem.AreaId = item.AreaId;
-
-            await groupProvider.UpdateAsync(
-                uow.Connection,
-                existingItem,
-                cancellationToken,
-                transaction: uow.Transaction,
-                setDefaultValues: true);
-
-            var changes = new List<string>();
-            if (oldTitle != item.Title)
-                changes.Add($"Заголовок: '{oldTitle}' → '{item.Title}'");
-            if (oldDescription != item.Description)
-                changes.Add($"Описание: '{oldDescription}' → '{item.Description}'");
-            if (oldAreaId != item.AreaId)
-                changes.Add($"Область: {oldAreaId} → {item.AreaId}");
-
-            await eventService.AddEventUpdateEntityAsync(
-                uow,
-                id,
-                string.Join(", ", changes),
-                cancellationToken);
-
-            await uow.CommitAsync(cancellationToken);
-        }
-        catch (Exception e)
-        {
-            await uow.RollbackAsync(cancellationToken);
-            throw;
-        }
-    }
-
-    public async Task<IEnumerable<GroupSummaryResponse>> GetGroupShortCardByAreaAsync(Guid areaId, CancellationToken cancellationToken)
-    {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
-        try
-        {
-            // Проверяем доступ к области
-            if (!currentUser.AccessibleAreas.Contains(areaId))
-            {
-                throw new UnauthorizedAccessException("Нет доступа к указанной области");
-            }
-
-            var groups = await groupProvider.GetListAsync(
-                uow.Connection,
-                cancellationToken,
-                filers: [new SimpleFilter<Guid>(groupProvider.Table[nameof(GroupEntity.AreaId)], areaId)],
-                transaction: uow.Transaction);
-
-            var result = new List<GroupSummaryResponse>();
-
-            foreach (var group in groups)
-            {
-                var tasksCount = await taskProvider.GetCountAsync(
-                    uow.Connection,
-                    cancellationToken,
-                    filers: [new SimpleFilter<Guid>(taskProvider.Table[nameof(TaskEntity.GroupId)], group.Id)],
-                    transaction: uow.Transaction);
-
-                result.Add(new GroupSummaryResponse
-                {
-                    Id = group.Id,
-                    Title = group.Title,
-                    Description = group.Description,
-                    AreaId = group.AreaId,
-                    TasksCount = tasksCount
-                });
-            }
-
-            await uow.CommitAsync(cancellationToken);
-            return result;
-        }
-        catch (Exception e)
-        {
-            await uow.RollbackAsync(cancellationToken);
-            throw;
-        }
-    }
-
+    /// <summary>
+    /// Удалить группу
+    /// </summary>
+    /// <param name="id">Идентификатор группы</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
         try
         {
-            var existingItem = await groupProvider.GetByIdAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
-
-            if (existingItem == null)
+            var group = await groupRepository.GetByIdAsync(id, cancellationToken);
+            if (group == null)
             {
-                throw new KeyNotFoundException("Группа не найдена");
+                throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(existingItem.AreaId))
+            if (!currentUser.AccessibleAreas.Contains(group.AreaId))
             {
-                throw new UnauthorizedAccessException("Нет доступа к указанной группе");
+                throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
 
-            await eventService.AddEventDeleteEntityAsync(uow, id, cancellationToken);
-
-            await groupProvider.DeleteAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
-
-            await uow.CommitAsync(cancellationToken);
+            await groupRepository.DeleteAsync(id, cancellationToken);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            await uow.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Ошибка удаления группы {GroupId}", id);
             throw;
         }
     }
+
+    /// <summary>
+    /// Получить группы по идентификатору области
+    /// </summary>
+    /// <param name="areaId">Идентификатор области</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Список групп в области</returns>
+    public async Task<IEnumerable<GroupResponse>> GetByAreaIdAsync(Guid areaId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!currentUser.AccessibleAreas.Contains(areaId))
+            {
+                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+            }
+
+            var groups = await groupRepository.GetByAreaIdAsync(areaId, cancellationToken);
+
+            return groups.Select(g => g.ToGroupResponse());
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка получения групп по идентификатору области {AreaId}", areaId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Получить краткие карточки групп по идентификатору области
+    /// </summary>
+    /// <param name="areaId">Идентификатор области</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Список кратких карточек групп</returns>
+    public async Task<IEnumerable<GroupSummaryResponse>> GetGroupShortCardByAreaAsync(Guid areaId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!currentUser.AccessibleAreas.Contains(areaId))
+            {
+                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+            }
+
+            var groups = await groupRepository.GetByAreaIdAsync(areaId, cancellationToken);
+
+            return groups.Select(g => g.ToGroupSummaryResponse());
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка получения кратких карточек групп по идентификатору области {AreaId}", areaId);
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Сложная операция - создать группу с задачей по умолчанию (явная транзакция)
+    /// </summary>
+    /// <param name="request">Данные для создания группы с задачей</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Созданная группа с задачей</returns>
+    public async Task<GroupWithTaskResponse> CreateWithDefaultTaskAsync(CreateGroupWithTaskRequest request, CancellationToken cancellationToken)
+    {
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            var area = await areaRepository.GetByIdAsync(request.AreaId, cancellationToken);
+            if (area == null)
+            {
+                throw new InvalidOperationException("Область не найдена");
+            }
+
+            if (!currentUser.AccessibleAreas.Contains(area.Id))
+            {
+                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+            }
+
+            var group = new GroupEntity
+            {
+                Id = Guid.NewGuid(),
+                Title = request.Title,
+                Description = request.Description,
+                AreaId = request.AreaId,
+                CreatorUserId = currentUser.UserId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+
+            var createdGroup = await groupRepository.CreateAsync(group, cancellationToken);
+
+            var task = new TaskEntity
+            {
+                Id = Guid.NewGuid(),
+                Title = request.TaskTitle,
+                Description = request.TaskDescription,
+                Status = Models.Common.TaskStatus.Pending,
+                GroupId = createdGroup.Id,
+                CreatorUserId = currentUser.UserId,
+                CreatedAt = DateTime.UtcNow,
+                UpdatedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+
+            var createdTask = await taskRepository.CreateAsync(task, cancellationToken);
+
+            await transaction.CommitAsync();
+
+            return new GroupWithTaskResponse
+            {
+                Group = createdGroup.ToGroupResponse(),
+                DefaultTask = createdTask.ToTaskResponse()
+            };
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            logger.LogError(ex, "Ошибка создания группы с задачей по умолчанию");
+            throw;
+        }
+    }
+}
+
+/// <summary>
+/// Запрос для создания группы с задачей по умолчанию
+/// </summary>
+public class CreateGroupWithTaskRequest
+{
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public Guid AreaId { get; set; }
+    public string TaskTitle { get; set; } = string.Empty;
+    public string TaskDescription { get; set; } = string.Empty;
+}
+
+/// <summary>
+/// Ответ с группой и задачей по умолчанию
+/// </summary>
+public class GroupWithTaskResponse
+{
+    public GroupResponse Group { get; set; } = null!;
+    public TaskResponse DefaultTask { get; set; } = null!;
 }

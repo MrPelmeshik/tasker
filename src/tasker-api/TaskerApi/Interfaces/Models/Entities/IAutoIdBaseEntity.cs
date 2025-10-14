@@ -12,6 +12,6 @@ public interface IAutoIdBaseEntity<T> : IIdBaseEntity<T>
     /// ID
     /// </summary>
     [Key, Editable(false), DatabaseGenerated(DatabaseGeneratedOption.Identity), Column("id")]
-    T Id { get; set; }
+    new T Id { get; set; }
 }
 

@@ -8,7 +8,7 @@ public class DatabaseSettings
     /// <summary>
     /// Строка подключения к базе данных.
     /// </summary>
-    public string ConnectionString { get; init; } = string.Empty;//todo: Реализовать полноценный конструктор
+    public string ConnectionString { get; init; } = string.Empty;
 }
 
 

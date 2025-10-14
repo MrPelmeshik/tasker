@@ -1,275 +1,253 @@
-using TaskerApi.Interfaces.Core;
-using TaskerApi.Interfaces.Models.Common;
-using TaskerApi.Interfaces.Providers;
+using TaskerApi.Core;
+using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
-using TaskerApi.Models.Common;
-using TaskerApi.Models.Common.SqlFilters;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
+using TaskerApi.Services.Base;
+using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
 
+/// <summary>
+/// Сервис для работы с областями с использованием Entity Framework
+/// </summary>
 public class AreaService(
     ILogger<AreaService> logger,
-    IUnitOfWorkFactory uowFactory,
     ICurrentUserService currentUser,
-    IAreaProvider areaProvider,
-    IGroupProvider groupProvider,
-    IUserAreaAccessProvider userAreaAccessProvider,
-    IEventAreaService eventService)
-    : IAreaService
+    IAreaRepository areaRepository,
+    IGroupRepository groupRepository,
+    IUserAreaAccessRepository userAreaAccessRepository,
+    TaskerDbContext context)
+    : BaseService(logger, currentUser), IAreaService
 {
+    /// <summary>
+    /// Получить все области
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Список всех доступных областей</returns>
     public async Task<IEnumerable<AreaResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            var items = await areaProvider.GetListAsync(
-                uow.Connection,
-                cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(areaProvider.Table[nameof(AreaEntity.Id)], currentUser.AccessibleAreas.ToArray())],
-                transaction: uow.Transaction);
-
-            await uow.CommitAsync(cancellationToken);
-            return items.Select(x => new AreaResponse
-            {
-                Id = x.Id,
-                Title = x.Title,
-                Description = x.Description,
-                CreatorUserId = x.CreatorUserId,
-                CreatedAt = x.CreatedAt,
-                UpdatedAt = x.UpdatedAt,
-                IsActive = x.IsActive,
-                DeactivatedAt = x.DeactivatedAt
-            });
-        }
-        catch (Exception e)
-        {
-            await uow.RollbackAsync(cancellationToken);
-            throw;
-        }
+            var areas = await areaRepository.GetAllAsync(cancellationToken);
+            
+            var accessibleAreas = areas.Where(a => CurrentUser.AccessibleAreas.Contains(a.Id));
+            
+            return accessibleAreas.Select(x => x.ToAreaResponse());
+        }, nameof(GetAllAsync));
     }
 
+    /// <summary>
+    /// Получить область по идентификатору
+    /// </summary>
+    /// <param name="id">Идентификатор области</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Область или null, если не найдена</returns>
     public async Task<AreaResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
-            var item = await areaProvider.GetByIdAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
+            var area = await areaRepository.GetByIdAsync(id, cancellationToken);
             
-            if (item == null)
+            if (area == null || !CurrentUser.AccessibleAreas.Contains(area.Id))
             {
-                await uow.CommitAsync(cancellationToken);
                 return null;
             }
-            
-            if (!currentUser.AccessibleAreas.Contains(item.Id))
-            {
-                throw new UnauthorizedAccessException("Нет доступа к указанной области");
-            }
 
-            await uow.CommitAsync(cancellationToken);
-            return new AreaResponse
-            {
-                Id = item.Id,
-                Title = item.Title,
-                Description = item.Description,
-                CreatorUserId = item.CreatorUserId,
-                CreatedAt = item.CreatedAt,
-                UpdatedAt = item.UpdatedAt,
-                IsActive = item.IsActive,
-                DeactivatedAt = item.DeactivatedAt
-            };
-        }
-        catch (Exception e)
-        {
-            await uow.RollbackAsync(cancellationToken);
-            throw;
-        }
+            return area.ToAreaResponse();
+        }, nameof(GetByIdAsync), new { id });
     }
 
-    public async Task<AreaCreateResponse> CreateAsync(AreaCreateRequest item, CancellationToken cancellationToken)
+    /// <summary>
+    /// Создать новую область
+    /// </summary>
+    /// <param name="request">Данные для создания области</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Созданная область</returns>
+    public async Task<AreaCreateResponse> CreateAsync(AreaCreateRequest request, CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
+        return await ExecuteWithErrorHandling(async () =>
+        {
+            var existingArea = await areaRepository.GetByNameAsync(request.Title, cancellationToken);
+            if (existingArea != null)
+            {
+                throw new InvalidOperationException("Область с таким названием уже существует");
+            }
 
+            var area = new AreaEntity
+            {
+                Id = Guid.NewGuid(),
+                Title = request.Title,
+                Description = request.Description,
+                CreatorUserId = CurrentUser.UserId,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                IsActive = true
+            };
+
+            var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
+
+            return createdArea.ToAreaCreateResponse();
+        }, nameof(CreateAsync), request);
+    }
+
+    /// <summary>
+    /// Обновить область
+    /// </summary>
+    /// <param name="id">Идентификатор области</param>
+    /// <param name="request">Данные для обновления</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    public async Task UpdateAsync(Guid id, AreaUpdateRequest request, CancellationToken cancellationToken)
+    {
         try
         {
-            var id = await areaProvider.CreateAsync(
-                uow.Connection,
-                new AreaEntity()
-                {
-                    Id = Guid.NewGuid(),
-                    Title = item.Title,
-                    Description = item.Description,
-                    CreatorUserId = currentUser.UserId,
-                },
-                cancellationToken,
-                uow.Transaction,
-                true);
-
-            await userAreaAccessProvider
-                .GrantAccessAsync(
-                    uow.Connection,
-                    currentUser.UserId,
-                    id,
-                    currentUser.UserId,
-                    cancellationToken,
-                    uow.Transaction);
-
-            await eventService.AddEventCreateEntityAsync(uow, id, cancellationToken);
-            
-            await uow.CommitAsync(cancellationToken);
-            return new AreaCreateResponse()
+            var existingArea = await areaRepository.GetByIdAsync(id, cancellationToken);
+            if (existingArea == null)
             {
-                AreaId = id,
-            };
+                throw new InvalidOperationException("Область не найдена");
+            }
+
+            if (!currentUser.AccessibleAreas.Contains(existingArea.Id))
+            {
+                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+            }
+
+            existingArea.Title = request.Title;
+            existingArea.Description = request.Description;
+            existingArea.UpdatedAt = DateTime.UtcNow;
+
+            await areaRepository.UpdateAsync(existingArea, cancellationToken);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            await uow.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Ошибка обновления области {AreaId}", id);
             throw;
         }
     }
 
-    public async Task UpdateAsync(Guid id, AreaUpdateRequest item, CancellationToken cancellationToken)
+    /// <summary>
+    /// Удалить область
+    /// </summary>
+    /// <param name="id">Идентификатор области</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
         try
         {
-            var existingItem = await areaProvider.GetByIdAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
-
-            if (existingItem == null)
+            var existingArea = await areaRepository.GetByIdAsync(id, cancellationToken);
+            if (existingArea == null)
             {
-                throw new KeyNotFoundException("Область не найдена");
+                throw new InvalidOperationException("Область не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(existingItem.Id))
+            if (!currentUser.AccessibleAreas.Contains(existingArea.Id))
             {
-                throw new UnauthorizedAccessException("Нет доступа к указанной области");
+                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
 
-            var oldTitle = existingItem.Title;
-            var oldDescription = existingItem.Description;
-
-            existingItem.Title = item.Title;
-            existingItem.Description = item.Description;
-
-            await areaProvider.UpdateAsync(
-                uow.Connection,
-                existingItem,
-                cancellationToken,
-                transaction: uow.Transaction,
-                setDefaultValues: true);
-
-            var changes = new List<string>();
-            if (oldTitle != item.Title)
-                changes.Add($"Заголовок: '{oldTitle}' → '{item.Title}'");
-            if (oldDescription != item.Description)
-                changes.Add($"Описание: '{oldDescription}' → '{item.Description}'");
-
-            await eventService.AddEventUpdateEntityAsync(
-                uow,
-                id, 
-                string.Join(", ", changes),
-                cancellationToken);
-
-            await uow.CommitAsync(cancellationToken);
+            await areaRepository.DeleteAsync(id, cancellationToken);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            await uow.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Ошибка удаления области {AreaId}", id);
             throw;
         }
     }
 
+    /// <summary>
+    /// Создать область с группой по умолчанию (сложная операция с явной транзакцией)
+    /// </summary>
+    /// <param name="request">Данные для создания области с группой</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Созданная область с группой</returns>
+    public async Task<CreateAreaWithGroupResponse> CreateWithDefaultGroupAsync(CreateAreaWithGroupRequest request, CancellationToken cancellationToken)
+    {
+        using var transaction = await context.Database.BeginTransactionAsync();
+        try
+        {
+            var area = new AreaEntity
+            {
+                Id = Guid.NewGuid(),
+                Title = request.Title,
+                Description = request.Description,
+                CreatorUserId = currentUser.UserId,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                IsActive = true
+            };
+
+            var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
+
+            var defaultGroup = new GroupEntity
+            {
+                Id = Guid.NewGuid(),
+                Title = "Default Group",
+                Description = "Default group for this area",
+                AreaId = createdArea.Id,
+                CreatorUserId = currentUser.UserId,
+                CreatedAt = DateTimeOffset.UtcNow,
+                UpdatedAt = DateTimeOffset.UtcNow,
+                IsActive = true
+            };
+
+            var createdGroup = await groupRepository.CreateAsync(defaultGroup, cancellationToken);
+
+            var userAccess = new UserAreaAccessEntity
+            {
+                Id = Guid.NewGuid(),
+                UserId = currentUser.UserId,
+                AreaId = createdArea.Id,
+                GrantedByUserId = currentUser.UserId,
+                GrantedAt = DateTime.UtcNow,
+                IsActive = true
+            };
+
+            await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
+
+            await transaction.CommitAsync();
+
+            return new CreateAreaWithGroupResponse
+            {
+                Area = createdArea.ToAreaResponse(),
+                DefaultGroup = createdGroup.ToGroupResponse()
+            };
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            logger.LogError(ex, "Ошибка создания области с группой по умолчанию");
+            throw;
+        }
+    }
+
+    /// <summary>
+    /// Получить краткие карточки областей
+    /// </summary>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Список кратких карточек областей</returns>
     public async Task<IEnumerable<AreaShortCardResponse>> GetAreaShortCardAsync(CancellationToken cancellationToken)
     {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
         try
         {
-            var areas = await areaProvider.GetListAsync(
-                uow.Connection,
-                cancellationToken,
-                filers: [new ArraySqlFilter<Guid>(areaProvider.Table[nameof(AreaEntity.Id)], currentUser.AccessibleAreas.ToArray())],
-                transaction: uow.Transaction);
+            var areas = await areaRepository.GetAllAsync(cancellationToken);
+            var accessibleAreas = areas.Where(a => currentUser.AccessibleAreas.Contains(a.Id));
 
             var result = new List<AreaShortCardResponse>();
 
-            foreach (var area in areas)
+            foreach (var area in accessibleAreas)
             {
-                var groupsCount = await groupProvider.GetCountAsync(
-                    uow.Connection,
-                    cancellationToken,
-                    filers: [new SimpleFilter<Guid>(areaProvider.Table[nameof(GroupEntity.AreaId)], area.Id)],
-                    transaction: uow.Transaction);
+                var groups = await groupRepository.GetByAreaIdAsync(area.Id, cancellationToken);
+                var groupCount = groups.Count;
 
-                result.Add(new AreaShortCardResponse
-                {
-                    Id = area.Id,
-                    Title = area.Title,
-                    Description = area.Description,
-                    GroupsCount = groupsCount
-                });
+                result.Add(area.ToAreaShortCardResponse(groupCount));
             }
 
-            await uow.CommitAsync(cancellationToken);
             return result;
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            await uow.RollbackAsync(cancellationToken);
-            throw;
-        }
-    }
-
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
-    {
-        await using var uow = await uowFactory.CreateAsync(cancellationToken, true);
-
-        try
-        {
-            var existingItem = await areaProvider.GetByIdAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
-
-            if (existingItem == null)
-            {
-                throw new KeyNotFoundException("Область не найдена");
-            }
-
-            if (!currentUser.AccessibleAreas.Contains(existingItem.Id))
-            {
-                throw new UnauthorizedAccessException("Нет доступа к указанной области");
-            }
-
-            await eventService.AddEventDeleteEntityAsync(uow, id, cancellationToken);
-
-            await areaProvider.DeleteAsync(
-                uow.Connection,
-                id,
-                cancellationToken,
-                transaction: uow.Transaction);
-
-            await uow.CommitAsync(cancellationToken);
-        }
-        catch (Exception e)
-        {
-            await uow.RollbackAsync(cancellationToken);
+            logger.LogError(ex, "Ошибка получения кратких карточек областей");
             throw;
         }
     }

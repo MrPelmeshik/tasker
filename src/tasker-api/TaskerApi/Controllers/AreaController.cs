@@ -4,6 +4,7 @@ using TaskerApi.Attributes;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
+using TaskerApi.Services;
 
 namespace TaskerApi.Controllers;
 
@@ -93,6 +94,29 @@ public class AreaController(IAreaService service) : ControllerBase
         catch (Exception e)
         {
             return BadRequest(e.Message);
+        }
+    }
+
+    /// <summary>
+    /// Создать область с группой по умолчанию (сложная операция с транзакцией)
+    /// </summary>
+    [HttpPost("with-group")]
+    [UserLog("Создание области с группой по умолчанию")]
+    public async Task<IActionResult> CreateWithDefaultGroup([FromBody] CreateAreaWithGroupRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            var result = await service.CreateWithDefaultGroupAsync(request, cancellationToken);
+            return CreatedAtAction(nameof(GetById), new { id = result.Area.Id }, result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
         }
     }
 }

@@ -1,5 +1,8 @@
 namespace TaskerApi.Models.Requests;
 
+/// <summary>
+/// Запрос на создание области.
+/// </summary>
 public class AreaCreateRequest
 {
     /// <summary>

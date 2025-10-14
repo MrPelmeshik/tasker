@@ -23,7 +23,7 @@ public class DbConnectionFactory : IDbConnectionFactory
     public DbConnectionFactory(IOptions<DatabaseSettings> databaseSettings)
     {
         _connectionString = ExpandEnvironmentVariables(databaseSettings.Value.ConnectionString)
-            ?? throw new InvalidOperationException("Database connection string is missing. Ensure 'Database:ConnectionString' is configured and required environment variables are set.");
+            ?? throw new InvalidOperationException("Строка подключения к базе данных отсутствует. Убедитесь, что 'Database:ConnectionString' настроена и необходимые переменные окружения установлены.");
     }
 
     /// <inheritdoc />
@@ -72,5 +72,4 @@ public class DbConnectionFactory : IDbConnectionFactory
         return expanded;
     }
 }
-
 

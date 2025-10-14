@@ -3,15 +3,18 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
 using TaskerApi.Services;
 using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Models.Entities;
-using TaskerApi.Interfaces.Providers;
+// using TaskerApi.Interfaces.Providers;
+using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
-using TaskerApi.Providers;
+// using TaskerApi.Providers;
+using TaskerApi.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -56,14 +59,38 @@ builder.Services.AddCors(options =>
 // Конфигурация настроек базы данных
 builder.Services.Configure<DatabaseSettings>(builder.Configuration.GetSection("Database"));
 
-// Регистрация инфраструктуры БД
+// Entity Framework
+builder.Services.AddDbContext<TaskerDbContext>(options =>
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+        ?? builder.Configuration["Database:ConnectionString"];
+    
+    if (string.IsNullOrEmpty(connectionString))
+    {
+        throw new InvalidOperationException("Строка подключения к базе данных не настроена");
+    }
+    
+    options.UseNpgsql(connectionString);
+});
+
+// Repositories
+builder.Services.AddScoped<IUserRepository, UserRepository>();
+builder.Services.AddScoped<ITaskRepository, TaskRepository>();
+builder.Services.AddScoped<IAreaRepository, AreaRepository>();
+builder.Services.AddScoped<IGroupRepository, GroupRepository>();
+builder.Services.AddScoped<ISubtaskRepository, SubtaskRepository>();
+builder.Services.AddScoped<IPurposeRepository, PurposeRepository>();
+builder.Services.AddScoped<IEventRepository, EventRepository>();
+builder.Services.AddScoped<IUserLogRepository, UserLogRepository>();
+builder.Services.AddScoped<IUserAreaAccessRepository, UserAreaAccessRepository>();
+
+// Database infrastructure
 builder.Services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
 builder.Services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
 
-// Ресгистрация суностей БД
-// Механизм для создания TableMetaInfo для всех классов, реализующих IDbEntity
+// Database entities
 
-// Получаем все типы, реализующие IDbEntity
+// Get all types implementing IDbEntity
 var dbEntityTypes = AppDomain.CurrentDomain.GetAssemblies()
     .SelectMany(a => a.GetTypes())
     .Where(t => typeof(IDbEntity).IsAssignableFrom(t) && t is { IsClass: true, IsAbstract: false })
@@ -77,38 +104,37 @@ foreach (var tableMetaInfoType in dbEntityTypes
 	builder.Services.AddSingleton(tableMetaInfoType);
 }
 
-// Регистрация провайдеров (Dapper)
-builder.Services.AddScoped<IUserLogProvider, UserLogProvider>();
-builder.Services.AddScoped<IUserProvider, UserProvider>();
-builder.Services.AddScoped<IEventProvider, EventProvider>();
-builder.Services.AddScoped<IAreaProvider, AreaProvider>();
-builder.Services.AddScoped<IGroupProvider, GroupProvider>();
-builder.Services.AddScoped<IPurposeProvider, PurposeProvider>();
-builder.Services.AddScoped<ITaskProvider, TaskProvider>();
-builder.Services.AddScoped<ISubtaskProvider, SubtaskProvider>();
-builder.Services.AddScoped<IUserAreaAccessProvider, UserAreaAccessProvider>();
+// Регистрация провайдеров (временно отключены для перехода на EF)
+// builder.Services.AddScoped<IUserLogProvider, UserLogProvider>();
+// builder.Services.AddScoped<IUserProvider, UserProvider>();
+// builder.Services.AddScoped<IEventProvider, EventProvider>();
+// builder.Services.AddScoped<IAreaProvider, AreaProvider>();
+// builder.Services.AddScoped<IGroupProvider, GroupProvider>();
+// builder.Services.AddScoped<IPurposeProvider, PurposeProvider>();
+// builder.Services.AddScoped<ITaskProvider, TaskProvider>();
+// builder.Services.AddScoped<ISubtaskProvider, SubtaskProvider>();
+// builder.Services.AddScoped<IUserAreaAccessProvider, UserAreaAccessProvider>();
 
-builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
-builder.Services.AddScoped<IEventToEntityBaseProvider<EventToAreaByAreaEntity>, EventToAreaByAreaProvider>();
-builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
-builder.Services.AddScoped<IEventToEntityBaseProvider<EventToAreaByEventEntity>, EventToAreaByEventProvider>();
-builder.Services.AddScoped<IEventToGroupByGroupProvider, EventToGroupByGroupProvider>();
-builder.Services.AddScoped<IEventToEntityBaseProvider<EventToGroupByGroupEntity>, EventToGroupByGroupProvider>();
-builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
-builder.Services.AddScoped<IEventToEntityBaseProvider<EventToGroupByEventEntity>, EventToGroupByEventProvider>();
-builder.Services.AddScoped<IEventToTaskByTaskProvider, EventToTaskByTaskProvider>();
-builder.Services.AddScoped<IEventToEntityBaseProvider<EventToTaskByTaskEntity>, EventToTaskByTaskProvider>();
-builder.Services.AddScoped<IEventToTaskByEventProvider, EventToTaskByEventProvider>();
-builder.Services.AddScoped<IEventToEntityBaseProvider<EventToTaskByEventEntity>, EventToTaskByEventProvider>();
+// builder.Services.AddScoped<IEventToAreaByAreaProvider, EventToAreaByAreaProvider>();
+// builder.Services.AddScoped<IEventToEntityBaseProvider<EventToAreaByAreaEntity>, EventToAreaByAreaProvider>();
+// builder.Services.AddScoped<IEventToAreaByEventProvider, EventToAreaByEventProvider>();
+// builder.Services.AddScoped<IEventToEntityBaseProvider<EventToAreaByEventEntity>, EventToAreaByEventProvider>();
+// builder.Services.AddScoped<IEventToGroupByGroupProvider, EventToGroupByGroupProvider>();
+// builder.Services.AddScoped<IEventToEntityBaseProvider<EventToGroupByGroupEntity>, EventToGroupByGroupProvider>();
+// builder.Services.AddScoped<IEventToGroupByEventProvider, EventToGroupByEventProvider>();
+// builder.Services.AddScoped<IEventToEntityBaseProvider<EventToGroupByEventEntity>, EventToGroupByEventProvider>();
+// builder.Services.AddScoped<IEventToTaskByTaskProvider, EventToTaskByTaskProvider>();
+// builder.Services.AddScoped<IEventToEntityBaseProvider<EventToTaskByTaskEntity>, EventToTaskByTaskProvider>();
+// builder.Services.AddScoped<IEventToTaskByEventProvider, EventToTaskByEventProvider>();
+// builder.Services.AddScoped<IEventToEntityBaseProvider<EventToTaskByEventEntity>, EventToTaskByEventProvider>();
 
-// Регистрация сервисов
+// Services
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
-builder.Services.AddScoped<IEventAreaService, EventAreaService>();
-builder.Services.AddScoped<IEventGroupService, EventGroupService>();
-builder.Services.AddScoped<IEventTaskService, EventTaskService>();
+
+// Updated services
 builder.Services.AddScoped<IAreaService, AreaService>();
 builder.Services.AddScoped<IGroupService, GroupService>();
 builder.Services.AddScoped<IPurposeService, PurposeService>();
@@ -135,7 +161,7 @@ builder.Services
         var jwt = builder.Configuration.GetSection("Jwt").Get<JwtSettings>();
         if (jwt == null || string.IsNullOrEmpty(jwt.SecretKey) || string.IsNullOrEmpty(jwt.Issuer) || string.IsNullOrEmpty(jwt.Audience))
         {
-            throw new InvalidOperationException("JWT configuration is missing or incomplete. Please ensure JWT_ISSUER, JWT_AUDIENCE, and JWT_SECRET_KEY environment variables are set.");
+            throw new InvalidOperationException("Конфигурация JWT отсутствует или неполная. Пожалуйста, убедитесь, что переменные окружения JWT_ISSUER, JWT_AUDIENCE и JWT_SECRET_KEY установлены.");
         }
         
         options.RequireHttpsMetadata = false;

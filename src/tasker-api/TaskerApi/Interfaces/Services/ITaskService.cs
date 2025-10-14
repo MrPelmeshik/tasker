@@ -18,12 +18,12 @@ public interface ITaskService
     /// <summary>
     /// Создать новую задачу
     /// </summary>
-    Task<TaskCreateResponse> CreateAsync(TaskCreateRequest request, CancellationToken cancellationToken);
+    Task<TaskResponse> CreateAsync(TaskCreateRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Обновить существующую задачу
     /// </summary>
-    Task UpdateAsync(Guid id, TaskUpdateRequest request, CancellationToken cancellationToken);
+    Task<TaskResponse> UpdateAsync(Guid id, TaskUpdateRequest request, CancellationToken cancellationToken);
 
     /// <summary>
     /// Удалить задачу

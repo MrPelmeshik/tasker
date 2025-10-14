@@ -72,7 +72,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during login");
+            logger.LogError(ex, "Неожиданная ошибка при входе");
             return StatusCode(500, ApiResponse<AuthResponse>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -115,7 +115,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during registration");
+            logger.LogError(ex, "Неожиданная ошибка при регистрации");
             return StatusCode(500, ApiResponse<RegisterResponse>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -169,7 +169,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during token refresh");
+            logger.LogError(ex, "Неожиданная ошибка при обновлении токена");
             return StatusCode(500, ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -205,7 +205,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error during logout");
+            logger.LogError(ex, "Неожиданная ошибка при выходе");
             return StatusCode(500, ApiResponse<object>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }
@@ -246,7 +246,7 @@ public class AuthController(
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Unexpected error getting current user info");
+            logger.LogError(ex, "Неожиданная ошибка при получении информации о текущем пользователе");
             return StatusCode(500, ApiResponse<UserInfo>.ErrorResult("Внутренняя ошибка сервера"));
         }
     }

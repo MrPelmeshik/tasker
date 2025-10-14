@@ -1,108 +1,157 @@
 using System.Security.Claims;
-using TaskerApi.Interfaces.Core;
-using TaskerApi.Interfaces.Providers;
+using TaskerApi.Core;
+using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Services;
 
+/// <summary>
+/// Сервис для работы с текущим пользователем
+/// </summary>
 public class CurrentUserService: ICurrentUserService
 {
+    /// <summary>
+    /// Идентификатор текущего пользователя
+    /// </summary>
     public Guid UserId { get; }
     
+    /// <summary>
+    /// Флаг аутентификации пользователя
+    /// </summary>
     public bool IsAuthenticated { get; }
 
-    private readonly UserEntity? _user;
-
-    public required IReadOnlyList<Guid> AccessibleAreas { get; init; }
-    
-    public required IReadOnlyList<Guid> AccessibleGroups { get; init; }
+    private readonly IUserRepository _userRepository;
+    private readonly IUserAreaAccessRepository _userAreaAccessRepository;
+    private UserEntity? _user;
+    private IReadOnlyList<Guid>? _accessibleAreas;
+    private IReadOnlyList<Guid>? _accessibleGroups;
 
     public CurrentUserService(
         IHttpContextAccessor httpContextAccessor,
-        IUnitOfWorkFactory uowFactory,
-        IUserProvider userProvider,
-        IUserAreaAccessProvider userAreaAccessProvider)
+        IUserRepository userRepository,
+        IUserAreaAccessRepository userAreaAccessRepository)
     {
+        _userRepository = userRepository;
+        _userAreaAccessRepository = userAreaAccessRepository;
+        
         var principal = httpContextAccessor.HttpContext?.User;
         
         UserId = Guid.TryParse(principal?.FindFirstValue(ClaimTypes.NameIdentifier), out var guid) 
             ? guid 
             : Guid.Empty;
-        IsAuthenticated = principal?.Identity?.IsAuthenticated ?? false;
-        
-        var (user, accessibleAreas, accessibleGroups) = GetUserAndAccessibleData(
-                uowFactory, 
-                userProvider, 
-                userAreaAccessProvider)
-            .GetAwaiter()
-            .GetResult();
-        
-        _user = user;
-        AccessibleAreas = accessibleAreas;
-        AccessibleGroups = accessibleGroups;
+            
+        IsAuthenticated = UserId != Guid.Empty && principal?.Identity?.IsAuthenticated == true;
     }
 
+    /// <summary>
+    /// Список доступных областей для пользователя
+    /// </summary>
+    public IReadOnlyList<Guid> AccessibleAreas => _accessibleAreas ??= LoadAccessibleAreas();
+    
+    /// <summary>
+    /// Список доступных групп для пользователя
+    /// </summary>
+    public IReadOnlyList<Guid> AccessibleGroups => _accessibleGroups ??= LoadAccessibleGroups();
+
+    /// <summary>
+    /// Получить данные текущего пользователя
+    /// </summary>
+    /// <returns>Данные пользователя или null</returns>
+    public UserEntity? GetUser()
+    {
+        return _user ??= LoadUser();
+    }
+
+    /// <summary>
+    /// Проверить доступ к области
+    /// </summary>
+    /// <param name="areaId">Идентификатор области</param>
+    /// <returns>True, если есть доступ</returns>
     public bool HasAccessToArea(Guid areaId)
     {
-        if (!IsAuthenticated || UserId == Guid.Empty)
-            return false;
-
         return AccessibleAreas.Contains(areaId);
     }
-    
-    public bool HasAccessToArea(IList<Guid> areaIds)
-    {
-        if (!IsAuthenticated || UserId == Guid.Empty || !areaIds.Any())
-            return false;
 
-        return areaIds.Intersect(AccessibleAreas).Any();
-    }
-    
+    /// <summary>
+    /// Проверить доступ к группе
+    /// </summary>
+    /// <param name="groupId">Идентификатор группы</param>
+    /// <returns>True, если есть доступ</returns>
     public bool HasAccessToGroup(Guid groupId)
     {
-        if (!IsAuthenticated || UserId == Guid.Empty)
-            return false;
-
         return AccessibleGroups.Contains(groupId);
     }
-    
+
+    /// <summary>
+    /// Проверить доступ к любой из областей
+    /// </summary>
+    /// <param name="areaIds">Список идентификаторов областей</param>
+    /// <returns>True, если есть доступ к любой области</returns>
+    public bool HasAccessToArea(IList<Guid> areaIds)
+    {
+        return areaIds.Any(id => AccessibleAreas.Contains(id));
+    }
+
+    /// <summary>
+    /// Проверить доступ к любой из групп
+    /// </summary>
+    /// <param name="groupIds">Список идентификаторов групп</param>
+    /// <returns>True, если есть доступ к любой группе</returns>
     public bool HasAccessToGroup(IList<Guid> groupIds)
     {
-        if (!IsAuthenticated || UserId == Guid.Empty || !groupIds.Any())
-            return false;
-
-        return groupIds.Intersect(AccessibleGroups).Any();
+        return groupIds.Any(id => AccessibleGroups.Contains(id));
     }
-    
-    private async Task<(UserEntity?, IReadOnlyList<Guid>, IReadOnlyList<Guid>)> GetUserAndAccessibleData(
-        IUnitOfWorkFactory uowFactory, 
-        IUserProvider userProvider, 
-        IUserAreaAccessProvider userAreaAccessProvider)
+
+    /// <summary>
+    /// Проверить, является ли пользователь администратором
+    /// </summary>
+    /// <returns>True, если пользователь администратор</returns>
+    public bool IsAdmin()
     {
-        var cancellationToken = CancellationToken.None;
-        await using var uow = await uowFactory.CreateAsync(cancellationToken);
+        return GetUser()?.IsAdmin ?? false;
+    }
 
-        var user = await userProvider
-            .GetByIdAsync(
-                uow.Connection,
-                UserId,
-                cancellationToken);
-        var accessibleAreas = await userAreaAccessProvider
-            .GetUserAccessibleAreaIdsAsync(
-                uow.Connection,
-                UserId,
-                cancellationToken);
+    /// <summary>
+    /// Проверить, активен ли пользователь
+    /// </summary>
+    /// <returns>True, если пользователь активен</returns>
+    public bool IsActive()
+    {
+        return GetUser()?.IsActive ?? false;
+    }
 
-        // Получаем все группы из доступных областей
-        var accessibleGroups = await userAreaAccessProvider
-            .GetUserAccessibleGroupIdsAsync(
-                uow.Connection,
-                UserId,
-                cancellationToken);
+    private UserEntity? LoadUser()
+    {
+        if (!IsAuthenticated) return null;
+        
+        try
+        {
+            return _userRepository.GetByIdAsync(UserId, CancellationToken.None).Result;
+        }
+        catch
+        {
+            return null;
+        }
+    }
 
-        return (user, accessibleAreas.ToArray().AsReadOnly(), accessibleGroups.ToArray().AsReadOnly());
+    private IReadOnlyList<Guid> LoadAccessibleAreas()
+    {
+        if (!IsAuthenticated) return new List<Guid>();
+        
+        try
+        {
+            var userAreaAccesses = _userAreaAccessRepository.GetByUserIdAsync(UserId, CancellationToken.None).Result;
+            return userAreaAccesses.Select(uaa => uaa.AreaId).ToList();
+        }
+        catch
+        {
+            return new List<Guid>();
+        }
+    }
+
+    private IReadOnlyList<Guid> LoadAccessibleGroups()
+    {
+        return new List<Guid>();
     }
 }
-
-

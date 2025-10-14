@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text.Json;
 using TaskerApi.Interfaces.Core;
-using TaskerApi.Interfaces.Providers;
+using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Attributes;
@@ -29,8 +29,7 @@ public class UserLogAttribute : TypeFilterAttribute
     /// </summary>
     private sealed class UserActionLogFilter(
         ILogger<UserActionLogFilter> logger,
-        IUserLogProvider logProvider,
-        IUnitOfWorkFactory uowFactory,
+        IUserLogRepository userLogRepository,
         string actionDescription)
         : IAsyncActionFilter
     {
@@ -84,12 +83,10 @@ public class UserLogAttribute : TypeFilterAttribute
                     RequestParams = JsonSerializer.Serialize(requestParams),
                     ResponseCode = response?.StatusCode,
                     ErrorMessage = errorMessage,
-                    CreatedAt = DateTimeOffset.UtcNow
+                    CreatedAt = DateTime.UtcNow
                 };
 
-                await using var uow = await uowFactory.CreateAsync(httpContext.RequestAborted, useTransaction: true);
-                await logProvider.CreateAsync(uow.Connection,entity, httpContext.RequestAborted, uow.Transaction, setDefaultValues: true);
-                await uow.CommitAsync(httpContext.RequestAborted);
+                await userLogRepository.CreateAsync(entity, httpContext.RequestAborted);
             }
             catch (Exception logEx)
             {

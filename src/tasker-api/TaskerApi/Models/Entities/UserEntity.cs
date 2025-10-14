@@ -50,13 +50,34 @@ public class UserEntity :
     [Column("password_salt")]
     public string? PasswordSalt { get; set; }
 
-    public DateTimeOffset CreatedAt { get; set; }
-    
-    public Guid Id { get; set; }
+    /// <summary>
+    /// Признак администратора
+    /// </summary>
+    [Column("is_admin")]
+    public bool IsAdmin { get; set; }
 
+    /// <summary>
+    /// Уникальный идентификатор пользователя.
+    /// </summary>
+    public Guid Id { get; set; }
+    
+    /// <summary>
+    /// Дата и время создания.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// Дата и время последнего обновления.
+    /// </summary>
+    public DateTimeOffset UpdatedAt { get; set; }
+
+    /// <summary>
+    /// Дата и время деактивации (мягкое удаление).
+    /// </summary>
     public DateTimeOffset? DeactivatedAt { get; set; }
 
+    /// <summary>
+    /// Флаг активности записи.
+    /// </summary>
     public bool IsActive { get; set; }
-
-    public DateTimeOffset UpdatedAt { get; set; }
 }
