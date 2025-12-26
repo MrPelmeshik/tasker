@@ -51,7 +51,7 @@ public class DbConnectionFactory : IDbConnectionFactory
     /// </summary>
     /// <param name="value">Строка с переменными окружения</param>
     /// <returns>Строка с подставленными значениями переменных</returns>
-    private static string ExpandEnvironmentVariables(string value)
+    public static string ExpandEnvironmentVariables(string value)
     {
         if (string.IsNullOrWhiteSpace(value)) return value;
         // Поддержка форматов %VAR%, $VAR и ${VAR}

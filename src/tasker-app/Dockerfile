@@ -10,9 +10,16 @@ ENV REACT_APP_API_BASE=$REACT_APP_API_BASE
 
 RUN npm run build
 
-FROM nginx:alpine AS runtime
-COPY --from=build /app/build /usr/share/nginx/html
-# Создаем конфигурацию nginx для порта 3000
-RUN echo 'server { listen 3000; location / { root /usr/share/nginx/html; index index.html index.htm; try_files $uri $uri/ /index.html; } }' > /etc/nginx/conf.d/default.conf
+FROM node:20-alpine3.20 AS runtime
+WORKDIR /app
+# Устанавливаем serve для статических файлов
+RUN npm install -g serve
+COPY --from=build /app/build ./build
 EXPOSE 3000
-CMD ["nginx", "-g", "daemon off;"]
+# Используем serve с правильными опциями для SPA
+# -s: single-page application mode (fallback to index.html)
+# -l: listen port and host
+# --cors: enable CORS
+# --no-clipboard: don't copy URL to clipboard
+# --no-compression: disable compression (может вызывать проблемы)
+CMD ["serve", "-s", "build", "-l", "tcp://0.0.0.0:3000", "--cors", "--no-clipboard"]

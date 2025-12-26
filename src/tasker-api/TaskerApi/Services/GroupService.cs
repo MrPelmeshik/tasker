@@ -32,8 +32,8 @@ public class GroupService(
         {
             var groups = await groupRepository.GetAllAsync(cancellationToken);
             
-            var accessibleGroups = groups.Where(g => 
-                CurrentUser.AccessibleAreas.Contains(g.AreaId));
+            var accessibleGroups = groups.Where(g =>
+                CurrentUser.HasAccessToArea(g.AreaId));
 
             return accessibleGroups.Select(g => g.ToGroupResponse());
         }, nameof(GetAsync));
@@ -55,7 +55,7 @@ public class GroupService(
                 return null;
             }
 
-            if (!CurrentUser.AccessibleAreas.Contains(group.AreaId))
+            if (!CurrentUser.HasAccessToArea(group.AreaId))
             {
                 return null;
             }
@@ -107,7 +107,7 @@ public class GroupService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(group.AreaId))
+            if (!CurrentUser.HasAccessToArea(group.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
@@ -140,7 +140,7 @@ public class GroupService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(group.AreaId))
+            if (!CurrentUser.HasAccessToArea(group.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
@@ -164,7 +164,7 @@ public class GroupService(
     {
         try
         {
-            if (!currentUser.AccessibleAreas.Contains(areaId))
+            if (!CurrentUser.HasAccessToArea(areaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
@@ -190,7 +190,7 @@ public class GroupService(
     {
         try
         {
-            if (!currentUser.AccessibleAreas.Contains(areaId))
+            if (!CurrentUser.HasAccessToArea(areaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
@@ -223,7 +223,7 @@ public class GroupService(
                 throw new InvalidOperationException("Область не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(area.Id))
+            if (!CurrentUser.HasAccessToArea(area.Id))
             {
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }

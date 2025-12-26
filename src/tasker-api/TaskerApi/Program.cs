@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
 using TaskerApi.Services;
 using TaskerApi.Interfaces.Core;
+using static TaskerApi.Core.DbConnectionFactory;
 using TaskerApi.Interfaces.Models.Entities;
 // using TaskerApi.Interfaces.Providers;
 using TaskerApi.Interfaces.Repositories;
@@ -70,7 +71,9 @@ builder.Services.AddDbContext<TaskerDbContext>(options =>
         throw new InvalidOperationException("Строка подключения к базе данных не настроена");
     }
     
-    options.UseNpgsql(connectionString);
+    // Expand environment variables in connection string (e.g., ${DB_PG_PWD_POSTGRES})
+    var expandedConnectionString = ExpandEnvironmentVariables(connectionString);
+    options.UseNpgsql(expandedConnectionString);
 });
 
 // Repositories

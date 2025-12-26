@@ -286,7 +286,7 @@ public static class EntityMapper
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            Status = Models.Common.TaskStatus.Pending,
+            Status = ResolveTaskStatusOnCreate(request.Status),
             GroupId = request.GroupId,
             CreatorUserId = creatorUserId,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -316,7 +316,7 @@ public static class EntityMapper
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            Status = Models.Common.TaskStatus.Pending,
+            Status = Models.Common.TaskStatus.New,
             TaskId = request.TaskId,
             CreatorUserId = creatorUserId,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -548,7 +548,7 @@ public static class EntityMapper
             Id = Guid.NewGuid(),
             Title = request.TaskTitle,
             Description = request.TaskDescription,
-            Status = Models.Common.TaskStatus.Pending,
+            Status = Models.Common.TaskStatus.New,
             GroupId = groupId,
             CreatorUserId = creatorUserId,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -579,7 +579,7 @@ public static class EntityMapper
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            Status = Models.Common.TaskStatus.Pending,
+            Status = Models.Common.TaskStatus.New,
             GroupId = request.GroupId,
             CreatorUserId = creatorUserId,
             CreatedAt = DateTimeOffset.UtcNow,
@@ -616,6 +616,19 @@ public static class EntityMapper
             Task = task.ToTaskResponse(),
             Event = eventEntity.ToEventResponse()
         };
+    }
+
+    /// <summary>
+    /// Нормализует статус при создании задачи.
+    /// Если статус в запросе не задан или некорректен, используется статус "Новая".
+    /// </summary>
+    /// <param name="status">Статус из запроса создания задачи.</param>
+    /// <returns>Валидный стартовый статус задачи.</returns>
+    private static Models.Common.TaskStatus ResolveTaskStatusOnCreate(Models.Common.TaskStatus status)
+    {
+        return Enum.IsDefined(typeof(Models.Common.TaskStatus), status)
+            ? status
+            : Models.Common.TaskStatus.New;
     }
 
     #endregion

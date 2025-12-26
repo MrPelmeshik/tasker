@@ -93,6 +93,9 @@ public class TaskerDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
+        
+        // Configure snake_case column names for all entities
+        ConfigureSnakeCaseColumnNames(modelBuilder);
 
         modelBuilder.Entity<UserEntity>(entity =>
         {
@@ -103,6 +106,9 @@ public class TaskerDbContext : DbContext
             entity.Property(e => e.LastName).HasMaxLength(255);
             entity.Property(e => e.PasswordHash).HasMaxLength(255);
             entity.Property(e => e.PasswordSalt).HasMaxLength(255);
+            
+            // Ignore IsAdmin property - the column doesn't exist in the database
+            entity.Ignore(e => e.IsAdmin);
             
             entity.HasIndex(e => e.Name).IsUnique();
             entity.HasIndex(e => e.Email).IsUnique();
@@ -132,7 +138,6 @@ public class TaskerDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(2000);
-            entity.Property(e => e.Status).HasConversion<string>();
             
             entity.HasOne<GroupEntity>()
                 .WithMany()
@@ -145,7 +150,6 @@ public class TaskerDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(2000);
-            entity.Property(e => e.Status).HasConversion<string>();
             
             entity.HasOne<TaskEntity>()
                 .WithMany()
@@ -165,7 +169,6 @@ public class TaskerDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(2000);
-            entity.Property(e => e.EventType).HasConversion<string>();
         });
 
         modelBuilder.Entity<UserLogEntity>(entity =>
@@ -178,6 +181,10 @@ public class TaskerDbContext : DbContext
             entity.Property(e => e.IpAddress).HasMaxLength(45);
             entity.Property(e => e.UserAgent).HasMaxLength(500);
             entity.Property(e => e.ErrorMessage).HasMaxLength(1000);
+            
+            // Ignore RequestParams property - it's of type object which EF Core can't map directly
+            // The column exists in DB as jsonb, but we'll handle it manually if needed
+            entity.Ignore(e => e.RequestParams);
             
             entity.HasOne<UserEntity>()
                 .WithMany()
@@ -200,7 +207,8 @@ public class TaskerDbContext : DbContext
                 .HasForeignKey(e => e.AreaId)
                 .OnDelete(DeleteBehavior.Restrict);
                 
-            entity.HasOne<UserEntity>("GrantedByUser")
+            // Foreign key relationship for GrantedByUserId (no navigation property)
+            entity.HasOne<UserEntity>()
                 .WithMany()
                 .HasForeignKey(e => e.GrantedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -284,5 +292,59 @@ public class TaskerDbContext : DbContext
                 .HasForeignKey(e => e.EventId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
+    }
+    
+    /// <summary>
+    /// Настраивает имена колонок в формате snake_case для всех сущностей
+    /// </summary>
+    private static void ConfigureSnakeCaseColumnNames(ModelBuilder modelBuilder)
+    {
+        // Configure for all entities that might have base interface properties
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            var entityBuilder = modelBuilder.Entity(entityType.ClrType);
+            
+            // Configure Id property (from IAutoIdBaseEntity)
+            var idProperty = entityType.FindProperty("Id");
+            if (idProperty != null && idProperty.PropertyInfo != null)
+            {
+                entityBuilder.Property("Id").HasColumnName("id");
+            }
+            
+            // Configure CreatedAt property (from ICreatedDateBaseEntity)
+            var createdAtProperty = entityType.FindProperty("CreatedAt");
+            if (createdAtProperty != null && createdAtProperty.PropertyInfo != null)
+            {
+                entityBuilder.Property("CreatedAt").HasColumnName("created_at");
+            }
+            
+            // Configure UpdatedAt property (from IUpdatedDateBaseEntity)
+            var updatedAtProperty = entityType.FindProperty("UpdatedAt");
+            if (updatedAtProperty != null && updatedAtProperty.PropertyInfo != null)
+            {
+                entityBuilder.Property("UpdatedAt").HasColumnName("updated_at");
+            }
+            
+            // Configure DeactivatedAt property (from ISoftDeleteBaseEntity)
+            var deactivatedAtProperty = entityType.FindProperty("DeactivatedAt");
+            if (deactivatedAtProperty != null && deactivatedAtProperty.PropertyInfo != null)
+            {
+                entityBuilder.Property("DeactivatedAt").HasColumnName("deactivated_at");
+            }
+            
+            // Configure IsActive property (from ISoftDeleteBaseEntity)
+            var isActiveProperty = entityType.FindProperty("IsActive");
+            if (isActiveProperty != null && isActiveProperty.PropertyInfo != null)
+            {
+                entityBuilder.Property("IsActive").HasColumnName("is_active");
+            }
+            
+            // Configure CreatorUserId property (from ICreatorUserBaseEntity)
+            var creatorUserIdProperty = entityType.FindProperty("CreatorUserId");
+            if (creatorUserIdProperty != null && creatorUserIdProperty.PropertyInfo != null)
+            {
+                entityBuilder.Property("CreatorUserId").HasColumnName("creator_user_id");
+            }
+        }
     }
 }

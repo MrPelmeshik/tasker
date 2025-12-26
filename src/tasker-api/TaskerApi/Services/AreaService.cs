@@ -32,7 +32,7 @@ public class AreaService(
         {
             var areas = await areaRepository.GetAllAsync(cancellationToken);
             
-            var accessibleAreas = areas.Where(a => CurrentUser.AccessibleAreas.Contains(a.Id));
+            var accessibleAreas = areas.Where(a => CurrentUser.HasAccessToArea(a.Id));
             
             return accessibleAreas.Select(x => x.ToAreaResponse());
         }, nameof(GetAllAsync));
@@ -50,7 +50,7 @@ public class AreaService(
         {
             var area = await areaRepository.GetByIdAsync(id, cancellationToken);
             
-            if (area == null || !CurrentUser.AccessibleAreas.Contains(area.Id))
+            if (area == null || !CurrentUser.HasAccessToArea(area.Id))
             {
                 return null;
             }
@@ -78,6 +78,9 @@ public class AreaService(
             var area = request.ToAreaEntity(CurrentUser.UserId);
 
             var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
+            var userAccess = createdArea.ToUserAreaAccessEntity(CurrentUser.UserId, CurrentUser.UserId);
+
+            await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
 
             return createdArea.ToAreaCreateResponse();
         }, nameof(CreateAsync), request);
@@ -99,7 +102,7 @@ public class AreaService(
                 throw new InvalidOperationException("Область не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(existingArea.Id))
+            if (!CurrentUser.HasAccessToArea(existingArea.Id))
             {
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
@@ -130,7 +133,7 @@ public class AreaService(
                 throw new InvalidOperationException("Область не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(existingArea.Id))
+            if (!CurrentUser.HasAccessToArea(existingArea.Id))
             {
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
@@ -189,7 +192,7 @@ public class AreaService(
         try
         {
             var areas = await areaRepository.GetAllAsync(cancellationToken);
-            var accessibleAreas = areas.Where(a => currentUser.AccessibleAreas.Contains(a.Id));
+            var accessibleAreas = areas.Where(a => CurrentUser.HasAccessToArea(a.Id));
 
             var result = new List<AreaShortCardResponse>();
 

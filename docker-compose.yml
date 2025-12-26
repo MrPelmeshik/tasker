@@ -5,7 +5,7 @@ services:
       context: ./docker/postgres
       dockerfile: ./dockerfile
     restart: always
-    container_name: postgres
+    container_name: pg
     hostname: postgres
     ports:
       - "5432:5432"

@@ -38,7 +38,7 @@ public class TaskService(
             foreach (var task in tasks)
             {
                 var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-                if (group != null && currentUser.AccessibleAreas.Contains(group.AreaId))
+                if (group != null && CurrentUser.HasAccessToArea(group.AreaId))
                 {
                     accessibleTasks.Add(task);
                 }
@@ -70,7 +70,7 @@ public class TaskService(
             }
 
             var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.AccessibleAreas.Contains(group.AreaId))
+            if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
             {
                 return null;
             }
@@ -100,7 +100,7 @@ public class TaskService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(group.AreaId))
+            if (!CurrentUser.HasAccessToArea(group.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
@@ -136,7 +136,7 @@ public class TaskService(
             }
 
             var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.AccessibleAreas.Contains(group.AreaId))
+            if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }
@@ -170,7 +170,7 @@ public class TaskService(
             }
 
             var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.AccessibleAreas.Contains(group.AreaId))
+            if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }
@@ -201,7 +201,7 @@ public class TaskService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!currentUser.AccessibleAreas.Contains(group.AreaId))
+            if (!CurrentUser.HasAccessToArea(group.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
