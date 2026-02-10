@@ -196,8 +196,15 @@ public class GroupService(
             }
 
             var groups = await groupRepository.GetByAreaIdAsync(areaId, cancellationToken);
+            var result = new List<GroupSummaryResponse>(groups.Count);
 
-            return groups.Select(g => g.ToGroupSummaryResponse());
+            foreach (var group in groups)
+            {
+                var tasks = await taskRepository.GetByGroupIdAsync(group.Id, cancellationToken);
+                result.Add(group.ToGroupSummaryResponse(tasks.Count));
+            }
+
+            return result;
         }
         catch (Exception ex)
         {

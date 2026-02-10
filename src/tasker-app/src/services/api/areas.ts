@@ -27,7 +27,12 @@ export class AreaApiClient extends BaseApiClient<AreaResponse, AreaCreateRequest
 
   // Получить краткие карточки областей для Tree виджета
   async getAreaShortCard(): Promise<AreaShortCardResponse[]> {
-    return apiFetch<AreaShortCardResponse[]>(`/area/getAreaShortCard`);
+    const cards = await apiFetch<Array<AreaShortCardResponse & { groupCount?: number }>>(`/area/getAreaShortCard`);
+
+    return cards.map(card => ({
+      ...card,
+      groupsCount: card.groupsCount ?? card.groupCount ?? 0,
+    }));
   }
 }
 
