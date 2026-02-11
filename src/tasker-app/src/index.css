@@ -196,6 +196,112 @@ body {
   --transition-slow: 0.4s ease;
 }
 
+/* ─── Light theme ─── */
+[data-theme="light"] {
+  --white: 0 0 0;
+  --black: 255 255 255;
+  --color-bg: #f0f2f5;
+  --color-bg-header: #ffffff;
+  --color-bg-surface: #ffffff;
+  --color-bg-active: #e8eaed;
+  --color-border: #d0d4d9;
+  --color-text: #1a1a1a;
+  --color-text-muted: #444444;
+  --color-text-secondary: #666666;
+  --color-text-subtle: #888888;
+  --color-dashed: #c0c0c0;
+  --color-accent: 0 140 200;
+  --color-danger: 220 38 38;
+  --color-danger-text: #dc2626;
+  --color-success: 22 163 74;
+  --color-warning: 202 138 4;
+  --color-info: 37 99 235;
+
+  /* Hex color variables for gradients */
+  --color-gradient-purple: #8b7ceb;
+  --color-gradient-cyan: #22b8cf;
+  --color-bg-dark: #e8eaed;
+  --color-bg-black: #d0d4d9;
+
+  /* Glass effect colors — light theme */
+  --glass-bg-1: rgba(0, 0, 0, 0.04);
+  --glass-bg-2: rgba(0, 0, 0, 0.05);
+  --glass-bg-3: rgba(0, 0, 0, 0.06);
+  --glass-bg-4: rgba(0, 0, 0, 0.07);
+  --glass-bg-5: rgba(0, 0, 0, 0.09);
+
+  --glass-border-1: rgba(0, 0, 0, 0.06);
+  --glass-border-2: rgba(0, 0, 0, 0.10);
+  --glass-border-3: rgba(0, 0, 0, 0.12);
+  --glass-border-4: rgba(0, 0, 0, 0.14);
+  --glass-border-5: rgba(0, 0, 0, 0.18);
+  --glass-border-6: rgba(0, 0, 0, 0.20);
+  --glass-accent-bg: rgba(0, 140, 200, 0.10);
+  --glass-accent-border: rgba(0, 140, 200, 0.30);
+  --glass-accent-shadow: rgba(0, 140, 200, 0.15);
+
+  --glass-hover-bg: rgba(0, 0, 0, 0.03);
+  --glass-text-muted: rgba(0, 0, 0, 0.45);
+  --glass-scrollbar-track: rgba(0, 0, 0, 0.05);
+  --glass-scrollbar-thumb: rgba(0, 0, 0, 0.18);
+  --glass-scrollbar-thumb-hover: rgba(0, 0, 0, 0.28);
+
+  --glass-card-bg-transparent: rgba(255, 255, 255, 0.60);
+  --glass-card-bg-hover: rgba(255, 255, 255, 0.80);
+  --glass-card-bg-selected: rgba(255, 255, 255, 0.90);
+
+  --glass-card-border-default: rgba(0, 0, 0, 0.08);
+  --glass-card-border-default-hover: rgba(0, 0, 0, 0.14);
+  --glass-card-border-default-selected: rgba(0, 0, 0, 0.22);
+
+  /* Common glass gradients — light theme */
+  --glass-gradient-bg: linear-gradient(180deg, rgba(255,255,255,0.70), rgba(255,255,255,0.40));
+  --glass-gradient-bg-hover: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.55));
+  --glass-gradient-bg-active: linear-gradient(180deg, rgba(255,255,255,0.50), rgba(255,255,255,0.30));
+  --glass-gradient-bg-subtle: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.15));
+
+  --glass-gradient-primary: linear-gradient(180deg, rgba(0,140,200,0.14), rgba(0,140,200,0.06));
+  --glass-gradient-primary-hover: linear-gradient(180deg, rgba(0,140,200,0.22), rgba(0,140,200,0.12));
+  --glass-gradient-primary-active: linear-gradient(180deg, rgba(0,140,200,0.10), rgba(0,140,200,0.04));
+
+  --glass-gradient-danger: linear-gradient(180deg, rgba(220,38,38,0.14), rgba(220,38,38,0.06));
+  --glass-gradient-danger-hover: linear-gradient(180deg, rgba(220,38,38,0.22), rgba(220,38,38,0.12));
+  --glass-gradient-danger-active: linear-gradient(180deg, rgba(220,38,38,0.10), rgba(220,38,38,0.04));
+
+  --glass-gradient-success: linear-gradient(180deg, rgb(var(--color-success) / 0.14), rgb(var(--color-success) / 0.06));
+  --glass-gradient-success-hover: linear-gradient(180deg, rgb(var(--color-success) / 0.22), rgb(var(--color-success) / 0.12));
+  --glass-gradient-success-active: linear-gradient(180deg, rgb(var(--color-success) / 0.10), rgb(var(--color-success) / 0.04));
+
+  --glass-gradient-warning: linear-gradient(180deg, rgb(var(--color-warning) / 0.14), rgb(var(--color-warning) / 0.06));
+  --glass-gradient-warning-hover: linear-gradient(180deg, rgb(var(--color-warning) / 0.22), rgb(var(--color-warning) / 0.12));
+  --glass-gradient-warning-active: linear-gradient(180deg, rgb(var(--color-warning) / 0.10), rgb(var(--color-warning) / 0.04));
+
+  --glass-gradient-info: linear-gradient(180deg, rgb(var(--color-info) / 0.14), rgb(var(--color-info) / 0.06));
+  --glass-gradient-info-hover: linear-gradient(180deg, rgb(var(--color-info) / 0.22), rgb(var(--color-info) / 0.12));
+  --glass-gradient-info-active: linear-gradient(180deg, rgb(var(--color-info) / 0.10), rgb(var(--color-info) / 0.04));
+
+  /* Radial gradients — light theme */
+  --glass-radial-default: radial-gradient(120% 80% at -10% -20%, rgba(0,0,0,0.08), transparent 60%);
+  --glass-radial-primary: radial-gradient(120% 80% at -10% -20%, rgba(0,140,200,0.18), transparent 60%);
+  --glass-radial-danger: radial-gradient(120% 80% at -10% -20%, rgba(220,38,38,0.18), transparent 60%);
+  --glass-radial-success: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-success) / 0.18), transparent 60%);
+  --glass-radial-warning: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-warning) / 0.18), transparent 60%);
+  --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.18), transparent 60%);
+  --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(0,0,0,0.04), transparent 60%);
+
+  /* Shadows — light theme */
+  --shadow-elev-1: 0 8px 18px rgba(0,0,0,0.08);
+  --shadow-elev-2: 0 10px 22px rgba(0,0,0,0.10);
+  --shadow-elev-3: 0 12px 26px rgba(0,0,0,0.12);
+  --shadow-elev-4: 0 6px 16px rgba(0,0,0,0.07);
+  --shadow-card: 0 10px 24px rgba(0, 0, 0, 0.08);
+  --shadow-inset-0: inset 0 1px 0 rgba(255,255,255,0.50);
+  --shadow-inset-1: inset 0 1px 0 rgba(255,255,255,0.60);
+  --shadow-inset-2: inset 0 1px 0 rgba(255,255,255,0.70);
+  --shadow-hover: 0 4px 15px rgba(0, 0, 0, 0.06);
+  --shadow-accent: 0 2px 10px rgba(0, 140, 200, 0.15);
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;

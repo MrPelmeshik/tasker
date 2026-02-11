@@ -43,6 +43,37 @@
 .right {
   display: flex;
   align-items: center;
+  gap: var(--space-12);
+}
+
+.themeToggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-32);
+  height: var(--size-32);
+  padding: 0;
+  border: 1px solid var(--glass-border-2);
+  border-radius: var(--radius-round);
+  background: var(--glass-bg-2);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), transform var(--transition-fast);
+}
+
+.themeToggle:hover {
+  background: var(--glass-bg-4);
+  border-color: var(--glass-border-4);
+  transform: scale(1.08);
+}
+
+.themeToggle:active {
+  transform: scale(0.95);
+}
+
+.themeIcon {
+  width: var(--size-18);
+  height: var(--size-18);
 }
 
 .user {
