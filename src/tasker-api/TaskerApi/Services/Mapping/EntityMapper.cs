@@ -511,7 +511,6 @@ public static class EntityMapper
             UserId = userId,
             AreaId = area.Id,
             GrantedByUserId = grantedByUserId,
-            GrantedAt = DateTimeOffset.UtcNow,
             IsActive = true
         };
     }

@@ -33,12 +33,6 @@ public class UserAreaAccessEntity :
     public Guid GrantedByUserId { get; set; }
 
     /// <summary>
-    /// Дата предоставления доступа
-    /// </summary>
-    [Column("granted_at")]
-    public DateTimeOffset GrantedAt { get; set; }
-
-    /// <summary>
     /// Дата и время создания.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }

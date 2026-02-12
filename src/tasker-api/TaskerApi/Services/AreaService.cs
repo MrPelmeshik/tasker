@@ -1,6 +1,7 @@
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -19,6 +20,7 @@ public class AreaService(
     IGroupRepository groupRepository,
     IUserAreaAccessRepository userAreaAccessRepository,
     IUserRepository userRepository,
+    IEntityEventLogger entityEventLogger,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IAreaService
 {
@@ -84,6 +86,8 @@ public class AreaService(
 
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
 
+            await entityEventLogger.LogAsync(EntityType.AREA, createdArea.Id, EventType.CREATE, createdArea.Title, null, cancellationToken);
+
             return createdArea.ToAreaCreateResponse();
         }, nameof(CreateAsync), request);
     }
@@ -112,6 +116,8 @@ public class AreaService(
             request.UpdateAreaEntity(existingArea);
 
             await areaRepository.UpdateAsync(existingArea, cancellationToken);
+
+            await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.UPDATE, existingArea.Title, null, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -140,6 +146,8 @@ public class AreaService(
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
 
+            await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.DELETE, existingArea.Title, null, cancellationToken);
+
             await areaRepository.DeleteAsync(id, cancellationToken);
         }
         catch (Exception ex)
@@ -164,9 +172,13 @@ public class AreaService(
 
             var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
 
+            await entityEventLogger.LogAsync(EntityType.AREA, createdArea.Id, EventType.CREATE, createdArea.Title, null, cancellationToken);
+
             var defaultGroup = createdArea.ToDefaultGroupEntity(currentUser.UserId);
 
             var createdGroup = await groupRepository.CreateAsync(defaultGroup, cancellationToken);
+
+            await entityEventLogger.LogAsync(EntityType.GROUP, createdGroup.Id, EventType.CREATE, createdGroup.Title, null, cancellationToken);
 
             var userAccess = createdArea.ToUserAreaAccessEntity(currentUser.UserId, currentUser.UserId);
 

@@ -3,6 +3,7 @@ using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -23,6 +24,7 @@ public class TaskService(
     IGroupRepository groupRepository,
     IEventRepository eventRepository,
     IUserRepository userRepository,
+    IEntityEventLogger entityEventLogger,
     TaskerDbContext context)
     : BaseService(logger, currentUser), ITaskService
 {
@@ -113,6 +115,8 @@ public class TaskService(
 
             var createdTask = await taskRepository.CreateAsync(task, cancellationToken);
 
+            await entityEventLogger.LogAsync(EntityType.TASK, createdTask.Id, EventType.CREATE, createdTask.Title, null, cancellationToken);
+
             return createdTask.ToTaskResponse();
         }
         catch (Exception ex)
@@ -149,6 +153,8 @@ public class TaskService(
 
             await taskRepository.UpdateAsync(task, cancellationToken);
 
+            await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.UPDATE, task.Title, null, cancellationToken);
+
             return task.ToTaskResponse();
         }
         catch (Exception ex)
@@ -178,6 +184,8 @@ public class TaskService(
             {
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }
+
+            await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.DELETE, task.Title, null, cancellationToken);
 
             await taskRepository.DeleteAsync(id, cancellationToken);
         }
@@ -217,6 +225,8 @@ public class TaskService(
             var eventEntity = request.ToEventEntity(currentUser.UserId);
 
             var createdEvent = await eventRepository.CreateAsync(eventEntity, cancellationToken);
+
+            await entityEventLogger.LogAsync(EntityType.TASK, createdTask.Id, EventType.CREATE, createdTask.Title, null, cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
 

@@ -1,6 +1,7 @@
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -19,6 +20,7 @@ public class GroupService(
     IAreaRepository areaRepository,
     ITaskRepository taskRepository,
     IUserRepository userRepository,
+    IEntityEventLogger entityEventLogger,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IGroupService
 {
@@ -88,6 +90,8 @@ public class GroupService(
 
             var createdGroup = await groupRepository.CreateAsync(group, cancellationToken);
 
+            await entityEventLogger.LogAsync(EntityType.GROUP, createdGroup.Id, EventType.CREATE, createdGroup.Title, null, cancellationToken);
+
             return createdGroup.ToGroupResponse();
         }, nameof(CreateAsync), request);
     }
@@ -118,6 +122,8 @@ public class GroupService(
 
             await groupRepository.UpdateAsync(group, cancellationToken);
 
+            await entityEventLogger.LogAsync(EntityType.GROUP, id, EventType.UPDATE, group.Title, null, cancellationToken);
+
             return group.ToGroupResponse();
         }
         catch (Exception ex)
@@ -146,6 +152,8 @@ public class GroupService(
             {
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
+
+            await entityEventLogger.LogAsync(EntityType.GROUP, id, EventType.DELETE, group.Title, null, cancellationToken);
 
             await groupRepository.DeleteAsync(id, cancellationToken);
         }
@@ -248,9 +256,13 @@ public class GroupService(
 
             var createdGroup = await groupRepository.CreateAsync(group, cancellationToken);
 
+            await entityEventLogger.LogAsync(EntityType.GROUP, createdGroup.Id, EventType.CREATE, createdGroup.Title, null, cancellationToken);
+
             var task = request.ToDefaultTaskEntity(createdGroup.Id, currentUser.UserId);
 
             var createdTask = await taskRepository.CreateAsync(task, cancellationToken);
+
+            await entityEventLogger.LogAsync(EntityType.TASK, createdTask.Id, EventType.CREATE, createdTask.Title, null, cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
 
