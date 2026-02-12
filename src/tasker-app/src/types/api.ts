@@ -34,7 +34,7 @@ export type AreaRole = 'Owner' | 'Administrator' | 'Executor' | 'Observer';
 
 export interface AddAreaMemberRequest {
   userId?: string;
-  email?: string;
+  login?: string;
   role: AreaRole;
 }
 

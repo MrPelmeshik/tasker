@@ -89,7 +89,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [membersLoading, setMembersLoading] = useState(false);
   const [membersError, setMembersError] = useState<string | null>(null);
   /** Форма добавления участника */
-  const [addMemberEmail, setAddMemberEmail] = useState('');
+  const [addMemberLogin, setAddMemberLogin] = useState('');
   const [addMemberRole, setAddMemberRole] = useState<AreaRole>('Executor');
   const [addMemberError, setAddMemberError] = useState<string | null>(null);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
@@ -117,7 +117,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       setFieldChanges({});
       /** Создание — сразу edit; существующая область — по умолчанию просмотр */
       setIsEditMode(!area);
-      setAddMemberEmail('');
+      setAddMemberLogin('');
       setAddMemberError(null);
       setRemoveConfirmMember(null);
     }
@@ -241,15 +241,15 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     }
   };
 
-  /** Добавить участника по email */
+  /** Добавить участника по логину */
   const handleAddMember = async () => {
-    const email = addMemberEmail.trim();
-    if (!email || !area?.id) return;
+    const login = addMemberLogin.trim();
+    if (!login || !area?.id) return;
     setAddMemberError(null);
     setAddMemberLoading(true);
     try {
-      await areaApi.addMember(area.id, { email, role: addMemberRole });
-      setAddMemberEmail('');
+      await areaApi.addMember(area.id, { login, role: addMemberRole });
+      setAddMemberLogin('');
       const updated = await areaApi.getMembers(area.id);
       setMembers(updated);
     } catch (err) {
@@ -483,15 +483,15 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                       <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', marginTop: 'var(--space-12)' }}>
                         <div style={{ display: 'flex', gap: 'var(--space-8)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
                           <GlassInput
-                            value={addMemberEmail}
+                            value={addMemberLogin}
                             onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                              setAddMemberEmail(e.target.value);
+                              setAddMemberLogin(e.target.value);
                               setAddMemberError(null);
                             }}
-                            placeholder="Email участника"
+                            placeholder="Логин участника"
                             disabled={addMemberLoading}
                             fullWidth
-                            type="email"
+                            type="text"
                           />
                           <GlassSelect
                             value={addMemberRole}
@@ -504,7 +504,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                             variant="primary"
                             size="xs"
                             onClick={handleAddMember}
-                            disabled={!addMemberEmail.trim() || addMemberLoading}
+                            disabled={!addMemberLogin.trim() || addMemberLoading}
                           >
                             <PlusIcon /> Добавить
                           </GlassButton>

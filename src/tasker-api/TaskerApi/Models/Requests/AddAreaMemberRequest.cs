@@ -9,14 +9,14 @@ namespace TaskerApi.Models.Requests;
 public class AddAreaMemberRequest
 {
     /// <summary>
-    /// Идентификатор пользователя для назначения (альтернатива Email)
+    /// Идентификатор пользователя для назначения (альтернатива Login)
     /// </summary>
     public Guid? UserId { get; set; }
 
     /// <summary>
-    /// Почтовый адрес пользователя для назначения (приоритет над UserId, если указаны оба)
+    /// Логин пользователя для назначения (приоритет над UserId, если указаны оба)
     /// </summary>
-    public string? Email { get; set; }
+    public string? Login { get; set; }
 
     /// <summary>
     /// Роль: Administrator, Executor или Observer

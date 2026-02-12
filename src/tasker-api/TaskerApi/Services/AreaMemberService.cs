@@ -82,14 +82,14 @@ public class AreaMemberService(
                 throw new UnauthorizedAccessException("Нет прав на назначение участников");
         }
 
-        var hasEmail = !string.IsNullOrWhiteSpace(request.Email);
+        var hasLogin = !string.IsNullOrWhiteSpace(request.Login);
         var hasUserId = request.UserId.HasValue;
-        if (!hasEmail && !hasUserId)
-            throw new InvalidOperationException("Укажите UserId или Email");
+        if (!hasLogin && !hasUserId)
+            throw new InvalidOperationException("Укажите UserId или Login");
 
         UserEntity? targetUser;
-        if (hasEmail)
-            targetUser = await userRepository.GetByEmailAsync(request.Email!.Trim(), cancellationToken);
+        if (hasLogin)
+            targetUser = await userRepository.GetByNameAsync(request.Login!.Trim(), cancellationToken);
         else
             targetUser = await userRepository.GetByIdAsync(request.UserId!.Value, cancellationToken);
 
