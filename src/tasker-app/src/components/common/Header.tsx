@@ -5,17 +5,14 @@ import { GlassButton } from '../ui/GlassButton';
 import { Tooltip } from '../ui/Tooltip';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useModal } from '../../context/ModalContext';
 import { SunIcon, MoonIcon } from '../icons';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
-  const { userName, isAuth, logout } = useAuth();
+  const { userName, isAuth } = useAuth();
   const { theme, toggleTheme } = useTheme();
-
-  const handleLogout = () => {
-    logout();
-    navigate('/login');
-  };
+  const { openCabinetModal } = useModal();
 
   return (
     <header className={styles.header}>
@@ -48,19 +45,23 @@ export const Header: React.FC = () => {
             {theme === 'dark' ? <SunIcon className={styles.themeIcon} /> : <MoonIcon className={styles.themeIcon} />}
           </button>
         </Tooltip>
-        <Tooltip content={userName ?? 'Гость'} placement="bottom" size="s">
-        <div className={styles.user}>
-          <div className={styles.avatar} aria-hidden />
-          <span className={styles.userName}>{userName ?? 'Гость'}</span>
-          {isAuth && (
-            <GlassButton 
-              size="s" 
-              onClick={handleLogout}
-            >
-              Выйти
-            </GlassButton>
-          )}
-        </div>
+        <Tooltip content={isAuth ? 'Личный кабинет' : (userName ?? 'Гость')} placement="bottom" size="s">
+          <div
+            className={styles.user}
+            onClick={() => isAuth && openCabinetModal()}
+            style={{ cursor: isAuth ? 'pointer' : 'default' }}
+            role={isAuth ? 'button' : undefined}
+            tabIndex={isAuth ? 0 : undefined}
+            onKeyDown={e => {
+              if (isAuth && (e.key === 'Enter' || e.key === ' ')) {
+                e.preventDefault();
+                openCabinetModal();
+              }
+            }}
+          >
+            <div className={styles.avatar} aria-hidden />
+            <span className={styles.userName}>{userName ?? 'Гость'}</span>
+          </div>
         </Tooltip>
       </div>
     </header>

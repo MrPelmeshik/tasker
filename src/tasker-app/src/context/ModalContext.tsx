@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { ActivityModal } from '../components/activities/ActivityModal';
 import { AreaModal } from '../components/areas/AreaModal';
+import { CabinetModal } from '../components/cabinet/CabinetModal';
 import { GroupModal } from '../components/groups/GroupModal';
 import { TaskModal } from '../components/tasks/TaskModal';
 import type { AreaResponse, GroupResponse, TaskResponse, AreaCreateRequest, AreaUpdateRequest, GroupCreateRequest, GroupUpdateRequest, TaskCreateRequest, TaskUpdateRequest } from '../types/api';
@@ -12,10 +13,12 @@ interface ModalContextType {
   openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, size?: ModalSize) => void;
   openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, groupId?: string, areaId?: string, size?: ModalSize) => void;
   openActivityModal: (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
+  openCabinetModal: () => void;
   closeAreaModal: () => void;
   closeGroupModal: () => void;
   closeTaskModal: () => void;
   closeActivityModal: () => void;
+  closeCabinetModal: () => void;
 }
 
 const ModalContext = createContext<ModalContextType | undefined>(undefined);
@@ -73,6 +76,8 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     onOpenTaskDetails: (() => void) | null;
   }>({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null });
 
+  const [cabinetModal, setCabinetModal] = useState<{ isOpen: boolean }>({ isOpen: false });
+
   const openAreaModal = (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>, size: ModalSize = 'medium') => {
     setAreaModal({ isOpen: true, area, mode, onSave, onDelete: onDelete ?? null, size });
   };
@@ -105,8 +110,16 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setActivityModal({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null });
   };
 
+  const openCabinetModal = () => {
+    setCabinetModal({ isOpen: true });
+  };
+
+  const closeCabinetModal = () => {
+    setCabinetModal({ isOpen: false });
+  };
+
   return (
-    <ModalContext.Provider value={{ openAreaModal, openGroupModal, openTaskModal, openActivityModal, closeAreaModal, closeGroupModal, closeTaskModal, closeActivityModal }}>
+    <ModalContext.Provider value={{ openAreaModal, openGroupModal, openTaskModal, openActivityModal, openCabinetModal, closeAreaModal, closeGroupModal, closeTaskModal, closeActivityModal, closeCabinetModal }}>
       {children}
       
       {/* Модальные окна на уровне приложения */}
@@ -155,6 +168,8 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
           onOpenTaskDetails={activityModal.onOpenTaskDetails || (() => {})}
         />
       )}
+
+      <CabinetModal isOpen={cabinetModal.isOpen} onClose={closeCabinetModal} />
     </ModalContext.Provider>
   );
 };
