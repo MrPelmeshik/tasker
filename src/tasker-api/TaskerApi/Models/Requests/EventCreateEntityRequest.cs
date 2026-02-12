@@ -26,4 +26,9 @@ public class EventCreateEntityRequest
     /// Тип события.
     /// </summary>
     public EventType EventType { get; set; }
+
+    /// <summary>
+    /// Дата события/активности (обязательное, ISO yyyy-MM-dd или полный ISO).
+    /// </summary>
+    public string EventDate { get; set; } = string.Empty;
 }

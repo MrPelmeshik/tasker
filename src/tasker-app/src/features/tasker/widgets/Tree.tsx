@@ -159,8 +159,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       title: area.title,
       description: area.description,
       ownerUserId: '',
-      createdAt: '',
-      updatedAt: '',
+      createdAt: new Date(0),
+      updatedAt: new Date(0),
       isActive: true,
     }));
     openGroupModal(null, 'create', areasForModal, (data, groupId) => handleGroupSave(data, groupId), undefined, areaId);
@@ -186,8 +186,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           description: group.description,
           areaId: group.areaId,
           ownerUserId: '',
-          createdAt: '',
-          updatedAt: '',
+          createdAt: new Date(0),
+          updatedAt: new Date(0),
           isActive: true,
         }))
       : [];
@@ -207,8 +207,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           title: area.title,
           description: area.description,
           ownerUserId: '',
-          createdAt: '',
-          updatedAt: '',
+          createdAt: new Date(0),
+          updatedAt: new Date(0),
           isActive: true,
         }));
         openGroupModal(group, 'edit', areasForModal, (data, groupId) => handleGroupSave(data, groupId), handleGroupDelete);
@@ -241,8 +241,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
               description: group.description,
               areaId: group.areaId,
               ownerUserId: '',
-              createdAt: '',
-              updatedAt: '',
+              createdAt: new Date(0),
+              updatedAt: new Date(0),
               isActive: true,
             }))
           : [];

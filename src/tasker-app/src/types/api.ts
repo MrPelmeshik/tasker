@@ -23,10 +23,10 @@ export interface AreaResponse {
   description?: string;
   ownerUserId: string;
   ownerUserName?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   isActive: boolean;
-  deactivatedAt?: string;
+  deactivatedAt?: Date;
 }
 
 /** Роли пользователей в области (соответствует backend AreaRole) */
@@ -64,10 +64,10 @@ export interface GroupResponse {
   areaId: string;
   ownerUserId: string;
   ownerUserName?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   isActive: boolean;
-  deactivatedAt?: string;
+  deactivatedAt?: Date;
 }
 
 export interface GroupCreateResponse {
@@ -81,8 +81,8 @@ export interface AreaShortCardResponse {
   description?: string;
   groupsCount: number;
   ownerUserName: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 export interface GroupSummaryResponse {
@@ -92,8 +92,8 @@ export interface GroupSummaryResponse {
   areaId: string;
   tasksCount: number;
   ownerUserName: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Типы для Task API
@@ -119,10 +119,10 @@ export interface TaskResponse {
   status: number; // TaskStatus enum value
   ownerUserId: string;
   ownerUserName?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   isActive: boolean;
-  deactivatedAt?: string;
+  deactivatedAt?: Date;
 }
 
 export interface TaskCreateResponse {
@@ -135,8 +135,8 @@ export interface TaskSummaryResponse {
   description?: string;
   status: number; // TaskStatus enum value
   ownerUserName: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Типы для недельной активности задач
@@ -161,6 +161,8 @@ export interface EventCreateRequest {
   title: string;
   description?: string;
   eventType: EventType;
+  /** Дата события/активности (обязательное, ISO YYYY-MM-DD) */
+  eventDate: string;
 }
 
 export interface EventCreateResponse {
@@ -176,10 +178,12 @@ export interface EventResponse {
   message?: EventMessage;
   eventType: string;
   ownerUserId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  /** Дата события/активности */
+  eventDate: Date;
+  updatedAt: Date;
   isActive: boolean;
-  deactivatedAt?: string;
+  deactivatedAt?: Date;
 }
 
 // Общие типы для CRUD операций
@@ -188,10 +192,10 @@ export interface BaseEntity {
   title: string;
   description?: string;
   ownerUserId: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   isActive: boolean;
-  deactivatedAt?: string;
+  deactivatedAt?: Date;
 }
 
 export interface CreateRequest {

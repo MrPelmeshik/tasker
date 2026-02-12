@@ -93,12 +93,13 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   }, [weekStartIso]);
 
   const handleActivitySaveForTask = useCallback(
-    (task: TaskResponse) => async (data: { title: string; description: string }) => {
+    (task: TaskResponse) => async (data: { title: string; description: string; date: string }) => {
       await createEventForTask({
         entityId: task.id,
         title: data.title,
         description: data.description || undefined,
         eventType: EventTypeActivity,
+        eventDate: data.date,
       });
       await loadData();
       notifyTaskUpdate(task.id, task.groupId);

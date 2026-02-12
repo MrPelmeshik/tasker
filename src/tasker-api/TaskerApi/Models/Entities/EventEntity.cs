@@ -40,6 +40,12 @@ public class EventEntity :
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
+    /// Дата события/активности (обязательное, для отображения и учёта в недельной сводке).
+    /// </summary>
+    [Column("event_date")]
+    public DateTimeOffset EventDate { get; set; }
+
+    /// <summary>
     /// Идентификатор пользователя-владельца.
     /// </summary>
     public Guid OwnerUserId { get; set; }

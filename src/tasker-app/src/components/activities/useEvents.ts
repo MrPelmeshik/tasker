@@ -5,6 +5,7 @@ import {
   fetchEventsByArea,
 } from '../../services/api';
 import type { EventResponse } from '../../types/api';
+import { toIsoDateString } from '../../utils/api-date';
 
 /**
  * Хук загрузки событий по сущности (задача, группа, область).
@@ -36,7 +37,9 @@ export function useEvents(
               : await fetchEventsByArea(entityId);
         if (!cancelled) {
           const raw = data ?? [];
-          const filtered = date ? raw.filter((ev) => ev.createdAt.slice(0, 10) === date) : raw;
+          const filtered = date
+            ? raw.filter((ev) => toIsoDateString(ev.eventDate) === date)
+            : raw;
           setEvents(filtered);
         }
       } catch (e) {

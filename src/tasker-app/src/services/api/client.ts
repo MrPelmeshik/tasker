@@ -1,5 +1,6 @@
 import { getStoredTokens, isAccessTokenExpiredOrMissing, setStoredTokens, clearStoredTokens } from '../storage/token';
 import type { ApiResponse, RefreshTokenResponse } from '../../types';
+import { parseApiDates } from '../../utils/api-date';
 
 const API_BASE = process.env.REACT_APP_API_BASE + '/api';
 
@@ -59,5 +60,6 @@ export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promi
 		throw new Error(text || `HTTP ${response.status}`);
 	}
 
-	return (await response.json()) as T;
+	const raw = await response.json();
+	return parseApiDates(raw) as T;
 }

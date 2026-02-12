@@ -34,6 +34,11 @@ public class EventResponse
     /// Дата и время создания.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    /// Дата события/активности.
+    /// </summary>
+    public DateTimeOffset EventDate { get; set; }
     
     /// <summary>
     /// Дата и время последнего обновления.

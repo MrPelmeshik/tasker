@@ -36,6 +36,7 @@ public static partial class EntityMapper
             EventType = entity.EventType.ToString(),
             OwnerUserId = entity.OwnerUserId,
             CreatedAt = entity.CreatedAt,
+            EventDate = entity.EventDate,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
             DeactivatedAt = entity.DeactivatedAt
@@ -49,6 +50,7 @@ public static partial class EntityMapper
     {
         var messageJson = EventMessageHelper.BuildActivityMessageJson(request.EventTitle, request.EventDescription);
 
+        var now = DateTimeOffset.UtcNow;
         return new EventEntity
         {
             Id = Guid.NewGuid(),
@@ -56,8 +58,9 @@ public static partial class EntityMapper
             Message = messageJson,
             EventType = (Models.Common.EventType)Enum.Parse(typeof(Models.Common.EventType), request.EventType),
             OwnerUserId = ownerUserId,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
+            CreatedAt = now,
+            EventDate = now,
+            UpdatedAt = now,
             IsActive = true
         };
     }

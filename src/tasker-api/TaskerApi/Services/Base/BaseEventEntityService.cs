@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
 using TaskerApi.Helpers;
@@ -53,6 +54,17 @@ public abstract class BaseEventEntityService(
 
         var now = DateTimeOffset.UtcNow;
 
+        if (string.IsNullOrWhiteSpace(item.EventDate))
+            throw new ArgumentException("Дата события/активности обязательна", nameof(item.EventDate));
+
+        DateTimeOffset eventDate;
+        if (DateTime.TryParseExact(item.EventDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+            eventDate = new DateTimeOffset(DateTime.SpecifyKind(parsed, DateTimeKind.Utc));
+        else if (DateTimeOffset.TryParse(item.EventDate, out var parsedOffset))
+            eventDate = parsedOffset;
+        else
+            throw new ArgumentException("Некорректный формат даты события", nameof(item.EventDate));
+
         var messageJson = EventMessageHelper.BuildActivityMessageJson(item.Title, item.Description);
 
         var eventEntity = new EventEntity
@@ -63,6 +75,7 @@ public abstract class BaseEventEntityService(
             EventType = item.EventType,
             OwnerUserId = CurrentUser.UserId,
             CreatedAt = now,
+            EventDate = eventDate,
             UpdatedAt = now,
             IsActive = true
         };

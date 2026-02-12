@@ -320,7 +320,7 @@ public class TaskService(
                 .Join(context.Events.Where(e => e.EventType == EventType.ACTIVITY && e.IsActive),
                     et => et.EventId,
                     e => e.Id,
-                    (et, e) => new { et.TaskId, OccurredAt = e.CreatedAt });
+                    (et, e) => new { et.TaskId, EventDate = e.EventDate });
 
             var activities = await activityQuery.ToListAsync(cancellationToken);
 
@@ -333,11 +333,11 @@ public class TaskService(
             {
                 var taskActivities = activities.Where(a => a.TaskId == task.Id).ToList();
                 var byDate = taskActivities
-                    .GroupBy(a => a.OccurredAt.UtcDateTime.ToString("yyyy-MM-dd"))
+                    .GroupBy(a => a.EventDate.UtcDateTime.ToString("yyyy-MM-dd"))
                     .ToDictionary(g => g.Key, g => g.Count());
 
-                var carryWeeks = taskActivities.Count(a => a.OccurredAt < weekStartOffset);
-                var hasFutureActivities = taskActivities.Any(a => a.OccurredAt >= weekEndOffset);
+                var carryWeeks = taskActivities.Count(a => a.EventDate < weekStartOffset);
+                var hasFutureActivities = taskActivities.Any(a => a.EventDate >= weekEndOffset);
 
                 result.Add(new TaskWeeklyActivityResponse
                 {

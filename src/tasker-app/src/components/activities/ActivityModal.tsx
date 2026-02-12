@@ -17,6 +17,8 @@ import type { TaskResponse } from '../../types/api';
 export interface ActivityFormData {
   title: string;
   description: string;
+  /** Дата активности (обязательное, ISO YYYY-MM-DD) */
+  date: string;
 }
 
 export interface ActivityModalProps {
@@ -54,7 +56,8 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     if (!title.trim()) return;
     setIsLoading(true);
     try {
-      await onSave({ title: title.trim(), description: description.trim() });
+      if (!date) throw new Error('Дата активности не указана');
+      await onSave({ title: title.trim(), description: description.trim(), date });
       onClose();
     } catch (error) {
       console.error('Ошибка сохранения активности:', error);

@@ -39,6 +39,7 @@ public class EntityEventLogger(
                 EventType = eventType,
                 OwnerUserId = userId,
                 CreatedAt = now,
+                EventDate = now,
                 UpdatedAt = now,
                 IsActive = true
             };

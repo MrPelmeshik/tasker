@@ -3,10 +3,10 @@ export interface Area {
   title: string;
   description?: string;
   ownerUserId: string;
-  createdAt: string;
-  deactivatedAt?: string;
+  createdAt: Date;
+  deactivatedAt?: Date;
   isActive: boolean;
-  updatedAt: string;
+  updatedAt: Date;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
@@ -16,10 +16,10 @@ export interface Group {
   description?: string;
   areaId: string;
   ownerUserId: string;
-  createdAt: string;
-  deactivatedAt?: string;
+  createdAt: Date;
+  deactivatedAt?: Date;
   isActive: boolean;
-  updatedAt: string;
+  updatedAt: Date;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
@@ -34,8 +34,8 @@ export interface AreaShortCard {
   description?: string;
   groupsCount: number;
   ownerUserName: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
@@ -46,8 +46,8 @@ export interface GroupSummary {
   areaId: string;
   tasksCount: number;
   ownerUserName: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
@@ -58,10 +58,10 @@ export interface Task {
   groupId: string;
   status: number; // TaskStatus enum value
   ownerUserId: string;
-  createdAt: string;
-  deactivatedAt?: string;
+  createdAt: Date;
+  deactivatedAt?: Date;
   isActive: boolean;
-  updatedAt: string;
+  updatedAt: Date;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
@@ -71,7 +71,7 @@ export interface TaskSummary {
   description?: string;
   status: number; // TaskStatus enum value
   ownerUserName: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: Date;
+  updatedAt: Date;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }

@@ -1,19 +1,19 @@
 /**
- * Форматирование ISO-даты YYYY-MM-DD в DD.MM.YYYY
+ * Форматирование даты (Date или ISO-строка YYYY-MM-DD) в DD.MM.YYYY
  */
-export function formatDateOnly(isoDate: string): string {
-  if (!isoDate || isoDate.length < 10) return isoDate;
-  const [y, m, d] = isoDate.slice(0, 10).split('-');
+export function formatDateOnly(value: string | Date): string {
+  const iso = typeof value === 'string' ? value : value.toISOString().slice(0, 10);
+  if (!iso || iso.length < 10) return iso;
+  const [y, m, d] = iso.slice(0, 10).split('-');
   return `${d}.${m}.${y}`;
 }
 
 /**
- * Форматирование ISO-даты в DD.MM.YY HH:mm
+ * Форматирование даты/времени (Date или ISO-строка) в DD.MM.YY HH:mm
  */
-export function formatDateTime(iso: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
+export function formatDateTime(value: string | Date): string {
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (!(d instanceof Date) || isNaN(d.getTime())) return '';
   const dd = String(d.getDate()).padStart(2, '0');
   const mm = String(d.getMonth() + 1).padStart(2, '0');
   const yy = String(d.getFullYear()).slice(-2);
