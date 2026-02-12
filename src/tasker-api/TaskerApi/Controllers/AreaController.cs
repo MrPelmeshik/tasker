@@ -83,6 +83,32 @@ public class AreaController(IAreaService service) : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Удалить область (мягкое удаление — деактивация)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [UserLog("Удаление области")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await service.DeleteAsync(id, cancellationToken);
+            return Ok(new { success = true, message = "Область успешно удалена" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Область не найдена");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Нет доступа к указанной области");
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
     [HttpGet]
     [UserLog("Получение кратких карточек областей")]
     public async Task<IActionResult> GetAreaShortCard(CancellationToken cancellationToken)

@@ -16,6 +16,7 @@ export {
   fetchAreaById, 
   createArea, 
   updateArea, 
+  deleteArea, 
   fetchActiveAreas, 
   fetchAreasByCreator, 
   fetchAreaShortCard 
@@ -27,6 +28,7 @@ export {
   fetchGroupById, 
   createGroup, 
   updateGroup, 
+  deleteGroup, 
   fetchActiveGroups, 
   fetchGroupsByArea, 
   fetchActiveGroupsByArea, 
@@ -46,6 +48,7 @@ export {
   fetchTaskById,
   createTask,
   updateTask,
+  deleteTask,
   fetchActiveTasks,
   fetchTasksByGroup,
   fetchActiveTasksByGroup,

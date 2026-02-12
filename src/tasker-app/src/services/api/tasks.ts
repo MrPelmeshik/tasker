@@ -30,6 +30,10 @@ export class TaskApiClient {
     return this.baseClient.update(id, data);
   }
 
+  async delete(id: string): Promise<void> {
+    return this.baseClient.delete(id);
+  }
+
   // Специальный метод create для возврата TaskCreateResponse
   async create(data: TaskCreateRequest): Promise<TaskCreateResponse> {
     return apiFetch<TaskCreateResponse>(`/task/create`, {
@@ -109,6 +113,7 @@ export const fetchTasks = () => taskApi.getAll();
 export const fetchTaskById = (id: string) => taskApi.getById(id);
 export const createTask = (data: TaskCreateRequest) => taskApi.create(data);
 export const updateTask = (id: string, data: TaskUpdateRequest) => taskApi.update(id, data);
+export const deleteTask = (id: string) => taskApi.delete(id);
 export const fetchActiveTasks = () => taskApi.getActiveTasks();
 export const fetchTasksByGroup = (groupId: string) => taskApi.getTasksByGroup(groupId);
 export const fetchActiveTasksByGroup = (groupId: string) => taskApi.getActiveTasksByGroup(groupId);

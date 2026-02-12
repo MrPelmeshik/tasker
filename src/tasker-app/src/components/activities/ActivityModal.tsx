@@ -79,6 +79,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               disabled={!title.trim() || isLoading}
             >
               <SaveIcon />
+              Сохранить
             </GlassButton>
           </div>
         </div>
@@ -133,18 +134,6 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               </div>
             </div>
           </div>
-        </div>
-        <div className={css.modalFooter}>
-          <GlassButton variant="subtle" onClick={onClose} disabled={isLoading}>
-            Отмена
-          </GlassButton>
-          <GlassButton
-            variant="primary"
-            onClick={handleSave}
-            disabled={!title.trim() || isLoading}
-          >
-            <SaveIcon /> Сохранить
-          </GlassButton>
         </div>
       </div>
     </Modal>

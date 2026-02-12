@@ -38,6 +38,13 @@ export class BaseApiClient<TEntity extends BaseEntity, TCreateRequest extends Cr
     });
   }
 
+  // Удалить запись (мягкое удаление — деактивация)
+  async delete(id: string): Promise<void> {
+    await apiFetch<void>(`/${this.endpoint}/delete/${id}`, {
+      method: 'DELETE',
+    });
+  }
+
   // Универсальный метод для обработки ошибок API
   protected handleApiError(error: unknown): never {
     if (error instanceof Error) {

@@ -12,6 +12,7 @@ import {
   fetchGroupById,
   fetchGroupsByArea,
   updateTask,
+  deleteTask,
   createEventForTask,
   EventTypeActivity,
   getMondayIso,
@@ -163,6 +164,17 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     }
   }, [loadData, notifyTaskUpdate]);
 
+  const handleTaskDelete = useCallback(async (id: string) => {
+    try {
+      await deleteTask(id);
+      await loadData();
+      notifyTaskUpdate(id, undefined);
+    } catch (error) {
+      console.error('Ошибка удаления задачи:', error);
+      throw error;
+    }
+  }, [loadData, notifyTaskUpdate]);
+
   const handleDayCellClick = useCallback(
     (task: TaskResponse, date: string, event: React.MouseEvent) => {
       event.stopPropagation();
@@ -172,14 +184,14 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           const group = await fetchGroupById(task.groupId);
           if (!group) return;
           const groupsForModal = await fetchGroupsByArea(group.areaId);
-          openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id));
+          openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete);
         } catch (error) {
           console.error('Ошибка загрузки задачи:', error);
         }
       };
       openActivityModal(task, date, handleActivitySaveForTask(task), onOpenTaskDetails);
     },
-    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleActivitySaveForTask]
+    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask]
   );
 
   const handleViewTaskDetails = useCallback(async (taskId: string, event: React.MouseEvent) => {
@@ -190,11 +202,11 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       const group = await fetchGroupById(task.groupId);
       if (!group) return;
       const groupsForModal = await fetchGroupsByArea(group.areaId);
-      openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id));
+      openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete);
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
     }
-  }, [openTaskModal, handleTaskSave]);
+  }, [openTaskModal, handleTaskSave, handleTaskDelete]);
 
   useEffect(() => {
     loadData();

@@ -82,6 +82,32 @@ public class GroupController(IGroupService service) : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Удалить группу (мягкое удаление — деактивация)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [UserLog("Удаление группы")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await service.DeleteAsync(id, cancellationToken);
+            return Ok(new { success = true, message = "Группа успешно удалена" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Группа не найдена");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Нет доступа к указанной группе");
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
     [HttpGet("{areaId}")]
     [UserLog("Получение кратких карточек групп по области")]
     public async Task<IActionResult> GetGroupShortCardByArea(Guid areaId, CancellationToken cancellationToken)

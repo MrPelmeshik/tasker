@@ -10,8 +10,6 @@ import type {
   AreaShortCard, 
   GroupSummary,
   TaskSummary,
-  AreaResponse, 
-  GroupResponse, 
   AreaCreateRequest, 
   AreaUpdateRequest, 
   GroupCreateRequest, 
@@ -25,17 +23,20 @@ import {
   fetchAreaById, 
   createArea, 
   updateArea,
+  deleteArea,
   fetchGroupShortCardByAreaForTree, 
   fetchGroupById, 
   createGroup, 
   updateGroup,
+  deleteGroup,
   fetchTaskSummaryByGroup,
   fetchTaskById,
   createTask,
-  updateTask
+  updateTask,
+  deleteTask
 } from '../../../services/api';
 import css from '../../../styles/tree.module.css';
-import { EyeIcon, PlusIcon } from '../../../components/icons';
+import { EyeIcon } from '../../../components/icons';
 
 // Утилитарная функция для конвертации hex в RGB
 function hexToRgb(hex: string): string {
@@ -156,7 +157,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     try {
       const area = await fetchAreaById(areaId);
       if (area) {
-        openAreaModal(area, 'edit', handleAreaSave);
+        openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
       }
     } catch (error) {
       console.error('Ошибка загрузки области:', error);
@@ -174,7 +175,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       updatedAt: '',
       isActive: true,
     }));
-    openGroupModal(null, 'create', areasForModal, (data, groupId) => handleGroupSave(data, groupId), areaId);
+    openGroupModal(null, 'create', areasForModal, (data, groupId) => handleGroupSave(data, groupId), undefined, areaId);
   };
 
   const handleCreateTaskForGroup = (groupId: string, event: React.MouseEvent) => {
@@ -203,7 +204,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         }))
       : [];
       
-    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), groupId, targetAreaId);
+    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), undefined, groupId, targetAreaId);
   };
 
   // Обработчики для групп
@@ -221,7 +222,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           updatedAt: '',
           isActive: true,
         }));
-        openGroupModal(group, 'edit', areasForModal, (data, groupId) => handleGroupSave(data, groupId));
+        openGroupModal(group, 'edit', areasForModal, (data, groupId) => handleGroupSave(data, groupId), handleGroupDelete);
       }
     } catch (error) {
       console.error('Ошибка загрузки группы:', error);
@@ -257,10 +258,76 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
             }))
           : [];
           
-        openTaskModal(task, 'edit', groupsForModal, (data, taskId) => handleTaskSave(data, taskId));
+        openTaskModal(task, 'edit', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), handleTaskDelete);
       }
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
+    }
+  };
+
+  // Обработчики удаления
+  const handleAreaDelete = async (id: string) => {
+    try {
+      await deleteArea(id);
+      const updatedAreas = await fetchAreaShortCard();
+      setAreas(updatedAreas);
+      setGroupsByArea(prev => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+    } catch (error) {
+      console.error('Ошибка удаления области:', error);
+      throw error;
+    }
+  };
+
+  const handleGroupDelete = async (id: string) => {
+    try {
+      const group = await fetchGroupById(id);
+      const areaId = group?.areaId;
+      await deleteGroup(id);
+      if (areaId) {
+        const updatedGroups = await fetchGroupShortCardByAreaForTree(areaId);
+        setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
+        setAreas(prev => prev.map(area =>
+          area.id === areaId ? { ...area, groupsCount: updatedGroups.length } : area
+        ));
+      }
+      setTasksByGroup(prev => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+    } catch (error) {
+      console.error('Ошибка удаления группы:', error);
+      throw error;
+    }
+  };
+
+  const handleTaskDelete = async (id: string) => {
+    try {
+      const task = await fetchTaskById(id);
+      const groupId = task?.groupId;
+      await deleteTask(id);
+      if (groupId) {
+        const updatedTasks = await fetchTaskSummaryByGroup(groupId);
+        setTasksByGroup(prev => new Map(prev).set(groupId, updatedTasks));
+        setGroupsByArea(prev => {
+          const newMap = new Map<string, GroupSummary[]>();
+          prev.forEach((groups, areaId) => {
+            const updatedGroups = groups.map((g: GroupSummary) =>
+              g.id === groupId ? { ...g, tasksCount: updatedTasks.length } : g
+            );
+            newMap.set(areaId, updatedGroups);
+          });
+          return newMap;
+        });
+      }
+      notifyTaskUpdate(id, groupId);
+    } catch (error) {
+      console.error('Ошибка удаления задачи:', error);
+      throw error;
     }
   };
 

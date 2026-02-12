@@ -9,6 +9,7 @@ import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
 import { EditIcon } from '../icons/EditIcon';
+import { DeleteIcon } from '../icons/DeleteIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import css from '../../styles/modal.module.css';
@@ -33,6 +34,8 @@ export interface GroupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>;
+  /** Колбэк при удалении записи (мягкое удаление) */
+  onDelete?: (id: string) => Promise<void>;
   group?: GroupResponse | null; // null для создания новой группы
   areas: AreaResponse[];
   title?: string;
@@ -44,6 +47,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   group = null,
   areas,
   title = 'Группа',
@@ -65,6 +69,8 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   /** Подтверждение возврата к просмотру при несохранённых изменениях */
   const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
+  /** Подтверждение удаления записи */
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
   const [isEditMode, setIsEditMode] = useState(true);
 
@@ -166,6 +172,26 @@ export const GroupModal: React.FC<GroupModalProps> = ({
     setIsEditMode(false);
   };
 
+  /** Запрос на удаление — показать подтверждение */
+  const handleDeleteRequest = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  /** Подтверждённое удаление */
+  const handleConfirmDelete = async () => {
+    if (!group?.id || !onDelete) return;
+    setShowDeleteConfirm(false);
+    setIsLoading(true);
+    try {
+      await onDelete(group.id);
+      onClose();
+    } catch (error) {
+      console.error('Ошибка удаления группы:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -188,15 +214,28 @@ export const GroupModal: React.FC<GroupModalProps> = ({
               <XIcon />
             </GlassButton>
             {isViewMode ? (
-              <GlassButton
-                variant="primary"
-                size="xs"
-                onClick={() => setIsEditMode(true)}
-                disabled={isLoading}
-              >
-                <EditIcon />
-                Редактировать
-              </GlassButton>
+              <>
+                <GlassButton
+                  variant="primary"
+                  size="xs"
+                  onClick={() => setIsEditMode(true)}
+                  disabled={isLoading}
+                >
+                  <EditIcon />
+                  Редактировать
+                </GlassButton>
+                {group && onDelete && (
+                  <GlassButton
+                    variant="danger"
+                    size="xs"
+                    onClick={handleDeleteRequest}
+                    disabled={isLoading}
+                  >
+                    <DeleteIcon />
+                    Удалить
+                  </GlassButton>
+                )}
+              </>
             ) : (
               <>
                 {group && (
@@ -217,6 +256,17 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 >
                   <SaveIcon />
                 </GlassButton>
+                {group && onDelete && (
+                  <GlassButton
+                    variant="danger"
+                    size="xs"
+                    onClick={handleDeleteRequest}
+                    disabled={isLoading}
+                  >
+                    <DeleteIcon />
+                    Удалить
+                  </GlassButton>
+                )}
               </>
             )}
           </div>
@@ -395,6 +445,17 @@ export const GroupModal: React.FC<GroupModalProps> = ({
         message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
         confirmText="Да"
         cancelText="Нет"
+      />
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="Удалить группу"
+        message="Вы уверены, что хотите удалить эту группу? Запись будет деактивирована и скрыта из списков."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
       />
     </Modal>
   );

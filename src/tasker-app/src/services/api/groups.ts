@@ -29,6 +29,10 @@ export class GroupApiClient {
     return this.baseClient.update(id, data);
   }
 
+  async delete(id: string): Promise<void> {
+    return this.baseClient.delete(id);
+  }
+
   // Специальный метод create для возврата GroupCreateResponse
   async create(data: GroupCreateRequest): Promise<GroupCreateResponse> {
     return apiFetch<GroupCreateResponse>(`/group/create`, {
@@ -81,6 +85,7 @@ export const fetchGroups = () => groupApi.getAll();
 export const fetchGroupById = (id: string) => groupApi.getById(id);
 export const createGroup = (data: GroupCreateRequest) => groupApi.create(data);
 export const updateGroup = (id: string, data: GroupUpdateRequest) => groupApi.update(id, data);
+export const deleteGroup = (id: string) => groupApi.delete(id);
 export const fetchActiveGroups = () => groupApi.getActiveGroups();
 export const fetchGroupsByArea = (areaId: string) => groupApi.getGroupsByArea(areaId);
 export const fetchActiveGroupsByArea = (areaId: string) => groupApi.getActiveGroupsByArea(areaId);

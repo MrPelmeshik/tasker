@@ -90,6 +90,32 @@ public class TaskController(ITaskService service) : ControllerBase
         }
     }
 
+    /// <summary>
+    /// Удалить задачу (мягкое удаление — деактивация)
+    /// </summary>
+    [HttpDelete("{id}")]
+    [UserLog("Удаление задачи")]
+    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await service.DeleteAsync(id, cancellationToken);
+            return Ok(new { success = true, message = "Задача успешно удалена" });
+        }
+        catch (KeyNotFoundException)
+        {
+            return NotFound("Задача не найдена");
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Нет доступа к указанной задаче");
+        }
+        catch (Exception e)
+        {
+            return BadRequest(e.Message);
+        }
+    }
+
     [HttpGet("{groupId}")]
     [UserLog("Получение кратких карточек задач по группе")]
     public async Task<IActionResult> GetTaskSummaryByGroup(Guid groupId, CancellationToken cancellationToken)

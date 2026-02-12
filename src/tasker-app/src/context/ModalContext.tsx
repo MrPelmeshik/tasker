@@ -8,9 +8,9 @@ import type { ActivityFormData } from '../components/activities/ActivityModal';
 import type { ModalSize } from '../types/modal-size';
 
 interface ModalContextType {
-  openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size?: ModalSize) => void;
-  openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string, size?: ModalSize) => void;
-  openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, groupId?: string, areaId?: string, size?: ModalSize) => void;
+  openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>, size?: ModalSize) => void;
+  openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, size?: ModalSize) => void;
+  openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, groupId?: string, areaId?: string, size?: ModalSize) => void;
   openActivityModal: (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
   closeAreaModal: () => void;
   closeGroupModal: () => void;
@@ -38,8 +38,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     area: AreaResponse | null;
     mode: 'create' | 'edit';
     onSave: ((data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>) | null;
+    onDelete: ((id: string) => Promise<void>) | null;
     size: ModalSize;
-  }>({ isOpen: false, area: null, mode: 'create', onSave: null, size: 'medium' });
+  }>({ isOpen: false, area: null, mode: 'create', onSave: null, onDelete: null, size: 'medium' });
 
   const [groupModal, setGroupModal] = useState<{
     isOpen: boolean;
@@ -47,9 +48,10 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     mode: 'create' | 'edit';
     areas: AreaResponse[];
     onSave: ((data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>) | null;
+    onDelete: ((id: string) => Promise<void>) | null;
     areaId?: string;
     size: ModalSize;
-  }>({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, size: 'medium' });
+  }>({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, onDelete: null, size: 'medium' });
 
   const [taskModal, setTaskModal] = useState<{
     isOpen: boolean;
@@ -57,10 +59,11 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     mode: 'create' | 'edit';
     groups: GroupResponse[];
     onSave: ((data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>) | null;
+    onDelete: ((id: string) => Promise<void>) | null;
     groupId?: string;
     areaId?: string;
     size: ModalSize;
-  }>({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, size: 'medium' });
+  }>({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, onDelete: null, size: 'medium' });
 
   const [activityModal, setActivityModal] = useState<{
     isOpen: boolean;
@@ -70,16 +73,16 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     onOpenTaskDetails: (() => void) | null;
   }>({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null });
 
-  const openAreaModal = (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size: ModalSize = 'medium') => {
-    setAreaModal({ isOpen: true, area, mode, onSave, size });
+  const openAreaModal = (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>, size: ModalSize = 'medium') => {
+    setAreaModal({ isOpen: true, area, mode, onSave, onDelete: onDelete ?? null, size });
   };
 
-  const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string, size: ModalSize = 'medium') => {
-    setGroupModal({ isOpen: true, group, mode, areas, onSave, areaId, size });
+  const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, size: ModalSize = 'medium') => {
+    setGroupModal({ isOpen: true, group, mode, areas, onSave, onDelete: onDelete ?? null, areaId, size });
   };
 
-  const openTaskModal = (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, groupId?: string, areaId?: string, size: ModalSize = 'medium') => {
-    setTaskModal({ isOpen: true, task, mode, groups, onSave, groupId, areaId, size });
+  const openTaskModal = (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, groupId?: string, areaId?: string, size: ModalSize = 'medium') => {
+    setTaskModal({ isOpen: true, task, mode, groups, onSave, onDelete: onDelete ?? null, groupId, areaId, size });
   };
 
   const openActivityModal = (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => {
@@ -87,15 +90,15 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   };
 
   const closeAreaModal = () => {
-    setAreaModal({ isOpen: false, area: null, mode: 'create', onSave: null, size: 'medium' });
+    setAreaModal({ isOpen: false, area: null, mode: 'create', onSave: null, onDelete: null, size: 'medium' });
   };
 
   const closeGroupModal = () => {
-    setGroupModal({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, size: 'medium' });
+    setGroupModal({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, onDelete: null, size: 'medium' });
   };
 
   const closeTaskModal = () => {
-    setTaskModal({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, size: 'medium' });
+    setTaskModal({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, onDelete: null, size: 'medium' });
   };
 
   const closeActivityModal = () => {
@@ -111,6 +114,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         isOpen={areaModal.isOpen}
         onClose={closeAreaModal}
         onSave={areaModal.onSave || (() => Promise.resolve())}
+        onDelete={areaModal.onDelete ?? undefined}
         area={areaModal.area}
         title={areaModal.mode === 'create' ? 'Создание области' : 'Редактирование области'}
         size={areaModal.size}
@@ -120,6 +124,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         isOpen={groupModal.isOpen}
         onClose={closeGroupModal}
         onSave={groupModal.onSave || (() => Promise.resolve())}
+        onDelete={groupModal.onDelete ?? undefined}
         group={groupModal.group}
         areas={groupModal.areas}
         title={groupModal.mode === 'create' ? 'Создание группы' : 'Редактирование группы'}
@@ -131,6 +136,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         isOpen={taskModal.isOpen}
         onClose={closeTaskModal}
         onSave={taskModal.onSave || (() => Promise.resolve())}
+        onDelete={taskModal.onDelete ?? undefined}
         task={taskModal.task}
         groups={taskModal.groups}
         title={taskModal.mode === 'create' ? 'Создание задачи' : 'Редактирование задачи'}

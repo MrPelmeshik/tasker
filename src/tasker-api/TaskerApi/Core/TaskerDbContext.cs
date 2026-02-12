@@ -1,4 +1,6 @@
+using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
+using TaskerApi.Interfaces.Models.Entities;
 using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Core;
@@ -96,6 +98,9 @@ public class TaskerDbContext : DbContext
         
         // Configure snake_case column names for all entities
         ConfigureSnakeCaseColumnNames(modelBuilder);
+
+        // Глобальный фильтр: по умолчанию возвращать только активные записи (IsActive = true)
+        ConfigureSoftDeleteFilters(modelBuilder);
 
         modelBuilder.Entity<UserEntity>(entity =>
         {
@@ -294,6 +299,30 @@ public class TaskerDbContext : DbContext
         });
     }
     
+    /// <summary>
+    /// Настраивает глобальный Query Filter для сущностей с soft delete — по умолчанию возвращаются только активные записи (IsActive = true).
+    /// Сущности определяются динамически через проверку интерфейса ISoftDeleteBaseEntity.
+    /// </summary>
+    private static void ConfigureSoftDeleteFilters(ModelBuilder modelBuilder)
+    {
+        foreach (var entityType in modelBuilder.Model.GetEntityTypes())
+        {
+            if (!typeof(ISoftDeleteBaseEntity).IsAssignableFrom(entityType.ClrType))
+                continue;
+
+            var isActiveProperty = entityType.ClrType.GetProperty("IsActive");
+            if (isActiveProperty == null)
+                continue;
+
+            var parameter = Expression.Parameter(entityType.ClrType, "e");
+            var propertyAccess = Expression.Property(parameter, isActiveProperty);
+            var body = Expression.Equal(propertyAccess, Expression.Constant(true));
+            var lambda = Expression.Lambda(body, parameter);
+
+            modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
+        }
+    }
+
     /// <summary>
     /// Настраивает имена колонок в формате snake_case для всех сущностей
     /// </summary>

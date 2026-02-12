@@ -27,12 +27,9 @@ public class BaseRepository<TEntity, TKey>(TaskerDbContext context, ILogger<Base
     /// <returns>Список всех сущностей</returns>
     public virtual async Task<IReadOnlyList<TEntity>> GetAllAsync(CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        var query = DbSet.AsQueryable();
-        
-        if (!includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            query = query.Where(e => ((ISoftDeleteBaseEntity)e).IsActive);
-        }
+        var query = (includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
+            ? DbSet.IgnoreQueryFilters().AsQueryable()
+            : DbSet.AsQueryable();
 
         return await query.ToListAsync(cancellationToken);
     }
@@ -46,12 +43,9 @@ public class BaseRepository<TEntity, TKey>(TaskerDbContext context, ILogger<Base
     /// <returns>Найденная сущность или null</returns>
     public virtual async Task<TEntity?> GetByIdAsync(TKey id, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        var query = DbSet.AsQueryable();
-        
-        if (!includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            query = query.Where(e => ((ISoftDeleteBaseEntity)e).IsActive);
-        }
+        var query = (includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
+            ? DbSet.IgnoreQueryFilters().AsQueryable()
+            : DbSet.AsQueryable();
 
         return await query.FirstOrDefaultAsync(e => e.Id!.Equals(id), cancellationToken);
     }
@@ -65,12 +59,9 @@ public class BaseRepository<TEntity, TKey>(TaskerDbContext context, ILogger<Base
     /// <returns>Список найденных сущностей</returns>
     public virtual async Task<IReadOnlyList<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        var query = DbSet.AsQueryable();
-        
-        if (!includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            query = query.Where(e => ((ISoftDeleteBaseEntity)e).IsActive);
-        }
+        var query = (includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
+            ? DbSet.IgnoreQueryFilters().AsQueryable()
+            : DbSet.AsQueryable();
 
         return await query.Where(predicate).ToListAsync(cancellationToken);
     }
@@ -84,12 +75,9 @@ public class BaseRepository<TEntity, TKey>(TaskerDbContext context, ILogger<Base
     /// <returns>Найденная сущность или null</returns>
     public virtual async Task<TEntity?> FirstOrDefaultAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        var query = DbSet.AsQueryable();
-        
-        if (!includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            query = query.Where(e => ((ISoftDeleteBaseEntity)e).IsActive);
-        }
+        var query = (includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
+            ? DbSet.IgnoreQueryFilters().AsQueryable()
+            : DbSet.AsQueryable();
 
         return await query.FirstOrDefaultAsync(predicate, cancellationToken);
     }
@@ -232,12 +220,9 @@ public class BaseRepository<TEntity, TKey>(TaskerDbContext context, ILogger<Base
     /// <returns>Количество сущностей</returns>
     public virtual async Task<int> CountAsync(Expression<Func<TEntity, bool>>? predicate = null, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        var query = DbSet.AsQueryable();
-        
-        if (!includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            query = query.Where(e => ((ISoftDeleteBaseEntity)e).IsActive);
-        }
+        var query = (includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
+            ? DbSet.IgnoreQueryFilters().AsQueryable()
+            : DbSet.AsQueryable();
 
         if (predicate != null)
         {
@@ -256,12 +241,9 @@ public class BaseRepository<TEntity, TKey>(TaskerDbContext context, ILogger<Base
     /// <returns>True, если сущность существует, иначе false</returns>
     public virtual async Task<bool> ExistsAsync(Expression<Func<TEntity, bool>> predicate, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        var query = DbSet.AsQueryable();
-        
-        if (!includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
-        {
-            query = query.Where(e => ((ISoftDeleteBaseEntity)e).IsActive);
-        }
+        var query = (includeDeleted && typeof(ISoftDeleteBaseEntity).IsAssignableFrom(typeof(TEntity)))
+            ? DbSet.IgnoreQueryFilters().AsQueryable()
+            : DbSet.AsQueryable();
 
         return await query.AnyAsync(predicate, cancellationToken);
     }

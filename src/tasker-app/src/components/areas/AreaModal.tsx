@@ -8,6 +8,7 @@ import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
 import { EditIcon } from '../icons/EditIcon';
+import { DeleteIcon } from '../icons/DeleteIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import css from '../../styles/modal.module.css';
@@ -32,6 +33,8 @@ export interface AreaModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>;
+  /** Колбэк при удалении записи (мягкое удаление) */
+  onDelete?: (id: string) => Promise<void>;
   area?: AreaResponse | null; // null для создания новой области
   title?: string;
   size?: ModalSize;
@@ -41,6 +44,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   area = null,
   title = 'Область',
   size = 'medium',
@@ -58,6 +62,8 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   /** Подтверждение возврата к просмотру при несохранённых изменениях */
   const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
+  /** Подтверждение удаления записи */
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
   const [isEditMode, setIsEditMode] = useState(true);
 
@@ -157,6 +163,26 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     setIsEditMode(false);
   };
 
+  /** Запрос на удаление — показать подтверждение */
+  const handleDeleteRequest = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  /** Подтверждённое удаление */
+  const handleConfirmDelete = async () => {
+    if (!area?.id || !onDelete) return;
+    setShowDeleteConfirm(false);
+    setIsLoading(true);
+    try {
+      await onDelete(area.id);
+      onClose();
+    } catch (error) {
+      console.error('Ошибка удаления области:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -179,15 +205,28 @@ export const AreaModal: React.FC<AreaModalProps> = ({
               <XIcon />
             </GlassButton>
             {isViewMode ? (
-              <GlassButton
-                variant="primary"
-                size="xs"
-                onClick={() => setIsEditMode(true)}
-                disabled={isLoading}
-              >
-                <EditIcon />
-                Редактировать
-              </GlassButton>
+              <>
+                <GlassButton
+                  variant="primary"
+                  size="xs"
+                  onClick={() => setIsEditMode(true)}
+                  disabled={isLoading}
+                >
+                  <EditIcon />
+                  Редактировать
+                </GlassButton>
+                {area && onDelete && (
+                  <GlassButton
+                    variant="danger"
+                    size="xs"
+                    onClick={handleDeleteRequest}
+                    disabled={isLoading}
+                  >
+                    <DeleteIcon />
+                    Удалить
+                  </GlassButton>
+                )}
+              </>
             ) : (
               <>
                 {area && (
@@ -208,6 +247,17 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 >
                   <SaveIcon />
                 </GlassButton>
+                {area && onDelete && (
+                  <GlassButton
+                    variant="danger"
+                    size="xs"
+                    onClick={handleDeleteRequest}
+                    disabled={isLoading}
+                  >
+                    <DeleteIcon />
+                    Удалить
+                  </GlassButton>
+                )}
               </>
             )}
           </div>
@@ -346,6 +396,17 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
         confirmText="Да"
         cancelText="Нет"
+      />
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="Удалить область"
+        message="Вы уверены, что хотите удалить эту область? Запись будет деактивирована и скрыта из списков."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
       />
     </Modal>
   );

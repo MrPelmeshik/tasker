@@ -9,6 +9,7 @@ import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
 import { EditIcon } from '../icons/EditIcon';
+import { DeleteIcon } from '../icons/DeleteIcon';
 import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
@@ -35,6 +36,8 @@ export interface TaskModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>;
+  /** Колбэк при удалении записи (мягкое удаление) */
+  onDelete?: (id: string) => Promise<void>;
   task?: TaskResponse | null; // null для создания новой задачи
   groups: GroupResponse[];
   title?: string;
@@ -47,6 +50,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   isOpen,
   onClose,
   onSave,
+  onDelete,
   task = null,
   groups,
   title = 'Задача',
@@ -71,6 +75,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   /** Подтверждение возврата к просмотру при несохранённых изменениях */
   const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
+  /** Подтверждение удаления записи */
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
   const [isEditMode, setIsEditMode] = useState(true);
 
@@ -174,6 +180,26 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     setIsEditMode(false);
   };
 
+  /** Запрос на удаление — показать подтверждение */
+  const handleDeleteRequest = () => {
+    setShowDeleteConfirm(true);
+  };
+
+  /** Подтверждённое удаление */
+  const handleConfirmDelete = async () => {
+    if (!task?.id || !onDelete) return;
+    setShowDeleteConfirm(false);
+    setIsLoading(true);
+    try {
+      await onDelete(task.id);
+      onClose();
+    } catch (error) {
+      console.error('Ошибка удаления задачи:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -196,15 +222,28 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               <XIcon />
             </GlassButton>
             {isViewMode ? (
-              <GlassButton
-                variant="primary"
-                size="xs"
-                onClick={() => setIsEditMode(true)}
-                disabled={isLoading}
-              >
-                <EditIcon />
-                Редактировать
-              </GlassButton>
+              <>
+                <GlassButton
+                  variant="primary"
+                  size="xs"
+                  onClick={() => setIsEditMode(true)}
+                  disabled={isLoading}
+                >
+                  <EditIcon />
+                  Редактировать
+                </GlassButton>
+                {task && onDelete && (
+                  <GlassButton
+                    variant="danger"
+                    size="xs"
+                    onClick={handleDeleteRequest}
+                    disabled={isLoading}
+                  >
+                    <DeleteIcon />
+                    Удалить
+                  </GlassButton>
+                )}
+              </>
             ) : (
               <>
                 {task && (
@@ -225,6 +264,17 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 >
                   <SaveIcon />
                 </GlassButton>
+                {task && onDelete && (
+                  <GlassButton
+                    variant="danger"
+                    size="xs"
+                    onClick={handleDeleteRequest}
+                    disabled={isLoading}
+                  >
+                    <DeleteIcon />
+                    Удалить
+                  </GlassButton>
+                )}
               </>
             )}
           </div>
@@ -440,6 +490,17 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
         confirmText="Да"
         cancelText="Нет"
+      />
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setShowDeleteConfirm(false)}
+        title="Удалить задачу"
+        message="Вы уверены, что хотите удалить эту задачу? Запись будет деактивирована и скрыта из списков."
+        confirmText="Удалить"
+        cancelText="Отмена"
+        variant="danger"
       />
     </Modal>
   );

@@ -44,6 +44,7 @@ export const fetchAreas = () => areaApi.getAll();
 export const fetchAreaById = (id: string) => areaApi.getById(id);
 export const createArea = (data: AreaCreateRequest) => areaApi.create(data);
 export const updateArea = (id: string, data: AreaUpdateRequest) => areaApi.update(id, data);
+export const deleteArea = (id: string) => areaApi.delete(id);
 export const fetchActiveAreas = () => areaApi.getActiveAreas();
 export const fetchAreasByCreator = (creatorUserId: string) => areaApi.getAreasByCreator(creatorUserId);
 export const fetchAreaShortCard = () => areaApi.getAreaShortCard();
