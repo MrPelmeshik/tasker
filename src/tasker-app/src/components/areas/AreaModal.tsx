@@ -95,6 +95,8 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [addMemberLoading, setAddMemberLoading] = useState(false);
   /** Подтверждение удаления участника */
   const [removeConfirmMember, setRemoveConfirmMember] = useState<AreaMemberResponse | null>(null);
+  /** ID участника, у которого меняется роль (для индикатора загрузки) */
+  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
   const areaEvents = useEvents('area', area?.id);
 
@@ -120,6 +122,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       setAddMemberLogin('');
       setAddMemberError(null);
       setRemoveConfirmMember(null);
+      setUpdatingMemberId(null);
     }
   }, [isOpen, area]);
 
@@ -246,6 +249,12 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     const login = addMemberLogin.trim();
     if (!login || !area?.id) return;
     setAddMemberError(null);
+
+    if (members.some(m => m.userName === login)) {
+      setAddMemberError('Этот пользователь уже в области. Измените роль в списке участников.');
+      return;
+    }
+
     setAddMemberLoading(true);
     try {
       await areaApi.addMember(area.id, { login, role: addMemberRole });
@@ -257,6 +266,22 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       setAddMemberError(msg);
     } finally {
       setAddMemberLoading(false);
+    }
+  };
+
+  /** Изменить роль участника области */
+  const handleChangeMemberRole = async (member: AreaMemberResponse, newRole: AreaRole) => {
+    if (!area?.id || member.role === 'Owner' || member.role === newRole) return;
+    setUpdatingMemberId(member.userId);
+    setAddMemberError(null);
+    try {
+      await areaApi.addMember(area.id, { userId: member.userId, role: newRole });
+      const updated = await areaApi.getMembers(area.id);
+      setMembers(updated);
+    } catch (err) {
+      setAddMemberError(err instanceof Error ? err.message : 'Ошибка изменения роли');
+    } finally {
+      setUpdatingMemberId(null);
     }
   };
 
@@ -465,13 +490,26 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                       {members.map(m => (
                         <li key={m.userId} className={formCss.readonlyMetaRow} style={{ alignItems: 'center', padding: 'var(--space-8) 0', borderBottom: '1px solid rgb(var(--white) / 0.06)' }}>
                           <span className={formCss.readonlyMetaValue} style={{ flex: 1 }}>{m.userName || '—'}</span>
-                          <span className={formCss.readonlyMetaLabel}>{ROLE_LABELS[m.role] ?? m.role}</span>
+                          {m.role === 'Owner' ? (
+                            <span className={formCss.readonlyMetaLabel}>{ROLE_LABELS[m.role] ?? m.role}</span>
+                          ) : !isViewMode ? (
+                            <GlassSelect
+                              value={m.role}
+                              onChange={(v) => handleChangeMemberRole(m, v as AreaRole)}
+                              options={ADDABLE_ROLES}
+                              disabled={addMemberLoading || updatingMemberId === m.userId}
+                              placeholder="Роль"
+                              size="s"
+                            />
+                          ) : (
+                            <span className={formCss.readonlyMetaLabel}>{ROLE_LABELS[m.role] ?? m.role}</span>
+                          )}
                           {!isViewMode && m.role !== 'Owner' && (
                             <GlassButton
                               variant="subtle"
                               size="xxs"
                               onClick={() => setRemoveConfirmMember(m)}
-                              disabled={addMemberLoading}
+                              disabled={addMemberLoading || updatingMemberId === m.userId}
                             >
                               <DeleteIcon />
                             </GlassButton>

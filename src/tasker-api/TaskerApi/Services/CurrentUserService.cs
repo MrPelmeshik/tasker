@@ -1,5 +1,4 @@
 using System.Security.Claims;
-using Microsoft.Extensions.Configuration;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
@@ -25,7 +24,6 @@ public class CurrentUserService: ICurrentUserService
     private readonly IUserRepository _userRepository;
     private readonly IUserAreaAccessRepository _userAreaAccessRepository;
     private readonly IAreaRepository _areaRepository;
-    private readonly bool _allowAllAccess;
     private UserEntity? _user;
     private IReadOnlyList<Guid>? _accessibleAreas;
     private IReadOnlyList<Guid>? _accessibleGroups;
@@ -34,13 +32,11 @@ public class CurrentUserService: ICurrentUserService
         IHttpContextAccessor httpContextAccessor,
         IUserRepository userRepository,
         IUserAreaAccessRepository userAreaAccessRepository,
-        IAreaRepository areaRepository,
-        IConfiguration configuration)
+        IAreaRepository areaRepository)
     {
         _userRepository = userRepository;
         _userAreaAccessRepository = userAreaAccessRepository;
         _areaRepository = areaRepository;
-        _allowAllAccess = configuration.GetValue<bool>("Testing:AllowAllAccess");
         
         var principal = httpContextAccessor.HttpContext?.User;
         
@@ -55,7 +51,7 @@ public class CurrentUserService: ICurrentUserService
     /// Список доступных областей для пользователя
     /// </summary>
     public IReadOnlyList<Guid> AccessibleAreas =>
-        _accessibleAreas ??= _allowAllAccess ? LoadAllAccessibleAreas() : LoadAccessibleAreas();
+        _accessibleAreas ??= LoadAccessibleAreas();
     
     /// <summary>
     /// Список доступных групп для пользователя
@@ -78,11 +74,6 @@ public class CurrentUserService: ICurrentUserService
     /// <returns>True, если есть доступ</returns>
     public bool HasAccessToArea(Guid areaId)
     {
-        if (IsAuthenticated && _allowAllAccess)
-        {
-            return true;
-        }
-
         return AccessibleAreas.Contains(areaId);
     }
 
@@ -93,11 +84,6 @@ public class CurrentUserService: ICurrentUserService
     /// <returns>True, если есть доступ</returns>
     public bool HasAccessToGroup(Guid groupId)
     {
-        if (IsAuthenticated && _allowAllAccess)
-        {
-            return true;
-        }
-
         return AccessibleGroups.Contains(groupId);
     }
 
@@ -108,11 +94,6 @@ public class CurrentUserService: ICurrentUserService
     /// <returns>True, если есть доступ к любой области</returns>
     public bool HasAccessToArea(IList<Guid> areaIds)
     {
-        if (IsAuthenticated && _allowAllAccess)
-        {
-            return true;
-        }
-
         return areaIds.Any(id => AccessibleAreas.Contains(id));
     }
 
@@ -123,11 +104,6 @@ public class CurrentUserService: ICurrentUserService
     /// <returns>True, если есть доступ к любой группе</returns>
     public bool HasAccessToGroup(IList<Guid> groupIds)
     {
-        if (IsAuthenticated && _allowAllAccess)
-        {
-            return true;
-        }
-
         return groupIds.Any(id => AccessibleGroups.Contains(id));
     }
 
@@ -177,25 +153,6 @@ public class CurrentUserService: ICurrentUserService
             var areas = _areaRepository.GetAllAsync(CancellationToken.None).Result;
             var fromOwner = areas.Where(a => a.OwnerUserId == UserId).Select(a => a.Id);
             return fromAccess.Union(fromOwner).Distinct().ToList();
-        }
-        catch
-        {
-            return new List<Guid>();
-        }
-    }
-
-    /// <summary>
-    /// Получить все идентификаторы областей при временном отключении проверки прав
-    /// </summary>
-    /// <returns>Список идентификаторов всех активных областей</returns>
-    private IReadOnlyList<Guid> LoadAllAccessibleAreas()
-    {
-        if (!IsAuthenticated) return new List<Guid>();
-
-        try
-        {
-            var areas = _areaRepository.GetAllAsync(CancellationToken.None).Result;
-            return areas.Select(area => area.Id).ToList();
         }
         catch
         {
