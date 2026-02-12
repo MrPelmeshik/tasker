@@ -33,16 +33,26 @@ function getEventTypeLabel(eventType: string): string {
   return labels[eventType] ?? eventType;
 }
 
+/** Форматирование ISO-даты YYYY-MM-DD в DD.MM.YYYY */
+function formatDateOnly(isoDate: string): string {
+  if (!isoDate || isoDate.length < 10) return isoDate;
+  const [y, m, d] = isoDate.slice(0, 10).split('-');
+  return `${d}.${m}.${y}`;
+}
+
 export interface ActivityChainProps {
   /** Тип сущности: задача, группа или область */
   entityType: 'task' | 'group' | 'area';
   /** Идентификатор сущности */
   entityId: string;
+  /** Опциональная дата (ISO YYYY-MM-DD): показывать только активности за этот день */
+  date?: string;
 }
 
 export const ActivityChain: React.FC<ActivityChainProps> = ({
   entityType,
   entityId,
+  date,
 }) => {
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(false);
@@ -62,7 +72,11 @@ export const ActivityChain: React.FC<ActivityChainProps> = ({
             : entityType === 'group'
               ? await fetchEventsByGroup(entityId)
               : await fetchEventsByArea(entityId);
-        if (!cancelled) setEvents(data ?? []);
+        if (!cancelled) {
+          const raw = data ?? [];
+          const filtered = date ? raw.filter((ev) => ev.createdAt.slice(0, 10) === date) : raw;
+          setEvents(filtered);
+        }
       } catch (e) {
         if (!cancelled) {
           setError('Ошибка загрузки активностей');
@@ -76,7 +90,7 @@ export const ActivityChain: React.FC<ActivityChainProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [entityType, entityId]);
+  }, [entityType, entityId, date]);
 
   const toggleExpanded = () => setExpanded((prev) => !prev);
 
@@ -88,7 +102,9 @@ export const ActivityChain: React.FC<ActivityChainProps> = ({
         onClick={toggleExpanded}
         aria-expanded={expanded}
       >
-        <span className={activityChainCss.headerTitle}>История активностей</span>
+        <span className={activityChainCss.headerTitle}>
+          {date ? `Активности за ${formatDateOnly(date)}` : 'История активностей'}
+        </span>
         <span className={activityChainCss.chevron} data-expanded={expanded}>
           ▼
         </span>

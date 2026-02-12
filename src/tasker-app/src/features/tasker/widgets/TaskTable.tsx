@@ -153,7 +153,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   }, [loadData, notifyTaskUpdate]);
 
   const handleDayCellClick = useCallback(
-    (task: TaskResponse, _date: string, event: React.MouseEvent) => {
+    (task: TaskResponse, date: string, event: React.MouseEvent) => {
       event.stopPropagation();
       const onOpenTaskDetails = async () => {
         closeActivityModal();
@@ -166,7 +166,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           console.error('Ошибка загрузки задачи:', error);
         }
       };
-      openActivityModal(task, handleActivitySaveForTask(task), onOpenTaskDetails);
+      openActivityModal(task, date, handleActivitySaveForTask(task), onOpenTaskDetails);
     },
     [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleActivitySaveForTask]
   );

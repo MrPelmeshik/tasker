@@ -11,7 +11,7 @@ interface ModalContextType {
   openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size?: ModalSize) => void;
   openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, areaId?: string, size?: ModalSize) => void;
   openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, groupId?: string, areaId?: string, size?: ModalSize) => void;
-  openActivityModal: (task: TaskResponse, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
+  openActivityModal: (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
   closeAreaModal: () => void;
   closeGroupModal: () => void;
   closeTaskModal: () => void;
@@ -65,9 +65,10 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   const [activityModal, setActivityModal] = useState<{
     isOpen: boolean;
     task: TaskResponse | null;
+    date: string | null;
     onSave: ((data: ActivityFormData) => Promise<void>) | null;
     onOpenTaskDetails: (() => void) | null;
-  }>({ isOpen: false, task: null, onSave: null, onOpenTaskDetails: null });
+  }>({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null });
 
   const openAreaModal = (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, size: ModalSize = 'medium') => {
     setAreaModal({ isOpen: true, area, mode, onSave, size });
@@ -81,8 +82,8 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setTaskModal({ isOpen: true, task, mode, groups, onSave, groupId, areaId, size });
   };
 
-  const openActivityModal = (task: TaskResponse, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => {
-    setActivityModal({ isOpen: true, task, onSave, onOpenTaskDetails });
+  const openActivityModal = (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => {
+    setActivityModal({ isOpen: true, task, date, onSave, onOpenTaskDetails });
   };
 
   const closeAreaModal = () => {
@@ -98,7 +99,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   };
 
   const closeActivityModal = () => {
-    setActivityModal({ isOpen: false, task: null, onSave: null, onOpenTaskDetails: null });
+    setActivityModal({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null });
   };
 
   return (
@@ -144,6 +145,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
           onClose={closeActivityModal}
           onSave={activityModal.onSave || (() => Promise.resolve())}
           task={activityModal.task}
+          date={activityModal.date}
           onOpenTaskDetails={activityModal.onOpenTaskDetails || (() => {})}
         />
       )}

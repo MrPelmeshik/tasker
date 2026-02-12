@@ -6,6 +6,7 @@ import { GlassTextarea } from '../ui/GlassTextarea';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { EyeIcon } from '../icons/EyeIcon';
+import { ActivityChain } from './ActivityChain';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import activityModalCss from '../../styles/activity-modal.module.css';
@@ -21,6 +22,8 @@ export interface ActivityModalProps {
   onClose: () => void;
   onSave: (data: ActivityFormData) => Promise<void>;
   task: TaskResponse;
+  /** Дата (ISO YYYY-MM-DD) — при передаче показываются активности за этот день */
+  date?: string | null;
   onOpenTaskDetails: () => void;
 }
 
@@ -29,6 +32,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   onClose,
   onSave,
   task,
+  date,
   onOpenTaskDetails,
 }) => {
   const [title, setTitle] = useState('');
@@ -86,6 +90,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             </GlassButton>
             <span>{task.title}</span>
           </div>
+          {date && (
+            <div style={{ marginBottom: 'var(--space-16)' }}>
+              <ActivityChain entityType="task" entityId={task.id} date={date} />
+            </div>
+          )}
           <div className={formCss.formContainer}>
             <div className={formCss.fieldGroup}>
               <label className={formCss.fieldLabel}>Заголовок *</label>
