@@ -8,6 +8,7 @@ import { GlassSelect } from '../ui';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
+import { ActivityChain } from '../activities';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, GroupResponse } from '../../types';
@@ -323,6 +324,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 )}
               </div>
             )}
+
+            {/* Цепочка активностей (только в режиме редактирования) */}
+            {task && <ActivityChain entityType="task" entityId={task.id} />}
           </div>
         </div>
       </div>

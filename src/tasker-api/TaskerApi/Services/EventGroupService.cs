@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Repositories;
@@ -6,6 +7,7 @@ using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
+using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
 
@@ -83,5 +85,25 @@ public class EventGroupService(
     public Task<EventCreateResponse> AddEventDeleteEntityAsync(IUnitOfWork uow, Guid entityId, CancellationToken cancellationToken)
     {
         throw new NotImplementedException("Используйте AddEventAsync с EventCreateEntityRequest");
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<EventResponse>> GetEventsByGroupIdAsync(Guid groupId, CancellationToken cancellationToken)
+    {
+        var group = await groupRepository.GetByIdAsync(groupId, cancellationToken);
+        if (group == null)
+            throw new InvalidOperationException("Группа не найдена");
+
+        if (!CurrentUser.HasAccessToArea(group.AreaId))
+            throw new UnauthorizedAccessException("Доступ к группе запрещен");
+
+        var eventIds = context.EventToGroups
+            .Where(l => l.GroupId == groupId && l.IsActive)
+            .Select(l => l.EventId);
+        var events = await context.Events
+            .Where(e => eventIds.Contains(e.Id) && e.IsActive)
+            .OrderByDescending(e => e.CreatedAt)
+            .ToListAsync(cancellationToken);
+        return events.Select(e => e.ToEventResponse()).ToList();
     }
 }

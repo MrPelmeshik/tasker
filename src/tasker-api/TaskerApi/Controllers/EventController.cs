@@ -31,4 +31,31 @@ public class EventController(
     {
         return await eventAreaService.AddEventAsync(item, cancellationToken);
     }
+
+    /// <summary>
+    /// Получить список событий по идентификатору задачи
+    /// </summary>
+    [HttpGet("byTask/{taskId:guid}")]
+    public async Task<IReadOnlyList<EventResponse>> GetEventsByTask(Guid taskId, CancellationToken cancellationToken)
+    {
+        return await eventTaskService.GetEventsByTaskIdAsync(taskId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Получить список событий по идентификатору группы
+    /// </summary>
+    [HttpGet("byGroup/{groupId:guid}")]
+    public async Task<IReadOnlyList<EventResponse>> GetEventsByGroup(Guid groupId, CancellationToken cancellationToken)
+    {
+        return await eventGroupService.GetEventsByGroupIdAsync(groupId, cancellationToken);
+    }
+
+    /// <summary>
+    /// Получить список событий по идентификатору области
+    /// </summary>
+    [HttpGet("byArea/{areaId:guid}")]
+    public async Task<IReadOnlyList<EventResponse>> GetEventsByArea(Guid areaId, CancellationToken cancellationToken)
+    {
+        return await eventAreaService.GetEventsByAreaIdAsync(areaId, cancellationToken);
+    }
 }

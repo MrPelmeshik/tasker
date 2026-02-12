@@ -1,0 +1,111 @@
+/* Стили для блока цепочки активностей */
+.chain {
+  margin-top: var(--space-20);
+  border-radius: var(--radius-xs);
+  background: rgb(var(--white) / 0.04);
+  border: var(--border-1) solid rgb(var(--white) / 0.06);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-12) var(--space-16);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-14);
+  font-weight: 500;
+  text-align: left;
+  transition: background 0.15s ease;
+}
+
+.header:hover {
+  background: rgb(var(--white) / 0.06);
+}
+
+.headerTitle {
+  flex: 1;
+}
+
+.chevron {
+  display: inline-block;
+  font-size: var(--font-12);
+  color: rgb(var(--white) / 0.5);
+  transition: transform 0.2s ease;
+}
+
+.chevron[data-expanded='false'] {
+  transform: rotate(-90deg);
+}
+
+.body {
+  padding: 0 var(--space-16) var(--space-16);
+  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
+}
+
+.message,
+.messageError {
+  padding: var(--space-12) 0;
+  font-size: var(--font-13);
+  color: rgb(var(--white) / 0.5);
+}
+
+.messageError {
+  color: var(--color-error, #e57373);
+}
+
+.eventList {
+  list-style: none;
+  margin: 0;
+  padding: var(--space-12) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.eventItem {
+  padding: var(--space-8) var(--space-12);
+  border-radius: var(--radius-xs);
+  background: rgb(var(--white) / 0.03);
+  border: var(--border-1) solid rgb(var(--white) / 0.04);
+}
+
+.eventMain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.eventTitle {
+  font-size: var(--font-13);
+  font-weight: 500;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+}
+
+.eventType {
+  font-size: var(--font-11);
+  padding: var(--space-2) var(--space-6);
+  border-radius: var(--radius-xs);
+  background: rgb(var(--white) / 0.08);
+  color: rgb(var(--white) / 0.7);
+}
+
+.eventDate {
+  font-size: var(--font-12);
+  color: rgb(var(--white) / 0.5);
+}
+
+.eventDesc {
+  margin-top: var(--space-6);
+  font-size: var(--font-12);
+  color: rgb(var(--white) / 0.6);
+  line-height: 1.4;
+}

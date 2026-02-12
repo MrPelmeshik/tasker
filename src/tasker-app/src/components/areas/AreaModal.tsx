@@ -7,6 +7,7 @@ import { GlassTextarea } from '../ui/GlassTextarea';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
+import { ActivityChain } from '../activities';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest } from '../../types';
@@ -242,6 +243,9 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 )}
               </div>
             )}
+
+            {/* Цепочка активностей (только в режиме редактирования) */}
+            {area && <ActivityChain entityType="area" entityId={area.id} />}
           </div>
         </div>
       </div>

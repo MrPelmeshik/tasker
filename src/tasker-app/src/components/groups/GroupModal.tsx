@@ -8,6 +8,7 @@ import { GlassSelect } from '../ui';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
+import { ActivityChain } from '../activities';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaResponse } from '../../types';
@@ -285,6 +286,9 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 )}
               </div>
             )}
+
+            {/* Цепочка активностей (только в режиме редактирования) */}
+            {group && <ActivityChain entityType="group" entityId={group.id} />}
           </div>
         </div>
       </div>

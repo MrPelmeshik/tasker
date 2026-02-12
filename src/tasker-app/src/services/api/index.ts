@@ -57,7 +57,13 @@ export {
   getMondayIso
 } from './tasks';
 
-export { createEventForTask, EventTypeActivity } from './events';
+export {
+  createEventForTask,
+  EventTypeActivity,
+  fetchEventsByTask,
+  fetchEventsByGroup,
+  fetchEventsByArea,
+} from './events';
 
 // Экспорт типов
 export type {

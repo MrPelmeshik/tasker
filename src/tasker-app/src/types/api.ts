@@ -152,6 +152,18 @@ export interface EventCreateResponse {
   id: string;
 }
 
+export interface EventResponse {
+  id: string;
+  title: string;
+  description?: string;
+  eventType: string;
+  creatorUserId: string;
+  createdAt: string;
+  updatedAt: string;
+  isActive: boolean;
+  deactivatedAt?: string;
+}
+
 // Общие типы для CRUD операций
 export interface BaseEntity {
   id: string;

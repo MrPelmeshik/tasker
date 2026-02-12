@@ -8,7 +8,7 @@ import { SaveIcon } from '../icons/SaveIcon';
 import { EyeIcon } from '../icons/EyeIcon';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
-import taskTableCss from '../../styles/task-table.module.css';
+import activityModalCss from '../../styles/activity-modal.module.css';
 import type { TaskResponse } from '../../types/api';
 
 export interface ActivityFormData {
@@ -56,7 +56,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="small">
+    <Modal isOpen={isOpen} onClose={onClose} size="medium">
       <div className={css.modalContent}>
         <div className={css.modalHeader}>
           <h3 className={css.modalTitle}>Добавить активность</h3>
@@ -75,12 +75,12 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           </div>
         </div>
         <div className={css.modalBody}>
-          <div className={taskTableCss.taskCell} style={{ marginBottom: 'var(--space-16)' }}>
+          <div className={activityModalCss.taskCard} style={{ marginBottom: 'var(--space-16)' }}>
             <GlassButton
               size="xxs"
               variant="subtle"
               onClick={onOpenTaskDetails}
-              className={taskTableCss.taskButton}
+              className={activityModalCss.taskCardButton}
             >
               <EyeIcon />
             </GlassButton>
@@ -108,6 +108,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   placeholder="Детали (опционально)"
                   disabled={isLoading}
                   rows={3}
+                  fullWidth
                 />
               </div>
             </div>
