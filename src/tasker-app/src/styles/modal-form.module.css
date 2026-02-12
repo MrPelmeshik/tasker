@@ -86,3 +86,49 @@
   color: var(--color-text);
   font-weight: 500;
 }
+
+/**
+ * Read-only отображение значения поля в режиме просмотра.
+ * Размеры совпадают с GlassInput (size m) для стабильного layout.
+ */
+.fieldValueReadonly {
+  width: 100%;
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-m);
+  font-size: var(--font-15);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: rgb(var(--white) / 0.04);
+  border: var(--border-1) solid rgb(var(--white) / 0.08);
+  min-height: var(--size-40);
+  box-sizing: border-box;
+}
+
+.fieldValueReadonly:empty::before {
+  content: '—';
+  color: rgb(var(--white) / 0.4);
+}
+
+/**
+ * Многострочный вариант для описания.
+ * min-height соответствует textarea rows={4}.
+ */
+.fieldValueReadonlyMultiline {
+  width: 100%;
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-m);
+  font-size: var(--font-15);
+  line-height: 1.5;
+  color: var(--color-text);
+  background: rgb(var(--white) / 0.04);
+  border: var(--border-1) solid rgb(var(--white) / 0.08);
+  min-height: 6.5em;
+  white-space: pre-wrap;
+  word-break: break-word;
+  box-sizing: border-box;
+}
+
+.fieldValueReadonlyMultiline:empty::before {
+  content: '—';
+  color: rgb(var(--white) / 0.4);
+}

@@ -7,6 +7,7 @@ import { GlassTextarea } from '../ui/GlassTextarea';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
+import { EditIcon } from '../icons/EditIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import css from '../../styles/modal.module.css';
@@ -55,10 +56,17 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  /** Подтверждение возврата к просмотру при несохранённых изменениях */
+  const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
+  /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
+  const [isEditMode, setIsEditMode] = useState(true);
 
   const areaEvents = useEvents('area', area?.id);
 
-  // Инициализация данных при открытии модального окна
+  /** Режим просмотра: только для существующей области и когда не в edit mode */
+  const isViewMode = Boolean(area && !isEditMode);
+
+  // Инициализация данных и режима при открытии модального окна
   useEffect(() => {
     if (isOpen) {
       const initialData = area ? {
@@ -72,6 +80,8 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       setFormData(initialData);
       setOriginalData(initialData);
       setFieldChanges({});
+      /** Создание — сразу edit; существующая область — по умолчанию просмотр */
+      setIsEditMode(!area);
     }
   }, [isOpen, area]);
 
@@ -131,6 +141,22 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     setShowConfirmModal(false);
   };
 
+  /** Возврат к режиму просмотра (только для существующей области) */
+  const handleReturnToView = () => {
+    if (hasUnsavedChanges) {
+      setShowReturnToViewConfirm(true);
+    } else {
+      setIsEditMode(false);
+    }
+  };
+
+  const handleConfirmReturnToView = () => {
+    setShowReturnToViewConfirm(false);
+    setFormData(originalData);
+    setFieldChanges({});
+    setIsEditMode(false);
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -141,7 +167,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       <div className={css.modalContent}>
         <div className={css.modalHeader}>
           <h3 className={css.modalTitle}>
-            {area ? 'Редактирование области' : 'Создание области'}
+            {isViewMode ? 'Область' : area ? 'Редактирование области' : 'Создание области'}
           </h3>
           <div className={css.modalActions}>
             <GlassButton
@@ -152,14 +178,38 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             >
               <XIcon />
             </GlassButton>
-            <GlassButton
-              variant="primary"
-              size="xs"
-              onClick={handleSave}
-              disabled={!hasChanges || !formData.title.trim() || isLoading}
-            >
-              <SaveIcon />
-            </GlassButton>
+            {isViewMode ? (
+              <GlassButton
+                variant="primary"
+                size="xs"
+                onClick={() => setIsEditMode(true)}
+                disabled={isLoading}
+              >
+                <EditIcon />
+                Редактировать
+              </GlassButton>
+            ) : (
+              <>
+                {area && (
+                  <GlassButton
+                    variant="subtle"
+                    size="xs"
+                    onClick={handleReturnToView}
+                    disabled={isLoading}
+                  >
+                    Отмена
+                  </GlassButton>
+                )}
+                <GlassButton
+                  variant="primary"
+                  size="xs"
+                  onClick={handleSave}
+                  disabled={!hasChanges || !formData.title.trim() || isLoading}
+                >
+                  <SaveIcon />
+                </GlassButton>
+              </>
+            )}
           </div>
         </div>
         
@@ -171,7 +221,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Название области *
                 </label>
-                {fieldChanges.title && (
+                {!isViewMode && fieldChanges.title && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -183,13 +233,19 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassInput
-                  value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
-                  placeholder="Введите название области"
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonly}>
+                    {formData.title || '—'}
+                  </div>
+                ) : (
+                  <GlassInput
+                    value={formData.title}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
+                    placeholder="Введите название области"
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -199,7 +255,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Описание
                 </label>
-                {fieldChanges.description && (
+                {!isViewMode && fieldChanges.description && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -211,14 +267,20 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassTextarea
-                  value={formData.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
-                  placeholder="Введите описание области"
-                  rows={4}
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonlyMultiline}>
+                    {formData.description || '—'}
+                  </div>
+                ) : (
+                  <GlassTextarea
+                    value={formData.description}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
+                    placeholder="Введите описание области"
+                    rows={4}
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -274,6 +336,16 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         cancelText="Отмена"
         discardText="Не сохранять"
         showDiscard={true}
+      />
+      <ConfirmModal
+        isOpen={showReturnToViewConfirm}
+        onClose={() => setShowReturnToViewConfirm(false)}
+        onConfirm={handleConfirmReturnToView}
+        onCancel={() => setShowReturnToViewConfirm(false)}
+        title="Вернуться к просмотру"
+        message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
+        confirmText="Да"
+        cancelText="Нет"
       />
     </Modal>
   );

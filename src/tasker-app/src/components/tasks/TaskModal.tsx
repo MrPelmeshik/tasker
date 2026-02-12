@@ -8,6 +8,8 @@ import { GlassSelect } from '../ui';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
+import { EditIcon } from '../icons/EditIcon';
+import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import css from '../../styles/modal.module.css';
@@ -67,10 +69,17 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  /** Подтверждение возврата к просмотру при несохранённых изменениях */
+  const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
+  /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
+  const [isEditMode, setIsEditMode] = useState(true);
 
   const taskEvents = useEvents('task', task?.id);
 
-  // Инициализация данных при открытии модального окна
+  /** Режим просмотра: только для существующей задачи и когда не в edit mode */
+  const isViewMode = Boolean(task && !isEditMode);
+
+  // Инициализация данных и режима при открытии модального окна
   useEffect(() => {
     if (isOpen) {
       const initialData = task ? {
@@ -88,6 +97,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       setFormData(initialData);
       setOriginalData(initialData);
       setFieldChanges({});
+      /** Создание — сразу edit; существующая задача — по умолчанию просмотр */
+      setIsEditMode(!task);
     }
   }, [isOpen, task, groups, defaultGroupId]);
 
@@ -147,6 +158,22 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     setShowConfirmModal(false);
   };
 
+  /** Возврат к режиму просмотра (только для существующей задачи) */
+  const handleReturnToView = () => {
+    if (hasUnsavedChanges) {
+      setShowReturnToViewConfirm(true);
+    } else {
+      setIsEditMode(false);
+    }
+  };
+
+  const handleConfirmReturnToView = () => {
+    setShowReturnToViewConfirm(false);
+    setFormData(originalData);
+    setFieldChanges({});
+    setIsEditMode(false);
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -157,7 +184,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
       <div className={css.modalContent}>
         <div className={css.modalHeader}>
           <h3 className={css.modalTitle}>
-            {task ? 'Редактирование задачи' : 'Создание задачи'}
+            {isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи'}
           </h3>
           <div className={css.modalActions}>
             <GlassButton
@@ -168,14 +195,38 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             >
               <XIcon />
             </GlassButton>
-            <GlassButton
-              variant="primary"
-              size="xs"
-              onClick={handleSave}
-              disabled={!hasChanges || !formData.title.trim() || !formData.groupId || isLoading}
-            >
-              <SaveIcon />
-            </GlassButton>
+            {isViewMode ? (
+              <GlassButton
+                variant="primary"
+                size="xs"
+                onClick={() => setIsEditMode(true)}
+                disabled={isLoading}
+              >
+                <EditIcon />
+                Редактировать
+              </GlassButton>
+            ) : (
+              <>
+                {task && (
+                  <GlassButton
+                    variant="subtle"
+                    size="xs"
+                    onClick={handleReturnToView}
+                    disabled={isLoading}
+                  >
+                    Отмена
+                  </GlassButton>
+                )}
+                <GlassButton
+                  variant="primary"
+                  size="xs"
+                  onClick={handleSave}
+                  disabled={!hasChanges || !formData.title.trim() || !formData.groupId || isLoading}
+                >
+                  <SaveIcon />
+                </GlassButton>
+              </>
+            )}
           </div>
         </div>
         
@@ -187,7 +238,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Группа *
                 </label>
-                {fieldChanges.groupId && (
+                {!isViewMode && fieldChanges.groupId && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -199,19 +250,25 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassSelect
-                  value={formData.groupId}
-                  onChange={(value) => handleFieldChange('groupId', value)}
-                  options={[
-                    { value: '', label: 'Выберите группу' },
-                    ...groups.map((group) => ({
-                      value: group.id,
-                      label: group.title
-                    }))
-                  ]}
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonly}>
+                    {groups.find(g => g.id === formData.groupId)?.title ?? '—'}
+                  </div>
+                ) : (
+                  <GlassSelect
+                    value={formData.groupId}
+                    onChange={(value) => handleFieldChange('groupId', value)}
+                    options={[
+                      { value: '', label: 'Выберите группу' },
+                      ...groups.map((group) => ({
+                        value: group.id,
+                        label: group.title
+                      }))
+                    ]}
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -221,7 +278,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Название задачи *
                 </label>
-                {fieldChanges.title && (
+                {!isViewMode && fieldChanges.title && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -233,13 +290,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassInput
-                  value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
-                  placeholder="Введите название задачи"
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonly}>
+                    {formData.title || '—'}
+                  </div>
+                ) : (
+                  <GlassInput
+                    value={formData.title}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
+                    placeholder="Введите название задачи"
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -249,7 +312,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Статус
                 </label>
-                {fieldChanges.status && (
+                {!isViewMode && fieldChanges.status && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -261,16 +324,22 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassSelect
-                  value={formData.status?.toString() || TaskStatus.New.toString()}
-                  onChange={(value) => handleFieldChange('status', parseInt(value))}
-                  options={getTaskStatusOptions().map(option => ({
-                    value: option.value.toString(),
-                    label: option.label
-                  }))}
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonly} style={{ display: 'flex', alignItems: 'center' }}>
+                    <TaskStatusBadge status={(formData.status ?? TaskStatus.New) as TaskStatus} size="s" />
+                  </div>
+                ) : (
+                  <GlassSelect
+                    value={formData.status?.toString() || TaskStatus.New.toString()}
+                    onChange={(value) => handleFieldChange('status', parseInt(value))}
+                    options={getTaskStatusOptions().map(option => ({
+                      value: option.value.toString(),
+                      label: option.label
+                    }))}
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -280,7 +349,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Описание
                 </label>
-                {fieldChanges.description && (
+                {!isViewMode && fieldChanges.description && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -292,14 +361,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassTextarea
-                  value={formData.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
-                  placeholder="Введите описание задачи"
-                  rows={4}
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonlyMultiline}>
+                    {formData.description || '—'}
+                  </div>
+                ) : (
+                  <GlassTextarea
+                    value={formData.description}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
+                    placeholder="Введите описание задачи"
+                    rows={4}
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -355,6 +430,16 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         cancelText="Отмена"
         discardText="Не сохранять"
         showDiscard={true}
+      />
+      <ConfirmModal
+        isOpen={showReturnToViewConfirm}
+        onClose={() => setShowReturnToViewConfirm(false)}
+        onConfirm={handleConfirmReturnToView}
+        onCancel={() => setShowReturnToViewConfirm(false)}
+        title="Вернуться к просмотру"
+        message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
+        confirmText="Да"
+        cancelText="Нет"
       />
     </Modal>
   );

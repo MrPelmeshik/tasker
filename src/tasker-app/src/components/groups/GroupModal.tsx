@@ -8,6 +8,7 @@ import { GlassSelect } from '../ui';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
+import { EditIcon } from '../icons/EditIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import css from '../../styles/modal.module.css';
@@ -62,10 +63,17 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  /** Подтверждение возврата к просмотру при несохранённых изменениях */
+  const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
+  /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
+  const [isEditMode, setIsEditMode] = useState(true);
 
   const groupEvents = useEvents('group', group?.id);
 
-  // Инициализация данных при открытии модального окна
+  /** Режим просмотра: только для существующей группы и когда не в edit mode */
+  const isViewMode = Boolean(group && !isEditMode);
+
+  // Инициализация данных и режима при открытии модального окна
   useEffect(() => {
     if (isOpen) {
       const initialData = group ? {
@@ -81,6 +89,8 @@ export const GroupModal: React.FC<GroupModalProps> = ({
       setFormData(initialData);
       setOriginalData(initialData);
       setFieldChanges({});
+      /** Создание — сразу edit; существующая группа — по умолчанию просмотр */
+      setIsEditMode(!group);
     }
   }, [isOpen, group, areas, defaultAreaId]);
 
@@ -140,6 +150,22 @@ export const GroupModal: React.FC<GroupModalProps> = ({
     setShowConfirmModal(false);
   };
 
+  /** Возврат к режиму просмотра (только для существующей группы) */
+  const handleReturnToView = () => {
+    if (hasUnsavedChanges) {
+      setShowReturnToViewConfirm(true);
+    } else {
+      setIsEditMode(false);
+    }
+  };
+
+  const handleConfirmReturnToView = () => {
+    setShowReturnToViewConfirm(false);
+    setFormData(originalData);
+    setFieldChanges({});
+    setIsEditMode(false);
+  };
+
   return (
     <Modal 
       isOpen={isOpen} 
@@ -150,7 +176,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
       <div className={css.modalContent}>
         <div className={css.modalHeader}>
           <h3 className={css.modalTitle}>
-            {group ? 'Редактирование группы' : 'Создание группы'}
+            {isViewMode ? 'Группа' : group ? 'Редактирование группы' : 'Создание группы'}
           </h3>
           <div className={css.modalActions}>
             <GlassButton
@@ -161,14 +187,38 @@ export const GroupModal: React.FC<GroupModalProps> = ({
             >
               <XIcon />
             </GlassButton>
-            <GlassButton
-              variant="primary"
-              size="xs"
-              onClick={handleSave}
-              disabled={!hasChanges || !formData.title.trim() || !formData.areaId || isLoading}
-            >
-              <SaveIcon />
-            </GlassButton>
+            {isViewMode ? (
+              <GlassButton
+                variant="primary"
+                size="xs"
+                onClick={() => setIsEditMode(true)}
+                disabled={isLoading}
+              >
+                <EditIcon />
+                Редактировать
+              </GlassButton>
+            ) : (
+              <>
+                {group && (
+                  <GlassButton
+                    variant="subtle"
+                    size="xs"
+                    onClick={handleReturnToView}
+                    disabled={isLoading}
+                  >
+                    Отмена
+                  </GlassButton>
+                )}
+                <GlassButton
+                  variant="primary"
+                  size="xs"
+                  onClick={handleSave}
+                  disabled={!hasChanges || !formData.title.trim() || !formData.areaId || isLoading}
+                >
+                  <SaveIcon />
+                </GlassButton>
+              </>
+            )}
           </div>
         </div>
         
@@ -180,7 +230,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Область *
                 </label>
-                {fieldChanges.areaId && (
+                {!isViewMode && fieldChanges.areaId && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -192,19 +242,25 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassSelect
-                  value={formData.areaId}
-                  onChange={(value) => handleFieldChange('areaId', value)}
-                  options={[
-                    { value: '', label: 'Выберите область' },
-                    ...areas.map((area) => ({
-                      value: area.id,
-                      label: area.title
-                    }))
-                  ]}
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonly}>
+                    {areas.find(a => a.id === formData.areaId)?.title ?? '—'}
+                  </div>
+                ) : (
+                  <GlassSelect
+                    value={formData.areaId}
+                    onChange={(value) => handleFieldChange('areaId', value)}
+                    options={[
+                      { value: '', label: 'Выберите область' },
+                      ...areas.map((area) => ({
+                        value: area.id,
+                        label: area.title
+                      }))
+                    ]}
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -214,7 +270,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Название группы *
                 </label>
-                {fieldChanges.title && (
+                {!isViewMode && fieldChanges.title && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -226,13 +282,19 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassInput
-                  value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
-                  placeholder="Введите название группы"
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonly}>
+                    {formData.title || '—'}
+                  </div>
+                ) : (
+                  <GlassInput
+                    value={formData.title}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
+                    placeholder="Введите название группы"
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -242,7 +304,7 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 <label className={formCss.fieldLabel}>
                   Описание
                 </label>
-                {fieldChanges.description && (
+                {!isViewMode && fieldChanges.description && (
                   <GlassButton
                     variant="subtle"
                     size="xxs"
@@ -254,14 +316,20 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 )}
               </div>
               <div className={formCss.fieldContainer}>
-                <GlassTextarea
-                  value={formData.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
-                  placeholder="Введите описание группы"
-                  rows={4}
-                  disabled={isLoading}
-                  fullWidth
-                />
+                {isViewMode ? (
+                  <div className={formCss.fieldValueReadonlyMultiline}>
+                    {formData.description || '—'}
+                  </div>
+                ) : (
+                  <GlassTextarea
+                    value={formData.description}
+                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
+                    placeholder="Введите описание группы"
+                    rows={4}
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                )}
               </div>
             </div>
 
@@ -317,6 +385,16 @@ export const GroupModal: React.FC<GroupModalProps> = ({
         cancelText="Отмена"
         discardText="Не сохранять"
         showDiscard={true}
+      />
+      <ConfirmModal
+        isOpen={showReturnToViewConfirm}
+        onClose={() => setShowReturnToViewConfirm(false)}
+        onConfirm={handleConfirmReturnToView}
+        onCancel={() => setShowReturnToViewConfirm(false)}
+        title="Вернуться к просмотру"
+        message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
+        confirmText="Да"
+        cancelText="Нет"
       />
     </Modal>
   );
