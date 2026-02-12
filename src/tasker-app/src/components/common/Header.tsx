@@ -2,6 +2,7 @@ import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import styles from '../../styles/header.module.css';
 import { GlassButton } from '../ui/GlassButton';
+import { Tooltip } from '../ui/Tooltip';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { SunIcon, MoonIcon } from '../icons';
@@ -38,15 +39,17 @@ export const Header: React.FC = () => {
         </nav>
       </div>
       <div className={styles.right}>
-        <button
-          className={styles.themeToggle}
-          onClick={toggleTheme}
-          title={theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'}
-          aria-label="Переключить тему"
-        >
-          {theme === 'dark' ? <SunIcon className={styles.themeIcon} /> : <MoonIcon className={styles.themeIcon} />}
-        </button>
-        <div className={styles.user} title={userName ?? 'Гость'}>
+        <Tooltip content={theme === 'dark' ? 'Переключить на светлую тему' : 'Переключить на тёмную тему'} placement="bottom" size="s">
+          <button
+            className={styles.themeToggle}
+            onClick={toggleTheme}
+            aria-label="Переключить тему"
+          >
+            {theme === 'dark' ? <SunIcon className={styles.themeIcon} /> : <MoonIcon className={styles.themeIcon} />}
+          </button>
+        </Tooltip>
+        <Tooltip content={userName ?? 'Гость'} placement="bottom" size="s">
+        <div className={styles.user}>
           <div className={styles.avatar} aria-hidden />
           <span className={styles.userName}>{userName ?? 'Гость'}</span>
           {isAuth && (
@@ -58,6 +61,7 @@ export const Header: React.FC = () => {
             </GlassButton>
           )}
         </div>
+        </Tooltip>
       </div>
     </header>
   );

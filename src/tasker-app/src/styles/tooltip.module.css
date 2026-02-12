@@ -5,6 +5,12 @@
   justify-content: center;
 }
 
+.triggerFill {
+  display: block;
+  width: 100%;
+  min-height: 1.5em;
+}
+
 .tooltip {
   position: absolute;
   border-radius: var(--radius-s);
@@ -18,44 +24,14 @@
   border: var(--border-1) solid rgb(var(--white) / 0.10);
   font-size: var(--font-12);
   line-height: 1.35;
-  z-index: 10;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 160ms ease, visibility 160ms ease;
+  z-index: 9999;
   pointer-events: none;
 }
 
-/* Placement variants */
-.top {
-  left: 50%;
-  bottom: calc(100% + var(--space-8));
-  transform: translateX(-50%);
-}
-
-.bottom {
-  left: 50%;
-  top: calc(100% + var(--space-8));
-  transform: translateX(-50%);
-}
-
-.left {
-  right: calc(100% + var(--space-8));
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-.right {
-  left: calc(100% + var(--space-8));
-  top: 50%;
-  transform: translateY(-50%);
-}
-
-/* Show on hover/focus of the trigger */
-.trigger:hover .tooltip,
-.trigger:focus-within .tooltip,
-.trigger:focus-visible .tooltip {
-  opacity: 1;
-  visibility: visible;
+/* Portal-режим: рендер в body, позиция через inline style */
+.tooltipPortal {
+  position: fixed;
+  transition: opacity 160ms ease, visibility 160ms ease;
 }
 
 @media (prefers-reduced-motion: reduce) {

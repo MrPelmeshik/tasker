@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import type { EventResponse, EventMessage } from '../../types/api';
+import { Tooltip } from '../ui/Tooltip';
 import activityChainCss from '../../styles/activity-chain.module.css';
 
 /** Форматирование ISO-даты в формат дд.мм.гг чч:мм */
@@ -173,18 +174,18 @@ export const ActivityList: React.FC<ActivityListProps> = ({
               {typesPresentInData.map((eventType) => {
                 const isHidden = hiddenTypes.has(eventType);
                 return (
-                  <button
-                    key={eventType}
-                    type="button"
-                    className={`${activityChainCss.typeChip} ${isHidden ? activityChainCss.typeChipHidden : ''}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      toggleTypeVisibility(eventType);
-                    }}
-                    title={isHidden ? 'Показать' : 'Скрыть'}
-                  >
-                    {getEventTypeLabel(eventType)}
-                  </button>
+                  <Tooltip key={eventType} content={isHidden ? 'Показать' : 'Скрыть'} placement="bottom" size="s">
+                    <button
+                      type="button"
+                      className={`${activityChainCss.typeChip} ${isHidden ? activityChainCss.typeChipHidden : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleTypeVisibility(eventType);
+                      }}
+                    >
+                      {getEventTypeLabel(eventType)}
+                    </button>
+                  </Tooltip>
                 );
               })}
             </div>

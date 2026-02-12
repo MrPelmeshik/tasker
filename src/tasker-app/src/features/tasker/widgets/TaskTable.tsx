@@ -225,7 +225,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         <table className={css.table}>
           <thead className={css.thead}>
             <tr>
-              <th className={`${css.th} ${css.colCarry}`} title="Количество недель переноса"></th>
+              <th className={`${css.th} ${css.colCarry}`} />
               {daysHeader.map((d, i) => (
                 <th key={i} className={`${css.th} ${css.colDay}`}>
                   <Tooltip content={`${d.weekdayLong}, ${d.date}`} placement="bottom" size="s">
@@ -233,7 +233,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                   </Tooltip>
                 </th>
               ))}
-              <th className={`${css.th} ${css.colFuture}`} title="Активности после этой недели"></th>
+              <th className={`${css.th} ${css.colFuture}`} />
               <th className={`${css.th} ${css.colTask}`}>Задача</th>
             </tr>
           </thead>
@@ -248,9 +248,11 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
               )}
               {!loading && rows.map(row => (
                 <tr key={row.taskId}>
-                  <td className={`${css.td} ${css.colCarry}`} title={row.carryWeeks > 0 ? 'Есть активности в прошлых неделях' : 'Нет активностей в прошлых неделях'}>
+                  <td className={`${css.td} ${css.colCarry}`}>
                     {row.carryWeeks > 0 ? (
-                      <GlassTag variant="subtle" size="xs">←</GlassTag>
+                      <Tooltip content="Есть активности в прошлых неделях" placement="bottom" size="s">
+                        <GlassTag variant="subtle" size="xs">←</GlassTag>
+                      </Tooltip>
                     ) : null}
                   </td>
                   {row.days.map(day => (
@@ -260,14 +262,20 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       onClick={(e) => handleDayCellClick(row.task, day.date, e)}
                     >
                       {day.count > 0 ? (
-                        <span title={String(day.count)} className={`${css.heatCell} ${intensityClass(day.count)}`} />
+                        <Tooltip content={String(day.count)} placement="bottom" size="s">
+                          <span className={`${css.heatCell} ${intensityClass(day.count)}`} />
+                        </Tooltip>
                       ) : (
                         <span className={css.heatCellPlaceholder} />
                       )}
                     </td>
                   ))}
-                  <td className={`${css.td} ${css.colFuture}`} title={row.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>
-                    {row.hasFutureActivities ? <GlassTag variant="subtle" size="xs">→</GlassTag> : null}
+                  <td className={`${css.td} ${css.colFuture}`}>
+                    {row.hasFutureActivities ? (
+                      <Tooltip content="Есть активности в будущих неделях" placement="bottom" size="s">
+                        <GlassTag variant="subtle" size="xs">→</GlassTag>
+                      </Tooltip>
+                    ) : null}
                   </td>
                   <td className={`${css.td} ${css.colTask}`}>
                     <div className={css.taskCell}>

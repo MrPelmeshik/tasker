@@ -27,7 +27,6 @@ export const TaskStatusBadge: React.FC<TaskStatusBadgeProps> = ({
       className={badgeClass}
       data-status={String(status)}
       style={{ '--status-color': color } as React.CSSProperties}
-      title={text}
     >
       {text}
     </span>
