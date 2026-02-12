@@ -11,6 +11,7 @@ import {
   fetchTaskById,
   fetchGroupById,
   fetchGroupsByArea,
+  fetchAreaShortCard,
   updateTask,
   deleteTask,
   createEventForTask,
@@ -183,8 +184,12 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         try {
           const group = await fetchGroupById(task.groupId);
           if (!group) return;
-          const groupsForModal = await fetchGroupsByArea(group.areaId);
-          openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete);
+          const [groupsForModal, areasData] = await Promise.all([
+            fetchGroupsByArea(group.areaId),
+            fetchAreaShortCard(),
+          ]);
+          const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
+          openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
         } catch (error) {
           console.error('Ошибка загрузки задачи:', error);
         }
@@ -201,8 +206,12 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       if (!task) return;
       const group = await fetchGroupById(task.groupId);
       if (!group) return;
-      const groupsForModal = await fetchGroupsByArea(group.areaId);
-      openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete);
+      const [groupsForModal, areasData] = await Promise.all([
+        fetchGroupsByArea(group.areaId),
+        fetchAreaShortCard(),
+      ]);
+      const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
+      openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
     }

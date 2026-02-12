@@ -204,7 +204,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         }))
       : [];
       
-    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), undefined, groupId, targetAreaId);
+    const areasForTaskModal = areas.map(a => ({ id: a.id, title: a.title }));
+    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), undefined, groupId, targetAreaId, areasForTaskModal);
   };
 
   // Обработчики для групп
@@ -258,7 +259,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
             }))
           : [];
           
-        openTaskModal(task, 'edit', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), handleTaskDelete);
+        const areasForTaskModal = areas.map(a => ({ id: a.id, title: a.title }));
+        openTaskModal(task, 'edit', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), handleTaskDelete, undefined, undefined, areasForTaskModal);
       }
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
@@ -446,7 +448,6 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         // Получаем текущую задачу для определения старой группы
         const currentTask = await fetchTaskById(taskId);
         const oldGroupId = currentTask?.groupId;
-        
         await updateTask(taskId, data as TaskUpdateRequest);
         
         // Перезагружаем задачи для новой группы

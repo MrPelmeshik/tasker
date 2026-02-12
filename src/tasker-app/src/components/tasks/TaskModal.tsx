@@ -18,6 +18,7 @@ import formCss from '../../styles/modal-form.module.css';
 import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, GroupResponse } from '../../types';
 import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
+import { fetchGroups } from '../../services/api';
 
 /// Форматирование ISO-даты в формат дд.мм.гг чч:мм
 function formatDateTime(iso: string): string {
@@ -43,7 +44,9 @@ export interface TaskModalProps {
   title?: string;
   size?: ModalSize;
   defaultGroupId?: string; // ID группы по умолчанию для создания
-  defaultAreaId?: string; // ID области по умолчанию для создания (для будущего расширения)
+  defaultAreaId?: string; // ID области по умолчанию для создания
+  /** Список областей для селектора (при наличии — показывается выбор области) */
+  areas?: Array<{ id: string; title: string }>;
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({
@@ -57,6 +60,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   size = 'medium',
   defaultGroupId,
   defaultAreaId,
+  areas,
 }) => {
   const [formData, setFormData] = useState<TaskCreateRequest>({
     title: '',
@@ -85,6 +89,35 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   /** Режим просмотра: только для существующей задачи и когда не в edit mode */
   const isViewMode = Boolean(task && !isEditMode);
 
+  /** Все группы (загружаются при наличии areas для селектора области) */
+  const [allGroups, setAllGroups] = useState<GroupResponse[]>([]);
+  /** Выбранная область (при areas) — управляет фильтром групп */
+  const [selectedAreaId, setSelectedAreaId] = useState<string>('');
+
+  /** Загрузка всех групп при открытии модалки с areas */
+  useEffect(() => {
+    if (isOpen && areas && areas.length > 0) {
+      fetchGroups()
+        .then(setAllGroups)
+        .catch((err) => {
+          console.error('Ошибка загрузки групп:', err);
+          setAllGroups([]);
+        });
+    }
+  }, [isOpen, areas]);
+
+  /** Синхронизация selectedAreaId с группой (когда группа задана) */
+  useEffect(() => {
+    if (isOpen && areas && areas.length > 0 && allGroups.length > 0 && formData.groupId) {
+      const areaOfGroup = allGroups.find(g => g.id === formData.groupId)?.areaId;
+      if (areaOfGroup) {
+        setSelectedAreaId(areaOfGroup);
+      }
+    } else if (isOpen && areas && areas.length > 0 && allGroups.length > 0 && !formData.groupId && defaultAreaId) {
+      setSelectedAreaId(defaultAreaId);
+    }
+  }, [isOpen, areas, allGroups, formData.groupId, defaultAreaId]);
+
   // Инициализация данных и режима при открытии модального окна
   useEffect(() => {
     if (isOpen) {
@@ -108,8 +141,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     }
   }, [isOpen, task, groups, defaultGroupId]);
 
-  // Проверка изменений в полях
-  const hasChanges = Object.values(fieldChanges).some(hasChange => hasChange);
+  /** Область по умолчанию (для исходной группы) */
+  const originalAreaId = areas && allGroups.length > 0
+    ? (allGroups.find(g => g.id === originalData.groupId)?.areaId ?? defaultAreaId ?? '')
+    : '';
+  /** Группы, отфильтрованные по выбранной области */
+  const groupsFiltered = areas && areas.length > 0
+    ? allGroups.filter(g => g.areaId === selectedAreaId)
+    : groups;
+  /** Область изменена относительно исходной */
+  const areaChanged = areas && areas.length > 0 && selectedAreaId !== originalAreaId;
+
+  // Проверка изменений в полях (включая смену области при наличии areas)
+  const hasChanges = areaChanged || Object.values(fieldChanges).some(hasChange => hasChange);
   const hasUnsavedChanges = hasChanges;
 
   const handleFieldChange = (field: keyof TaskCreateRequest, value: string | number) => {
@@ -124,6 +168,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     const originalValue = originalData[field];
     setFormData(prev => ({ ...prev, [field]: originalValue }));
     setFieldChanges(prev => ({ ...prev, [field]: false }));
+  };
+
+  /** Обработчик смены области */
+  const handleAreaChange = (areaId: string) => {
+    setSelectedAreaId(areaId);
+    const firstGroup = allGroups.find(g => g.areaId === areaId);
+    handleFieldChange('groupId', firstGroup?.id ?? '');
+  };
+
+  /** Сброс области и группы к исходным значениям */
+  const handleResetArea = () => {
+    setSelectedAreaId(originalAreaId);
+    handleResetField('groupId');
   };
 
   const handleSave = async () => {
@@ -279,6 +336,48 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
+            {/* Поле области (при наличии areas) */}
+            {areas && areas.length > 0 && (
+              <div className={formCss.fieldGroup}>
+                <div className={formCss.fieldHeader}>
+                  <label className={formCss.fieldLabel}>
+                    Область *
+                  </label>
+                  {!isViewMode && areaChanged && (
+                    <GlassButton
+                      variant="subtle"
+                      size="xxs"
+                      onClick={handleResetArea}
+                      className={formCss.resetButton}
+                    >
+                      <ResetIcon />
+                    </GlassButton>
+                  )}
+                </div>
+                <div className={formCss.fieldContainer}>
+                  {isViewMode ? (
+                    <div className={formCss.fieldValueReadonly}>
+                      {areas.find(a => a.id === selectedAreaId)?.title ?? '—'}
+                    </div>
+                  ) : (
+                    <GlassSelect
+                      value={selectedAreaId}
+                      onChange={handleAreaChange}
+                      options={[
+                        { value: '', label: 'Выберите область' },
+                        ...areas.map((area) => ({
+                          value: area.id,
+                          label: area.title
+                        }))
+                      ]}
+                      disabled={isLoading}
+                      fullWidth
+                    />
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Поле группы */}
             <div className={formCss.fieldGroup}>
               <div className={formCss.fieldHeader}>
@@ -299,15 +398,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               <div className={formCss.fieldContainer}>
                 {isViewMode ? (
                   <div className={formCss.fieldValueReadonly}>
-                    {groups.find(g => g.id === formData.groupId)?.title ?? '—'}
+                    {(allGroups.length > 0 ? allGroups : groups).find(g => g.id === formData.groupId)?.title ?? '—'}
                   </div>
                 ) : (
                   <GlassSelect
                     value={formData.groupId}
                     onChange={(value) => handleFieldChange('groupId', value)}
                     options={[
-                      { value: '', label: 'Выберите группу' },
-                      ...groups.map((group) => ({
+                      { value: '', label: groupsFiltered.length === 0 ? 'Нет групп в области' : 'Выберите группу' },
+                      ...groupsFiltered.map((group) => ({
                         value: group.id,
                         label: group.title
                       }))

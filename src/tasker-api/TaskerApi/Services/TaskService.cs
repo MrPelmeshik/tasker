@@ -155,6 +155,16 @@ public class TaskService(
                 throw new UnauthorizedAccessException("Нет прав на редактирование задачи");
             }
 
+            // При переносе в другую группу — проверяем доступ к новой области
+            if (request.GroupId != task.GroupId)
+            {
+                var newGroup = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
+                if (newGroup == null)
+                    throw new InvalidOperationException("Целевая группа не найдена");
+                if (!await areaRoleService.CanEditTaskAsync(newGroup.AreaId, cancellationToken))
+                    throw new UnauthorizedAccessException("Нет прав на редактирование в целевой области");
+            }
+
             var oldSnapshot = EventMessageHelper.ShallowClone(task);
 
             request.UpdateTaskEntity(task);

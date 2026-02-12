@@ -325,6 +325,7 @@ public static class EntityMapper
     {
         entity.Title = request.Title;
         entity.Description = request.Description;
+        entity.GroupId = request.GroupId;
         entity.Status = request.Status;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
     }
