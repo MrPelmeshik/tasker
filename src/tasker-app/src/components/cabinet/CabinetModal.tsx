@@ -1,19 +1,24 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { GlassButton } from '../ui/GlassButton';
-import { XIcon } from '../icons';
-import { getCurrentUser } from '../../services/api/client';
+import { GlassInput } from '../ui/GlassInput';
+import { XIcon, EditIcon } from '../icons';
+import { getCurrentUser, updateProfile } from '../../services/api/client';
 import { areaApi } from '../../services/api/areas';
-import { useAuth } from '../../context/AuthContext';
 import css from '../../styles/modal.module.css';
 import cabinetCss from './cabinet.module.css';
-import type { UserInfo, AreaResponse } from '../../types';
+import formCss from '../../styles/modal-form.module.css';
+import type { UserInfo, AreaResponse, AreaRole } from '../../types';
 
-/** Подписи ролей для отображения */
-const ROLE_LABELS: Record<string, string> = {
-  user: 'Пользователь',
-  admin: 'Администратор',
+/** Подписи ролей области для отображения */
+const AREA_ROLE_LABELS: Record<string, string> = {
+  Owner: 'Владелец',
+  Administrator: 'Администратор',
+  Executor: 'Исполнитель',
+  Observer: 'Наблюдатель',
 };
+
+type AreaWithRole = { area: AreaResponse; role: AreaRole | null };
 
 export interface CabinetModalProps {
   isOpen: boolean;
@@ -21,11 +26,20 @@ export interface CabinetModalProps {
 }
 
 export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) => {
-  const { logout } = useAuth();
   const [user, setUser] = useState<UserInfo | null>(null);
-  const [areas, setAreas] = useState<AreaResponse[]>([]);
+  const [areasWithRoles, setAreasWithRoles] = useState<AreaWithRole[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editUsername, setEditUsername] = useState('');
+  const [editEmail, setEditEmail] = useState('');
+  const [editFirstName, setEditFirstName] = useState('');
+  const [editLastName, setEditLastName] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -33,6 +47,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
     let cancelled = false;
     setLoading(true);
     setError(null);
+    setIsEditMode(false);
 
     const load = async () => {
       try {
@@ -44,12 +59,34 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
         if (cancelled) return;
 
         if (userRes.success && userRes.data) {
-          setUser(userRes.data);
+          const userData = userRes.data;
+          setUser(userData);
+          setEditUsername(userData.username || '');
+          setEditEmail(userData.email || '');
+          setEditFirstName(userData.firstName || '');
+          setEditLastName(userData.lastName || '');
+          setCurrentPassword('');
+          setNewPassword('');
+          setConfirmNewPassword('');
+
+          const areas = Array.isArray(areasData) ? areasData.filter((a: AreaResponse) => a.isActive) : [];
+          const membersPromises = areas.map((a: AreaResponse) => areaApi.getMembers(a.id));
+          const membersResults = await Promise.all(membersPromises);
+
+          if (cancelled) return;
+
+          const withRoles: AreaWithRole[] = areas.map((area: AreaResponse, i: number) => {
+            const members = membersResults[i] ?? [];
+            const myMember = members.find((m: { userId: string }) => m.userId === userData.id);
+            return {
+              area,
+              role: myMember?.role ?? null,
+            };
+          });
+          setAreasWithRoles(withRoles);
         } else {
           setError(userRes.message || 'Ошибка загрузки профиля');
         }
-
-        setAreas(Array.isArray(areasData) ? areasData : []);
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Ошибка загрузки');
@@ -63,10 +100,65 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
     return () => { cancelled = true; };
   }, [isOpen]);
 
-  const handleLogout = () => {
-    onClose();
-    logout();
-    /** Редирект на /login произойдёт автоматически через ProtectedRoute при isAuth=false */
+  const handleStartEdit = () => {
+    setSaveError(null);
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    if (user) {
+      setEditUsername(user.username || '');
+      setEditEmail(user.email || '');
+      setEditFirstName(user.firstName || '');
+      setEditLastName(user.lastName || '');
+    }
+    setCurrentPassword('');
+    setNewPassword('');
+    setConfirmNewPassword('');
+    setSaveError(null);
+    setIsEditMode(false);
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    const newPwd = newPassword.trim();
+    const confirmPwd = confirmNewPassword.trim();
+    if (newPwd && newPwd !== confirmPwd) {
+      setSaveError('Пароли не совпадают');
+      return;
+    }
+    if (newPwd && newPwd.length < 8) {
+      setSaveError('Пароль должен содержать минимум 8 символов');
+      return;
+    }
+    setSaving(true);
+    setSaveError(null);
+    try {
+      const payload: Parameters<typeof updateProfile>[0] = {
+        username: editUsername.trim() || undefined,
+        email: editEmail.trim() || undefined,
+        firstName: editFirstName.trim() || undefined,
+        lastName: editLastName.trim() || undefined,
+      };
+      if (newPwd) {
+        payload.currentPassword = currentPassword;
+        payload.newPassword = newPwd;
+      }
+      const res = await updateProfile(payload);
+      if (res.success && res.data) {
+        setUser(res.data);
+        setCurrentPassword('');
+        setNewPassword('');
+        setConfirmNewPassword('');
+        setIsEditMode(false);
+      } else {
+        setSaveError(res.message || 'Ошибка сохранения');
+      }
+    } catch (err) {
+      setSaveError(err instanceof Error ? err.message : 'Ошибка сохранения');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -91,36 +183,117 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
           ) : (
             <>
               <section className={cabinetCss.section}>
-                <h4 className={cabinetCss.sectionTitle}>Профиль</h4>
+                <div className={cabinetCss.sectionHeader}>
+                  <h4 className={cabinetCss.sectionTitle}>Профиль</h4>
+                  <div className={cabinetCss.sectionHeaderActions}>
+                    {isEditMode ? (
+                      <>
+                        <GlassButton variant="subtle" size="xs" onClick={handleCancelEdit} disabled={saving}>
+                          Отмена
+                        </GlassButton>
+                        <GlassButton variant="primary" size="xs" onClick={handleSaveProfile} disabled={saving}>
+                          Сохранить
+                        </GlassButton>
+                      </>
+                    ) : user ? (
+                      <GlassButton variant="subtle" size="xs" onClick={handleStartEdit}>
+                        <EditIcon />
+                      </GlassButton>
+                    ) : null}
+                  </div>
+                </div>
                 <div className={cabinetCss.profileBlock}>
                   <div className={cabinetCss.avatar} aria-hidden />
                   <div className={cabinetCss.profileFields}>
                     {user && (
                       <>
-                        <div className={cabinetCss.profileRow}>
-                          <span className={cabinetCss.profileLabel}>Логин</span>
-                          <span className={cabinetCss.profileValue}>{user.username || '—'}</span>
-                        </div>
-                        <div className={cabinetCss.profileRow}>
-                          <span className={cabinetCss.profileLabel}>Email</span>
-                          <span className={cabinetCss.profileValue}>{user.email || '—'}</span>
-                        </div>
-                        <div className={cabinetCss.profileRow}>
-                          <span className={cabinetCss.profileLabel}>Имя</span>
-                          <span className={cabinetCss.profileValue}>{user.firstName || '—'}</span>
-                        </div>
-                        <div className={cabinetCss.profileRow}>
-                          <span className={cabinetCss.profileLabel}>Фамилия</span>
-                          <span className={cabinetCss.profileValue}>{user.lastName || '—'}</span>
-                        </div>
-                        {user.roles?.length ? (
-                          <div className={cabinetCss.profileRow}>
-                            <span className={cabinetCss.profileLabel}>Роли</span>
-                            <span className={cabinetCss.profileValue}>
-                              {user.roles.map(r => ROLE_LABELS[r] ?? r).join(', ')}
-                            </span>
-                          </div>
-                        ) : null}
+                        {isEditMode ? (
+                          <>
+                            <GlassInput
+                              fullWidth
+                              size="m"
+                              label="Логин"
+                              value={editUsername}
+                              onChange={e => setEditUsername(e.target.value)}
+                              placeholder="Логин"
+                            />
+                            <GlassInput
+                              fullWidth
+                              size="m"
+                              label="Email"
+                              value={editEmail}
+                              onChange={e => setEditEmail(e.target.value)}
+                              placeholder="Email"
+                            />
+                            <GlassInput
+                              fullWidth
+                              size="m"
+                              label="Имя"
+                              value={editFirstName}
+                              onChange={e => setEditFirstName(e.target.value)}
+                              placeholder="Имя"
+                            />
+                            <GlassInput
+                              fullWidth
+                              size="m"
+                              label="Фамилия"
+                              value={editLastName}
+                              onChange={e => setEditLastName(e.target.value)}
+                              placeholder="Фамилия"
+                            />
+                            <GlassInput
+                              fullWidth
+                              size="m"
+                              type="password"
+                              label="Текущий пароль (для смены)"
+                              value={currentPassword}
+                              onChange={e => setCurrentPassword(e.target.value)}
+                              placeholder="Текущий пароль"
+                            />
+                            <GlassInput
+                              fullWidth
+                              size="m"
+                              type="password"
+                              label="Новый пароль"
+                              value={newPassword}
+                              onChange={e => setNewPassword(e.target.value)}
+                              placeholder="Минимум 8 символов"
+                            />
+                            <GlassInput
+                              fullWidth
+                              size="m"
+                              type="password"
+                              label="Подтвердите новый пароль"
+                              value={confirmNewPassword}
+                              onChange={e => setConfirmNewPassword(e.target.value)}
+                              placeholder="Повторите пароль"
+                            />
+                            {saveError && (
+                              <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error, #e53e3e)', fontSize: 'var(--font-12)' }}>
+                                {saveError}
+                              </div>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <div className={cabinetCss.profileRow}>
+                              <span className={cabinetCss.profileLabel}>Логин</span>
+                              <span className={cabinetCss.profileValue}>{user.username || '—'}</span>
+                            </div>
+                            <div className={cabinetCss.profileRow}>
+                              <span className={cabinetCss.profileLabel}>Email</span>
+                              <span className={cabinetCss.profileValue}>{user.email || '—'}</span>
+                            </div>
+                            <div className={cabinetCss.profileRow}>
+                              <span className={cabinetCss.profileLabel}>Имя</span>
+                              <span className={cabinetCss.profileValue}>{user.firstName || '—'}</span>
+                            </div>
+                            <div className={cabinetCss.profileRow}>
+                              <span className={cabinetCss.profileLabel}>Фамилия</span>
+                              <span className={cabinetCss.profileValue}>{user.lastName || '—'}</span>
+                            </div>
+                          </>
+                        )}
                       </>
                     )}
                   </div>
@@ -129,24 +302,21 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
 
               <section className={cabinetCss.section}>
                 <h4 className={cabinetCss.sectionTitle}>Мои области</h4>
-                {areas.length === 0 ? (
+                {areasWithRoles.length === 0 ? (
                   <div className={cabinetCss.areaEmpty}>Нет доступных областей</div>
                 ) : (
                   <ul className={cabinetCss.areasList}>
-                    {areas.filter(a => a.isActive).map(area => (
+                    {areasWithRoles.map(({ area, role }) => (
                       <li key={area.id} className={cabinetCss.areaItem}>
-                        {area.title}
+                        <span className={cabinetCss.areaTitle}>{area.title}</span>
+                        {role && (
+                          <span className={cabinetCss.areaRole}>{AREA_ROLE_LABELS[role] ?? role}</span>
+                        )}
                       </li>
                     ))}
                   </ul>
                 )}
               </section>
-
-              <div className={cabinetCss.footer}>
-                <GlassButton variant="danger" size="m" onClick={handleLogout}>
-                  Выйти
-                </GlassButton>
-              </div>
             </>
           )}
         </div>

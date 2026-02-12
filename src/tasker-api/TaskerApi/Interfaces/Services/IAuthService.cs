@@ -44,4 +44,12 @@ public interface IAuthService
     /// <param name="accessToken">Access токен</param>
     /// <returns>Результат проверки</returns>
     Task<bool> ValidateTokenAsync(string accessToken);
+
+    /// <summary>
+    /// Обновление профиля текущего пользователя (email, firstName, lastName).
+    /// </summary>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <param name="request">Данные для обновления</param>
+    /// <returns>Обновлённая информация о пользователе</returns>
+    Task<ApiResponse<UserInfo>> UpdateProfileAsync(Guid userId, ProfileUpdateRequest request);
 }

@@ -217,6 +217,63 @@ public class AuthService(
         return Task.FromResult(principal != null);
     }
 
+    /// <summary>
+    /// Обновить профиль текущего пользователя.
+    /// Поддерживает Username, Email, FirstName, LastName и смену пароля.
+    /// </summary>
+    public async Task<ApiResponse<UserInfo>> UpdateProfileAsync(Guid userId, ProfileUpdateRequest request)
+    {
+        try
+        {
+            var user = await userRepository.GetByIdAsync(userId, CancellationToken.None);
+            if (user == null)
+                return ApiResponse<UserInfo>.ErrorResult("Пользователь не найден");
+
+            if (!string.IsNullOrEmpty(request.Username))
+            {
+                var newUsername = request.Username.Trim();
+                if (newUsername.Length >= 3)
+                {
+                    var existingByName = await userRepository.GetByNameAsync(newUsername, CancellationToken.None);
+                    if (existingByName != null && existingByName.Id != userId)
+                        return ApiResponse<UserInfo>.ErrorResult("Логин уже занят");
+                }
+            }
+
+            if (request.Email != null)
+            {
+                var newEmail = request.Email.Trim();
+                if (!string.IsNullOrEmpty(newEmail))
+                {
+                    var existingByEmail = await userRepository.GetByEmailAsync(newEmail, CancellationToken.None);
+                    if (existingByEmail != null && existingByEmail.Id != userId)
+                        return ApiResponse<UserInfo>.ErrorResult("Email уже используется");
+                }
+            }
+
+            if (!string.IsNullOrEmpty(request.NewPassword))
+            {
+                if (string.IsNullOrEmpty(request.CurrentPassword))
+                    return ApiResponse<UserInfo>.ErrorResult("Для смены пароля укажите текущий пароль");
+
+                var passwordOk = PasswordHasher.Verify(request.CurrentPassword, user.PasswordHash ?? "", user.PasswordSalt ?? "");
+                if (!passwordOk)
+                    return ApiResponse<UserInfo>.ErrorResult("Неверный текущий пароль");
+            }
+
+            request.ApplyProfileUpdate(user);
+            await userRepository.UpdateAsync(user, CancellationToken.None);
+
+            var info = user.ToUserInfo();
+            return ApiResponse<UserInfo>.SuccessResult(info, "Профиль обновлён");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка обновления профиля");
+            return ApiResponse<UserInfo>.ErrorResult("Внутренняя ошибка сервера");
+        }
+    }
+
     private (string accessToken, string refreshToken) CreateTokens(UserEntity user)
     {
         var access = CreateJwtToken(user.Id, user.Name, tokenType: "access", TimeSpan.FromMinutes(_jwt.AccessTokenLifetimeMinutes));

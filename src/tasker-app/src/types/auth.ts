@@ -1,6 +1,3 @@
-// ApiResponse импортируется из ./api
-import type { ApiResponse } from './api';
-
 export type UserInfo = {
 	id: string;
 	username: string;
@@ -44,4 +41,15 @@ export type RegisterRequest = {
 export type RegisterResponse = {
 	userId: string;
 	message: string;
+};
+
+export type ProfileUpdateRequest = {
+	username?: string;
+	email?: string;
+	firstName?: string;
+	lastName?: string;
+	/** Текущий пароль — обязателен при смене пароля */
+	currentPassword?: string;
+	/** Новый пароль — минимум 8 символов */
+	newPassword?: string;
 };

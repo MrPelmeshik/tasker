@@ -504,6 +504,29 @@ public static class EntityMapper
     }
 
     /// <summary>
+    /// Частичное обновление UserEntity из ProfileUpdateRequest.
+    /// Поддерживает Username, Email, FirstName, LastName, Password.
+    /// </summary>
+    public static void ApplyProfileUpdate(this ProfileUpdateRequest request, UserEntity entity)
+    {
+        if (request.Username != null)
+            entity.Name = request.Username.Trim();
+        if (request.Email != null)
+            entity.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        if (request.FirstName != null)
+            entity.FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? null : request.FirstName.Trim();
+        if (request.LastName != null)
+            entity.LastName = string.IsNullOrWhiteSpace(request.LastName) ? null : request.LastName.Trim();
+        if (!string.IsNullOrEmpty(request.NewPassword))
+        {
+            var (hash, salt) = PasswordHasher.HashPassword(request.NewPassword);
+            entity.PasswordHash = hash;
+            entity.PasswordSalt = salt;
+        }
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
+    }
+
+    /// <summary>
     /// Маппинг RegisterRequest в UserEntity
     /// </summary>
     public static UserEntity ToUserEntity(this RegisterRequest request, string passwordHash, string passwordSalt)

@@ -2,11 +2,29 @@
   margin-bottom: var(--space-20);
 }
 
+.section:last-child {
+  margin-bottom: 0;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  margin-bottom: var(--space-12);
+}
+
+.sectionHeaderActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
 .sectionTitle {
   font-size: var(--font-12);
   font-weight: 500;
   color: rgb(var(--white) / 0.5);
-  margin: 0 0 var(--space-8);
+  margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.05em;
 }
@@ -32,7 +50,7 @@
 .profileFields {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-12);
   flex: 1;
   min-width: 0;
 }
@@ -60,10 +78,14 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-12);
 }
 
 .areaItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
   padding: var(--space-10) var(--space-12);
   border-radius: var(--radius-m);
   background: rgb(var(--white) / 0.04);
@@ -74,6 +96,17 @@
 
 .areaItem:hover {
   background: rgb(var(--white) / 0.08);
+}
+
+.areaTitle {
+  flex: 1;
+  min-width: 0;
+}
+
+.areaRole {
+  font-size: var(--font-12);
+  color: rgb(var(--white) / 0.5);
+  flex-shrink: 0;
 }
 
 .areaEmpty {
@@ -90,11 +123,4 @@
   font-size: var(--font-14);
   color: rgb(var(--white) / 0.5);
   text-align: center;
-}
-
-.footer {
-  display: flex;
-  justify-content: flex-end;
-  padding-top: var(--space-16);
-  border-top: var(--border-1) solid var(--glass-border-2);
 }

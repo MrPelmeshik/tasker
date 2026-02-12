@@ -270,5 +270,41 @@ public class AuthController(
         });
     }
 
-    
+    /// <summary>
+    /// Обновление профиля текущего пользователя (email, firstName, lastName).
+    /// </summary>
+    /// <param name="request">Данные для обновления</param>
+    /// <returns>Обновлённая информация о пользователе</returns>
+    /// <response code="200">Профиль обновлён</response>
+    /// <response code="400">Ошибка валидации или email уже используется</response>
+    /// <response code="401">Неавторизованный доступ</response>
+    [HttpPatch("me")]
+    [Authorize]
+    [ProducesResponseType(typeof(ApiResponse<UserInfo>), 200)]
+    [ProducesResponseType(typeof(ApiResponse<UserInfo>), 400)]
+    [ProducesResponseType(typeof(ApiResponse<UserInfo>), 401)]
+    public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateRequest request)
+    {
+        try
+        {
+            var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
+                return Unauthorized(ApiResponse<UserInfo>.ErrorResult("Токен доступа недействителен"));
+
+            if (request == null)
+                return BadRequest(ApiResponse<UserInfo>.ErrorResult("Тело запроса не должно быть пустым"));
+
+            var result = await authService.UpdateProfileAsync(userId, request);
+
+            if (result.Success)
+                return Ok(result);
+
+            return BadRequest(result);
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Неожиданная ошибка при обновлении профиля");
+            return StatusCode(500, ApiResponse<UserInfo>.ErrorResult("Внутренняя ошибка сервера"));
+        }
+    }
 }

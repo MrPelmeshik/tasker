@@ -1,5 +1,5 @@
 import { getStoredTokens, isAccessTokenExpiredOrMissing, setStoredTokens, clearStoredTokens } from '../storage/token';
-import type { ApiResponse, AuthResponse, RefreshTokenResponse, RegisterRequest, RegisterResponse, UserInfo } from '../../types';
+import type { ApiResponse, AuthResponse, ProfileUpdateRequest, RefreshTokenResponse, RegisterRequest, RegisterResponse, UserInfo } from '../../types';
 
 const API_BASE = process.env.REACT_APP_API_BASE + '/api';
 
@@ -84,6 +84,13 @@ export async function registerRequest(payload: RegisterRequest): Promise<ApiResp
 
 export async function getCurrentUser(): Promise<ApiResponse<UserInfo>> {
 	return apiFetch<ApiResponse<UserInfo>>('/auth/me');
+}
+
+export async function updateProfile(data: ProfileUpdateRequest): Promise<ApiResponse<UserInfo>> {
+	return apiFetch<ApiResponse<UserInfo>>('/auth/me', {
+		method: 'PATCH',
+		body: JSON.stringify(data),
+	});
 }
 
 export async function logoutRequest(): Promise<void> {
