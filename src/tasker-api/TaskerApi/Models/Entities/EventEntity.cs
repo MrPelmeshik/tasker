@@ -29,10 +29,10 @@ public class EventEntity :
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// Описание события
+    /// Сообщение события в формате JSON (детализация).
     /// </summary>
     [Column("description")]
-    public string? Description { get; set; }
+    public string? Message { get; set; }
     
     /// <summary>
     /// Дата и время создания.

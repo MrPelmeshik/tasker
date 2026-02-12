@@ -118,11 +118,15 @@ public class GroupService(
                 throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
             }
 
+            var oldSnapshot = EventMessageHelper.ShallowClone(group);
+
             request.UpdateGroupEntity(group);
 
             await groupRepository.UpdateAsync(group, cancellationToken);
 
-            await entityEventLogger.LogAsync(EntityType.GROUP, id, EventType.UPDATE, group.Title, null, cancellationToken);
+            var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, group);
+
+            await entityEventLogger.LogAsync(EntityType.GROUP, id, EventType.UPDATE, group.Title, messageJson, cancellationToken);
 
             return group.ToGroupResponse();
         }

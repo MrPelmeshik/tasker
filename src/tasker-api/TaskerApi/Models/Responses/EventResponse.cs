@@ -16,9 +16,9 @@ public class EventResponse
     public string Title { get; set; } = string.Empty;
     
     /// <summary>
-    /// Описание события.
+    /// Сообщение события в формате JSON (детализация).
     /// </summary>
-    public string Description { get; set; } = string.Empty;
+    public System.Text.Json.JsonElement? Message { get; set; }
     
     /// <summary>
     /// Тип события.

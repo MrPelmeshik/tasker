@@ -113,11 +113,15 @@ public class AreaService(
                 throw new UnauthorizedAccessException("Доступ к данной области запрещен");
             }
 
+            var oldSnapshot = EventMessageHelper.ShallowClone(existingArea);
+
             request.UpdateAreaEntity(existingArea);
 
             await areaRepository.UpdateAsync(existingArea, cancellationToken);
 
-            await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.UPDATE, existingArea.Title, null, cancellationToken);
+            var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, existingArea);
+
+            await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.UPDATE, existingArea.Title, messageJson, cancellationToken);
         }
         catch (Exception ex)
         {

@@ -149,11 +149,15 @@ public class TaskService(
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }
 
+            var oldSnapshot = EventMessageHelper.ShallowClone(task);
+
             request.UpdateTaskEntity(task);
 
             await taskRepository.UpdateAsync(task, cancellationToken);
 
-            await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.UPDATE, task.Title, null, cancellationToken);
+            var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, task);
+
+            await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.UPDATE, task.Title, messageJson, cancellationToken);
 
             return task.ToTaskResponse();
         }

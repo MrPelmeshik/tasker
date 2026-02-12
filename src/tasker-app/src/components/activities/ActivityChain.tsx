@@ -4,7 +4,7 @@ import {
   fetchEventsByGroup,
   fetchEventsByArea,
 } from '../../services/api';
-import type { EventResponse } from '../../types/api';
+import type { EventResponse, EventMessage } from '../../types/api';
 import activityChainCss from '../../styles/activity-chain.module.css';
 
 /** Форматирование ISO-даты в формат дд.мм.гг чч:мм */
@@ -38,6 +38,67 @@ function formatDateOnly(isoDate: string): string {
   if (!isoDate || isoDate.length < 10) return isoDate;
   const [y, m, d] = isoDate.slice(0, 10).split('-');
   return `${d}.${m}.${y}`;
+}
+
+/** Названия полей для отображения диффа */
+const FIELD_LABELS: Record<string, string> = {
+  Title: 'Заголовок',
+  Description: 'Описание',
+  Status: 'Статус',
+  GroupId: 'Группа',
+};
+
+/** Статусы задач для отображения */
+const STATUS_LABELS: Record<number, string> = {
+  1: 'Новая',
+  2: 'В ожидании',
+  3: 'В работе',
+  4: 'Закрыта',
+  5: 'Отменена',
+};
+
+/** Форматирует значение для отображения */
+function formatValue(key: string, value: unknown): string {
+  if (value === null || value === undefined) return '—';
+  if (key === 'Status' && typeof value === 'number') {
+    return STATUS_LABELS[value] ?? String(value);
+  }
+  if (key === 'GroupId' && typeof value === 'string') {
+    return value.slice(0, 8) + '…';
+  }
+  const s = String(value);
+  return s.length > 60 ? `${s.slice(0, 60)}…` : s;
+}
+
+/** Преобразует message в текст для отображения */
+function formatMessageForDisplay(message: EventMessage): string | null {
+  if (!message || typeof message !== 'object') return null;
+  const m = message as Record<string, unknown>;
+  if ('old' in m && 'new' in m) {
+    const oldObj = m.old as Record<string, unknown> | undefined;
+    const newObj = m.new as Record<string, unknown> | undefined;
+    if (!oldObj || !newObj) return null;
+    const parts: string[] = [];
+    for (const key of Object.keys(oldObj)) {
+      if (key in newObj) {
+        const label = FIELD_LABELS[key] ?? key;
+        const oldVal = formatValue(key, oldObj[key]);
+        const newVal = formatValue(key, newObj[key]);
+        parts.push(`${label}: «${oldVal}» → «${newVal}»`);
+      }
+    }
+    return parts.length > 0 ? parts.join('; ') : null;
+  }
+  if ('text' in m && typeof m.text === 'string') {
+    return m.text;
+  }
+  if ('description' in m && typeof m.description === 'string') {
+    return m.description;
+  }
+  if ('title' in m && typeof m.title === 'string') {
+    return m.title;
+  }
+  return null;
 }
 
 export interface ActivityChainProps {
@@ -135,13 +196,15 @@ export const ActivityChain: React.FC<ActivityChainProps> = ({
                       {formatDateTime(ev.createdAt)}
                     </span>
                   </div>
-                  {ev.description && (
-                    <div className={activityChainCss.eventDesc}>
-                      {ev.description.length > 120
-                        ? `${ev.description.slice(0, 120)}…`
-                        : ev.description}
-                    </div>
-                  )}
+                  {ev.message && (() => {
+                    const text = formatMessageForDisplay(ev.message);
+                    if (!text) return null;
+                    return (
+                      <div className={activityChainCss.eventDesc}>
+                        {text.length > 120 ? `${text.slice(0, 120)}…` : text}
+                      </div>
+                    );
+                  })()}
                 </li>
               ))}
             </ul>

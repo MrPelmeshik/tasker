@@ -2,6 +2,7 @@ using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using TaskerApi.Models.Common;
+using TaskerApi.Services;
 
 namespace TaskerApi.Services.Mapping;
 
@@ -193,11 +194,24 @@ public static class EntityMapper
     /// </summary>
     public static EventResponse ToEventResponse(this EventEntity entity)
     {
+        System.Text.Json.JsonElement? messageElement = null;
+        if (!string.IsNullOrEmpty(entity.Message))
+        {
+            try
+            {
+                messageElement = System.Text.Json.JsonSerializer.Deserialize<System.Text.Json.JsonElement>(entity.Message);
+            }
+            catch
+            {
+                // Если JSON невалидный — оставляем null
+            }
+        }
+
         return new EventResponse
         {
             Id = entity.Id,
             Title = entity.Title,
-            Description = entity.Description,
+            Message = messageElement,
             EventType = entity.EventType.ToString(),
             CreatorUserId = entity.CreatorUserId,
             CreatedAt = entity.CreatedAt,
@@ -600,11 +614,13 @@ public static class EntityMapper
     /// </summary>
     public static EventEntity ToEventEntity(this CreateTaskWithEventRequest request, Guid creatorUserId)
     {
+        var messageJson = EventMessageHelper.BuildActivityMessageJson(request.EventTitle, request.EventDescription);
+
         return new EventEntity
         {
             Id = Guid.NewGuid(),
             Title = request.EventTitle,
-            Description = request.EventDescription,
+            Message = messageJson,
             EventType = (Models.Common.EventType)Enum.Parse(typeof(Models.Common.EventType), request.EventType),
             CreatorUserId = creatorUserId,
             CreatedAt = DateTimeOffset.UtcNow,

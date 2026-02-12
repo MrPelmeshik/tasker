@@ -23,7 +23,7 @@ public class EntityEventLogger(
         Guid entityId,
         EventType eventType,
         string title,
-        string? description,
+        string? messageJson,
         CancellationToken cancellationToken = default)
     {
         try
@@ -35,7 +35,7 @@ public class EntityEventLogger(
             {
                 Id = Guid.NewGuid(),
                 Title = title ?? string.Empty,
-                Description = description,
+                Message = messageJson,
                 EventType = eventType,
                 CreatorUserId = userId,
                 CreatedAt = now,

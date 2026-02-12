@@ -152,10 +152,13 @@ export interface EventCreateResponse {
   id: string;
 }
 
+/** Сообщение события в формате JSON (могут быть old/new, title/description, text и т.д.) */
+export type EventMessage = Record<string, unknown> | null;
+
 export interface EventResponse {
   id: string;
   title: string;
-  description?: string;
+  message?: EventMessage;
   eventType: string;
   creatorUserId: string;
   createdAt: string;

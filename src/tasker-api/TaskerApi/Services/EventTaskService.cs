@@ -38,11 +38,13 @@ public class EventTaskService(
 
         var now = DateTimeOffset.UtcNow;
 
+        var messageJson = EventMessageHelper.BuildActivityMessageJson(item.Title, item.Description);
+
         var eventEntity = new EventEntity
         {
             Id = Guid.NewGuid(),
             Title = item.Title,
-            Description = item.Description,
+            Message = messageJson,
             EventType = item.EventType,
             CreatorUserId = CurrentUser.UserId,
             CreatedAt = now,

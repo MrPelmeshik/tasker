@@ -15,13 +15,13 @@ public interface IEntityEventLogger
     /// <param name="entityId">Идентификатор сущности.</param>
     /// <param name="eventType">Тип события (CREATE, UPDATE, DELETE).</param>
     /// <param name="title">Заголовок события (например, название сущности).</param>
-    /// <param name="description">Описание события (опционально).</param>
+    /// <param name="messageJson">Сообщение в формате JSON (опционально, для UPDATE — дифф old/new).</param>
     /// <param name="cancellationToken">Токен отмены операции.</param>
     Task LogAsync(
         EntityType entityType,
         Guid entityId,
         EventType eventType,
         string title,
-        string? description,
+        string? messageJson,
         CancellationToken cancellationToken = default);
 }
