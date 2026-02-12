@@ -1,7 +1,7 @@
 import React from 'react';
 import { getStoredUserName, setStoredUserName, clearStoredUser } from '../services/storage/user';
 import { clearStoredTokens, getStoredTokens, setStoredTokens, isAccessTokenExpiredOrMissing } from '../services/storage/token';
-import { loginRequest, logoutRequest, registerRequest } from '../services/api/client';
+import { loginRequest, logoutRequest, registerRequest } from '../services/api/auth';
 
 type AuthContextValue = {
   userName: string | null;

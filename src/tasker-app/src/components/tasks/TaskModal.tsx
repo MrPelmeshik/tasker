@@ -13,25 +13,15 @@ import { DeleteIcon } from '../icons/DeleteIcon';
 import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
+import { useEntityFormModal } from '../../hooks';
+import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, GroupResponse } from '../../types';
 import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 import { fetchGroups } from '../../services/api';
-
-/// Форматирование ISO-даты в формат дд.мм.гг чч:мм
-function formatDateTime(iso: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yy = String(d.getFullYear()).slice(-2);
-  const hh = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${dd}.${mm}.${yy} ${hh}:${min}`;
-}
+import { formatDateTime } from '../../utils/date';
 
 export interface TaskModalProps {
   isOpen: boolean;
@@ -62,39 +52,69 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   defaultAreaId,
   areas,
 }) => {
-  const [formData, setFormData] = useState<TaskCreateRequest>({
-    title: '',
-    description: '',
-    groupId: '',
-    status: TaskStatus.New,
-  });
-  const [originalData, setOriginalData] = useState<TaskCreateRequest>({
-    title: '',
-    description: '',
-    groupId: '',
-    status: TaskStatus.New,
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  /** Подтверждение возврата к просмотру при несохранённых изменениях */
-  const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
-  /** Подтверждение удаления записи */
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
-  const [isEditMode, setIsEditMode] = useState(true);
-
-  const taskEvents = useEvents('task', task?.id);
-
-  /** Режим просмотра: только для существующей задачи и когда не в edit mode */
-  const isViewMode = Boolean(task && !isEditMode);
-
-  /** Все группы (загружаются при наличии areas для селектора области) */
   const [allGroups, setAllGroups] = useState<GroupResponse[]>([]);
-  /** Выбранная область (при areas) — управляет фильтром групп */
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
 
-  /** Загрузка всех групп при открытии модалки с areas */
+  const modal = useEntityFormModal<TaskCreateRequest>({
+    isOpen,
+    entity: task,
+    getInitialData: () =>
+      task
+        ? {
+            title: task.title,
+            description: task.description || '',
+            groupId: task.groupId,
+            status: task.status || TaskStatus.New,
+          }
+        : {
+            title: '',
+            description: '',
+            groupId: defaultGroupId || (groups.length > 0 ? groups[0].id : ''),
+            status: TaskStatus.New,
+          },
+    deps: [task, groups, defaultGroupId],
+    onClose,
+    onSave: (data) => onSave(data, task?.id),
+    onDelete,
+    validate: (data) => Boolean(data.title?.trim() && data.groupId),
+    getExtraUnsavedChanges: ({ originalData: orig }) => {
+      if (!areas?.length || !allGroups.length) return false;
+      const origAreaId = allGroups.find(g => g.id === orig.groupId)?.areaId ?? defaultAreaId ?? '';
+      return selectedAreaId !== origAreaId;
+    },
+  });
+
+  const {
+    formData,
+    originalData,
+    fieldChanges,
+    handleFieldChange,
+    handleResetField,
+    hasChanges,
+    hasUnsavedChanges,
+    showConfirmModal,
+    showReturnToViewConfirm,
+    showDeleteConfirm,
+    handleClose,
+    handleConfirmSave,
+    handleConfirmDiscard,
+    handleConfirmCancel,
+    handleReturnToView,
+    handleConfirmReturnToView,
+    handleDeleteRequest,
+    handleConfirmDelete,
+    dismissReturnToViewConfirm,
+    dismissDeleteConfirm,
+    handleSave,
+    isEditMode,
+    setIsEditMode,
+    isLoading,
+  } = modal;
+
+  const taskEvents = useEvents('task', task?.id);
+  const isViewMode = Boolean(task && !isEditMode);
+
+  /** Загрузка всех групп при наличии areas */
   useEffect(() => {
     if (isOpen && areas && areas.length > 0) {
       fetchGroups()
@@ -106,155 +126,33 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     }
   }, [isOpen, areas]);
 
-  /** Синхронизация selectedAreaId с группой (когда группа задана) */
+  /** Синхронизация selectedAreaId с группой */
   useEffect(() => {
     if (isOpen && areas && areas.length > 0 && allGroups.length > 0 && formData.groupId) {
       const areaOfGroup = allGroups.find(g => g.id === formData.groupId)?.areaId;
-      if (areaOfGroup) {
-        setSelectedAreaId(areaOfGroup);
-      }
+      if (areaOfGroup) setSelectedAreaId(areaOfGroup);
     } else if (isOpen && areas && areas.length > 0 && allGroups.length > 0 && !formData.groupId && defaultAreaId) {
       setSelectedAreaId(defaultAreaId);
     }
   }, [isOpen, areas, allGroups, formData.groupId, defaultAreaId]);
 
-  // Инициализация данных и режима при открытии модального окна
-  useEffect(() => {
-    if (isOpen) {
-      const initialData = task ? {
-        title: task.title,
-        description: task.description || '',
-        groupId: task.groupId,
-        status: task.status || TaskStatus.New,
-      } : {
-        title: '',
-        description: '',
-        groupId: defaultGroupId || (groups.length > 0 ? groups[0].id : ''),
-        status: TaskStatus.New,
-      };
-      
-      setFormData(initialData);
-      setOriginalData(initialData);
-      setFieldChanges({});
-      /** Создание — сразу edit; существующая задача — по умолчанию просмотр */
-      setIsEditMode(!task);
-    }
-  }, [isOpen, task, groups, defaultGroupId]);
+  const originalAreaId =
+    areas && allGroups.length > 0
+      ? (allGroups.find(g => g.id === originalData.groupId)?.areaId ?? defaultAreaId ?? '')
+      : '';
+  const groupsFiltered =
+    areas && areas.length > 0 ? allGroups.filter(g => g.areaId === selectedAreaId) : groups;
+  const areaChanged = Boolean(areas?.length && selectedAreaId !== originalAreaId);
 
-  /** Область по умолчанию (для исходной группы) */
-  const originalAreaId = areas && allGroups.length > 0
-    ? (allGroups.find(g => g.id === originalData.groupId)?.areaId ?? defaultAreaId ?? '')
-    : '';
-  /** Группы, отфильтрованные по выбранной области */
-  const groupsFiltered = areas && areas.length > 0
-    ? allGroups.filter(g => g.areaId === selectedAreaId)
-    : groups;
-  /** Область изменена относительно исходной */
-  const areaChanged = areas && areas.length > 0 && selectedAreaId !== originalAreaId;
-
-  // Проверка изменений в полях (включая смену области при наличии areas)
-  const hasChanges = areaChanged || Object.values(fieldChanges).some(hasChange => hasChange);
-  const hasUnsavedChanges = hasChanges;
-
-  const handleFieldChange = (field: keyof TaskCreateRequest, value: string | number) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Проверяем, изменилось ли поле относительно оригинального значения
-    const hasChanged = value !== originalData[field];
-    setFieldChanges(prev => ({ ...prev, [field]: hasChanged }));
-  };
-
-  const handleResetField = (field: keyof TaskCreateRequest) => {
-    const originalValue = originalData[field];
-    setFormData(prev => ({ ...prev, [field]: originalValue }));
-    setFieldChanges(prev => ({ ...prev, [field]: false }));
-  };
-
-  /** Обработчик смены области */
   const handleAreaChange = (areaId: string) => {
     setSelectedAreaId(areaId);
     const firstGroup = allGroups.find(g => g.areaId === areaId);
     handleFieldChange('groupId', firstGroup?.id ?? '');
   };
 
-  /** Сброс области и группы к исходным значениям */
   const handleResetArea = () => {
     setSelectedAreaId(originalAreaId);
     handleResetField('groupId');
-  };
-
-  const handleSave = async () => {
-    if (!formData.title.trim() || !formData.groupId) return;
-    
-    setIsLoading(true);
-    try {
-      // Передаем данные и ID задачи отдельно
-      const taskId = task ? task.id : undefined;
-      await onSave(formData, taskId);
-      onClose();
-    } catch (error) {
-      console.error('Ошибка сохранения задачи:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    if (hasUnsavedChanges) {
-      setShowConfirmModal(true);
-    } else {
-      onClose();
-    }
-  };
-
-  const handleConfirmSave = async () => {
-    setShowConfirmModal(false);
-    await handleSave();
-  };
-
-  const handleConfirmDiscard = () => {
-    setShowConfirmModal(false);
-    onClose();
-  };
-
-  const handleConfirmCancel = () => {
-    setShowConfirmModal(false);
-  };
-
-  /** Возврат к режиму просмотра (только для существующей задачи) */
-  const handleReturnToView = () => {
-    if (hasUnsavedChanges) {
-      setShowReturnToViewConfirm(true);
-    } else {
-      setIsEditMode(false);
-    }
-  };
-
-  const handleConfirmReturnToView = () => {
-    setShowReturnToViewConfirm(false);
-    setFormData(originalData);
-    setFieldChanges({});
-    setIsEditMode(false);
-  };
-
-  /** Запрос на удаление — показать подтверждение */
-  const handleDeleteRequest = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  /** Подтверждённое удаление */
-  const handleConfirmDelete = async () => {
-    if (!task?.id || !onDelete) return;
-    setShowDeleteConfirm(false);
-    setIsLoading(true);
-    try {
-      await onDelete(task.id);
-      onClose();
-    } catch (error) {
-      console.error('Ошибка удаления задачи:', error);
-    } finally {
-      setIsLoading(false);
-    }
   };
 
   return (
@@ -570,33 +468,21 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         onConfirm={handleConfirmSave}
         onCancel={handleConfirmCancel}
         onDiscard={handleConfirmDiscard}
-        title="Несохраненные изменения"
-        message="У вас есть несохраненные изменения. Что вы хотите сделать?"
-        confirmText="Сохранить"
-        cancelText="Отмена"
-        discardText="Не сохранять"
-        showDiscard={true}
+        {...CONFIRM_UNSAVED_CHANGES}
       />
       <ConfirmModal
         isOpen={showReturnToViewConfirm}
-        onClose={() => setShowReturnToViewConfirm(false)}
+        onClose={dismissReturnToViewConfirm}
         onConfirm={handleConfirmReturnToView}
-        onCancel={() => setShowReturnToViewConfirm(false)}
-        title="Вернуться к просмотру"
-        message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
-        confirmText="Да"
-        cancelText="Нет"
+        onCancel={dismissReturnToViewConfirm}
+        {...CONFIRM_RETURN_TO_VIEW}
       />
       <ConfirmModal
         isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
+        onClose={dismissDeleteConfirm}
         onConfirm={handleConfirmDelete}
-        onCancel={() => setShowDeleteConfirm(false)}
-        title="Удалить задачу"
-        message="Вы уверены, что хотите удалить эту задачу? Запись будет деактивирована и скрыта из списков."
-        confirmText="Удалить"
-        cancelText="Отмена"
-        variant="danger"
+        onCancel={dismissDeleteConfirm}
+        {...getConfirmDeleteConfig('задачу')}
       />
     </Modal>
   );

@@ -13,39 +13,15 @@ import { DeleteIcon } from '../icons/DeleteIcon';
 import { PlusIcon } from '../icons/PlusIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
+import { useEntityFormModal } from '../../hooks';
 import { areaApi } from '../../services/api/areas';
+import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
+import { formatDateTime } from '../../utils/date';
+import { AREA_ROLE_LABELS, getAddableRoles } from '../../utils/area-role';
 import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaMemberResponse, AreaRole } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
-
-/** Подписи ролей для отображения */
-const ROLE_LABELS: Record<string, string> = {
-  Owner: 'Владелец',
-  Administrator: 'Администратор',
-  Executor: 'Исполнитель',
-  Observer: 'Наблюдатель',
-};
-
-/** Роли, которые можно назначить при добавлении (без Owner) */
-const ADDABLE_ROLES: Array<{ value: AreaRole; label: string }> = [
-  { value: 'Administrator', label: 'Администратор' },
-  { value: 'Executor', label: 'Исполнитель' },
-  { value: 'Observer', label: 'Наблюдатель' },
-];
-
-/// Форматирование ISO-даты в формат дд.мм.гг чч:мм
-function formatDateTime(iso: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yy = String(d.getFullYear()).slice(-2);
-  const hh = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${dd}.${mm}.${yy} ${hh}:${min}`;
-}
 
 export interface AreaModalProps {
   isOpen: boolean;
@@ -67,23 +43,46 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   title = 'Область',
   size = 'medium',
 }) => {
-  const [formData, setFormData] = useState<AreaCreateRequest>({
-    title: '',
-    description: '',
+  const modal = useEntityFormModal<AreaCreateRequest>({
+    isOpen,
+    entity: area,
+    getInitialData: () =>
+      area
+        ? { title: area.title, description: area.description || '' }
+        : { title: '', description: '' },
+    deps: [area],
+    onClose,
+    onSave: (data) => onSave((area ? { ...data, id: area.id } : data) as AreaCreateRequest | AreaUpdateRequest),
+    onDelete,
+    validate: (data) => Boolean(data.title?.trim()),
   });
-  const [originalData, setOriginalData] = useState<AreaCreateRequest>({
-    title: '',
-    description: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  /** Подтверждение возврата к просмотру при несохранённых изменениях */
-  const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
-  /** Подтверждение удаления записи */
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
-  const [isEditMode, setIsEditMode] = useState(true);
+
+  const {
+    formData,
+    fieldChanges,
+    handleFieldChange,
+    handleResetField,
+    hasChanges,
+    hasUnsavedChanges,
+    showConfirmModal,
+    showReturnToViewConfirm,
+    showDeleteConfirm,
+    handleClose,
+    handleConfirmSave,
+    handleConfirmDiscard,
+    handleConfirmCancel,
+    handleReturnToView,
+    handleConfirmReturnToView,
+    handleDeleteRequest,
+    handleConfirmDelete,
+    dismissReturnToViewConfirm,
+    dismissDeleteConfirm,
+    handleSave,
+    isEditMode,
+    setIsEditMode,
+    isLoading,
+  } = modal;
+
   /** Участники области */
   const [members, setMembers] = useState<AreaMemberResponse[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
@@ -99,26 +98,11 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
   const areaEvents = useEvents('area', area?.id);
-
-  /** Режим просмотра: только для существующей области и когда не в edit mode */
   const isViewMode = Boolean(area && !isEditMode);
 
-  // Инициализация данных и режима при открытии модального окна
+  // Сброс доп. состояния при открытии
   useEffect(() => {
     if (isOpen) {
-      const initialData = area ? {
-        title: area.title,
-        description: area.description || '',
-      } : {
-        title: '',
-        description: '',
-      };
-      
-      setFormData(initialData);
-      setOriginalData(initialData);
-      setFieldChanges({});
-      /** Создание — сразу edit; существующая область — по умолчанию просмотр */
-      setIsEditMode(!area);
       setAddMemberLogin('');
       setAddMemberError(null);
       setRemoveConfirmMember(null);
@@ -151,98 +135,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       });
     return () => { cancelled = true; };
   }, [isOpen, area?.id]);
-
-  // Проверка изменений в полях
-  const hasChanges = Object.values(fieldChanges).some(hasChange => hasChange);
-  const hasUnsavedChanges = hasChanges;
-
-  const handleFieldChange = (field: keyof AreaCreateRequest, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Проверяем, изменилось ли поле относительно оригинального значения
-    const hasChanged = value !== originalData[field];
-    setFieldChanges(prev => ({ ...prev, [field]: hasChanged }));
-  };
-
-  const handleResetField = (field: keyof AreaCreateRequest) => {
-    const originalValue = originalData[field];
-    setFormData(prev => ({ ...prev, [field]: originalValue }));
-    setFieldChanges(prev => ({ ...prev, [field]: false }));
-  };
-
-  const handleSave = async () => {
-    if (!formData.title.trim()) return;
-    
-    setIsLoading(true);
-    try {
-      // Добавляем ID для режима редактирования
-      const dataToSave = area ? { ...formData, id: area.id } : formData;
-      await onSave(dataToSave);
-      onClose();
-    } catch (error) {
-      console.error('Ошибка сохранения области:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    if (hasUnsavedChanges) {
-      setShowConfirmModal(true);
-    } else {
-      onClose();
-    }
-  };
-
-  const handleConfirmSave = async () => {
-    setShowConfirmModal(false);
-    await handleSave();
-  };
-
-  const handleConfirmDiscard = () => {
-    setShowConfirmModal(false);
-    onClose();
-  };
-
-  const handleConfirmCancel = () => {
-    setShowConfirmModal(false);
-  };
-
-  /** Возврат к режиму просмотра (только для существующей области) */
-  const handleReturnToView = () => {
-    if (hasUnsavedChanges) {
-      setShowReturnToViewConfirm(true);
-    } else {
-      setIsEditMode(false);
-    }
-  };
-
-  const handleConfirmReturnToView = () => {
-    setShowReturnToViewConfirm(false);
-    setFormData(originalData);
-    setFieldChanges({});
-    setIsEditMode(false);
-  };
-
-  /** Запрос на удаление — показать подтверждение */
-  const handleDeleteRequest = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  /** Подтверждённое удаление */
-  const handleConfirmDelete = async () => {
-    if (!area?.id || !onDelete) return;
-    setShowDeleteConfirm(false);
-    setIsLoading(true);
-    try {
-      await onDelete(area.id);
-      onClose();
-    } catch (error) {
-      console.error('Ошибка удаления области:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   /** Добавить участника по логину */
   const handleAddMember = async () => {
@@ -491,18 +383,18 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                         <li key={m.userId} className={formCss.readonlyMetaRow} style={{ alignItems: 'center', padding: 'var(--space-8) 0', borderBottom: '1px solid rgb(var(--white) / 0.06)' }}>
                           <span className={formCss.readonlyMetaValue} style={{ flex: 1 }}>{m.userName || '—'}</span>
                           {m.role === 'Owner' ? (
-                            <span className={formCss.readonlyMetaLabel}>{ROLE_LABELS[m.role] ?? m.role}</span>
+                            <span className={formCss.readonlyMetaLabel}>{AREA_ROLE_LABELS[m.role] ?? m.role}</span>
                           ) : !isViewMode ? (
                             <GlassSelect
                               value={m.role}
                               onChange={(v) => handleChangeMemberRole(m, v as AreaRole)}
-                              options={ADDABLE_ROLES}
+                              options={getAddableRoles()}
                               disabled={addMemberLoading || updatingMemberId === m.userId}
                               placeholder="Роль"
                               size="s"
                             />
                           ) : (
-                            <span className={formCss.readonlyMetaLabel}>{ROLE_LABELS[m.role] ?? m.role}</span>
+                            <span className={formCss.readonlyMetaLabel}>{AREA_ROLE_LABELS[m.role] ?? m.role}</span>
                           )}
                           {!isViewMode && m.role !== 'Owner' && (
                             <GlassButton
@@ -534,7 +426,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                           <GlassSelect
                             value={addMemberRole}
                             onChange={(v) => setAddMemberRole(v as AreaRole)}
-                            options={ADDABLE_ROLES}
+                            options={getAddableRoles()}
                             disabled={addMemberLoading}
                             placeholder="Роль"
                           />
@@ -578,33 +470,21 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         onConfirm={handleConfirmSave}
         onCancel={handleConfirmCancel}
         onDiscard={handleConfirmDiscard}
-        title="Несохраненные изменения"
-        message="У вас есть несохраненные изменения. Что вы хотите сделать?"
-        confirmText="Сохранить"
-        cancelText="Отмена"
-        discardText="Не сохранять"
-        showDiscard={true}
+        {...CONFIRM_UNSAVED_CHANGES}
       />
       <ConfirmModal
         isOpen={showReturnToViewConfirm}
-        onClose={() => setShowReturnToViewConfirm(false)}
+        onClose={dismissReturnToViewConfirm}
         onConfirm={handleConfirmReturnToView}
-        onCancel={() => setShowReturnToViewConfirm(false)}
-        title="Вернуться к просмотру"
-        message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
-        confirmText="Да"
-        cancelText="Нет"
+        onCancel={dismissReturnToViewConfirm}
+        {...CONFIRM_RETURN_TO_VIEW}
       />
       <ConfirmModal
         isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
+        onClose={dismissDeleteConfirm}
         onConfirm={handleConfirmDelete}
-        onCancel={() => setShowDeleteConfirm(false)}
-        title="Удалить область"
-        message="Вы уверены, что хотите удалить эту область? Запись будет деактивирована и скрыта из списков."
-        confirmText="Удалить"
-        cancelText="Отмена"
-        variant="danger"
+        onCancel={dismissDeleteConfirm}
+        {...getConfirmDeleteConfig('область')}
       />
       <ConfirmModal
         isOpen={Boolean(removeConfirmMember)}

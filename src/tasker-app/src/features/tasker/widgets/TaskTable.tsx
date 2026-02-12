@@ -16,14 +16,13 @@ import {
   deleteTask,
   createEventForTask,
   EventTypeActivity,
-  getMondayIso,
   type TaskWeeklyActivity,
   type TaskDayActivity,
 } from '../../../services/api';
 import { useModal, useTaskUpdate } from '../../../context';
+import { useWeek } from '../../../hooks';
 import { formatDateOnly } from '../../../utils/date';
-
-type WeekNav = 'prev' | 'next' | 'current' | 'latest';
+import { buildWeekDays, getWeekEndIso, buildWeekDates } from '../../../utils/week';
 
 /** Строка таблицы: задача + активность по дням */
 type TaskRow = {
@@ -34,52 +33,6 @@ type TaskRow = {
   days: TaskDayActivity[];
   task: TaskResponse;
 };
-
-function useWeek(): { weekStartIso: string; go: (nav: WeekNav) => void; set: (iso: string) => void } {
-  const [weekStartIso, setWeekStartIso] = useState(() => getMondayIso(new Date()));
-
-  const go = (nav: WeekNav) => {
-    if (nav === 'current' || nav === 'latest') return setWeekStartIso(getMondayIso(new Date()));
-    const base = new Date(weekStartIso + 'T12:00:00');
-    base.setDate(base.getDate() + (nav === 'prev' ? -7 : 7));
-    setWeekStartIso(getMondayIso(base));
-  };
-
-  return { weekStartIso, go, set: setWeekStartIso };
-}
-
-/** Данные для заголовков дней недели (label — краткое, weekdayLong — полное для подсказки) */
-function buildWeekDays(isoMonday: string): { label: string; weekdayLong: string; date: string }[] {
-  const base = new Date(isoMonday + 'T00:00:00Z');
-  const weekdayFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' });
-  const weekdayLongFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'long' });
-  const dateFmt = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(base);
-    d.setUTCDate(d.getUTCDate() + i);
-    const weekday = weekdayFmt.format(d);
-    const weekdayLong = weekdayLongFmt.format(d);
-    const date = dateFmt.format(d);
-    return { label: weekday, weekdayLong, date };
-  });
-}
-
-/** ISO-дата конца недели (понедельник + 6 дней) */
-function getWeekEndIso(isoMonday: string): string {
-  const base = new Date(isoMonday + 'T00:00:00Z');
-  base.setUTCDate(base.getUTCDate() + 6);
-  return base.toISOString().slice(0, 10);
-}
-
-/** 7 ISO-дат для выбранной недели */
-function buildWeekDates(isoMonday: string): string[] {
-  const base = new Date(isoMonday + 'T00:00:00Z');
-  return Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(base);
-    d.setUTCDate(d.getUTCDate() + i);
-    return d.toISOString().slice(0, 10);
-  });
-}
 
 function intensityClass(count: number): string {
   if (count <= 0) return css.intensity0;

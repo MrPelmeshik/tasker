@@ -1,14 +1,12 @@
 // Экспорт базовых утилит
 export { BaseApiClient, apiUtils } from './base';
+export { loginRequest, registerRequest, getCurrentUser, updateProfile, logoutRequest } from './auth';
 
 // Экспорт API клиентов
 export { areaApi, AreaApiClient } from './areas';
 export { groupApi, GroupApiClient } from './groups';
 export * from './tasks';
 export * from './events';
-
-// Экспорт функций для совместимости
-export * from './areas-groups';
 
 // Экспорт отдельных функций из areas
 export { 

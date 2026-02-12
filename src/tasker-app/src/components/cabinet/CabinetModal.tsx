@@ -3,20 +3,13 @@ import { Modal } from '../common/Modal';
 import { GlassButton } from '../ui/GlassButton';
 import { GlassInput } from '../ui/GlassInput';
 import { XIcon, EditIcon } from '../icons';
-import { getCurrentUser, updateProfile } from '../../services/api/client';
+import { getCurrentUser, updateProfile } from '../../services/api/auth';
 import { areaApi } from '../../services/api/areas';
 import css from '../../styles/modal.module.css';
 import cabinetCss from './cabinet.module.css';
 import formCss from '../../styles/modal-form.module.css';
+import { AREA_ROLE_LABELS } from '../../utils/area-role';
 import type { UserInfo, AreaResponse, AreaRole } from '../../types';
-
-/** Подписи ролей области для отображения */
-const AREA_ROLE_LABELS: Record<string, string> = {
-  Owner: 'Владелец',
-  Administrator: 'Администратор',
-  Executor: 'Исполнитель',
-  Observer: 'Наблюдатель',
-};
 
 type AreaWithRole = { area: AreaResponse; role: AreaRole | null };
 

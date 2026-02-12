@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { GlassButton } from '../ui/GlassButton';
@@ -12,23 +12,13 @@ import { EditIcon } from '../icons/EditIcon';
 import { DeleteIcon } from '../icons/DeleteIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
+import { useEntityFormModal } from '../../hooks';
+import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
+import { formatDateTime } from '../../utils/date';
 import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaResponse } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
-
-/// Форматирование ISO-даты в формат дд.мм.гг чч:мм
-function formatDateTime(iso: string): string {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d.getTime())) return '';
-  const dd = String(d.getDate()).padStart(2, '0');
-  const mm = String(d.getMonth() + 1).padStart(2, '0');
-  const yy = String(d.getFullYear()).slice(-2);
-  const hh = String(d.getHours()).padStart(2, '0');
-  const min = String(d.getMinutes()).padStart(2, '0');
-  return `${dd}.${mm}.${yy} ${hh}:${min}`;
-}
 
 export interface GroupModalProps {
   isOpen: boolean;
@@ -54,143 +44,52 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   size = 'medium',
   defaultAreaId,
 }) => {
-  const [formData, setFormData] = useState<GroupCreateRequest>({
-    title: '',
-    description: '',
-    areaId: '',
+  const modal = useEntityFormModal<GroupCreateRequest>({
+    isOpen,
+    entity: group,
+    getInitialData: () =>
+      group
+        ? { title: group.title, description: group.description || '', areaId: group.areaId }
+        : {
+            title: '',
+            description: '',
+            areaId: defaultAreaId || (areas.length > 0 ? areas[0].id : ''),
+          },
+    deps: [group, areas, defaultAreaId],
+    onClose,
+    onSave: (data) => onSave(data, group?.id),
+    onDelete,
+    validate: (data) => Boolean(data.title?.trim() && data.areaId),
   });
-  const [originalData, setOriginalData] = useState<GroupCreateRequest>({
-    title: '',
-    description: '',
-    areaId: '',
-  });
-  const [isLoading, setIsLoading] = useState(false);
-  const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
-  const [showConfirmModal, setShowConfirmModal] = useState(false);
-  /** Подтверждение возврата к просмотру при несохранённых изменениях */
-  const [showReturnToViewConfirm, setShowReturnToViewConfirm] = useState(false);
-  /** Подтверждение удаления записи */
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  /** Режим просмотра (false) vs редактирования (true). По умолчанию просмотр для существующей сущности. */
-  const [isEditMode, setIsEditMode] = useState(true);
+
+  const {
+    formData,
+    fieldChanges,
+    handleFieldChange,
+    handleResetField,
+    hasChanges,
+    hasUnsavedChanges,
+    showConfirmModal,
+    showReturnToViewConfirm,
+    showDeleteConfirm,
+    handleClose,
+    handleConfirmSave,
+    handleConfirmDiscard,
+    handleConfirmCancel,
+    handleReturnToView,
+    handleConfirmReturnToView,
+    handleDeleteRequest,
+    handleConfirmDelete,
+    dismissReturnToViewConfirm,
+    dismissDeleteConfirm,
+    handleSave,
+    isEditMode,
+    setIsEditMode,
+    isLoading,
+  } = modal;
 
   const groupEvents = useEvents('group', group?.id);
-
-  /** Режим просмотра: только для существующей группы и когда не в edit mode */
   const isViewMode = Boolean(group && !isEditMode);
-
-  // Инициализация данных и режима при открытии модального окна
-  useEffect(() => {
-    if (isOpen) {
-      const initialData = group ? {
-        title: group.title,
-        description: group.description || '',
-        areaId: group.areaId,
-      } : {
-        title: '',
-        description: '',
-        areaId: defaultAreaId || (areas.length > 0 ? areas[0].id : ''),
-      };
-      
-      setFormData(initialData);
-      setOriginalData(initialData);
-      setFieldChanges({});
-      /** Создание — сразу edit; существующая группа — по умолчанию просмотр */
-      setIsEditMode(!group);
-    }
-  }, [isOpen, group, areas, defaultAreaId]);
-
-  // Проверка изменений в полях
-  const hasChanges = Object.values(fieldChanges).some(hasChange => hasChange);
-  const hasUnsavedChanges = hasChanges;
-
-  const handleFieldChange = (field: keyof GroupCreateRequest, value: string) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
-    
-    // Проверяем, изменилось ли поле относительно оригинального значения
-    const hasChanged = value !== originalData[field];
-    setFieldChanges(prev => ({ ...prev, [field]: hasChanged }));
-  };
-
-  const handleResetField = (field: keyof GroupCreateRequest) => {
-    const originalValue = originalData[field];
-    setFormData(prev => ({ ...prev, [field]: originalValue }));
-    setFieldChanges(prev => ({ ...prev, [field]: false }));
-  };
-
-  const handleSave = async () => {
-    if (!formData.title.trim() || !formData.areaId) return;
-    
-    setIsLoading(true);
-    try {
-      // Передаем данные и ID группы отдельно
-      const groupId = group ? group.id : undefined;
-      await onSave(formData, groupId);
-      onClose();
-    } catch (error) {
-      console.error('Ошибка сохранения группы:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClose = () => {
-    if (hasUnsavedChanges) {
-      setShowConfirmModal(true);
-    } else {
-      onClose();
-    }
-  };
-
-  const handleConfirmSave = async () => {
-    setShowConfirmModal(false);
-    await handleSave();
-  };
-
-  const handleConfirmDiscard = () => {
-    setShowConfirmModal(false);
-    onClose();
-  };
-
-  const handleConfirmCancel = () => {
-    setShowConfirmModal(false);
-  };
-
-  /** Возврат к режиму просмотра (только для существующей группы) */
-  const handleReturnToView = () => {
-    if (hasUnsavedChanges) {
-      setShowReturnToViewConfirm(true);
-    } else {
-      setIsEditMode(false);
-    }
-  };
-
-  const handleConfirmReturnToView = () => {
-    setShowReturnToViewConfirm(false);
-    setFormData(originalData);
-    setFieldChanges({});
-    setIsEditMode(false);
-  };
-
-  /** Запрос на удаление — показать подтверждение */
-  const handleDeleteRequest = () => {
-    setShowDeleteConfirm(true);
-  };
-
-  /** Подтверждённое удаление */
-  const handleConfirmDelete = async () => {
-    if (!group?.id || !onDelete) return;
-    setShowDeleteConfirm(false);
-    setIsLoading(true);
-    try {
-      await onDelete(group.id);
-      onClose();
-    } catch (error) {
-      console.error('Ошибка удаления группы:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <Modal 
@@ -426,33 +325,21 @@ export const GroupModal: React.FC<GroupModalProps> = ({
         onConfirm={handleConfirmSave}
         onCancel={handleConfirmCancel}
         onDiscard={handleConfirmDiscard}
-        title="Несохраненные изменения"
-        message="У вас есть несохраненные изменения. Что вы хотите сделать?"
-        confirmText="Сохранить"
-        cancelText="Отмена"
-        discardText="Не сохранять"
-        showDiscard={true}
+        {...CONFIRM_UNSAVED_CHANGES}
       />
       <ConfirmModal
         isOpen={showReturnToViewConfirm}
-        onClose={() => setShowReturnToViewConfirm(false)}
+        onClose={dismissReturnToViewConfirm}
         onConfirm={handleConfirmReturnToView}
-        onCancel={() => setShowReturnToViewConfirm(false)}
-        title="Вернуться к просмотру"
-        message="Есть несохранённые изменения. Вернуться к просмотру без сохранения?"
-        confirmText="Да"
-        cancelText="Нет"
+        onCancel={dismissReturnToViewConfirm}
+        {...CONFIRM_RETURN_TO_VIEW}
       />
       <ConfirmModal
         isOpen={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
+        onClose={dismissDeleteConfirm}
         onConfirm={handleConfirmDelete}
-        onCancel={() => setShowDeleteConfirm(false)}
-        title="Удалить группу"
-        message="Вы уверены, что хотите удалить эту группу? Запись будет деактивирована и скрыта из списков."
-        confirmText="Удалить"
-        cancelText="Отмена"
-        variant="danger"
+        onCancel={dismissDeleteConfirm}
+        {...getConfirmDeleteConfig('группу')}
       />
     </Modal>
   );

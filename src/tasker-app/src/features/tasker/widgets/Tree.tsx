@@ -37,19 +37,7 @@ import {
 } from '../../../services/api';
 import css from '../../../styles/tree.module.css';
 import { EyeIcon } from '../../../components/icons';
-
-// Утилитарная функция для конвертации hex в RGB
-function hexToRgb(hex: string): string {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return '255, 255, 255'; // fallback to white
-  
-  const r = parseInt(result[1], 16);
-  const g = parseInt(result[2], 16);
-  const b = parseInt(result[3], 16);
-  
-  return `${r}, ${g}, ${b}`;
-}
-
+import { hexToRgb } from '../../../utils/color';
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { openAreaModal, openGroupModal, openTaskModal } = useModal();
@@ -334,15 +322,15 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   };
 
   // Обработчики сохранения
-  const handleAreaSave = async (data: any) => {
+  const handleAreaSave = async (data: AreaCreateRequest | (AreaUpdateRequest & { id?: string })) => {
     try {
-      // Определяем режим по наличию ID в данных
-      const isCreate = !data.id;
+      const dataWithId = data as { id?: string } & AreaCreateRequest;
+      const isCreate = !dataWithId.id;
       
       if (isCreate) {
         await createArea(data as AreaCreateRequest);
       } else {
-        await updateArea(data.id, data as AreaUpdateRequest);
+        await updateArea(dataWithId.id!, data as AreaUpdateRequest);
       }
       
       // Перезагружаем список областей
@@ -354,7 +342,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     }
   };
 
-  const handleGroupSave = async (data: any, groupId?: string) => {
+  const handleGroupSave = async (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => {
     try {
       // Определяем режим по наличию groupId
       const isCreate = !groupId;
@@ -414,7 +402,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     }
   };
 
-  const handleTaskSave = async (data: any, taskId?: string) => {
+  const handleTaskSave = async (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => {
     try {
       // Определяем режим по наличию taskId
       const isCreate = !taskId;
