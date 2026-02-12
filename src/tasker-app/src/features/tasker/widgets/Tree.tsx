@@ -589,11 +589,11 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                                           >
                                             <div className={css.taskContent}>
                                               <div className={css.taskInfo}>
-                                                <div className={css.taskTitle}>{task.title}</div>
-                                                <div className={css.taskStatus}>
-                                                  <TaskStatusBadge 
-                                                    status={task.status as TaskStatus} 
-                                                    size="xs" 
+                                                <div className={css.taskTitleRow}>
+                                                  <div className={css.taskTitle}>{task.title}</div>
+                                                  <TaskStatusBadge
+                                                    status={task.status as TaskStatus}
+                                                    size="xs"
                                                   />
                                                 </div>
                                               </div>

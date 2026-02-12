@@ -23,8 +23,9 @@ export const TaskStatusBadge: React.FC<TaskStatusBadgeProps> = ({
   ].filter(Boolean).join(' ');
 
   return (
-    <span 
+    <span
       className={badgeClass}
+      data-status={String(status)}
       style={{ '--status-color': color } as React.CSSProperties}
       title={text}
     >

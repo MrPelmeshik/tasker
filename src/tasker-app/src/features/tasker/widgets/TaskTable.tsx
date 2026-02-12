@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { GlassWidget, GlassButton, GlassTag } from '../../../components';
+import { GlassWidget, GlassButton, GlassTag, TaskStatusBadge } from '../../../components';
 import { EyeIcon } from '../../../components/icons';
 import type { WidgetSizeProps } from '../../../types';
 import type { TaskResponse, TaskUpdateRequest } from '../../../types/api';
@@ -259,6 +259,10 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       >
                         <EyeIcon />
                       </GlassButton>
+                      <TaskStatusBadge
+                        status={(row.task.status ?? TaskStatus.InProgress) as TaskStatus}
+                        size="xs"
+                      />
                       <span>{row.taskName}</span>
                     </div>
                   </td>
