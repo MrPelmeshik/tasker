@@ -230,7 +230,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   disabled={isLoading}
                 >
                   <EditIcon />
-                  Редактировать
                 </GlassButton>
                 {task && onDelete && (
                   <GlassButton
@@ -240,7 +239,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                     disabled={isLoading}
                   >
                     <DeleteIcon />
-                    Удалить
                   </GlassButton>
                 )}
               </>
@@ -272,7 +270,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                     disabled={isLoading}
                   >
                     <DeleteIcon />
-                    Удалить
                   </GlassButton>
                 )}
               </>

@@ -222,7 +222,6 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                   disabled={isLoading}
                 >
                   <EditIcon />
-                  Редактировать
                 </GlassButton>
                 {group && onDelete && (
                   <GlassButton
@@ -232,7 +231,6 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                     disabled={isLoading}
                   >
                     <DeleteIcon />
-                    Удалить
                   </GlassButton>
                 )}
               </>
@@ -264,7 +262,6 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                     disabled={isLoading}
                   >
                     <DeleteIcon />
-                    Удалить
                   </GlassButton>
                 )}
               </>

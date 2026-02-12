@@ -36,6 +36,11 @@ public class TaskEntity :
     public Guid GroupId { get; set; }
 
     /// <summary>
+    /// Навигационное свойство к группе (для каскадных query filters)
+    /// </summary>
+    public GroupEntity? Group { get; set; }
+
+    /// <summary>
     /// Статус задачи
     /// </summary>
     [Column("status")]

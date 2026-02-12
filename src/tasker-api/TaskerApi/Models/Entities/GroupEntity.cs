@@ -34,6 +34,11 @@ public class GroupEntity :
     public Guid AreaId { get; set; }
 
     /// <summary>
+    ///     Навигационное свойство к области (для каскадных query filters)
+    /// </summary>
+    public AreaEntity? Area { get; set; }
+
+    /// <summary>
     /// Дата и время создания.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }

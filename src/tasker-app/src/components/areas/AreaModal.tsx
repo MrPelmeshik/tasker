@@ -213,7 +213,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   disabled={isLoading}
                 >
                   <EditIcon />
-                  Редактировать
                 </GlassButton>
                 {area && onDelete && (
                   <GlassButton
@@ -223,7 +222,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                     disabled={isLoading}
                   >
                     <DeleteIcon />
-                    Удалить
                   </GlassButton>
                 )}
               </>
@@ -255,7 +253,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                     disabled={isLoading}
                   >
                     <DeleteIcon />
-                    Удалить
                   </GlassButton>
                 )}
               </>

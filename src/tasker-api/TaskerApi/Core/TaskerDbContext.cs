@@ -102,6 +102,9 @@ public class TaskerDbContext : DbContext
         // Глобальный фильтр: по умолчанию возвращать только активные записи (IsActive = true)
         ConfigureSoftDeleteFilters(modelBuilder);
 
+        // Каскадные фильтры: задачи и группы возвращаются только если активны родительские сущности
+        ConfigureCascadingActiveFilters(modelBuilder);
+
         modelBuilder.Entity<UserEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -132,7 +135,7 @@ public class TaskerDbContext : DbContext
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(1000);
             
-            entity.HasOne<AreaEntity>()
+            entity.HasOne(g => g.Area)
                 .WithMany()
                 .HasForeignKey(e => e.AreaId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -144,7 +147,7 @@ public class TaskerDbContext : DbContext
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(2000);
             
-            entity.HasOne<GroupEntity>()
+            entity.HasOne(t => t.Group)
                 .WithMany()
                 .HasForeignKey(e => e.GroupId)
                 .OnDelete(DeleteBehavior.Restrict);
@@ -321,6 +324,22 @@ public class TaskerDbContext : DbContext
 
             modelBuilder.Entity(entityType.ClrType).HasQueryFilter(lambda);
         }
+    }
+
+    /// <summary>
+    /// Настраивает каскадные Query Filter для Task и Group: возвращать только записи,
+    /// у которых активны все родительские сущности по иерархии Area → Group → Task.
+    /// </summary>
+    /// <param name="modelBuilder">Построитель модели Entity Framework</param>
+    private void ConfigureCascadingActiveFilters(ModelBuilder modelBuilder)
+    {
+        // Задачи: task.IsActive AND группа активна AND область группы активна
+        modelBuilder.Entity<TaskEntity>().HasQueryFilter(t =>
+            t.IsActive && t.Group != null && t.Group.IsActive && t.Group.Area != null && t.Group.Area.IsActive);
+
+        // Группы: group.IsActive AND область активна
+        modelBuilder.Entity<GroupEntity>().HasQueryFilter(g =>
+            g.IsActive && g.Area != null && g.Area.IsActive);
     }
 
     /// <summary>

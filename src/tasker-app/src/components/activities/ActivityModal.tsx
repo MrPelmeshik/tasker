@@ -79,7 +79,6 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               disabled={!title.trim() || isLoading}
             >
               <SaveIcon />
-              Сохранить
             </GlassButton>
           </div>
         </div>
