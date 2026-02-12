@@ -1,6 +1,4 @@
-using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
-using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Entities;
@@ -21,92 +19,67 @@ public class EventAreaService(
     IAreaRepository areaRepository,
     IAreaRoleService areaRoleService,
     TaskerDbContext context)
-    : BaseService(logger, currentUser), IEventAreaService
+    : BaseEventEntityService(logger, currentUser, eventRepository, areaRoleService, context), IEventAreaService
 {
     /// <inheritdoc />
-    public async Task<EventCreateResponse> AddEventAsync(EventCreateEntityRequest item, CancellationToken cancellationToken)
+    public Task<EventCreateResponse> AddEventAsync(EventCreateEntityRequest item, CancellationToken cancellationToken)
+        => AddEventCoreAsync(item, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<EventResponse>> GetEventsByAreaIdAsync(Guid areaId, CancellationToken cancellationToken)
     {
-        var area = await areaRepository.GetByIdAsync(item.EntityId, cancellationToken);
+        return await GetEventsCoreAsync(areaId, cancellationToken);
+    }
+
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    protected override async Task<Guid> GetAreaIdForEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    {
+        var area = await areaRepository.GetByIdAsync(entityId, cancellationToken);
         if (area == null)
             throw new InvalidOperationException("Область не найдена");
 
-        if (!await areaRoleService.CanAddActivityAsync(area.Id, cancellationToken))
-            throw new UnauthorizedAccessException("Нет прав на добавление записей по активности в область");
+        return area.Id;
+    }
 
-        var now = DateTimeOffset.UtcNow;
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    protected override async Task EnsureAccessToEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    {
+        var area = await areaRepository.GetByIdAsync(entityId, cancellationToken);
+        if (area == null)
+            throw new InvalidOperationException("Область не найдена");
 
-        var messageJson = EventMessageHelper.BuildActivityMessageJson(item.Title, item.Description);
+        if (!CurrentUser.HasAccessToArea(area.Id))
+            throw new UnauthorizedAccessException("Доступ к области запрещен");
+    }
 
-        var eventEntity = new EventEntity
-        {
-            Id = Guid.NewGuid(),
-            Title = item.Title,
-            Message = messageJson,
-            EventType = item.EventType,
-            OwnerUserId = CurrentUser.UserId,
-            CreatedAt = now,
-            UpdatedAt = now,
-            IsActive = true
-        };
-
-        var createdEvent = await eventRepository.CreateAsync(eventEntity, cancellationToken);
-
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    protected override void AddLinkToContext(EventEntity createdEvent, Guid entityId, DateTimeOffset now)
+    {
         var link = new EventToAreaEntity
         {
             EventId = createdEvent.Id,
-            AreaId = item.EntityId,
+            AreaId = entityId,
             OwnerUserId = CurrentUser.UserId,
             CreatedAt = now,
             UpdatedAt = now,
             IsActive = true
         };
         context.EventToAreas.Add(link);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return new EventCreateResponse { Id = createdEvent.Id };
     }
 
+    /// <summary>
     /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventAsync(IUnitOfWork uow, EventCreateEntityRequest item, CancellationToken cancellationToken)
+    /// </summary>
+    protected override IQueryable<Guid> GetEventIdsForEntity(Guid entityId)
     {
-        return AddEventAsync(item, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventCreateEntityAsync(IUnitOfWork uow, Guid entityId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException("Используйте AddEventAsync с EventCreateEntityRequest");
-    }
-
-    /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventUpdateEntityAsync(IUnitOfWork uow, Guid entityId, string changes, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException("Используйте AddEventAsync с EventCreateEntityRequest");
-    }
-
-    /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventDeleteEntityAsync(IUnitOfWork uow, Guid entityId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException("Используйте AddEventAsync с EventCreateEntityRequest");
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<EventResponse>> GetEventsByAreaIdAsync(Guid areaId, CancellationToken cancellationToken)
-    {
-        var area = await areaRepository.GetByIdAsync(areaId, cancellationToken);
-        if (area == null)
-            throw new InvalidOperationException("Область не найдена");
-
-        if (!CurrentUser.HasAccessToArea(area.Id))
-            throw new UnauthorizedAccessException("Доступ к области запрещен");
-
-        var eventIds = context.EventToAreas
-            .Where(l => l.AreaId == areaId && l.IsActive)
+        return context.EventToAreas
+            .Where(l => l.AreaId == entityId && l.IsActive)
             .Select(l => l.EventId);
-        var events = await context.Events
-            .Where(e => eventIds.Contains(e.Id) && e.IsActive)
-            .OrderByDescending(e => e.CreatedAt)
-            .ToListAsync(cancellationToken);
-        return events.Select(e => e.ToEventResponse()).ToList();
     }
 }

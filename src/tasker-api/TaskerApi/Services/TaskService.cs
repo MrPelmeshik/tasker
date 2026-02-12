@@ -1,6 +1,7 @@
 using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
+using TaskerApi.Helpers;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
@@ -39,16 +40,12 @@ public class TaskService(
         try
         {
             var tasks = await taskRepository.GetAllAsync(cancellationToken);
-            
-            var accessibleTasks = new List<TaskEntity>();
-            foreach (var task in tasks)
-            {
-                var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-                if (group != null && CurrentUser.HasAccessToArea(group.AreaId))
-                {
-                    accessibleTasks.Add(task);
-                }
-            }
+
+            var groupIds = tasks.Select(t => t.GroupId).Distinct().ToHashSet();
+            var groups = await groupRepository.FindAsync(g => groupIds.Contains(g.Id), cancellationToken);
+            var groupsByArea = groups.Where(g => CurrentUser.HasAccessToArea(g.AreaId)).Select(g => g.Id).ToHashSet();
+
+            var accessibleTasks = tasks.Where(t => groupsByArea.Contains(t.GroupId)).ToList();
 
             return accessibleTasks.Select(t => t.ToTaskResponse());
         }
@@ -305,13 +302,11 @@ public class TaskService(
             var inProgressTasks = await taskRepository.FindAsync(
                 t => t.Status == TaskStatus.InProgress,
                 cancellationToken);
-            var tasksWithAccess = new List<TaskEntity>();
-            foreach (var task in inProgressTasks)
-            {
-                var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-                if (group != null && CurrentUser.HasAccessToArea(group.AreaId))
-                    tasksWithAccess.Add(task);
-            }
+
+            var groupIds = inProgressTasks.Select(t => t.GroupId).Distinct().ToHashSet();
+            var groups = await groupRepository.FindAsync(g => groupIds.Contains(g.Id), cancellationToken);
+            var accessibleGroupIds = groups.Where(g => CurrentUser.HasAccessToArea(g.AreaId)).Select(g => g.Id).ToHashSet();
+            var tasksWithAccess = inProgressTasks.Where(t => accessibleGroupIds.Contains(t.GroupId)).ToList();
 
             if (tasksWithAccess.Count == 0)
                 return new List<TaskWeeklyActivityResponse>();

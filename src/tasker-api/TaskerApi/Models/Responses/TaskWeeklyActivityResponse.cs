@@ -30,19 +30,3 @@ public class TaskWeeklyActivityResponse
     /// </summary>
     public List<TaskDayActivityResponse> Days { get; set; } = new();
 }
-
-/// <summary>
-/// Активность задачи за день
-/// </summary>
-public class TaskDayActivityResponse
-{
-    /// <summary>
-    /// Дата в формате ISO (YYYY-MM-DD)
-    /// </summary>
-    public string Date { get; set; } = string.Empty;
-
-    /// <summary>
-    /// Количество активностей за день
-    /// </summary>
-    public int Count { get; set; }
-}

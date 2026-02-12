@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Text.Json;
 
-namespace TaskerApi.Services;
+namespace TaskerApi.Helpers;
 
 /// <summary>
 /// Вспомогательный класс для формирования JSON-сообщений событий.
@@ -47,7 +47,6 @@ public static class EventMessageHelper
 
     /// <summary>
     /// Формирует JSON для UPDATE-события с диффом old/new на основе сравнения двух объектов.
-    /// Сравнивает свойства через рефлексию, исключая служебные поля. Возвращает null, если изменений нет.
     /// </summary>
     public static string? BuildUpdateMessageJson(object oldEntity, object newEntity)
     {

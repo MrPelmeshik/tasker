@@ -10,119 +10,52 @@ namespace TaskerApi.Controllers;
 [ApiController]
 [Route("api/[controller]/[action]")]
 [Authorize]
-public class GroupController(IGroupService service) : ControllerBase
+public class GroupController(IGroupService service) : BaseApiController
 {
     [HttpGet]
     [UserLog("Получение списка групп")]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
-    { 
-        try 
-        {
-            return Ok(await service.GetAsync(cancellationToken));
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
+    public Task<IActionResult> GetAll(CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () => Ok(await service.GetAsync(cancellationToken)));
 
     [HttpGet("{id}")]
     [UserLog("Получение группы по идентификатору")]
-    public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
-    { 
-        try 
+    public Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () =>
         {
             var result = await service.GetByIdAsync(id, cancellationToken);
             if (result == null)
-            {
                 return NotFound("Группа не найдена");
-            }
             return Ok(result);
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
-    
+        });
+
     [HttpPost]
     [UserLog("Создание группы")]
-    public async Task<IActionResult> Create([FromBody]GroupCreateRequest item, CancellationToken cancellationToken)
-    {
-        try
-        {
-            return Ok(await service.CreateAsync(item, cancellationToken)); 
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
+    public Task<IActionResult> Create([FromBody] GroupCreateRequest item, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () => Ok(await service.CreateAsync(item, cancellationToken)));
 
     [HttpPut("{id}")]
     [UserLog("Обновление группы")]
-    public async Task<IActionResult> Update(Guid id, [FromBody]GroupUpdateRequest item, CancellationToken cancellationToken)
-    {
-        try
+    public Task<IActionResult> Update(Guid id, [FromBody] GroupUpdateRequest item, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () =>
         {
             await service.UpdateAsync(id, item, cancellationToken);
             return Ok(new { success = true, message = "Группа успешно обновлена" });
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound("Группа не найдена");
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid("Нет доступа к указанной группе");
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
+        });
 
     /// <summary>
     /// Удалить группу (мягкое удаление — деактивация)
     /// </summary>
     [HttpDelete("{id}")]
     [UserLog("Удаление группы")]
-    public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
-    {
-        try
+    public Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () =>
         {
             await service.DeleteAsync(id, cancellationToken);
             return Ok(new { success = true, message = "Группа успешно удалена" });
-        }
-        catch (KeyNotFoundException)
-        {
-            return NotFound("Группа не найдена");
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid("Нет доступа к указанной группе");
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
+        });
 
     [HttpGet("{areaId}")]
     [UserLog("Получение кратких карточек групп по области")]
-    public async Task<IActionResult> GetGroupShortCardByArea(Guid areaId, CancellationToken cancellationToken)
-    { 
-        try 
-        {
-            return Ok(await service.GetGroupShortCardByAreaAsync(areaId, cancellationToken));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return Forbid("Нет доступа к указанной области");
-        }
-        catch (Exception e)
-        {
-            return BadRequest(e.Message);
-        }
-    }
+    public Task<IActionResult> GetGroupShortCardByArea(Guid areaId, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () => Ok(await service.GetGroupShortCardByAreaAsync(areaId, cancellationToken)));
 }

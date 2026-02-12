@@ -1,15 +1,11 @@
-using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
-using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
-using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
 using TaskerApi.Services.Mapping;
-using EventType = TaskerApi.Models.Common.EventType;
 
 namespace TaskerApi.Services;
 
@@ -24,12 +20,24 @@ public class EventTaskService(
     IGroupRepository groupRepository,
     IAreaRoleService areaRoleService,
     TaskerDbContext context)
-    : BaseService(logger, currentUser), IEventTaskService
+    : BaseEventEntityService(logger, currentUser, eventRepository, areaRoleService, context), IEventTaskService
 {
     /// <inheritdoc />
-    public async Task<EventCreateResponse> AddEventAsync(EventCreateEntityRequest item, CancellationToken cancellationToken)
+    public Task<EventCreateResponse> AddEventAsync(EventCreateEntityRequest item, CancellationToken cancellationToken)
+        => AddEventCoreAsync(item, cancellationToken);
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyList<EventResponse>> GetEventsByTaskIdAsync(Guid taskId, CancellationToken cancellationToken)
     {
-        var task = await taskRepository.GetByIdAsync(item.EntityId, cancellationToken);
+        return await GetEventsCoreAsync(taskId, cancellationToken);
+    }
+
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    protected override async Task<Guid> GetAreaIdForEntityAsync(Guid entityId, CancellationToken cancellationToken)
+    {
+        var task = await taskRepository.GetByIdAsync(entityId, cancellationToken);
         if (task == null)
             throw new InvalidOperationException("Задача не найдена");
 
@@ -37,84 +45,47 @@ public class EventTaskService(
         if (group == null)
             throw new InvalidOperationException("Группа не найдена");
 
-        if (!await areaRoleService.CanAddActivityAsync(group.AreaId, cancellationToken))
-            throw new UnauthorizedAccessException("Нет прав на добавление записей по активности в задачу");
-
-        var now = DateTimeOffset.UtcNow;
-
-        var messageJson = EventMessageHelper.BuildActivityMessageJson(item.Title, item.Description);
-
-        var eventEntity = new EventEntity
-        {
-            Id = Guid.NewGuid(),
-            Title = item.Title,
-            Message = messageJson,
-            EventType = item.EventType,
-            OwnerUserId = CurrentUser.UserId,
-            CreatedAt = now,
-            UpdatedAt = now,
-            IsActive = true
-        };
-
-        var createdEvent = await eventRepository.CreateAsync(eventEntity, cancellationToken);
-
-        var link = new EventToTaskEntity
-        {
-            EventId = createdEvent.Id,
-            TaskId = item.EntityId,
-            OwnerUserId = CurrentUser.UserId,
-            CreatedAt = now,
-            UpdatedAt = now,
-            IsActive = true
-        };
-        context.EventToTasks.Add(link);
-        await context.SaveChangesAsync(cancellationToken);
-
-        return new EventCreateResponse { Id = createdEvent.Id };
+        return group.AreaId;
     }
 
+    /// <summary>
     /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventAsync(IUnitOfWork uow, EventCreateEntityRequest item, CancellationToken cancellationToken)
+    /// </summary>
+    protected override async Task EnsureAccessToEntityAsync(Guid entityId, CancellationToken cancellationToken)
     {
-        return AddEventAsync(item, cancellationToken);
-    }
-
-    /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventCreateEntityAsync(IUnitOfWork uow, Guid entityId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException("Используйте AddEventAsync с EventCreateEntityRequest");
-    }
-
-    /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventUpdateEntityAsync(IUnitOfWork uow, Guid entityId, string changes, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException("Используйте AddEventAsync с EventCreateEntityRequest");
-    }
-
-    /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventDeleteEntityAsync(IUnitOfWork uow, Guid entityId, CancellationToken cancellationToken)
-    {
-        throw new NotImplementedException("Используйте AddEventAsync с EventCreateEntityRequest");
-    }
-
-    /// <inheritdoc />
-    public async Task<IReadOnlyList<EventResponse>> GetEventsByTaskIdAsync(Guid taskId, CancellationToken cancellationToken)
-    {
-        var task = await taskRepository.GetByIdAsync(taskId, cancellationToken);
+        var task = await taskRepository.GetByIdAsync(entityId, cancellationToken);
         if (task == null)
             throw new InvalidOperationException("Задача не найдена");
 
         var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
         if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
             throw new UnauthorizedAccessException("Доступ к задаче запрещен");
+    }
 
-        var eventIds = context.EventToTasks
-            .Where(l => l.TaskId == taskId && l.IsActive)
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    protected override void AddLinkToContext(EventEntity createdEvent, Guid entityId, DateTimeOffset now)
+    {
+        var link = new EventToTaskEntity
+        {
+            EventId = createdEvent.Id,
+            TaskId = entityId,
+            OwnerUserId = CurrentUser.UserId,
+            CreatedAt = now,
+            UpdatedAt = now,
+            IsActive = true
+        };
+        context.EventToTasks.Add(link);
+    }
+
+    /// <summary>
+    /// <inheritdoc />
+    /// </summary>
+    protected override IQueryable<Guid> GetEventIdsForEntity(Guid entityId)
+    {
+        return context.EventToTasks
+            .Where(l => l.TaskId == entityId && l.IsActive)
             .Select(l => l.EventId);
-        var events = await context.Events
-            .Where(e => eventIds.Contains(e.Id) && e.IsActive)
-            .OrderByDescending(e => e.CreatedAt)
-            .ToListAsync(cancellationToken);
-        return events.Select(e => e.ToEventResponse()).ToList();
     }
 }
