@@ -29,6 +29,21 @@ export interface AreaResponse {
   deactivatedAt?: string;
 }
 
+/** Роли пользователей в области (соответствует backend AreaRole) */
+export type AreaRole = 'Owner' | 'Administrator' | 'Executor' | 'Observer';
+
+export interface AddAreaMemberRequest {
+  userId?: string;
+  email?: string;
+  role: AreaRole;
+}
+
+export interface AreaMemberResponse {
+  userId: string;
+  userName: string;
+  role: AreaRole;
+}
+
 // Типы для Group API
 export interface GroupCreateRequest {
   title: string;

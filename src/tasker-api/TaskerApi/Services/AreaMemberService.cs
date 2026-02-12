@@ -82,12 +82,23 @@ public class AreaMemberService(
                 throw new UnauthorizedAccessException("Нет прав на назначение участников");
         }
 
-        var targetUser = await userRepository.GetByIdAsync(request.UserId, cancellationToken);
+        var hasEmail = !string.IsNullOrWhiteSpace(request.Email);
+        var hasUserId = request.UserId.HasValue;
+        if (!hasEmail && !hasUserId)
+            throw new InvalidOperationException("Укажите UserId или Email");
+
+        UserEntity? targetUser;
+        if (hasEmail)
+            targetUser = await userRepository.GetByEmailAsync(request.Email!.Trim(), cancellationToken);
+        else
+            targetUser = await userRepository.GetByIdAsync(request.UserId!.Value, cancellationToken);
+
         if (targetUser == null)
             throw new InvalidOperationException("Пользователь не найден");
 
+        var targetUserId = targetUser.Id;
         var existingAccess = (await userAreaAccessRepository.GetByAreaIdAsync(areaId, cancellationToken))
-            .FirstOrDefault(a => a.UserId == request.UserId && a.IsActive);
+            .FirstOrDefault(a => a.UserId == targetUserId && a.IsActive);
 
         if (existingAccess != null)
         {
@@ -97,7 +108,7 @@ public class AreaMemberService(
         }
         else
         {
-            var userAccess = area.ToUserAreaAccessEntity(request.UserId, currentUserService.UserId, request.Role);
+            var userAccess = area.ToUserAreaAccessEntity(targetUserId, currentUserService.UserId, request.Role);
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
         }
     }
