@@ -144,6 +144,9 @@ builder.Services.AddScoped<IPurposeService, PurposeService>();
 builder.Services.AddScoped<ITaskService, TaskService>();
 builder.Services.AddScoped<ISubtaskService, SubtaskService>();
 builder.Services.AddScoped<IUserLogService, UserLogService>();
+builder.Services.AddScoped<IEventTaskService, EventTaskService>();
+builder.Services.AddScoped<IEventGroupService, EventGroupService>();
+builder.Services.AddScoped<IEventAreaService, EventAreaService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
 // builder.Services.AddScoped<UserLogAttribute>();

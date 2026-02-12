@@ -121,6 +121,23 @@
   width: var(--size-32);
 }
 
+/* Кликабельные ячейки дней — курсор и hover */
+.colDayClickable {
+  cursor: pointer;
+}
+
+.colDayClickable:hover {
+  background-color: rgb(var(--white) / 0.14) !important;
+}
+
+/* Невидимый placeholder для пустых ячеек (сохраняет область клика) */
+.heatCellPlaceholder {
+  display: inline-block;
+  width: var(--size-18);
+  height: var(--size-18);
+  vertical-align: middle;
+}
+
 .heatCell {
   position: relative;
   display: inline-block;

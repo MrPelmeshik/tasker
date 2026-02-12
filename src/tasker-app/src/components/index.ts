@@ -5,3 +5,4 @@ export * from './icons';
 export * from './areas';
 export * from './groups';
 export * from './tasks';
+export * from './activities';

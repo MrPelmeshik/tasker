@@ -33,6 +33,9 @@ export interface AreaShortCard {
   title: string;
   description?: string;
   groupsCount: number;
+  creatorUserName: string;
+  createdAt: string;
+  updatedAt: string;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
@@ -42,6 +45,9 @@ export interface GroupSummary {
   description?: string;
   areaId: string;
   tasksCount: number;
+  creatorUserName: string;
+  createdAt: string;
+  updatedAt: string;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }
 
@@ -64,5 +70,8 @@ export interface TaskSummary {
   title: string;
   description?: string;
   status: number; // TaskStatus enum value
+  creatorUserName: string;
+  createdAt: string;
+  updatedAt: string;
   customColor?: string; // Hex цвет для кастомной окраски карточки
 }

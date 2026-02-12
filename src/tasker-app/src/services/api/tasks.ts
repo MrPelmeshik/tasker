@@ -117,7 +117,7 @@ export const fetchActiveTasksByCreator = (creatorUserId: string) => taskApi.getA
 export const fetchTaskSummaryByGroup = (groupId: string) => taskApi.getTaskSummaryByGroup(groupId);
 export const fetchWeeklyTasks = (params: { weekStartIso: string }) => taskApi.getWeeklyTasks(params);
 
-// Утилитарная функция для получения понедельника
+// Утилитарная функция для получения понедельника (в локальном времени)
 export function getMonday(date: Date): Date {
   const d = new Date(date);
   const day = d.getDay();
@@ -125,4 +125,13 @@ export function getMonday(date: Date): Date {
   d.setDate(diff);
   d.setHours(0, 0, 0, 0);
   return d;
+}
+
+/** ISO-строка понедельника по локальной дате (без смещения в UTC) */
+export function getMondayIso(date: Date): string {
+  const m = getMonday(date);
+  const y = m.getFullYear();
+  const mo = String(m.getMonth() + 1).padStart(2, '0');
+  const day = String(m.getDate()).padStart(2, '0');
+  return `${y}-${mo}-${day}`;
 }

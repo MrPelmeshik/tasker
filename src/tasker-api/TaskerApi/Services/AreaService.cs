@@ -18,6 +18,7 @@ public class AreaService(
     IAreaRepository areaRepository,
     IGroupRepository groupRepository,
     IUserAreaAccessRepository userAreaAccessRepository,
+    IUserRepository userRepository,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IAreaService
 {
@@ -55,7 +56,8 @@ public class AreaService(
                 return null;
             }
 
-            return area.ToAreaResponse();
+            var user = await userRepository.GetByIdAsync(area.CreatorUserId, cancellationToken);
+            return area.ToAreaResponse(user?.Name ?? "");
         }, nameof(GetByIdAsync), new { id });
     }
 
@@ -192,7 +194,12 @@ public class AreaService(
         try
         {
             var areas = await areaRepository.GetAllAsync(cancellationToken);
-            var accessibleAreas = areas.Where(a => CurrentUser.HasAccessToArea(a.Id));
+            var accessibleAreas = areas.Where(a => CurrentUser.HasAccessToArea(a.Id)).ToList();
+
+            // Пакетная загрузка имён создателей
+            var userIds = accessibleAreas.Select(a => a.CreatorUserId).Distinct().ToHashSet();
+            var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
+            var userNames = users.ToDictionary(u => u.Id, u => u.Name);
 
             var result = new List<AreaShortCardResponse>();
 
@@ -200,8 +207,9 @@ public class AreaService(
             {
                 var groups = await groupRepository.GetByAreaIdAsync(area.Id, cancellationToken);
                 var groupCount = groups.Count;
+                var creatorName = userNames.GetValueOrDefault(area.CreatorUserId, "");
 
-                result.Add(area.ToAreaShortCardResponse(groupCount));
+                result.Add(area.ToAreaShortCardResponse(groupCount, creatorName));
             }
 
             return result;

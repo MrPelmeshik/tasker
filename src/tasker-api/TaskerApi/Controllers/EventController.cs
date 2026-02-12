@@ -14,19 +14,19 @@ public class EventController(
     IEventGroupService eventGroupService,
     IEventTaskService eventTaskService) : ControllerBase
 {
-    [HttpPost]
+    [HttpPost("addByTask")]
     public async Task<EventCreateResponse> AddEventByTask([FromBody] EventCreateEntityRequest item, CancellationToken cancellationToken)
     {
         return await eventTaskService.AddEventAsync(item, cancellationToken);
     }
     
-    [HttpPost]
+    [HttpPost("addByGroup")]
     public async Task<EventCreateResponse> AddEventByGroup([FromBody] EventCreateEntityRequest item, CancellationToken cancellationToken)
     {
         return await eventGroupService.AddEventAsync(item, cancellationToken);
     }
     
-    [HttpPost]
+    [HttpPost("addByArea")]
     public async Task<EventCreateResponse> AddEventByArea([FromBody] EventCreateEntityRequest item, CancellationToken cancellationToken)
     {
         return await eventAreaService.AddEventAsync(item, cancellationToken);

@@ -49,6 +49,7 @@ function hexToRgb(hex: string): string {
   return `${r}, ${g}, ${b}`;
 }
 
+
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { openAreaModal, openGroupModal, openTaskModal } = useModal();
   const { notifyTaskUpdate } = useTaskUpdate();

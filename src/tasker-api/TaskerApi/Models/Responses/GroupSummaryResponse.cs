@@ -36,6 +36,11 @@ public class GroupSummaryResponse
     public Guid CreatorUserId { get; set; }
     
     /// <summary>
+    /// Имя пользователя-создателя.
+    /// </summary>
+    public string CreatorUserName { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Дата и время создания.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }

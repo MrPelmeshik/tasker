@@ -18,6 +18,7 @@ public class GroupService(
     IGroupRepository groupRepository,
     IAreaRepository areaRepository,
     ITaskRepository taskRepository,
+    IUserRepository userRepository,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IGroupService
 {
@@ -60,7 +61,8 @@ public class GroupService(
                 return null;
             }
 
-            return group.ToGroupResponse();
+            var user = await userRepository.GetByIdAsync(group.CreatorUserId, cancellationToken);
+            return group.ToGroupResponse(user?.Name ?? "");
         }, nameof(GetByIdAsync), new { id });
     }
 
@@ -196,12 +198,19 @@ public class GroupService(
             }
 
             var groups = await groupRepository.GetByAreaIdAsync(areaId, cancellationToken);
+
+            // Пакетная загрузка имён создателей
+            var userIds = groups.Select(g => g.CreatorUserId).Distinct().ToHashSet();
+            var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
+            var userNames = users.ToDictionary(u => u.Id, u => u.Name);
+
             var result = new List<GroupSummaryResponse>(groups.Count);
 
             foreach (var group in groups)
             {
                 var tasks = await taskRepository.GetByGroupIdAsync(group.Id, cancellationToken);
-                result.Add(group.ToGroupSummaryResponse(tasks.Count));
+                var creatorName = userNames.GetValueOrDefault(group.CreatorUserId, "");
+                result.Add(group.ToGroupSummaryResponse(tasks.Count, creatorName));
             }
 
             return result;

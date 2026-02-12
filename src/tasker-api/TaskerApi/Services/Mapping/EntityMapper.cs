@@ -14,7 +14,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг AreaEntity в AreaResponse
     /// </summary>
-    public static AreaResponse ToAreaResponse(this AreaEntity entity)
+    public static AreaResponse ToAreaResponse(this AreaEntity entity, string creatorUserName = "")
     {
         return new AreaResponse
         {
@@ -22,6 +22,7 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             CreatorUserId = entity.CreatorUserId,
+            CreatorUserName = creatorUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -32,7 +33,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг AreaEntity в AreaShortCardResponse
     /// </summary>
-    public static AreaShortCardResponse ToAreaShortCardResponse(this AreaEntity entity, int groupsCount = 0)
+    public static AreaShortCardResponse ToAreaShortCardResponse(this AreaEntity entity, int groupsCount = 0, string creatorUserName = "")
     {
         return new AreaShortCardResponse
         {
@@ -40,7 +41,10 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             GroupCount = groupsCount,
+            CreatorUserId = entity.CreatorUserId,
+            CreatorUserName = creatorUserName,
             CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive
         };
     }
@@ -66,7 +70,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг GroupEntity в GroupResponse
     /// </summary>
-    public static GroupResponse ToGroupResponse(this GroupEntity entity)
+    public static GroupResponse ToGroupResponse(this GroupEntity entity, string creatorUserName = "")
     {
         return new GroupResponse
         {
@@ -75,6 +79,7 @@ public static class EntityMapper
             Description = entity.Description,
             AreaId = entity.AreaId,
             CreatorUserId = entity.CreatorUserId,
+            CreatorUserName = creatorUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -85,7 +90,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг GroupEntity в GroupSummaryResponse
     /// </summary>
-    public static GroupSummaryResponse ToGroupSummaryResponse(this GroupEntity entity, int tasksCount = 0)
+    public static GroupSummaryResponse ToGroupSummaryResponse(this GroupEntity entity, int tasksCount = 0, string creatorUserName = "")
     {
         return new GroupSummaryResponse
         {
@@ -94,6 +99,7 @@ public static class EntityMapper
             Description = entity.Description,
             AreaId = entity.AreaId,
             CreatorUserId = entity.CreatorUserId,
+            CreatorUserName = creatorUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -105,7 +111,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг TaskEntity в TaskResponse
     /// </summary>
-    public static TaskResponse ToTaskResponse(this TaskEntity entity)
+    public static TaskResponse ToTaskResponse(this TaskEntity entity, string creatorUserName = "")
     {
         return new TaskResponse
         {
@@ -114,6 +120,7 @@ public static class EntityMapper
             Description = entity.Description,
             GroupId = entity.GroupId,
             CreatorUserId = entity.CreatorUserId,
+            CreatorUserName = creatorUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -125,7 +132,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг TaskEntity в TaskSummaryResponse
     /// </summary>
-    public static TaskSummaryResponse ToTaskSummaryResponse(this TaskEntity entity)
+    public static TaskSummaryResponse ToTaskSummaryResponse(this TaskEntity entity, string creatorUserName = "")
     {
         return new TaskSummaryResponse
         {
@@ -134,6 +141,7 @@ public static class EntityMapper
             Description = entity.Description,
             GroupId = entity.GroupId,
             CreatorUserId = entity.CreatorUserId,
+            CreatorUserName = creatorUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,

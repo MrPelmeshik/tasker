@@ -26,9 +26,24 @@ public class AreaShortCardResponse
     public int GroupCount { get; set; }
     
     /// <summary>
+    /// Идентификатор пользователя-создателя.
+    /// </summary>
+    public Guid CreatorUserId { get; set; }
+    
+    /// <summary>
+    /// Имя пользователя-создателя.
+    /// </summary>
+    public string CreatorUserName { get; set; } = string.Empty;
+    
+    /// <summary>
     /// Дата и время создания.
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }
+    
+    /// <summary>
+    /// Дата и время последнего обновления.
+    /// </summary>
+    public DateTimeOffset UpdatedAt { get; set; }
     
     /// <summary>
     /// Флаг активности записи.

@@ -1,23 +1,45 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
 import { GlassWidget, GlassButton, GlassTag } from '../../../components';
+import { EyeIcon } from '../../../components/icons';
 import type { WidgetSizeProps } from '../../../types';
+import type { TaskResponse, TaskUpdateRequest } from '../../../types/api';
+import { TaskStatus } from '../../../types/task-status';
 import css from '../../../styles/task-table.module.css';
-import { fetchWeeklyTasks, getMonday, type TaskWeeklyActivity, type TaskDayActivity } from '../../../services/api';
-import { useTaskUpdate } from '../../../context';
+import {
+  fetchTasks,
+  fetchWeeklyTasks,
+  fetchTaskById,
+  fetchGroupById,
+  fetchGroupsByArea,
+  updateTask,
+  createEventForTask,
+  EventTypeActivity,
+  getMondayIso,
+  type TaskWeeklyActivity,
+  type TaskDayActivity,
+} from '../../../services/api';
+import { useModal, useTaskUpdate } from '../../../context';
 
 type WeekNav = 'prev' | 'next' | 'current' | 'latest';
 
+/** Строка таблицы: задача + активность по дням */
+type TaskRow = {
+  taskId: string;
+  taskName: string;
+  carryWeeks: number;
+  hasFutureActivities: boolean;
+  days: TaskDayActivity[];
+  task: TaskResponse;
+};
+
 function useWeek(): { weekStartIso: string; go: (nav: WeekNav) => void; set: (iso: string) => void } {
-  const monday = useMemo(() => getMonday(new Date()), []);
-  const [weekStartIso, setWeekStartIso] = useState(() => monday.toISOString().slice(0, 10));
+  const [weekStartIso, setWeekStartIso] = useState(() => getMondayIso(new Date()));
 
   const go = (nav: WeekNav) => {
-    if (nav === 'current') return setWeekStartIso(monday.toISOString().slice(0, 10));
-    if (nav === 'latest') return setWeekStartIso(monday.toISOString().slice(0, 10));
-    const base = new Date(weekStartIso + 'T00:00:00Z');
-    const delta = nav === 'prev' ? -7 : 7;
-    base.setUTCDate(base.getUTCDate() + delta);
-    setWeekStartIso(base.toISOString().slice(0, 10));
+    if (nav === 'current' || nav === 'latest') return setWeekStartIso(getMondayIso(new Date()));
+    const base = new Date(weekStartIso + 'T12:00:00');
+    base.setDate(base.getDate() + (nav === 'prev' ? -7 : 7));
+    setWeekStartIso(getMondayIso(base));
   };
 
   return { weekStartIso, go, set: setWeekStartIso };
@@ -36,6 +58,16 @@ function buildWeekDays(isoMonday: string): { label: string; title: string }[] {
   });
 }
 
+/** 7 ISO-дат для выбранной недели */
+function buildWeekDates(isoMonday: string): string[] {
+  const base = new Date(isoMonday + 'T00:00:00Z');
+  return Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(base);
+    d.setUTCDate(d.getUTCDate() + i);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
 function intensityClass(count: number): string {
   if (count <= 0) return css.intensity0;
   if (count <= 2) return css.intensity1;
@@ -48,37 +80,117 @@ function intensityClass(count: number): string {
 export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { weekStartIso, go } = useWeek();
   const [loading, setLoading] = useState(false);
-  const [data, setData] = useState<TaskWeeklyActivity[]>([]);
-  const { subscribeToTaskUpdates } = useTaskUpdate();
+  const [rows, setRows] = useState<TaskRow[]>([]);
+  const { openTaskModal, openActivityModal, closeActivityModal } = useModal();
+  const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
 
-  // Функция для загрузки данных
   const loadData = useCallback(async () => {
     let alive = true;
     setLoading(true);
     try {
-      const res = await fetchWeeklyTasks({ weekStartIso });
-      if (alive) setData(res);
+      const [tasksRes, weeklyRes] = await Promise.all([
+        fetchTasks(),
+        fetchWeeklyTasks({ weekStartIso }),
+      ]);
+      if (!alive) return;
+
+      const inProgressTasks = tasksRes.filter(t => t.status === TaskStatus.InProgress);
+      const weeklyByTaskId = new Map<string, TaskWeeklyActivity>();
+      weeklyRes.forEach(a => weeklyByTaskId.set(a.taskId, a));
+
+      const weekDates = buildWeekDates(weekStartIso);
+      const merged: TaskRow[] = inProgressTasks.map(task => {
+        const activity = weeklyByTaskId.get(task.id);
+        const daysMap = activity ? new Map(activity.days.map(d => [d.date, d.count])) : null;
+        const days: TaskDayActivity[] = weekDates.map(date => ({
+          date,
+          count: daysMap?.get(date) ?? 0,
+        }));
+        return {
+          taskId: task.id,
+          taskName: task.title,
+          carryWeeks: activity?.carryWeeks ?? 0,
+          hasFutureActivities: activity?.hasFutureActivities ?? false,
+          days,
+          task,
+        };
+      });
+
+      setRows(merged);
     } catch (error) {
-      console.error('Ошибка загрузки недельных задач:', error);
-      if (alive) setData([]);
+      console.error('Ошибка загрузки задач:', error);
+      if (alive) setRows([]);
     } finally {
       if (alive) setLoading(false);
     }
     return () => { alive = false; };
   }, [weekStartIso]);
 
-  // Загрузка данных при изменении недели
+  const handleActivitySaveForTask = useCallback(
+    (task: TaskResponse) => async (data: { title: string; description: string }) => {
+      await createEventForTask({
+        entityId: task.id,
+        title: data.title,
+        description: data.description || undefined,
+        eventType: EventTypeActivity,
+      });
+      await loadData();
+      notifyTaskUpdate(task.id, task.groupId);
+    },
+    [loadData, notifyTaskUpdate]
+  );
+
+  const handleTaskSave = useCallback(async (data: TaskUpdateRequest, taskId?: string) => {
+    if (!taskId) return;
+    try {
+      await updateTask(taskId, data);
+      await loadData();
+      notifyTaskUpdate(taskId, data.groupId);
+    } catch (error) {
+      console.error('Ошибка сохранения задачи:', error);
+      throw error;
+    }
+  }, [loadData, notifyTaskUpdate]);
+
+  const handleDayCellClick = useCallback(
+    (task: TaskResponse, _date: string, event: React.MouseEvent) => {
+      event.stopPropagation();
+      const onOpenTaskDetails = async () => {
+        closeActivityModal();
+        try {
+          const group = await fetchGroupById(task.groupId);
+          if (!group) return;
+          const groupsForModal = await fetchGroupsByArea(group.areaId);
+          openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id));
+        } catch (error) {
+          console.error('Ошибка загрузки задачи:', error);
+        }
+      };
+      openActivityModal(task, handleActivitySaveForTask(task), onOpenTaskDetails);
+    },
+    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleActivitySaveForTask]
+  );
+
+  const handleViewTaskDetails = useCallback(async (taskId: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    try {
+      const task = await fetchTaskById(taskId);
+      if (!task) return;
+      const group = await fetchGroupById(task.groupId);
+      if (!group) return;
+      const groupsForModal = await fetchGroupsByArea(group.areaId);
+      openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id));
+    } catch (error) {
+      console.error('Ошибка загрузки задачи:', error);
+    }
+  }, [openTaskModal, handleTaskSave]);
+
   useEffect(() => {
     loadData();
   }, [loadData]);
 
-  // Подписка на обновления задач
   useEffect(() => {
-    const unsubscribe = subscribeToTaskUpdates((taskId, groupId) => {
-      // Перезагружаем данные при любом обновлении задачи
-      loadData();
-    });
-
+    const unsubscribe = subscribeToTaskUpdates(() => loadData());
     return unsubscribe;
   }, [subscribeToTaskUpdates, loadData]);
 
@@ -94,7 +206,6 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           <div className={css.spacer} />
           <span className={css.muted}>{weekStartIso}</span>
         </div>
-        {/* Static header table to prevent body text from sliding under header */}
         <table className={css.table}>
           <thead className={css.thead}>
             <tr>
@@ -115,39 +226,40 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                   <td className={css.td} colSpan={10}>Загрузка…</td>
                 </tr>
               )}
-              {!loading && data.map(task => (
-                <tr key={task.taskId}>
-                  <td className={`${css.td} ${css.colCarry}`} title={`Перенос: ${task.carryWeeks}`}>
-                    {task.carryWeeks > 0 ? (
-                      <GlassTag 
-                        variant="subtle" 
-                        size="xs"
-                      >
-                        {task.carryWeeks}
-                      </GlassTag>
+              {!loading && rows.map(row => (
+                <tr key={row.taskId}>
+                  <td className={`${css.td} ${css.colCarry}`} title={row.carryWeeks > 0 ? 'Есть активности в прошлых неделях' : 'Нет активностей в прошлых неделях'}>
+                    {row.carryWeeks > 0 ? (
+                      <GlassTag variant="subtle" size="xs">←</GlassTag>
                     ) : null}
                   </td>
-                  {task.days.map((day: TaskDayActivity) => (
-                    <td key={day.date} className={`${css.td} ${css.colDay}`}>
+                  {row.days.map(day => (
+                    <td
+                      key={day.date}
+                      className={`${css.td} ${css.colDay} ${css.colDayClickable}`}
+                      onClick={(e) => handleDayCellClick(row.task, day.date, e)}
+                    >
                       {day.count > 0 ? (
                         <span title={String(day.count)} className={`${css.heatCell} ${intensityClass(day.count)}`} />
-                      ) : null}
+                      ) : (
+                        <span className={css.heatCellPlaceholder} />
+                      )}
                     </td>
                   ))}
-                  <td className={`${css.td} ${css.colFuture}`} title={task.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>
-                    {task.hasFutureActivities ? (
-                      <GlassTag 
-                        variant="subtle" 
-                        size="xs"
-                      >
-                        →
-                      </GlassTag>
-                    ) : null}
+                  <td className={`${css.td} ${css.colFuture}`} title={row.hasFutureActivities ? 'Есть активности в будущих неделях' : 'Нет активностей в будущих неделях'}>
+                    {row.hasFutureActivities ? <GlassTag variant="subtle" size="xs">→</GlassTag> : null}
                   </td>
                   <td className={`${css.td} ${css.colTask}`}>
                     <div className={css.taskCell}>
-                      <GlassButton size="xxs" variant="subtle" onClick={() => {}} className={css.taskButton}>+</GlassButton>
-                      <span>{task.taskName}</span>
+                      <GlassButton
+                        size="xxs"
+                        variant="subtle"
+                        onClick={(e: React.MouseEvent) => handleViewTaskDetails(row.taskId, e)}
+                        className={css.taskButton}
+                      >
+                        <EyeIcon />
+                      </GlassButton>
+                      <span>{row.taskName}</span>
                     </div>
                   </td>
                 </tr>
@@ -159,5 +271,3 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     </GlassWidget>
   );
 };
-
-

@@ -22,6 +22,7 @@ export interface AreaResponse {
   title: string;
   description?: string;
   creatorUserId: string;
+  creatorUserName?: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -47,6 +48,7 @@ export interface GroupResponse {
   description?: string;
   areaId: string;
   creatorUserId: string;
+  creatorUserName?: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -63,6 +65,9 @@ export interface AreaShortCardResponse {
   title: string;
   description?: string;
   groupsCount: number;
+  creatorUserName: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface GroupSummaryResponse {
@@ -71,6 +76,9 @@ export interface GroupSummaryResponse {
   description?: string;
   areaId: string;
   tasksCount: number;
+  creatorUserName: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Типы для Task API
@@ -95,6 +103,7 @@ export interface TaskResponse {
   groupId: string;
   status: number; // TaskStatus enum value
   creatorUserId: string;
+  creatorUserName?: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -110,6 +119,9 @@ export interface TaskSummaryResponse {
   title: string;
   description?: string;
   status: number; // TaskStatus enum value
+  creatorUserName: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // Типы для недельной активности задач
@@ -124,6 +136,20 @@ export interface TaskWeeklyActivity {
 export interface TaskDayActivity {
   date: string;
   count: number;
+}
+
+// Типы для Events API (активности)
+export type EventType = number; // 0=UNKNOWN, 1=CREATE, 2=UPDATE, 3=DELETE, 4=NOTE, 5=ACTIVITY
+
+export interface EventCreateRequest {
+  entityId: string;
+  title: string;
+  description?: string;
+  eventType: EventType;
+}
+
+export interface EventCreateResponse {
+  id: string;
 }
 
 // Общие типы для CRUD операций

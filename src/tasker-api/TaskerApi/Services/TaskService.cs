@@ -1,3 +1,5 @@
+using System.Globalization;
+using Microsoft.EntityFrameworkCore;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
@@ -20,6 +22,7 @@ public class TaskService(
     ITaskRepository taskRepository,
     IGroupRepository groupRepository,
     IEventRepository eventRepository,
+    IUserRepository userRepository,
     TaskerDbContext context)
     : BaseService(logger, currentUser), ITaskService
 {
@@ -75,7 +78,8 @@ public class TaskService(
                 return null;
             }
 
-            return task.ToTaskResponse();
+            var user = await userRepository.GetByIdAsync(task.CreatorUserId, cancellationToken);
+            return task.ToTaskResponse(user?.Name ?? "");
         }
         catch (Exception ex)
         {
@@ -240,21 +244,86 @@ public class TaskService(
 
             var tasks = await taskRepository.GetByGroupIdAsync(groupId, cancellationToken);
 
-            return tasks.Select(t => t.ToTaskSummaryResponse());
+            // Пакетная загрузка имён создателей
+            var userIds = tasks.Select(t => t.CreatorUserId).Distinct().ToHashSet();
+            var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
+            var userNames = users.ToDictionary(u => u.Id, u => u.Name);
+
+            return tasks.Select(t => t.ToTaskSummaryResponse(userNames.GetValueOrDefault(t.CreatorUserId, "")));
         }, nameof(GetTaskSummaryByGroupAsync), new { groupId });
     }
 
     /// <summary>
-    /// Получить недельную активность
+    /// Получить недельную активность задач (агрегация событий типа ACTIVITY по дням)
     /// </summary>
-    /// <param name="request">Параметры запроса недельной активности</param>
+    /// <param name="request">Параметры запроса недельной активности (год, номер недели)</param>
     /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Список недельной активности</returns>
+    /// <returns>Список недельной активности по задачам в статусе In Progress</returns>
     public async Task<IEnumerable<TaskWeeklyActivityResponse>> GetWeeklyActivityAsync(TaskWeeklyActivityRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            return new List<TaskWeeklyActivityResponse>();
+            var weekStart = ISOWeek.ToDateTime(request.Year, request.WeekNumber, DayOfWeek.Monday);
+            var weekStartOffset = new DateTimeOffset(weekStart, TimeSpan.Zero);
+            var weekEndOffset = weekStartOffset.AddDays(7);
+
+            var inProgressTasks = await taskRepository.FindAsync(
+                t => t.Status == TaskStatus.InProgress,
+                cancellationToken);
+            var tasksWithAccess = new List<TaskEntity>();
+            foreach (var task in inProgressTasks)
+            {
+                var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
+                if (group != null && CurrentUser.HasAccessToArea(group.AreaId))
+                    tasksWithAccess.Add(task);
+            }
+
+            if (tasksWithAccess.Count == 0)
+                return new List<TaskWeeklyActivityResponse>();
+
+            var taskIds = tasksWithAccess.Select(t => t.Id).ToHashSet();
+            var taskNames = tasksWithAccess.ToDictionary(t => t.Id, t => t.Title);
+
+            var activityQuery = context.EventToTasks
+                .AsNoTracking()
+                .Where(et => taskIds.Contains(et.TaskId) && et.IsActive)
+                .Join(context.Events.Where(e => e.EventType == EventType.ACTIVITY && e.IsActive),
+                    et => et.EventId,
+                    e => e.Id,
+                    (et, e) => new { et.TaskId, OccurredAt = e.CreatedAt });
+
+            var activities = await activityQuery.ToListAsync(cancellationToken);
+
+            var weekDates = Enumerable.Range(0, 7)
+                .Select(i => weekStartOffset.AddDays(i).ToString("yyyy-MM-dd"))
+                .ToList();
+
+            var result = new List<TaskWeeklyActivityResponse>();
+            foreach (var task in tasksWithAccess)
+            {
+                var taskActivities = activities.Where(a => a.TaskId == task.Id).ToList();
+                var byDate = taskActivities
+                    .GroupBy(a => a.OccurredAt.UtcDateTime.ToString("yyyy-MM-dd"))
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                var carryWeeks = taskActivities.Count(a => a.OccurredAt < weekStartOffset);
+                var hasFutureActivities = taskActivities.Any(a => a.OccurredAt >= weekEndOffset);
+
+                result.Add(new TaskWeeklyActivityResponse
+                {
+                    TaskId = task.Id,
+                    TaskName = taskNames.GetValueOrDefault(task.Id, ""),
+                    CarryWeeks = carryWeeks > 0 ? 1 : 0,
+                    HasFutureActivities = hasFutureActivities,
+                    Days = weekDates.Select(d => new TaskDayActivityResponse
+                    {
+                        Date = d,
+                        Count = byDate.GetValueOrDefault(d, 0)
+                    }).ToList()
+                });
+            }
+
+            return result;
         }
         catch (Exception ex)
         {

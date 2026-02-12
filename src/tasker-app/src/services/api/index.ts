@@ -5,6 +5,7 @@ export { BaseApiClient, apiUtils } from './base';
 export { areaApi, AreaApiClient } from './areas';
 export { groupApi, GroupApiClient } from './groups';
 export * from './tasks';
+export * from './events';
 
 // Экспорт функций для совместимости
 export * from './areas-groups';
@@ -52,8 +53,11 @@ export {
   fetchActiveTasksByCreator,
   fetchTaskSummaryByGroup,
   fetchWeeklyTasks,
-  getMonday
+  getMonday,
+  getMondayIso
 } from './tasks';
+
+export { createEventForTask, EventTypeActivity } from './events';
 
 // Экспорт типов
 export type {

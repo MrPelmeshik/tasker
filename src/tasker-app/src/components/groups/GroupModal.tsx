@@ -13,6 +13,19 @@ import formCss from '../../styles/modal-form.module.css';
 import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaResponse } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 
+/// Форматирование ISO-даты в формат дд.мм.гг чч:мм
+function formatDateTime(iso: string): string {
+  if (!iso) return '';
+  const d = new Date(iso);
+  if (isNaN(d.getTime())) return '';
+  const dd = String(d.getDate()).padStart(2, '0');
+  const mm = String(d.getMonth() + 1).padStart(2, '0');
+  const yy = String(d.getFullYear()).slice(-2);
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${dd}.${mm}.${yy} ${hh}:${min}`;
+}
+
 export interface GroupModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -247,6 +260,31 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                 />
               </div>
             </div>
+
+            {/* Метаданные (только в режиме редактирования) */}
+            {group && (
+              <div className={formCss.readonlyMeta}>
+                <div className={formCss.readonlyMetaTitle}>Информация</div>
+                {group.creatorUserName && (
+                  <div className={formCss.readonlyMetaRow}>
+                    <span className={formCss.readonlyMetaLabel}>Автор</span>
+                    <span className={formCss.readonlyMetaValue}>{group.creatorUserName}</span>
+                  </div>
+                )}
+                {group.createdAt && (
+                  <div className={formCss.readonlyMetaRow}>
+                    <span className={formCss.readonlyMetaLabel}>Дата создания</span>
+                    <span className={formCss.readonlyMetaValue}>{formatDateTime(group.createdAt)}</span>
+                  </div>
+                )}
+                {group.updatedAt && (
+                  <div className={formCss.readonlyMetaRow}>
+                    <span className={formCss.readonlyMetaLabel}>Дата обновления</span>
+                    <span className={formCss.readonlyMetaValue}>{formatDateTime(group.updatedAt)}</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
