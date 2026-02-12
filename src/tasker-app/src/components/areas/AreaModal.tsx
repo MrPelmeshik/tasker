@@ -7,7 +7,8 @@ import { GlassTextarea } from '../ui/GlassTextarea';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
-import { ActivityChain } from '../activities';
+import { ActivityList } from '../activities/ActivityList';
+import { useEvents } from '../activities/useEvents';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest } from '../../types';
@@ -54,6 +55,8 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const areaEvents = useEvents('area', area?.id);
 
   // Инициализация данных при открытии модального окна
   useEffect(() => {
@@ -245,7 +248,16 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             )}
 
             {/* Цепочка активностей (только в режиме редактирования) */}
-            {area && <ActivityChain entityType="area" entityId={area.id} />}
+            {area && (
+              <ActivityList
+                events={areaEvents.events}
+                loading={areaEvents.loading}
+                error={areaEvents.error}
+                headerTitle="История активностей"
+                showTypeFilter={true}
+                defaultExpanded={true}
+              />
+            )}
           </div>
         </div>
       </div>

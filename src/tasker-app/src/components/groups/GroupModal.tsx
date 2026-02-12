@@ -8,7 +8,8 @@ import { GlassSelect } from '../ui';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { ResetIcon } from '../icons/ResetIcon';
-import { ActivityChain } from '../activities';
+import { ActivityList } from '../activities/ActivityList';
+import { useEvents } from '../activities/useEvents';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { GroupResponse, GroupCreateRequest, GroupUpdateRequest, AreaResponse } from '../../types';
@@ -61,6 +62,8 @@ export const GroupModal: React.FC<GroupModalProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+
+  const groupEvents = useEvents('group', group?.id);
 
   // Инициализация данных при открытии модального окна
   useEffect(() => {
@@ -288,7 +291,16 @@ export const GroupModal: React.FC<GroupModalProps> = ({
             )}
 
             {/* Цепочка активностей (только в режиме редактирования) */}
-            {group && <ActivityChain entityType="group" entityId={group.id} />}
+            {group && (
+              <ActivityList
+                events={groupEvents.events}
+                loading={groupEvents.loading}
+                error={groupEvents.error}
+                headerTitle="История активностей"
+                showTypeFilter={true}
+                defaultExpanded={true}
+              />
+            )}
           </div>
         </div>
       </div>

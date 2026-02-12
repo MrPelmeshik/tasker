@@ -6,10 +6,12 @@ import { GlassTextarea } from '../ui/GlassTextarea';
 import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { EyeIcon } from '../icons/EyeIcon';
-import { ActivityChain } from './ActivityChain';
+import { ActivityList } from './ActivityList';
+import { useEvents } from './useEvents';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import activityModalCss from '../../styles/activity-modal.module.css';
+import { formatDateOnly } from '../../utils/date';
 import type { TaskResponse } from '../../types/api';
 
 export interface ActivityFormData {
@@ -38,6 +40,8 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+
+  const taskEvents = useEvents('task', task.id, date ?? undefined);
 
   useEffect(() => {
     if (isOpen) {
@@ -92,7 +96,14 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           </div>
           {date && (
             <div style={{ marginBottom: 'var(--space-16)' }}>
-              <ActivityChain entityType="task" entityId={task.id} date={date} />
+              <ActivityList
+                events={taskEvents.events}
+                loading={taskEvents.loading}
+                error={taskEvents.error}
+                headerTitle={date ? `Активности за ${formatDateOnly(date)}` : 'История активностей'}
+                showTypeFilter={true}
+                defaultExpanded={true}
+              />
             </div>
           )}
           <div className={formCss.formContainer}>
