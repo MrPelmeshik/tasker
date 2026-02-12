@@ -42,6 +42,48 @@
   border-radius: 0.625rem;
 }
 
+/* Компактный режим — кружок */
+.compact {
+  padding: 0;
+  border-radius: 50%;
+  min-width: 0.375rem;
+  min-height: 0.375rem;
+  width: 0.375rem;
+  height: 0.375rem;
+}
+
+.compact.badge:hover {
+  transform: none;
+}
+
+.compact.xs {
+  min-width: 0.375rem;
+  min-height: 0.375rem;
+  width: 0.375rem;
+  height: 0.375rem;
+}
+
+.compact.s {
+  min-width: 0.5rem;
+  min-height: 0.5rem;
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+.compact.m {
+  min-width: 0.625rem;
+  min-height: 0.625rem;
+  width: 0.625rem;
+  height: 0.625rem;
+}
+
+.compact.l {
+  min-width: 0.75rem;
+  min-height: 0.75rem;
+  width: 0.75rem;
+  height: 0.75rem;
+}
+
 /* Специальные стили для разных статусов */
 .badge[data-status="1"] {
   background-color: #3b82f6;

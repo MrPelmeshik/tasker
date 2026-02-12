@@ -302,6 +302,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       <TaskStatusBadge
                         status={(row.task.status ?? TaskStatus.InProgress) as TaskStatus}
                         size="xs"
+                        variant="compact"
                       />
                       <span>{row.taskName}</span>
                     </div>

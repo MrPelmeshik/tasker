@@ -661,6 +661,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                                                   <TaskStatusBadge
                                                     status={task.status as TaskStatus}
                                                     size="xs"
+                                                    variant="compact"
                                                   />
                                                 </div>
                                               </div>
