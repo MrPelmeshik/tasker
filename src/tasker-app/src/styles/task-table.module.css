@@ -13,6 +13,12 @@
 
 .spacer { flex: 1; }
 
+.weekLabel {
+  font-size: var(--font-13);
+  font-weight: 500;
+  color: var(--color-text);
+}
+
 /* Removed local .btn overrides; GlassButton handles button styling */
 
 .gridWrapper {

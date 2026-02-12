@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { GlassWidget, GlassButton, GlassTag, TaskStatusBadge } from '../../../components';
+import { GlassWidget, GlassButton, GlassTag, TaskStatusBadge, Tooltip } from '../../../components';
 import { EyeIcon } from '../../../components/icons';
 import type { WidgetSizeProps } from '../../../types';
 import type { TaskResponse, TaskUpdateRequest } from '../../../types/api';
@@ -19,6 +19,7 @@ import {
   type TaskDayActivity,
 } from '../../../services/api';
 import { useModal, useTaskUpdate } from '../../../context';
+import { formatDateOnly } from '../../../utils/date';
 
 type WeekNav = 'prev' | 'next' | 'current' | 'latest';
 
@@ -45,17 +46,27 @@ function useWeek(): { weekStartIso: string; go: (nav: WeekNav) => void; set: (is
   return { weekStartIso, go, set: setWeekStartIso };
 }
 
-function buildWeekDays(isoMonday: string): { label: string; title: string }[] {
+/** Данные для заголовков дней недели (label — краткое, weekdayLong — полное для подсказки) */
+function buildWeekDays(isoMonday: string): { label: string; weekdayLong: string; date: string }[] {
   const base = new Date(isoMonday + 'T00:00:00Z');
   const weekdayFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'short' });
+  const weekdayLongFmt = new Intl.DateTimeFormat('ru-RU', { weekday: 'long' });
   const dateFmt = new Intl.DateTimeFormat('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
   return Array.from({ length: 7 }, (_, i) => {
     const d = new Date(base);
     d.setUTCDate(d.getUTCDate() + i);
     const weekday = weekdayFmt.format(d);
+    const weekdayLong = weekdayLongFmt.format(d);
     const date = dateFmt.format(d);
-    return { label: weekday, title: `${weekday}, ${date}` };
+    return { label: weekday, weekdayLong, date };
   });
+}
+
+/** ISO-дата конца недели (понедельник + 6 дней) */
+function getWeekEndIso(isoMonday: string): string {
+  const base = new Date(isoMonday + 'T00:00:00Z');
+  base.setUTCDate(base.getUTCDate() + 6);
+  return base.toISOString().slice(0, 10);
 }
 
 /** 7 ISO-дат для выбранной недели */
@@ -195,23 +206,32 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   }, [subscribeToTaskUpdates, loadData]);
 
   const daysHeader = useMemo(() => buildWeekDays(weekStartIso), [weekStartIso]);
+  const dateRangeLabel = useMemo(
+    () => `${formatDateOnly(weekStartIso)} – ${formatDateOnly(getWeekEndIso(weekStartIso))}`,
+    [weekStartIso]
+  );
 
   return (
     <GlassWidget colSpan={colSpan} rowSpan={rowSpan}>
       <div className={css.container}>
         <div className={css.toolbar}>
-          <GlassButton size="s" variant="subtle" onClick={() => go('prev')}>Пред. неделя</GlassButton>
+          <span className={css.weekLabel}>Неделя</span>
+          <GlassButton size="s" variant="subtle" onClick={() => go('prev')}>Предыдущая</GlassButton>
           <GlassButton size="s" variant="subtle" onClick={() => go('current')}>Текущая</GlassButton>
-          <GlassButton size="s" variant="subtle" onClick={() => go('next')}>След. неделя</GlassButton>
+          <GlassButton size="s" variant="subtle" onClick={() => go('next')}>Следующая</GlassButton>
           <div className={css.spacer} />
-          <span className={css.muted}>{weekStartIso}</span>
+          <span className={css.muted}>{dateRangeLabel}</span>
         </div>
         <table className={css.table}>
           <thead className={css.thead}>
             <tr>
               <th className={`${css.th} ${css.colCarry}`} title="Количество недель переноса"></th>
               {daysHeader.map((d, i) => (
-                <th key={i} className={`${css.th} ${css.colDay}`} title={d.title}>{d.label}</th>
+                <th key={i} className={`${css.th} ${css.colDay}`}>
+                  <Tooltip content={`${d.weekdayLong}, ${d.date}`} placement="bottom" size="s">
+                    <span>{d.label}</span>
+                  </Tooltip>
+                </th>
               ))}
               <th className={`${css.th} ${css.colFuture}`} title="Активности после этой недели"></th>
               <th className={`${css.th} ${css.colTask}`}>Задача</th>
