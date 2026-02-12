@@ -1,30 +1,30 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Attributes;
-using TaskerApi.Interfaces.Repositories;
-using TaskerApi.Models.Entities;
+using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Requests;
 
 namespace TaskerApi.Controllers;
 
 /// <summary>
-/// Контроллер для работы с пользователями (пример использования репозиториев)
+/// Контроллер для работы с пользователями.
 /// </summary>
 [ApiController]
 [Route("api/[controller]/[action]")]
 [Authorize]
 public class UserController : ControllerBase
 {
-    private readonly IUserRepository _userRepository;
+    private readonly IUserService _userService;
     private readonly ILogger<UserController> _logger;
 
-    public UserController(IUserRepository userRepository, ILogger<UserController> logger)
+    public UserController(IUserService userService, ILogger<UserController> logger)
     {
-        _userRepository = userRepository;
+        _userService = userService;
         _logger = logger;
     }
 
     /// <summary>
-    /// Получить всех пользователей
+    /// Получить всех пользователей.
     /// </summary>
     [HttpGet]
     [UserLog("Получение списка пользователей")]
@@ -32,7 +32,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var users = await _userRepository.GetAllAsync(cancellationToken);
+            var users = await _userService.GetAllAsync(cancellationToken);
             return Ok(users);
         }
         catch (Exception e)
@@ -43,15 +43,15 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Получить пользователя по ID
+    /// Получить пользователя по ID.
     /// </summary>
-    [HttpGet("{id}")]
+    [HttpGet("{id:guid}")]
     [UserLog("Получение пользователя по идентификатору")]
     public async Task<IActionResult> GetById(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            var user = await _userRepository.GetByIdAsync(id, cancellationToken);
+            var user = await _userService.GetByIdAsync(id, cancellationToken);
             if (user == null)
             {
                 return NotFound("Пользователь не найден");
@@ -66,7 +66,7 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Получить пользователя по имени
+    /// Получить пользователя по имени.
     /// </summary>
     [HttpGet("by-name/{name}")]
     [UserLog("Получение пользователя по имени")]
@@ -74,7 +74,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var user = await _userRepository.GetByNameAsync(name, cancellationToken);
+            var user = await _userService.GetByNameAsync(name, cancellationToken);
             if (user == null)
             {
                 return NotFound("Пользователь не найден");
@@ -89,7 +89,7 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Получить пользователя по email
+    /// Получить пользователя по email.
     /// </summary>
     [HttpGet("by-email/{email}")]
     [UserLog("Получение пользователя по email")]
@@ -97,7 +97,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var user = await _userRepository.GetByEmailAsync(email, cancellationToken);
+            var user = await _userService.GetByEmailAsync(email, cancellationToken);
             if (user == null)
             {
                 return NotFound("Пользователь не найден");
@@ -112,16 +112,24 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Создать пользователя
+    /// Создать пользователя.
     /// </summary>
     [HttpPost]
     [UserLog("Создание пользователя")]
-    public async Task<IActionResult> Create([FromBody] UserEntity user, CancellationToken cancellationToken)
+    public async Task<IActionResult> Create([FromBody] UserCreateRequest request, CancellationToken cancellationToken)
     {
+        if (!ModelState.IsValid)
+        {
+            return BadRequest(ModelState);
+        }
         try
         {
-            var createdUser = await _userRepository.CreateAsync(user, cancellationToken);
+            var createdUser = await _userService.CreateAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = createdUser.Id }, createdUser);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception e)
         {
@@ -131,21 +139,20 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Обновить пользователя
+    /// Обновить пользователя.
     /// </summary>
-    [HttpPut("{id}")]
+    [HttpPut("{id:guid}")]
     [UserLog("Обновление пользователя")]
-    public async Task<IActionResult> Update(Guid id, [FromBody] UserEntity user, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(Guid id, [FromBody] UserUpdateRequest request, CancellationToken cancellationToken)
     {
         try
         {
-            if (id != user.Id)
-            {
-                return BadRequest("ID в URL не совпадает с ID в теле запроса");
-            }
-
-            var updatedUser = await _userRepository.UpdateAsync(user, cancellationToken);
+            var updatedUser = await _userService.UpdateAsync(id, request, cancellationToken);
             return Ok(updatedUser);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception e)
         {
@@ -155,15 +162,15 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Удалить пользователя
+    /// Удалить пользователя.
     /// </summary>
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     [UserLog("Удаление пользователя")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         try
         {
-            var deletedCount = await _userRepository.DeleteAsync(id, cancellationToken);
+            var deletedCount = await _userService.DeleteAsync(id, cancellationToken);
             if (deletedCount == 0)
             {
                 return NotFound("Пользователь не найден");
@@ -178,7 +185,7 @@ public class UserController : ControllerBase
     }
 
     /// <summary>
-    /// Получить количество пользователей
+    /// Получить количество пользователей.
     /// </summary>
     [HttpGet("count")]
     [UserLog("Получение количества пользователей")]
@@ -186,7 +193,7 @@ public class UserController : ControllerBase
     {
         try
         {
-            var count = await _userRepository.CountAsync(cancellationToken: cancellationToken);
+            var count = await _userService.CountAsync(cancellationToken);
             return Ok(new { count });
         }
         catch (Exception e)

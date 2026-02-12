@@ -1,128 +1,137 @@
-using TaskerApi.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Entities;
+using TaskerApi.Models.Requests;
+using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
+using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
 
 /// <summary>
-/// Сервис для работы с пользователями с использованием Entity Framework
+/// Сервис для работы с пользователями с использованием Entity Framework.
 /// </summary>
 public class UserService(
     ILogger<UserService> logger,
-    IUserRepository userRepository,
-    TaskerDbContext context)
+    IUserRepository userRepository)
     : BaseService(logger, null), IUserService
 {
-    /// <summary>
-    /// Получить пользователя по идентификатору
-    /// </summary>
-    /// <param name="id">Идентификатор пользователя</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Пользователь или null, если не найден</returns>
-    public async Task<UserEntity?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<IEnumerable<UserResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
         return await ExecuteWithErrorHandling(async () =>
         {
-            return await userRepository.GetByIdAsync(id, cancellationToken);
+            var users = await userRepository.GetAllAsync(cancellationToken);
+            return users.Select(u => u.ToUserResponse());
+        }, nameof(GetAllAsync));
+    }
+
+    /// <inheritdoc />
+    public async Task<UserResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
+    {
+        return await ExecuteWithErrorHandling(async () =>
+        {
+            var user = await userRepository.GetByIdAsync(id, cancellationToken);
+            return user?.ToUserResponse();
         }, nameof(GetByIdAsync), new { id });
     }
 
-    /// <summary>
-    /// Получить пользователя по имени
-    /// </summary>
-    /// <param name="name">Имя пользователя</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Пользователь или null, если не найден</returns>
-    public async Task<UserEntity?> GetByNameAsync(string name, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<UserResponse?> GetByNameAsync(string name, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithErrorHandling(async () =>
         {
-            return await userRepository.GetByNameAsync(name, cancellationToken);
+            var user = await userRepository.GetByNameAsync(name, cancellationToken);
+            return user?.ToUserResponse();
         }, nameof(GetByNameAsync), new { name });
     }
 
-    /// <summary>
-    /// Получить пользователя по email
-    /// </summary>
-    /// <param name="email">Email пользователя</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Пользователь или null, если не найден</returns>
-    public async Task<UserEntity?> GetByEmailAsync(string email, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<UserResponse?> GetByEmailAsync(string email, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithErrorHandling(async () =>
         {
-            return await userRepository.GetByEmailAsync(email, cancellationToken);
+            var user = await userRepository.GetByEmailAsync(email, cancellationToken);
+            return user?.ToUserResponse();
         }, nameof(GetByEmailAsync), new { email });
     }
 
-    /// <summary>
-    /// Создать нового пользователя
-    /// </summary>
-    /// <param name="user">Данные пользователя</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Созданный пользователь</returns>
-    public async Task<UserEntity> CreateAsync(UserEntity user, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<UserResponse> CreateAsync(UserCreateRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithErrorHandling(async () =>
         {
-            var existingByName = await userRepository.GetByNameAsync(user.Name, cancellationToken);
+            var existingByName = await userRepository.GetByNameAsync(request.Username.Trim(), cancellationToken);
             if (existingByName != null)
             {
                 throw new InvalidOperationException("Пользователь с таким именем уже существует");
             }
 
-            if (!string.IsNullOrEmpty(user.Email))
+            if (!string.IsNullOrWhiteSpace(request.Email))
             {
-                var existingByEmail = await userRepository.GetByEmailAsync(user.Email, cancellationToken);
+                var existingByEmail = await userRepository.GetByEmailAsync(request.Email.Trim(), cancellationToken);
                 if (existingByEmail != null)
                 {
                     throw new InvalidOperationException("Пользователь с таким email уже существует");
                 }
             }
 
-            return await userRepository.CreateAsync(user, cancellationToken);
-        }, nameof(CreateAsync), user);
+            var user = request.ToUserEntity();
+            var createdUser = await userRepository.CreateAsync(user, cancellationToken);
+            return createdUser.ToUserResponse();
+        }, nameof(CreateAsync), request);
     }
 
-    /// <summary>
-    /// Обновить пользователя
-    /// </summary>
-    /// <param name="user">Данные пользователя для обновления</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Обновленный пользователь</returns>
-    public async Task<UserEntity> UpdateAsync(UserEntity user, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<UserResponse> UpdateAsync(Guid id, UserUpdateRequest request, CancellationToken cancellationToken = default)
     {
         return await ExecuteWithErrorHandling(async () =>
         {
-            return await userRepository.UpdateAsync(user, cancellationToken);
-        }, nameof(UpdateAsync), new { user.Id });
+            var user = await userRepository.GetByIdAsync(id, cancellationToken);
+            if (user == null)
+            {
+                throw new InvalidOperationException("Пользователь не найден");
+            }
+
+            if (request.Username != null)
+            {
+                var existingByName = await userRepository.GetByNameAsync(request.Username.Trim(), cancellationToken);
+                if (existingByName != null && existingByName.Id != id)
+                {
+                    throw new InvalidOperationException("Пользователь с таким именем уже существует");
+                }
+            }
+
+            if (request.Email != null && !string.IsNullOrWhiteSpace(request.Email))
+            {
+                var existingByEmail = await userRepository.GetByEmailAsync(request.Email.Trim(), cancellationToken);
+                if (existingByEmail != null && existingByEmail.Id != id)
+                {
+                    throw new InvalidOperationException("Пользователь с таким email уже существует");
+                }
+            }
+
+            request.UpdateUserEntity(user);
+            var updatedUser = await userRepository.UpdateAsync(user, cancellationToken);
+            return updatedUser.ToUserResponse();
+        }, nameof(UpdateAsync), new { id });
     }
 
-    /// <summary>
-    /// Удалить пользователя
-    /// </summary>
-    /// <param name="id">Идентификатор пользователя</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<int> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        await ExecuteWithErrorHandling(async () =>
+        return await ExecuteWithErrorHandling(async () =>
         {
-            await userRepository.DeleteAsync(id, cancellationToken);
+            return await userRepository.DeleteAsync(id, cancellationToken);
         }, nameof(DeleteAsync), new { id });
     }
 
-    /// <summary>
-    /// Получить всех пользователей
-    /// </summary>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Список всех пользователей</returns>
-    public async Task<IEnumerable<UserEntity>> GetAllAsync(CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<int> CountAsync(CancellationToken cancellationToken = default)
     {
         return await ExecuteWithErrorHandling(async () =>
         {
-            return await userRepository.GetAllAsync(cancellationToken);
-        }, nameof(GetAllAsync));
+            return await userRepository.CountAsync(cancellationToken: cancellationToken);
+        }, nameof(CountAsync));
     }
 }

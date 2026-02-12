@@ -1,3 +1,4 @@
+using TaskerApi.Core;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -406,6 +407,27 @@ public static class EntityMapper
     }
 
     /// <summary>
+    /// Маппинг UserEntity в UserResponse (без чувствительных данных).
+    /// </summary>
+    public static UserResponse ToUserResponse(this UserEntity entity)
+    {
+        var roles = entity.IsAdmin ? new List<string> { "admin", "user" } : new List<string> { "user" };
+        return new UserResponse
+        {
+            Id = entity.Id,
+            Username = entity.Name,
+            Email = entity.Email,
+            FirstName = entity.FirstName,
+            LastName = entity.LastName,
+            Roles = roles,
+            CreatedAt = entity.CreatedAt,
+            UpdatedAt = entity.UpdatedAt,
+            IsActive = entity.IsActive,
+            DeactivatedAt = entity.DeactivatedAt
+        };
+    }
+
+    /// <summary>
     /// Маппинг UserEntity в UserInfo
     /// </summary>
     public static UserInfo ToUserInfo(this UserEntity entity)
@@ -432,6 +454,53 @@ public static class EntityMapper
             ExpiresIn = expiresIn,
             UserInfo = entity.ToUserInfo()
         };
+    }
+
+    /// <summary>
+    /// Маппинг UserCreateRequest в UserEntity с хешированием пароля.
+    /// </summary>
+    public static UserEntity ToUserEntity(this UserCreateRequest request)
+    {
+        var (hash, salt) = PasswordHasher.HashPassword(request.Password);
+        return new UserEntity
+        {
+            Id = Guid.NewGuid(),
+            Name = request.Username.Trim(),
+            Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim(),
+            FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? null : request.FirstName.Trim(),
+            LastName = string.IsNullOrWhiteSpace(request.LastName) ? null : request.LastName.Trim(),
+            PasswordHash = hash,
+            PasswordSalt = salt,
+            IsAdmin = request.IsAdmin,
+            CreatedAt = DateTimeOffset.UtcNow,
+            UpdatedAt = DateTimeOffset.UtcNow,
+            IsActive = true
+        };
+    }
+
+    /// <summary>
+    /// Частичное обновление UserEntity из UserUpdateRequest.
+    /// При передаче Password — пересчитывается хеш. Id берётся из URL, не из request.
+    /// </summary>
+    public static void UpdateUserEntity(this UserUpdateRequest request, UserEntity entity)
+    {
+        if (request.Username != null)
+            entity.Name = request.Username.Trim();
+        if (request.Email != null)
+            entity.Email = string.IsNullOrWhiteSpace(request.Email) ? null : request.Email.Trim();
+        if (request.FirstName != null)
+            entity.FirstName = string.IsNullOrWhiteSpace(request.FirstName) ? null : request.FirstName.Trim();
+        if (request.LastName != null)
+            entity.LastName = string.IsNullOrWhiteSpace(request.LastName) ? null : request.LastName.Trim();
+        if (request.Password != null)
+        {
+            var (hash, salt) = PasswordHasher.HashPassword(request.Password);
+            entity.PasswordHash = hash;
+            entity.PasswordSalt = salt;
+        }
+        if (request.IsAdmin.HasValue)
+            entity.IsAdmin = request.IsAdmin.Value;
+        entity.UpdatedAt = DateTimeOffset.UtcNow;
     }
 
     /// <summary>
