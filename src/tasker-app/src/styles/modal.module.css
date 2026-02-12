@@ -4,7 +4,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--modal-overlay-bg);
   backdrop-filter: var(--glass-backdrop-blur-8);
   -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
   display: flex;
@@ -16,8 +16,8 @@
 }
 
 .modal {
-  background: linear-gradient(180deg, rgb(var(--white) / 0.08), rgb(var(--white) / 0.04));
-  border: var(--border-1) solid rgb(var(--white) / 0.12);
+  background: var(--modal-bg);
+  border: var(--border-1) solid var(--modal-border);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-card), var(--shadow-inset-0);
   backdrop-filter: var(--glass-backdrop-blur-10);
@@ -95,7 +95,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(900px 450px at -10% -20%, rgb(var(--white) / 0.06), transparent 60%);
+  background: radial-gradient(900px 450px at -10% -20%, var(--modal-highlight), transparent 60%);
 }
 
 .modalContent {
@@ -123,7 +123,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-8);
-  text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 12px rgb(var(--white) / 0.06);
+  text-shadow: 0 1px 0 rgb(var(--black) / 0.4), 0 0 12px rgb(var(--white) / 0.06);
 }
 
 .modalTitleIcon {
@@ -187,7 +187,7 @@
 @supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
   .modal {
     background:
-      linear-gradient(180deg, rgba(40,40,40,0.85), rgba(30,30,30,0.80)) padding-box,
+      linear-gradient(180deg, var(--glass-bg-4), var(--glass-bg-3)) padding-box,
       radial-gradient(120% 100% at 0% 0%, rgb(var(--color-accent) / 0.18), rgb(var(--color-accent) / 0) 60%) border-box,
       radial-gradient(120% 100% at 100% 0%, rgba(255, 0, 160, 0.16), rgba(255, 0, 160, 0) 60%) border-box,
       radial-gradient(160% 120% at 50% 120%, rgb(var(--white) / 0.10), rgb(var(--white) / 0)) border-box;

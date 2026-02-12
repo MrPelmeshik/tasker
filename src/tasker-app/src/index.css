@@ -194,6 +194,12 @@ body {
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.4s ease;
+
+  /* Modal */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.6);
+  --modal-bg: rgba(30, 30, 36, 0.92);
+  --modal-border: rgba(255, 255, 255, 0.12);
+  --modal-highlight: rgba(255, 255, 255, 0.06);
 }
 
 /* ─── Light theme ─── */
@@ -288,6 +294,12 @@ body {
   --glass-radial-warning: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-warning) / 0.18), transparent 60%);
   --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.18), transparent 60%);
   --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(0,0,0,0.04), transparent 60%);
+
+  /* Modal — light theme */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.18);
+  --modal-bg: rgba(255, 255, 255, 0.95);
+  --modal-border: rgba(0, 0, 0, 0.12);
+  --modal-highlight: rgba(255, 255, 255, 0.5);
 
   /* Shadows — light theme */
   --shadow-elev-1: 0 8px 18px rgba(0,0,0,0.08);

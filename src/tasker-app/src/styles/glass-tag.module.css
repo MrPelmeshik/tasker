@@ -79,7 +79,7 @@
 .primary { 
   border-color: rgb(var(--color-accent) / 0.40);
   background: var(--glass-gradient-primary);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
@@ -93,7 +93,7 @@
 .danger { 
   border-color: rgb(var(--color-danger) / 0.40);
   background: var(--glass-gradient-danger);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
@@ -107,7 +107,7 @@
 .success { 
   border-color: rgb(var(--color-success) / 0.40);
   background: var(--glass-gradient-success);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
@@ -121,7 +121,7 @@
 .warning { 
   border-color: rgb(var(--color-warning) / 0.40);
   background: var(--glass-gradient-warning);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
@@ -135,7 +135,7 @@
 .info { 
   border-color: rgb(var(--color-info) / 0.40);
   background: var(--glass-gradient-info);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
@@ -149,7 +149,7 @@
 /* Subtle вариант - менее заметный */
 .subtle {
   background: var(--glass-gradient-bg-subtle);
-  border-color: rgba(255,255,255,0.08);
+  border-color: rgb(var(--white) / 0.08);
   box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
   filter: saturate(0.8) brightness(0.9);
 }

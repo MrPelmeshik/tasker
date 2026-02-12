@@ -72,7 +72,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  box-shadow: 0 0 0 0 rgb(var(--white) / 0);
   transition: box-shadow var(--transition-normal);
 }
 
@@ -84,7 +84,7 @@
 }
 
 .areaCard:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
 }
 
 .areaCard.expanded {
@@ -93,7 +93,7 @@
   box-shadow: 
     var(--shadow-elev-2),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(255,255,255,0.15);
+    0 0 0 1px rgb(var(--white) / 0.15);
   filter: saturate(1.1) brightness(1.05);
 }
 
@@ -281,7 +281,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  box-shadow: 0 0 0 0 rgb(var(--white) / 0);
   transition: box-shadow var(--transition-fast);
 }
 
@@ -293,7 +293,7 @@
 }
 
 .groupCard:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
 }
 
 /* Custom color support for group cards */
@@ -316,7 +316,7 @@
   box-shadow: 
     var(--shadow-elev-2),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(255,255,255,0.15);
+    0 0 0 1px rgb(var(--white) / 0.15);
   filter: saturate(1.1) brightness(1.05);
 }
 
@@ -424,7 +424,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  box-shadow: 0 0 0 0 rgb(var(--white) / 0);
   transition: box-shadow var(--transition-fast);
 }
 
@@ -436,7 +436,7 @@
 }
 
 .taskCard:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
 }
 
 /* Custom color support for task cards */

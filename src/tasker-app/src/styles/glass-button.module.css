@@ -24,7 +24,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  box-shadow: 0 0 0 0 rgba(255,255,255,0);
+  box-shadow: 0 0 0 0 rgb(var(--white) / 0);
   transition: box-shadow 220ms ease;
 }
 
@@ -43,20 +43,20 @@
     var(--shadow-elev-2),
     var(--shadow-inset-1);
   filter: saturate(1.04) brightness(1.03);
-  border-color: rgba(255,255,255,0.18);
+  border-color: rgb(var(--white) / 0.18);
 }
 
 .btn:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
 }
 
 .btn:active {
   background: var(--glass-gradient-bg-active);
   box-shadow:
     var(--shadow-elev-4),
-    inset 0 2px 6px rgba(0,0,0,0.28);
+    inset 0 2px 6px rgb(var(--black) / 0.28);
   filter: saturate(1.0) brightness(0.98);
-  border-color: rgba(255,255,255,0.22);
+  border-color: rgb(var(--white) / 0.22);
 }
 
 .inner { position: relative; z-index: 1; }
@@ -67,11 +67,11 @@
 .primary { 
   border-color: rgb(var(--color-accent) / 0.35);
   background: var(--glass-gradient-primary);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(0,200,255,0.15);
+    0 0 0 1px rgb(var(--color-accent) / 0.15);
 }
 
 .primary::before {
@@ -84,13 +84,13 @@
   box-shadow: 
     var(--shadow-elev-2),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(0,200,255,0.25),
-    0 0 20px rgba(0,200,255,0.15);
+    0 0 0 1px rgb(var(--color-accent) / 0.25),
+    0 0 20px rgb(var(--color-accent) / 0.15);
   filter: saturate(1.1) brightness(1.05);
 }
 
 .primary:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgba(0,200,255,0.20);
+  box-shadow: 0 0 0 var(--border-2) rgb(var(--color-accent) / 0.20);
 }
 
 .primary:active { 
@@ -98,8 +98,8 @@
   background: var(--glass-gradient-primary-active);
   box-shadow: 
     var(--shadow-elev-4),
-    inset 0 2px 6px rgba(0,0,0,0.28),
-    0 0 0 1px rgba(0,200,255,0.30);
+    inset 0 2px 6px rgb(var(--black) / 0.28),
+    0 0 0 1px rgb(var(--color-accent) / 0.30);
   filter: saturate(1.0) brightness(0.95);
 }
 
@@ -107,11 +107,11 @@
 .danger { 
   border-color: rgb(var(--color-danger) / 0.35);
   background: var(--glass-gradient-danger);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(255,64,64,0.15);
+    0 0 0 1px rgb(var(--color-danger) / 0.15);
 }
 
 .danger::before {
@@ -124,13 +124,13 @@
   box-shadow: 
     var(--shadow-elev-2),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(255,64,64,0.25),
-    0 0 20px rgba(255,64,64,0.15);
+    0 0 0 1px rgb(var(--color-danger) / 0.25),
+    0 0 20px rgb(var(--color-danger) / 0.15);
   filter: saturate(1.1) brightness(1.05);
 }
 
 .danger:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgba(255,64,64,0.20);
+  box-shadow: 0 0 0 var(--border-2) rgb(var(--color-danger) / 0.20);
 }
 
 .danger:active { 
@@ -138,8 +138,8 @@
   background: var(--glass-gradient-danger-active);
   box-shadow: 
     var(--shadow-elev-4),
-    inset 0 2px 6px rgba(0,0,0,0.28),
-    0 0 0 1px rgba(255,64,64,0.30);
+    inset 0 2px 6px rgb(var(--black) / 0.28),
+    0 0 0 1px rgb(var(--color-danger) / 0.30);
   filter: saturate(1.0) brightness(0.95);
 }
 
@@ -147,7 +147,7 @@
 .success { 
   border-color: rgb(var(--color-success) / 0.35);
   background: var(--glass-gradient-success);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
@@ -178,7 +178,7 @@
   background: var(--glass-gradient-success-active);
   box-shadow: 
     var(--shadow-elev-4),
-    inset 0 2px 6px rgba(0,0,0,0.28),
+    inset 0 2px 6px rgb(var(--black) / 0.28),
     0 0 0 1px rgb(var(--color-success) / 0.30);
   filter: saturate(1.0) brightness(0.95);
 }
@@ -187,7 +187,7 @@
 .warning { 
   border-color: rgb(var(--color-warning) / 0.35);
   background: var(--glass-gradient-warning);
-  color: rgba(255,255,255,0.95);
+  color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
@@ -218,7 +218,7 @@
   background: var(--glass-gradient-warning-active);
   box-shadow: 
     var(--shadow-elev-4),
-    inset 0 2px 6px rgba(0,0,0,0.28),
+    inset 0 2px 6px rgb(var(--black) / 0.28),
     0 0 0 1px rgb(var(--color-warning) / 0.30);
   filter: saturate(1.0) brightness(0.95);
 }
@@ -226,7 +226,7 @@
 /* Subtle variant - less prominent by default, highlights on hover */
 .subtle {
   background: var(--glass-gradient-bg-subtle);
-  border-color: rgba(255,255,255,0.06);
+  border-color: rgb(var(--white) / 0.06);
   box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
   filter: saturate(0.8) brightness(0.9);
 }
@@ -239,18 +239,18 @@
   background: var(--glass-gradient-bg-hover);
   box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
   filter: saturate(1.04) brightness(1.03);
-  border-color: rgba(255,255,255,0.18);
+  border-color: rgb(var(--white) / 0.18);
 }
 
 .subtle:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgba(255,255,255,0.10);
+  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
 }
 
 .subtle:active {
   background: var(--glass-gradient-bg-active);
-  box-shadow: var(--shadow-elev-4), inset 0 2px 6px rgba(0,0,0,0.28);
+  box-shadow: var(--shadow-elev-4), inset 0 2px 6px rgb(var(--black) / 0.28);
   filter: saturate(1.0) brightness(0.98);
-  border-color: rgba(255,255,255,0.22);
+  border-color: rgb(var(--white) / 0.22);
 }
 
 .xxs { padding: var(--space-2) var(--space-6);  border-radius: var(--radius-xs);  font-size: var(--font-11); }

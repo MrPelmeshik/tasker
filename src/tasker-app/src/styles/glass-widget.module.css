@@ -40,7 +40,7 @@
   margin: 0 0 var(--space-12) 0;
   font-size: var(--font-18);
   color: var(--color-text);
-  text-shadow: 0 1px 0 rgba(0,0,0,0.4), 0 0 12px rgb(var(--white) / 0.06);
+  text-shadow: 0 1px 0 rgb(var(--black) / 0.4), 0 0 12px rgb(var(--white) / 0.06);
 }
 
 .content {
@@ -72,7 +72,7 @@
 @supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
   .glass {
     background:
-      linear-gradient(180deg, rgba(40,40,40,0.85), rgba(30,30,30,0.80)) padding-box,
+      linear-gradient(180deg, var(--glass-bg-4), var(--glass-bg-3)) padding-box,
       radial-gradient(120% 100% at 0% 0%, rgb(var(--color-accent) / 0.18), rgb(var(--color-accent) / 0) 60%) border-box,
       radial-gradient(120% 100% at 100% 0%, rgba(255, 0, 160, 0.16), rgba(255, 0, 160, 0) 60%) border-box,
       radial-gradient(160% 120% at 50% 120%, rgb(var(--white) / 0.10), rgb(var(--white) / 0)) border-box;
