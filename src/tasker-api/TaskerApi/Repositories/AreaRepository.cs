@@ -20,15 +20,15 @@ public class AreaRepository : BaseRepository<AreaEntity, Guid>, IAreaRepository
     }
 
     /// <summary>
-    /// Получает области по идентификатору создателя
+    /// Получает области по идентификатору владельца
     /// </summary>
-    /// <param name="creatorUserId">Идентификатор пользователя-создателя</param>
+    /// <param name="ownerUserId">Идентификатор пользователя-владельца</param>
     /// <param name="cancellationToken">Токен отмены операции</param>
     /// <param name="includeDeleted">Включать ли удаленные области</param>
-    /// <returns>Список областей создателя</returns>
-    public async Task<IReadOnlyList<AreaEntity>> GetByCreatorIdAsync(Guid creatorUserId, CancellationToken cancellationToken = default, bool includeDeleted = false)
+    /// <returns>Список областей владельца</returns>
+    public async Task<IReadOnlyList<AreaEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        return await FindAsync(a => a.CreatorUserId == creatorUserId, cancellationToken, includeDeleted);
+        return await FindAsync(a => a.OwnerUserId == ownerUserId, cancellationToken, includeDeleted);
     }
 
     /// <summary>

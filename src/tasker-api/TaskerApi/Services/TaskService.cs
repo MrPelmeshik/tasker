@@ -25,6 +25,7 @@ public class TaskService(
     IEventRepository eventRepository,
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
+    IAreaRoleService areaRoleService,
     TaskerDbContext context)
     : BaseService(logger, currentUser), ITaskService
 {
@@ -80,7 +81,7 @@ public class TaskService(
                 return null;
             }
 
-            var user = await userRepository.GetByIdAsync(task.CreatorUserId, cancellationToken);
+            var user = await userRepository.GetByIdAsync(task.OwnerUserId, cancellationToken);
             return task.ToTaskResponse(user?.Name ?? "");
         }
         catch (Exception ex)
@@ -106,9 +107,9 @@ public class TaskService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!CurrentUser.HasAccessToArea(group.AreaId))
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(group.AreaId, cancellationToken))
             {
-                throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
+                throw new UnauthorizedAccessException("Только владелец области может создавать задачи");
             }
 
             var task = request.ToTaskEntity(currentUser.UserId);
@@ -144,9 +145,14 @@ public class TaskService(
             }
 
             var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
+            if (group == null)
             {
-                throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
+                throw new InvalidOperationException("Группа не найдена");
+            }
+
+            if (!await areaRoleService.CanEditTaskAsync(group.AreaId, cancellationToken))
+            {
+                throw new UnauthorizedAccessException("Нет прав на редактирование задачи");
             }
 
             var oldSnapshot = EventMessageHelper.ShallowClone(task);
@@ -184,9 +190,14 @@ public class TaskService(
             }
 
             var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
+            if (group == null)
             {
-                throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
+                throw new InvalidOperationException("Группа не найдена");
+            }
+
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(group.AreaId, cancellationToken))
+            {
+                throw new UnauthorizedAccessException("Только владелец области может удалять задачи");
             }
 
             await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.DELETE, task.Title, null, cancellationToken);
@@ -217,9 +228,9 @@ public class TaskService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!CurrentUser.HasAccessToArea(group.AreaId))
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(group.AreaId, cancellationToken))
             {
-                throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
+                throw new UnauthorizedAccessException("Только владелец области может создавать задачи");
             }
 
             var task = request.ToTaskEntity(currentUser.UserId);
@@ -258,12 +269,12 @@ public class TaskService(
 
             var tasks = await taskRepository.GetByGroupIdAsync(groupId, cancellationToken);
 
-            // Пакетная загрузка имён создателей
-            var userIds = tasks.Select(t => t.CreatorUserId).Distinct().ToHashSet();
+            // Пакетная загрузка имён владельцев
+            var userIds = tasks.Select(t => t.OwnerUserId).Distinct().ToHashSet();
             var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
             var userNames = users.ToDictionary(u => u.Id, u => u.Name);
 
-            return tasks.Select(t => t.ToTaskSummaryResponse(userNames.GetValueOrDefault(t.CreatorUserId, "")));
+            return tasks.Select(t => t.ToTaskSummaryResponse(userNames.GetValueOrDefault(t.OwnerUserId, "")));
         }, nameof(GetTaskSummaryByGroupAsync), new { groupId });
     }
 

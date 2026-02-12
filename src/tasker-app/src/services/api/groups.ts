@@ -59,15 +59,15 @@ export class GroupApiClient {
     return groups.filter(group => group.isActive);
   }
 
-  // Получить группы по создателю
-  async getGroupsByCreator(creatorUserId: string): Promise<GroupResponse[]> {
+  // Получить группы по владельцу
+  async getGroupsByOwner(ownerUserId: string): Promise<GroupResponse[]> {
     const groups = await this.getAll();
-    return groups.filter(group => group.creatorUserId === creatorUserId);
+    return groups.filter(group => group.ownerUserId === ownerUserId);
   }
 
-  // Получить активные группы по создателю
-  async getActiveGroupsByCreator(creatorUserId: string): Promise<GroupResponse[]> {
-    const groups = await this.getGroupsByCreator(creatorUserId);
+  // Получить активные группы по владельцу
+  async getActiveGroupsByOwner(ownerUserId: string): Promise<GroupResponse[]> {
+    const groups = await this.getGroupsByOwner(ownerUserId);
     return groups.filter(group => group.isActive);
   }
 
@@ -89,6 +89,6 @@ export const deleteGroup = (id: string) => groupApi.delete(id);
 export const fetchActiveGroups = () => groupApi.getActiveGroups();
 export const fetchGroupsByArea = (areaId: string) => groupApi.getGroupsByArea(areaId);
 export const fetchActiveGroupsByArea = (areaId: string) => groupApi.getActiveGroupsByArea(areaId);
-export const fetchGroupsByCreator = (creatorUserId: string) => groupApi.getGroupsByCreator(creatorUserId);
-export const fetchActiveGroupsByCreator = (creatorUserId: string) => groupApi.getActiveGroupsByCreator(creatorUserId);
+export const fetchGroupsByOwner = (ownerUserId: string) => groupApi.getGroupsByOwner(ownerUserId);
+export const fetchActiveGroupsByOwner = (ownerUserId: string) => groupApi.getActiveGroupsByOwner(ownerUserId);
 export const fetchGroupShortCardByAreaForTree = (areaId: string) => groupApi.getGroupShortCardByAreaForTree(areaId);

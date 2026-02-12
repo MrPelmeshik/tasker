@@ -12,7 +12,7 @@ public class EventToSubtaskEntity :
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity,
-    ICreatorUserBaseEntity
+    IOwnerUserBaseEntity
 {
     /// <summary>
     /// ID события
@@ -32,9 +32,9 @@ public class EventToSubtaskEntity :
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     
     /// <summary>
     /// Дата и время деактивации (мягкое удаление).

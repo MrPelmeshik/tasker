@@ -26,14 +26,14 @@ public class GroupResponse
     public Guid AreaId { get; set; }
 
     /// <summary>
-    /// Идентификатор создателя
+    /// Идентификатор владельца
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
 
     /// <summary>
-    /// Имя пользователя-создателя.
+    /// Имя пользователя-владельца.
     /// </summary>
-    public string CreatorUserName { get; set; } = string.Empty;
+    public string OwnerUserName { get; set; } = string.Empty;
 
     /// <summary>
     /// Дата создания

@@ -11,7 +11,7 @@ namespace TaskerApi.Controllers;
 [ApiController]
 [Route("api/[controller]/[action]")]
 [Authorize]
-public class AreaController(IAreaService service) : ControllerBase
+public class AreaController(IAreaService service, IAreaMemberService memberService) : ControllerBase
 {
     [HttpGet]
     [UserLog("Получение списка областей")]
@@ -139,6 +139,110 @@ public class AreaController(IAreaService service) : ControllerBase
 
             var result = await service.CreateWithDefaultGroupAsync(request, cancellationToken);
             return CreatedAtAction(nameof(GetById), new { id = result.Area.Id }, result);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Получить список участников области
+    /// </summary>
+    [HttpGet("{areaId}")]
+    [UserLog("Получение участников области")]
+    public async Task<IActionResult> GetMembers(Guid areaId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var members = await memberService.GetMembersAsync(areaId, cancellationToken);
+            return Ok(members);
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Нет доступа к области");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Назначить роль участнику области
+    /// </summary>
+    [HttpPost("{areaId}")]
+    [UserLog("Назначение участника области")]
+    public async Task<IActionResult> AddMember(Guid areaId, [FromBody] AddAreaMemberRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await memberService.AddMemberAsync(areaId, request, cancellationToken);
+            return Ok(new { success = true, message = "Участник назначен" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Нет прав на назначение участников");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Удалить участника из области
+    /// </summary>
+    [HttpDelete("{areaId}/{userId}")]
+    [UserLog("Удаление участника области")]
+    public async Task<IActionResult> RemoveMember(Guid areaId, Guid userId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await memberService.RemoveMemberAsync(areaId, userId, cancellationToken);
+            return Ok(new { success = true, message = "Участник удалён" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Нет прав на удаление участников");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(ex.Message);
+        }
+    }
+
+    /// <summary>
+    /// Передать роль владельца области другому пользователю
+    /// </summary>
+    [HttpPost("{areaId}/transfer-owner")]
+    [UserLog("Передача роли владельца области")]
+    public async Task<IActionResult> TransferOwner(Guid areaId, [FromBody] TransferOwnerRequest request, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            await memberService.TransferOwnerAsync(areaId, request, cancellationToken);
+            return Ok(new { success = true, message = "Роль владельца передана" });
+        }
+        catch (UnauthorizedAccessException)
+        {
+            return Forbid("Только владелец может передать роль");
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {

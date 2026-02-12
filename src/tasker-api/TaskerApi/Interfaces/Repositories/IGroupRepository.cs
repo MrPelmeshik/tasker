@@ -17,11 +17,11 @@ public interface IGroupRepository : IRepository<GroupEntity, Guid>
     Task<IReadOnlyList<GroupEntity>> GetByAreaIdAsync(Guid areaId, CancellationToken cancellationToken = default, bool includeDeleted = false);
 
     /// <summary>
-    /// Получить группы по создателю
+    /// Получить группы по владельцу
     /// </summary>
-    /// <param name="creatorUserId">Идентификатор создателя</param>
+    /// <param name="ownerUserId">Идентификатор владельца</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <param name="includeDeleted">Включить удаленные записи</param>
     /// <returns>Список групп</returns>
-    Task<IReadOnlyList<GroupEntity>> GetByCreatorIdAsync(Guid creatorUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
+    Task<IReadOnlyList<GroupEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
 }

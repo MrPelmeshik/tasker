@@ -21,9 +21,9 @@ public class PurposeResponse
     public string Description { get; set; } = string.Empty;
     
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     
     /// <summary>
     /// Дата и время создания.

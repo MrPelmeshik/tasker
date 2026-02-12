@@ -429,10 +429,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             {task && (
               <div className={formCss.readonlyMeta}>
                 <div className={formCss.readonlyMetaTitle}>Информация</div>
-                {task.creatorUserName && (
+                {task.ownerUserName && (
                   <div className={formCss.readonlyMetaRow}>
-                    <span className={formCss.readonlyMetaLabel}>Автор</span>
-                    <span className={formCss.readonlyMetaValue}>{task.creatorUserName}</span>
+                    <span className={formCss.readonlyMetaLabel}>Владелец</span>
+                    <span className={formCss.readonlyMetaValue}>{task.ownerUserName}</span>
                   </div>
                 )}
                 {task.createdAt && (

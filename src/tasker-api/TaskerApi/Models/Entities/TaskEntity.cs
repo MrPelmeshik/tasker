@@ -15,7 +15,7 @@ public class TaskEntity :
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity,
-    ICreatorUserBaseEntity
+    IOwnerUserBaseEntity
 {
     /// <summary>
     /// Заголовок задачи
@@ -52,9 +52,9 @@ public class TaskEntity :
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     
     /// <summary>
     /// Уникальный идентификатор задачи.

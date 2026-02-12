@@ -13,7 +13,7 @@ public class AreaEntity :
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity,
-    ICreatorUserBaseEntity
+    IOwnerUserBaseEntity
 {
     /// <summary>
     /// Заголовок области
@@ -28,9 +28,9 @@ public class AreaEntity :
     public string? Description { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
 
     /// <summary>
     /// Дата и время создания.

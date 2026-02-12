@@ -14,7 +14,7 @@ public class EventEntity :
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity, 
-    ICreatorUserBaseEntity
+    IOwnerUserBaseEntity
 {
     /// <summary>
     /// Тип события
@@ -40,9 +40,9 @@ public class EventEntity :
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     
     /// <summary>
     /// Уникальный идентификатор события.

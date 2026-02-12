@@ -34,14 +34,14 @@ public class TaskResponse
     public TaskStatus Status { get; set; }
 
     /// <summary>
-    /// ID пользователя-создателя
+    /// ID пользователя-владельца
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
 
     /// <summary>
-    /// Имя пользователя-создателя.
+    /// Имя пользователя-владельца.
     /// </summary>
-    public string CreatorUserName { get; set; } = string.Empty;
+    public string OwnerUserName { get; set; } = string.Empty;
 
     /// <summary>
     /// Дата создания

@@ -17,11 +17,11 @@ public interface ITaskRepository : IRepository<TaskEntity, Guid>
     Task<IReadOnlyList<TaskEntity>> GetByGroupIdAsync(Guid groupId, CancellationToken cancellationToken = default, bool includeDeleted = false);
 
     /// <summary>
-    /// Получить задачи по создателю
+    /// Получить задачи по владельцу
     /// </summary>
-    /// <param name="creatorUserId">Идентификатор создателя</param>
+    /// <param name="ownerUserId">Идентификатор владельца</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <param name="includeDeleted">Включить удаленные записи</param>
     /// <returns>Список задач</returns>
-    Task<IReadOnlyList<TaskEntity>> GetByCreatorIdAsync(Guid creatorUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
+    Task<IReadOnlyList<TaskEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
 }

@@ -20,14 +20,14 @@ public class PurposeRepository : BaseRepository<PurposeEntity, Guid>, IPurposeRe
     }
 
     /// <summary>
-    /// Получает цели по идентификатору создателя
+    /// Получает цели по идентификатору владельца
     /// </summary>
-    /// <param name="creatorUserId">Идентификатор пользователя-создателя</param>
+    /// <param name="ownerUserId">Идентификатор пользователя-владельца</param>
     /// <param name="cancellationToken">Токен отмены операции</param>
     /// <param name="includeDeleted">Включать ли удаленные цели</param>
-    /// <returns>Список целей создателя</returns>
-    public async Task<IReadOnlyList<PurposeEntity>> GetByCreatorIdAsync(Guid creatorUserId, CancellationToken cancellationToken = default, bool includeDeleted = false)
+    /// <returns>Список целей владельца</returns>
+    public async Task<IReadOnlyList<PurposeEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        return await FindAsync(p => p.CreatorUserId == creatorUserId, cancellationToken, includeDeleted);
+        return await FindAsync(p => p.OwnerUserId == ownerUserId, cancellationToken, includeDeleted);
     }
 }

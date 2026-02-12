@@ -384,10 +384,10 @@ export const GroupModal: React.FC<GroupModalProps> = ({
             {group && (
               <div className={formCss.readonlyMeta}>
                 <div className={formCss.readonlyMetaTitle}>Информация</div>
-                {group.creatorUserName && (
+                {group.ownerUserName && (
                   <div className={formCss.readonlyMetaRow}>
-                    <span className={formCss.readonlyMetaLabel}>Автор</span>
-                    <span className={formCss.readonlyMetaValue}>{group.creatorUserName}</span>
+                    <span className={formCss.readonlyMetaLabel}>Владелец</span>
+                    <span className={formCss.readonlyMetaValue}>{group.ownerUserName}</span>
                   </div>
                 )}
                 {group.createdAt && (

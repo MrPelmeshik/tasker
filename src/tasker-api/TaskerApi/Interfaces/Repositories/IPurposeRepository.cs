@@ -8,11 +8,11 @@ namespace TaskerApi.Interfaces.Repositories;
 public interface IPurposeRepository : IRepository<PurposeEntity, Guid>
 {
     /// <summary>
-    /// Получить цели по создателю
+    /// Получить цели по владельцу
     /// </summary>
-    /// <param name="creatorUserId">Идентификатор создателя</param>
+    /// <param name="ownerUserId">Идентификатор владельца</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <param name="includeDeleted">Включить удаленные записи</param>
     /// <returns>Список целей</returns>
-    Task<IReadOnlyList<PurposeEntity>> GetByCreatorIdAsync(Guid creatorUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
+    Task<IReadOnlyList<PurposeEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
 }

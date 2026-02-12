@@ -37,7 +37,7 @@ public class EntityEventLogger(
                 Title = title ?? string.Empty,
                 Message = messageJson,
                 EventType = eventType,
-                CreatorUserId = userId,
+                OwnerUserId = userId,
                 CreatedAt = now,
                 UpdatedAt = now,
                 IsActive = true
@@ -52,7 +52,7 @@ public class EntityEventLogger(
                     {
                         EventId = eventEntity.Id,
                         AreaId = entityId,
-                        CreatorUserId = userId,
+                        OwnerUserId = userId,
                         CreatedAt = now,
                         UpdatedAt = now,
                         IsActive = true
@@ -63,7 +63,7 @@ public class EntityEventLogger(
                     {
                         EventId = eventEntity.Id,
                         GroupId = entityId,
-                        CreatorUserId = userId,
+                        OwnerUserId = userId,
                         CreatedAt = now,
                         UpdatedAt = now,
                         IsActive = true
@@ -74,7 +74,7 @@ public class EntityEventLogger(
                     {
                         EventId = eventEntity.Id,
                         TaskId = entityId,
-                        CreatorUserId = userId,
+                        OwnerUserId = userId,
                         CreatedAt = now,
                         UpdatedAt = now,
                         IsActive = true

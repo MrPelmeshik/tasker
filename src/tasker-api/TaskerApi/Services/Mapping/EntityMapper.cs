@@ -16,15 +16,15 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг AreaEntity в AreaResponse
     /// </summary>
-    public static AreaResponse ToAreaResponse(this AreaEntity entity, string creatorUserName = "")
+    public static AreaResponse ToAreaResponse(this AreaEntity entity, string ownerUserName = "")
     {
         return new AreaResponse
         {
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            CreatorUserId = entity.CreatorUserId,
-            CreatorUserName = creatorUserName,
+            OwnerUserId = entity.OwnerUserId,
+            OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -35,7 +35,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг AreaEntity в AreaShortCardResponse
     /// </summary>
-    public static AreaShortCardResponse ToAreaShortCardResponse(this AreaEntity entity, int groupsCount = 0, string creatorUserName = "")
+    public static AreaShortCardResponse ToAreaShortCardResponse(this AreaEntity entity, int groupsCount = 0, string ownerUserName = "")
     {
         return new AreaShortCardResponse
         {
@@ -43,8 +43,8 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             GroupCount = groupsCount,
-            CreatorUserId = entity.CreatorUserId,
-            CreatorUserName = creatorUserName,
+            OwnerUserId = entity.OwnerUserId,
+            OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive
@@ -61,7 +61,7 @@ public static class EntityMapper
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            CreatorUserId = entity.CreatorUserId,
+            OwnerUserId = entity.OwnerUserId,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -72,7 +72,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг GroupEntity в GroupResponse
     /// </summary>
-    public static GroupResponse ToGroupResponse(this GroupEntity entity, string creatorUserName = "")
+    public static GroupResponse ToGroupResponse(this GroupEntity entity, string ownerUserName = "")
     {
         return new GroupResponse
         {
@@ -80,8 +80,8 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             AreaId = entity.AreaId,
-            CreatorUserId = entity.CreatorUserId,
-            CreatorUserName = creatorUserName,
+            OwnerUserId = entity.OwnerUserId,
+            OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -92,7 +92,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг GroupEntity в GroupSummaryResponse
     /// </summary>
-    public static GroupSummaryResponse ToGroupSummaryResponse(this GroupEntity entity, int tasksCount = 0, string creatorUserName = "")
+    public static GroupSummaryResponse ToGroupSummaryResponse(this GroupEntity entity, int tasksCount = 0, string ownerUserName = "")
     {
         return new GroupSummaryResponse
         {
@@ -100,8 +100,8 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             AreaId = entity.AreaId,
-            CreatorUserId = entity.CreatorUserId,
-            CreatorUserName = creatorUserName,
+            OwnerUserId = entity.OwnerUserId,
+            OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -113,7 +113,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг TaskEntity в TaskResponse
     /// </summary>
-    public static TaskResponse ToTaskResponse(this TaskEntity entity, string creatorUserName = "")
+    public static TaskResponse ToTaskResponse(this TaskEntity entity, string ownerUserName = "")
     {
         return new TaskResponse
         {
@@ -121,8 +121,8 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             GroupId = entity.GroupId,
-            CreatorUserId = entity.CreatorUserId,
-            CreatorUserName = creatorUserName,
+            OwnerUserId = entity.OwnerUserId,
+            OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -134,7 +134,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг TaskEntity в TaskSummaryResponse
     /// </summary>
-    public static TaskSummaryResponse ToTaskSummaryResponse(this TaskEntity entity, string creatorUserName = "")
+    public static TaskSummaryResponse ToTaskSummaryResponse(this TaskEntity entity, string ownerUserName = "")
     {
         return new TaskSummaryResponse
         {
@@ -142,8 +142,8 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             GroupId = entity.GroupId,
-            CreatorUserId = entity.CreatorUserId,
-            CreatorUserName = creatorUserName,
+            OwnerUserId = entity.OwnerUserId,
+            OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -163,7 +163,7 @@ public static class EntityMapper
             Title = entity.Title,
             Description = entity.Description,
             TaskId = entity.TaskId,
-            CreatorUserId = entity.CreatorUserId,
+            OwnerUserId = entity.OwnerUserId,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -182,7 +182,7 @@ public static class EntityMapper
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            CreatorUserId = entity.CreatorUserId,
+            OwnerUserId = entity.OwnerUserId,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -214,7 +214,7 @@ public static class EntityMapper
             Title = entity.Title,
             Message = messageElement,
             EventType = entity.EventType.ToString(),
-            CreatorUserId = entity.CreatorUserId,
+            OwnerUserId = entity.OwnerUserId,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
@@ -247,14 +247,14 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг AreaCreateRequest в AreaEntity
     /// </summary>
-    public static AreaEntity ToAreaEntity(this AreaCreateRequest request, Guid creatorUserId)
+    public static AreaEntity ToAreaEntity(this AreaCreateRequest request, Guid ownerUserId)
     {
         return new AreaEntity
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -274,7 +274,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг GroupCreateRequest в GroupEntity
     /// </summary>
-    public static GroupEntity ToGroupEntity(this GroupCreateRequest request, Guid creatorUserId)
+    public static GroupEntity ToGroupEntity(this GroupCreateRequest request, Guid ownerUserId)
     {
         return new GroupEntity
         {
@@ -282,7 +282,7 @@ public static class EntityMapper
             Title = request.Title,
             Description = request.Description,
             AreaId = request.AreaId,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -302,7 +302,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг TaskCreateRequest в TaskEntity
     /// </summary>
-    public static TaskEntity ToTaskEntity(this TaskCreateRequest request, Guid creatorUserId)
+    public static TaskEntity ToTaskEntity(this TaskCreateRequest request, Guid ownerUserId)
     {
         return new TaskEntity
         {
@@ -311,7 +311,7 @@ public static class EntityMapper
             Description = request.Description,
             Status = ResolveTaskStatusOnCreate(request.Status),
             GroupId = request.GroupId,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -332,7 +332,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг SubtaskCreateRequest в SubtaskEntity
     /// </summary>
-    public static SubtaskEntity ToSubtaskEntity(this SubtaskCreateRequest request, Guid creatorUserId)
+    public static SubtaskEntity ToSubtaskEntity(this SubtaskCreateRequest request, Guid ownerUserId)
     {
         return new SubtaskEntity
         {
@@ -341,7 +341,7 @@ public static class EntityMapper
             Description = request.Description,
             Status = Models.Common.TaskStatus.New,
             TaskId = request.TaskId,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -362,14 +362,14 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг PurposeCreateRequest в PurposeEntity
     /// </summary>
-    public static PurposeEntity ToPurposeEntity(this PurposeCreateRequest request, Guid creatorUserId)
+    public static PurposeEntity ToPurposeEntity(this PurposeCreateRequest request, Guid ownerUserId)
     {
         return new PurposeEntity
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -551,14 +551,14 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг CreateAreaWithGroupRequest в AreaEntity
     /// </summary>
-    public static AreaEntity ToAreaEntity(this CreateAreaWithGroupRequest request, Guid creatorUserId)
+    public static AreaEntity ToAreaEntity(this CreateAreaWithGroupRequest request, Guid ownerUserId)
     {
         return new AreaEntity
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -568,7 +568,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг для создания группы по умолчанию
     /// </summary>
-    public static GroupEntity ToDefaultGroupEntity(this AreaEntity area, Guid creatorUserId)
+    public static GroupEntity ToDefaultGroupEntity(this AreaEntity area, Guid ownerUserId)
     {
         return new GroupEntity
         {
@@ -576,7 +576,7 @@ public static class EntityMapper
             Title = "Default Group",
             Description = "Default group for this area",
             AreaId = area.Id,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -586,7 +586,11 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг для создания доступа пользователя к области
     /// </summary>
-    public static UserAreaAccessEntity ToUserAreaAccessEntity(this AreaEntity area, Guid userId, Guid grantedByUserId)
+    /// <param name="area">Область</param>
+    /// <param name="userId">Идентификатор пользователя</param>
+    /// <param name="grantedByUserId">Идентификатор пользователя, предоставившего доступ</param>
+    /// <param name="role">Роль пользователя в области</param>
+    public static UserAreaAccessEntity ToUserAreaAccessEntity(this AreaEntity area, Guid userId, Guid grantedByUserId, Models.Common.AreaRole role)
     {
         return new UserAreaAccessEntity
         {
@@ -594,6 +598,7 @@ public static class EntityMapper
             UserId = userId,
             AreaId = area.Id,
             GrantedByUserId = grantedByUserId,
+            Role = role,
             IsActive = true
         };
     }
@@ -613,7 +618,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг CreateGroupWithTaskRequest в GroupEntity
     /// </summary>
-    public static GroupEntity ToGroupEntity(this CreateGroupWithTaskRequest request, Guid creatorUserId)
+    public static GroupEntity ToGroupEntity(this CreateGroupWithTaskRequest request, Guid ownerUserId)
     {
         return new GroupEntity
         {
@@ -621,7 +626,7 @@ public static class EntityMapper
             Title = request.Title,
             Description = request.Description,
             AreaId = request.AreaId,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -631,7 +636,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг для создания задачи по умолчанию
     /// </summary>
-    public static TaskEntity ToDefaultTaskEntity(this CreateGroupWithTaskRequest request, Guid groupId, Guid creatorUserId)
+    public static TaskEntity ToDefaultTaskEntity(this CreateGroupWithTaskRequest request, Guid groupId, Guid ownerUserId)
     {
         return new TaskEntity
         {
@@ -640,7 +645,7 @@ public static class EntityMapper
             Description = request.TaskDescription,
             Status = Models.Common.TaskStatus.New,
             GroupId = groupId,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -662,7 +667,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг CreateTaskWithEventRequest в TaskEntity
     /// </summary>
-    public static TaskEntity ToTaskEntity(this CreateTaskWithEventRequest request, Guid creatorUserId)
+    public static TaskEntity ToTaskEntity(this CreateTaskWithEventRequest request, Guid ownerUserId)
     {
         return new TaskEntity
         {
@@ -671,7 +676,7 @@ public static class EntityMapper
             Description = request.Description,
             Status = Models.Common.TaskStatus.New,
             GroupId = request.GroupId,
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true
@@ -681,7 +686,7 @@ public static class EntityMapper
     /// <summary>
     /// Маппинг CreateTaskWithEventRequest в EventEntity
     /// </summary>
-    public static EventEntity ToEventEntity(this CreateTaskWithEventRequest request, Guid creatorUserId)
+    public static EventEntity ToEventEntity(this CreateTaskWithEventRequest request, Guid ownerUserId)
     {
         var messageJson = EventMessageHelper.BuildActivityMessageJson(request.EventTitle, request.EventDescription);
 
@@ -691,7 +696,7 @@ public static class EntityMapper
             Title = request.EventTitle,
             Message = messageJson,
             EventType = (Models.Common.EventType)Enum.Parse(typeof(Models.Common.EventType), request.EventType),
-            CreatorUserId = creatorUserId,
+            OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
             IsActive = true

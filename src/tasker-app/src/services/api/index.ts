@@ -18,7 +18,7 @@ export {
   updateArea, 
   deleteArea, 
   fetchActiveAreas, 
-  fetchAreasByCreator, 
+  fetchAreasByOwner, 
   fetchAreaShortCard 
 } from './areas';
 
@@ -32,8 +32,8 @@ export {
   fetchActiveGroups, 
   fetchGroupsByArea, 
   fetchActiveGroupsByArea, 
-  fetchGroupsByCreator, 
-  fetchActiveGroupsByCreator, 
+  fetchGroupsByOwner, 
+  fetchActiveGroupsByOwner, 
   fetchGroupShortCardByAreaForTree 
 } from './groups';
 
@@ -52,8 +52,8 @@ export {
   fetchActiveTasks,
   fetchTasksByGroup,
   fetchActiveTasksByGroup,
-  fetchTasksByCreator,
-  fetchActiveTasksByCreator,
+  fetchTasksByOwner,
+  fetchActiveTasksByOwner,
   fetchTaskSummaryByGroup,
   fetchWeeklyTasks,
   getMonday,

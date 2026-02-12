@@ -13,7 +13,7 @@ public class GroupEntity :
     ISoftDeleteBaseEntity, 
     IUpdatedDateBaseEntity, 
     ICreatedDateBaseEntity, 
-    ICreatorUserBaseEntity
+    IOwnerUserBaseEntity
 {
     /// <summary>
     ///     Заголовок группы
@@ -44,9 +44,9 @@ public class GroupEntity :
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     
     /// <summary>
     /// Уникальный идентификатор группы.

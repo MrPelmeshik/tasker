@@ -7,7 +7,7 @@ namespace TaskerApi.Models.Entities.Base;
 /// </summary>
 public abstract class EventRelationBaseEntity : 
     IDbEntity,
-    ICreatorUserBaseEntity, 
+    IOwnerUserBaseEntity, 
     ICreatedDateBaseEntity, 
     IUpdatedDateBaseEntity, 
     ISoftDeleteBaseEntity
@@ -18,9 +18,9 @@ public abstract class EventRelationBaseEntity :
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
 
     /// <summary>
     /// Дата и время деактивации (мягкое удаление).

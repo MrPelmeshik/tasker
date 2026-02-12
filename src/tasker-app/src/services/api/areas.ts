@@ -19,10 +19,10 @@ export class AreaApiClient extends BaseApiClient<AreaResponse, AreaCreateRequest
     return areas.filter(area => area.isActive);
   }
 
-  // Получить области с фильтрацией по создателю
-  async getAreasByCreator(creatorUserId: string): Promise<AreaResponse[]> {
+  // Получить области с фильтрацией по владельцу
+  async getAreasByOwner(ownerUserId: string): Promise<AreaResponse[]> {
     const areas = await this.getAll();
-    return areas.filter(area => area.creatorUserId === creatorUserId);
+    return areas.filter(area => area.ownerUserId === ownerUserId);
   }
 
   // Получить краткие карточки областей для Tree виджета
@@ -46,5 +46,5 @@ export const createArea = (data: AreaCreateRequest) => areaApi.create(data);
 export const updateArea = (id: string, data: AreaUpdateRequest) => areaApi.update(id, data);
 export const deleteArea = (id: string) => areaApi.delete(id);
 export const fetchActiveAreas = () => areaApi.getActiveAreas();
-export const fetchAreasByCreator = (creatorUserId: string) => areaApi.getAreasByCreator(creatorUserId);
+export const fetchAreasByOwner = (ownerUserId: string) => areaApi.getAreasByOwner(ownerUserId);
 export const fetchAreaShortCard = () => areaApi.getAreaShortCard();

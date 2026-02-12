@@ -16,14 +16,14 @@ public class AreaResponse
     public string? Description { get; set; }
 
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
 
     /// <summary>
-    /// Имя пользователя-создателя.
+    /// Имя пользователя-владельца.
     /// </summary>
-    public string CreatorUserName { get; set; } = string.Empty;
+    public string OwnerUserName { get; set; } = string.Empty;
 
     /// <summary>
     /// Дата и время создания.

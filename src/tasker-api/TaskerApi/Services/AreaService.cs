@@ -21,6 +21,7 @@ public class AreaService(
     IUserAreaAccessRepository userAreaAccessRepository,
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
+    IAreaRoleService areaRoleService,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IAreaService
 {
@@ -58,7 +59,7 @@ public class AreaService(
                 return null;
             }
 
-            var user = await userRepository.GetByIdAsync(area.CreatorUserId, cancellationToken);
+            var user = await userRepository.GetByIdAsync(area.OwnerUserId, cancellationToken);
             return area.ToAreaResponse(user?.Name ?? "");
         }, nameof(GetByIdAsync), new { id });
     }
@@ -82,7 +83,7 @@ public class AreaService(
             var area = request.ToAreaEntity(CurrentUser.UserId);
 
             var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
-            var userAccess = createdArea.ToUserAreaAccessEntity(CurrentUser.UserId, CurrentUser.UserId);
+            var userAccess = createdArea.ToUserAreaAccessEntity(CurrentUser.UserId, CurrentUser.UserId, AreaRole.Owner);
 
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
 
@@ -108,9 +109,9 @@ public class AreaService(
                 throw new InvalidOperationException("Область не найдена");
             }
 
-            if (!CurrentUser.HasAccessToArea(existingArea.Id))
+            if (!await areaRoleService.CanEditAreaAsync(existingArea.Id, cancellationToken))
             {
-                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+                throw new UnauthorizedAccessException("Нет прав на редактирование области");
             }
 
             var oldSnapshot = EventMessageHelper.ShallowClone(existingArea);
@@ -145,9 +146,9 @@ public class AreaService(
                 throw new InvalidOperationException("Область не найдена");
             }
 
-            if (!CurrentUser.HasAccessToArea(existingArea.Id))
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(existingArea.Id, cancellationToken))
             {
-                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+                throw new UnauthorizedAccessException("Только владелец области может удалить область");
             }
 
             await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.DELETE, existingArea.Title, null, cancellationToken);
@@ -184,7 +185,7 @@ public class AreaService(
 
             await entityEventLogger.LogAsync(EntityType.GROUP, createdGroup.Id, EventType.CREATE, createdGroup.Title, null, cancellationToken);
 
-            var userAccess = createdArea.ToUserAreaAccessEntity(currentUser.UserId, currentUser.UserId);
+            var userAccess = createdArea.ToUserAreaAccessEntity(currentUser.UserId, currentUser.UserId, AreaRole.Owner);
 
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
 
@@ -212,8 +213,8 @@ public class AreaService(
             var areas = await areaRepository.GetAllAsync(cancellationToken);
             var accessibleAreas = areas.Where(a => CurrentUser.HasAccessToArea(a.Id)).ToList();
 
-            // Пакетная загрузка имён создателей
-            var userIds = accessibleAreas.Select(a => a.CreatorUserId).Distinct().ToHashSet();
+            // Пакетная загрузка имён владельцев
+            var userIds = accessibleAreas.Select(a => a.OwnerUserId).Distinct().ToHashSet();
             var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
             var userNames = users.ToDictionary(u => u.Id, u => u.Name);
 
@@ -223,9 +224,9 @@ public class AreaService(
             {
                 var groups = await groupRepository.GetByAreaIdAsync(area.Id, cancellationToken);
                 var groupCount = groups.Count;
-                var creatorName = userNames.GetValueOrDefault(area.CreatorUserId, "");
+                var ownerName = userNames.GetValueOrDefault(area.OwnerUserId, "");
 
-                result.Add(area.ToAreaShortCardResponse(groupCount, creatorName));
+                result.Add(area.ToAreaShortCardResponse(groupCount, ownerName));
             }
 
             return result;

@@ -19,6 +19,7 @@ public class EventAreaService(
     ICurrentUserService currentUser,
     IEventRepository eventRepository,
     IAreaRepository areaRepository,
+    IAreaRoleService areaRoleService,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IEventAreaService
 {
@@ -29,8 +30,8 @@ public class EventAreaService(
         if (area == null)
             throw new InvalidOperationException("Область не найдена");
 
-        if (!CurrentUser.HasAccessToArea(area.Id))
-            throw new UnauthorizedAccessException("Доступ к области запрещен");
+        if (!await areaRoleService.CanAddActivityAsync(area.Id, cancellationToken))
+            throw new UnauthorizedAccessException("Нет прав на добавление записей по активности в область");
 
         var now = DateTimeOffset.UtcNow;
 
@@ -42,7 +43,7 @@ public class EventAreaService(
             Title = item.Title,
             Message = messageJson,
             EventType = item.EventType,
-            CreatorUserId = CurrentUser.UserId,
+            OwnerUserId = CurrentUser.UserId,
             CreatedAt = now,
             UpdatedAt = now,
             IsActive = true
@@ -54,7 +55,7 @@ public class EventAreaService(
         {
             EventId = createdEvent.Id,
             AreaId = item.EntityId,
-            CreatorUserId = CurrentUser.UserId,
+            OwnerUserId = CurrentUser.UserId,
             CreatedAt = now,
             UpdatedAt = now,
             IsActive = true

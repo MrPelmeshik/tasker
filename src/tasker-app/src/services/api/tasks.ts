@@ -60,15 +60,15 @@ export class TaskApiClient {
     return tasks.filter(task => task.isActive);
   }
 
-  // Получить задачи по создателю
-  async getTasksByCreator(creatorUserId: string): Promise<TaskResponse[]> {
+  // Получить задачи по владельцу
+  async getTasksByOwner(ownerUserId: string): Promise<TaskResponse[]> {
     const tasks = await this.getAll();
-    return tasks.filter(task => task.creatorUserId === creatorUserId);
+    return tasks.filter(task => task.ownerUserId === ownerUserId);
   }
 
-  // Получить активные задачи по создателю
-  async getActiveTasksByCreator(creatorUserId: string): Promise<TaskResponse[]> {
-    const tasks = await this.getTasksByCreator(creatorUserId);
+  // Получить активные задачи по владельцу
+  async getActiveTasksByOwner(ownerUserId: string): Promise<TaskResponse[]> {
+    const tasks = await this.getTasksByOwner(ownerUserId);
     return tasks.filter(task => task.isActive);
   }
 
@@ -117,8 +117,8 @@ export const deleteTask = (id: string) => taskApi.delete(id);
 export const fetchActiveTasks = () => taskApi.getActiveTasks();
 export const fetchTasksByGroup = (groupId: string) => taskApi.getTasksByGroup(groupId);
 export const fetchActiveTasksByGroup = (groupId: string) => taskApi.getActiveTasksByGroup(groupId);
-export const fetchTasksByCreator = (creatorUserId: string) => taskApi.getTasksByCreator(creatorUserId);
-export const fetchActiveTasksByCreator = (creatorUserId: string) => taskApi.getActiveTasksByCreator(creatorUserId);
+export const fetchTasksByOwner = (ownerUserId: string) => taskApi.getTasksByOwner(ownerUserId);
+export const fetchActiveTasksByOwner = (ownerUserId: string) => taskApi.getActiveTasksByOwner(ownerUserId);
 export const fetchTaskSummaryByGroup = (groupId: string) => taskApi.getTaskSummaryByGroup(groupId);
 export const fetchWeeklyTasks = (params: { weekStartIso: string }) => taskApi.getWeeklyTasks(params);
 

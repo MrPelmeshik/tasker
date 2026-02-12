@@ -33,9 +33,9 @@ public class SubtaskResponse
     public Guid TaskId { get; set; }
     
     /// <summary>
-    /// Идентификатор пользователя-создателя.
+    /// Идентификатор пользователя-владельца.
     /// </summary>
-    public Guid CreatorUserId { get; set; }
+    public Guid OwnerUserId { get; set; }
     
     /// <summary>
     /// Дата и время создания.

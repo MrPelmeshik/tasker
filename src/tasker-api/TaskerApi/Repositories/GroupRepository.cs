@@ -32,14 +32,14 @@ public class GroupRepository : BaseRepository<GroupEntity, Guid>, IGroupReposito
     }
 
     /// <summary>
-    /// Получает группы по идентификатору создателя
+    /// Получает группы по идентификатору владельца
     /// </summary>
-    /// <param name="creatorUserId">Идентификатор пользователя-создателя</param>
+    /// <param name="ownerUserId">Идентификатор пользователя-владельца</param>
     /// <param name="cancellationToken">Токен отмены операции</param>
     /// <param name="includeDeleted">Включать ли удаленные группы</param>
-    /// <returns>Список групп создателя</returns>
-    public async Task<IReadOnlyList<GroupEntity>> GetByCreatorIdAsync(Guid creatorUserId, CancellationToken cancellationToken = default, bool includeDeleted = false)
+    /// <returns>Список групп владельца</returns>
+    public async Task<IReadOnlyList<GroupEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        return await FindAsync(g => g.CreatorUserId == creatorUserId, cancellationToken, includeDeleted);
+        return await FindAsync(g => g.OwnerUserId == ownerUserId, cancellationToken, includeDeleted);
     }
 }

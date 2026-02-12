@@ -163,6 +163,9 @@ public class CurrentUserService: ICurrentUserService
         }
     }
 
+    /// <summary>
+    /// Загружает области, к которым пользователь имеет доступ: владелец (areas.owner_user_id) или запись в user_area_access
+    /// </summary>
     private IReadOnlyList<Guid> LoadAccessibleAreas()
     {
         if (!IsAuthenticated) return new List<Guid>();
@@ -170,7 +173,10 @@ public class CurrentUserService: ICurrentUserService
         try
         {
             var userAreaAccesses = _userAreaAccessRepository.GetByUserIdAsync(UserId, CancellationToken.None).Result;
-            return userAreaAccesses.Select(uaa => uaa.AreaId).ToList();
+            var fromAccess = userAreaAccesses.Select(uaa => uaa.AreaId).ToHashSet();
+            var areas = _areaRepository.GetAllAsync(CancellationToken.None).Result;
+            var fromOwner = areas.Where(a => a.OwnerUserId == UserId).Select(a => a.Id);
+            return fromAccess.Union(fromOwner).Distinct().ToList();
         }
         catch
         {

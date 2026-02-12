@@ -1,5 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using TaskerApi.Interfaces.Models.Entities;
+using TaskerApi.Models.Common;
 
 namespace TaskerApi.Models.Entities;
 
@@ -31,6 +32,12 @@ public class UserAreaAccessEntity :
     /// </summary>
     [Column("granted_by_user_id")]
     public Guid GrantedByUserId { get; set; }
+
+    /// <summary>
+    /// Роль пользователя в области
+    /// </summary>
+    [Column("role")]
+    public AreaRole Role { get; set; }
 
     /// <summary>
     /// Дата и время создания.

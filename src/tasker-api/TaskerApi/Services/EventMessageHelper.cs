@@ -13,7 +13,7 @@ public static class EventMessageHelper
     /// Имена свойств, исключаемых из диффа (служебные поля).
     /// </summary>
     private static readonly HashSet<string> ExcludedPropertyNames =
-        ["Id", "CreatedAt", "UpdatedAt", "CreatorUserId", "DeactivatedAt", "IsActive"];
+        ["Id", "CreatedAt", "UpdatedAt", "OwnerUserId", "DeactivatedAt", "IsActive"];
 
     /// <summary>
     /// Создаёт поверхностную копию объекта через MemberwiseClone.

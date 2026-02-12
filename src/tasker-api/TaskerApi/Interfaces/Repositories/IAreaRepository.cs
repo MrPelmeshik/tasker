@@ -8,13 +8,13 @@ namespace TaskerApi.Interfaces.Repositories;
 public interface IAreaRepository : IRepository<AreaEntity, Guid>
 {
     /// <summary>
-    /// Получить области по создателю
+    /// Получить области по владельцу
     /// </summary>
-    /// <param name="creatorUserId">Идентификатор создателя</param>
+    /// <param name="ownerUserId">Идентификатор владельца</param>
     /// <param name="cancellationToken">Токен отмены</param>
     /// <param name="includeDeleted">Включить удаленные записи</param>
     /// <returns>Список областей</returns>
-    Task<IReadOnlyList<AreaEntity>> GetByCreatorIdAsync(Guid creatorUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
+    Task<IReadOnlyList<AreaEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
 
     /// <summary>
     /// Получить область по названию

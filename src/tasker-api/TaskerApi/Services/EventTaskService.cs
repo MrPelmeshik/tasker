@@ -22,6 +22,7 @@ public class EventTaskService(
     IEventRepository eventRepository,
     ITaskRepository taskRepository,
     IGroupRepository groupRepository,
+    IAreaRoleService areaRoleService,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IEventTaskService
 {
@@ -33,8 +34,11 @@ public class EventTaskService(
             throw new InvalidOperationException("Задача не найдена");
 
         var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-        if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
-            throw new UnauthorizedAccessException("Доступ к задаче запрещен");
+        if (group == null)
+            throw new InvalidOperationException("Группа не найдена");
+
+        if (!await areaRoleService.CanAddActivityAsync(group.AreaId, cancellationToken))
+            throw new UnauthorizedAccessException("Нет прав на добавление записей по активности в задачу");
 
         var now = DateTimeOffset.UtcNow;
 
@@ -46,7 +50,7 @@ public class EventTaskService(
             Title = item.Title,
             Message = messageJson,
             EventType = item.EventType,
-            CreatorUserId = CurrentUser.UserId,
+            OwnerUserId = CurrentUser.UserId,
             CreatedAt = now,
             UpdatedAt = now,
             IsActive = true
@@ -58,7 +62,7 @@ public class EventTaskService(
         {
             EventId = createdEvent.Id,
             TaskId = item.EntityId,
-            CreatorUserId = CurrentUser.UserId,
+            OwnerUserId = CurrentUser.UserId,
             CreatedAt = now,
             UpdatedAt = now,
             IsActive = true

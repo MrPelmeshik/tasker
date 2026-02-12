@@ -148,6 +148,8 @@ builder.Services.AddScoped<IEventTaskService, EventTaskService>();
 builder.Services.AddScoped<IEventGroupService, EventGroupService>();
 builder.Services.AddScoped<IEventAreaService, EventAreaService>();
 builder.Services.AddScoped<IEntityEventLogger, EntityEventLogger>();
+builder.Services.AddScoped<IAreaRoleService, AreaRoleService>();
+builder.Services.AddScoped<IAreaMemberService, AreaMemberService>();
 
 // Регистрация атрибута логирования как сервис-фильтра
 // builder.Services.AddScoped<UserLogAttribute>();

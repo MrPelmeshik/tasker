@@ -335,10 +335,10 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             {area && (
               <div className={formCss.readonlyMeta}>
                 <div className={formCss.readonlyMetaTitle}>Информация</div>
-                {area.creatorUserName && (
+                {area.ownerUserName && (
                   <div className={formCss.readonlyMetaRow}>
-                    <span className={formCss.readonlyMetaLabel}>Автор</span>
-                    <span className={formCss.readonlyMetaValue}>{area.creatorUserName}</span>
+                    <span className={formCss.readonlyMetaLabel}>Владелец</span>
+                    <span className={formCss.readonlyMetaValue}>{area.ownerUserName}</span>
                   </div>
                 )}
                 {area.createdAt && (

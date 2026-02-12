@@ -21,8 +21,8 @@ export interface AreaResponse {
   id: string;
   title: string;
   description?: string;
-  creatorUserId: string;
-  creatorUserName?: string;
+  ownerUserId: string;
+  ownerUserName?: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -47,8 +47,8 @@ export interface GroupResponse {
   title: string;
   description?: string;
   areaId: string;
-  creatorUserId: string;
-  creatorUserName?: string;
+  ownerUserId: string;
+  ownerUserName?: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -65,7 +65,7 @@ export interface AreaShortCardResponse {
   title: string;
   description?: string;
   groupsCount: number;
-  creatorUserName: string;
+  ownerUserName: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -76,7 +76,7 @@ export interface GroupSummaryResponse {
   description?: string;
   areaId: string;
   tasksCount: number;
-  creatorUserName: string;
+  ownerUserName: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -102,8 +102,8 @@ export interface TaskResponse {
   description?: string;
   groupId: string;
   status: number; // TaskStatus enum value
-  creatorUserId: string;
-  creatorUserName?: string;
+  ownerUserId: string;
+  ownerUserName?: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -119,7 +119,7 @@ export interface TaskSummaryResponse {
   title: string;
   description?: string;
   status: number; // TaskStatus enum value
-  creatorUserName: string;
+  ownerUserName: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -160,7 +160,7 @@ export interface EventResponse {
   title: string;
   message?: EventMessage;
   eventType: string;
-  creatorUserId: string;
+  ownerUserId: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;
@@ -172,7 +172,7 @@ export interface BaseEntity {
   id: string;
   title: string;
   description?: string;
-  creatorUserId: string;
+  ownerUserId: string;
   createdAt: string;
   updatedAt: string;
   isActive: boolean;

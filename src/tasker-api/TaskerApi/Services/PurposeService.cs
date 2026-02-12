@@ -136,22 +136,22 @@ public class PurposeService(
     }
 
     /// <summary>
-    /// Получить цели по создателю
+    /// Получить цели по владельцу
     /// </summary>
-    /// <param name="creatorId">Идентификатор создателя</param>
+    /// <param name="ownerId">Идентификатор владельца</param>
     /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Список целей создателя</returns>
-    public async Task<IEnumerable<PurposeResponse>> GetByCreatorIdAsync(Guid creatorId, CancellationToken cancellationToken)
+    /// <returns>Список целей владельца</returns>
+    public async Task<IEnumerable<PurposeResponse>> GetByOwnerIdAsync(Guid ownerId, CancellationToken cancellationToken)
     {
         try
         {
-            var purposes = await purposeRepository.GetByCreatorIdAsync(creatorId, cancellationToken);
+            var purposes = await purposeRepository.GetByOwnerIdAsync(ownerId, cancellationToken);
 
             return purposes.Select(p => p.ToPurposeResponse());
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Ошибка получения целей по идентификатору создателя {CreatorId}", creatorId);
+            logger.LogError(ex, "Ошибка получения целей по идентификатору владельца {OwnerId}", ownerId);
             throw;
         }
     }

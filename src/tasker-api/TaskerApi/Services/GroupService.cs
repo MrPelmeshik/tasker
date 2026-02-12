@@ -21,6 +21,7 @@ public class GroupService(
     ITaskRepository taskRepository,
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
+    IAreaRoleService areaRoleService,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IGroupService
 {
@@ -63,7 +64,7 @@ public class GroupService(
                 return null;
             }
 
-            var user = await userRepository.GetByIdAsync(group.CreatorUserId, cancellationToken);
+            var user = await userRepository.GetByIdAsync(group.OwnerUserId, cancellationToken);
             return group.ToGroupResponse(user?.Name ?? "");
         }, nameof(GetByIdAsync), new { id });
     }
@@ -84,7 +85,10 @@ public class GroupService(
                 throw new InvalidOperationException("Область не найдена");
             }
 
-            EnsureAccessToArea(area.Id);
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(area.Id, cancellationToken))
+            {
+                throw new UnauthorizedAccessException("Только владелец области может создавать группы");
+            }
 
             var group = request.ToGroupEntity(CurrentUser.UserId);
 
@@ -113,9 +117,9 @@ public class GroupService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!CurrentUser.HasAccessToArea(group.AreaId))
+            if (!await areaRoleService.CanEditGroupAsync(group.AreaId, cancellationToken))
             {
-                throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
+                throw new UnauthorizedAccessException("Нет прав на редактирование группы");
             }
 
             var oldSnapshot = EventMessageHelper.ShallowClone(group);
@@ -152,9 +156,9 @@ public class GroupService(
                 throw new InvalidOperationException("Группа не найдена");
             }
 
-            if (!CurrentUser.HasAccessToArea(group.AreaId))
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(group.AreaId, cancellationToken))
             {
-                throw new UnauthorizedAccessException("Доступ к данной группе запрещен");
+                throw new UnauthorizedAccessException("Только владелец области может удалять группы");
             }
 
             await entityEventLogger.LogAsync(EntityType.GROUP, id, EventType.DELETE, group.Title, null, cancellationToken);
@@ -211,8 +215,8 @@ public class GroupService(
 
             var groups = await groupRepository.GetByAreaIdAsync(areaId, cancellationToken);
 
-            // Пакетная загрузка имён создателей
-            var userIds = groups.Select(g => g.CreatorUserId).Distinct().ToHashSet();
+            // Пакетная загрузка имён владельцев
+            var userIds = groups.Select(g => g.OwnerUserId).Distinct().ToHashSet();
             var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
             var userNames = users.ToDictionary(u => u.Id, u => u.Name);
 
@@ -221,8 +225,8 @@ public class GroupService(
             foreach (var group in groups)
             {
                 var tasks = await taskRepository.GetByGroupIdAsync(group.Id, cancellationToken);
-                var creatorName = userNames.GetValueOrDefault(group.CreatorUserId, "");
-                result.Add(group.ToGroupSummaryResponse(tasks.Count, creatorName));
+                var ownerName = userNames.GetValueOrDefault(group.OwnerUserId, "");
+                result.Add(group.ToGroupSummaryResponse(tasks.Count, ownerName));
             }
 
             return result;
@@ -251,9 +255,9 @@ public class GroupService(
                 throw new InvalidOperationException("Область не найдена");
             }
 
-            if (!CurrentUser.HasAccessToArea(area.Id))
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(area.Id, cancellationToken))
             {
-                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+                throw new UnauthorizedAccessException("Только владелец области может создавать группы и задачи");
             }
 
             var group = request.ToGroupEntity(currentUser.UserId);

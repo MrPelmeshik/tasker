@@ -1,6 +1,7 @@
 using System.Linq.Expressions;
 using Microsoft.EntityFrameworkCore;
 using TaskerApi.Interfaces.Models.Entities;
+using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
 
 namespace TaskerApi.Core;
@@ -220,6 +221,11 @@ public class TaskerDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.GrantedByUserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            entity.Property(e => e.Role)
+                .HasConversion(
+                    r => r.ToString().ToLowerInvariant(),
+                    s => (AreaRole)Enum.Parse(typeof(AreaRole), s, true));
         });
         modelBuilder.Entity<EventToAreaEntity>(entity =>
         {
@@ -387,11 +393,11 @@ public class TaskerDbContext : DbContext
                 entityBuilder.Property("IsActive").HasColumnName("is_active");
             }
             
-            // Configure CreatorUserId property (from ICreatorUserBaseEntity)
-            var creatorUserIdProperty = entityType.FindProperty("CreatorUserId");
-            if (creatorUserIdProperty != null && creatorUserIdProperty.PropertyInfo != null)
+            // Configure OwnerUserId property (from IOwnerUserBaseEntity)
+            var ownerUserIdProperty = entityType.FindProperty("OwnerUserId");
+            if (ownerUserIdProperty != null && ownerUserIdProperty.PropertyInfo != null)
             {
-                entityBuilder.Property("CreatorUserId").HasColumnName("creator_user_id");
+                entityBuilder.Property("OwnerUserId").HasColumnName("owner_user_id");
             }
         }
     }
