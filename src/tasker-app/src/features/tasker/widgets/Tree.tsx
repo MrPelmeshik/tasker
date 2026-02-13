@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DndContext,
@@ -393,7 +393,7 @@ const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ task, onViewDetails }) => {
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { openAreaModal, openFolderModal, openTaskModal } = useModal();
-  const { notifyTaskUpdate } = useTaskUpdate();
+  const { notifyTaskUpdate, subscribeToTaskUpdates } = useTaskUpdate();
   const { addError, addSuccess } = useToast();
 
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
@@ -418,21 +418,24 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     if (data) setActiveDrag({ id: active.id as string, data });
   }, []);
 
-  useEffect(() => {
-    const loadAreas = async () => {
-      try {
-        setLoading(true);
-        const data = await fetchAreaShortCard();
-        setAreas(data);
-      } catch (error) {
-        console.error('Ошибка загрузки областей:', error);
-        setAreas([]);
-        addError(parseApiErrorMessage(error));
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAreas();
+  const expandedAreasRef = useRef(expandedAreas);
+  const expandedFoldersRef = useRef(expandedFolders);
+  const foldersByAreaRef = useRef(foldersByArea);
+  const foldersByParentRef = useRef(foldersByParent);
+  expandedAreasRef.current = expandedAreas;
+  expandedFoldersRef.current = expandedFolders;
+  foldersByAreaRef.current = foldersByArea;
+  foldersByParentRef.current = foldersByParent;
+
+  const refreshAreas = useCallback(async () => {
+    try {
+      const data = await fetchAreaShortCard();
+      setAreas(data);
+    } catch (error) {
+      console.error('Ошибка загрузки областей:', error);
+      setAreas([]);
+      addError(parseApiErrorMessage(error));
+    }
   }, [addError]);
 
   const loadAreaContent = useCallback(async (areaId: string) => {
@@ -480,6 +483,54 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       });
     }
   }, [addError]);
+
+  const refreshTree = useCallback(async () => {
+    try {
+      await refreshAreas();
+      const areasToRefresh = Array.from(expandedAreasRef.current);
+      for (const areaId of areasToRefresh) {
+        await loadAreaContent(areaId);
+      }
+      const foldersToRefresh = Array.from(expandedFoldersRef.current);
+      for (const folderId of foldersToRefresh) {
+        const folder = findFolderById(folderId, foldersByAreaRef.current, foldersByParentRef.current);
+        if (folder) await loadFolderContent(folderId, folder.areaId);
+      }
+    } catch {
+      /* ошибки уже обработаны в loadAreaContent/loadFolderContent */
+    }
+  }, [refreshAreas, loadAreaContent, loadFolderContent]);
+
+  useEffect(() => {
+    const loadAreas = async () => {
+      try {
+        setLoading(true);
+        await refreshAreas();
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadAreas();
+  }, [refreshAreas]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToTaskUpdates(() => refreshTree());
+    return unsubscribe;
+  }, [subscribeToTaskUpdates, refreshTree]);
+
+  const TREE_POLL_INTERVAL_MS = 30_000;
+  useEffect(() => {
+    const id = setInterval(() => refreshTree(), TREE_POLL_INTERVAL_MS);
+    return () => clearInterval(id);
+  }, [refreshTree]);
+
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') refreshTree();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
+  }, [refreshTree]);
 
   const handleDragEnd = useCallback(
     async (event: DragEndEvent) => {
@@ -536,6 +587,14 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           if (oldFolderId) {
             const tasks = await fetchTaskSummaryByFolder(oldFolderId);
             setTasksByFolder((prev) => new Map(prev).set(oldFolderId, tasks));
+            const subfolders = foldersByParent.get(oldFolderId) ?? [];
+            if (tasks.length === 0 && subfolders.length === 0) {
+              setExpandedFolders((prev) => {
+                const next = new Set(prev);
+                next.delete(oldFolderId);
+                return next;
+              });
+            }
           } else if (oldAreaId) {
             const tasks = await fetchTaskSummaryByAreaRoot(oldAreaId);
             setTasksByArea((prev) => new Map(prev).set(oldAreaId, tasks));
