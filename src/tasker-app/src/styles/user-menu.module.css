@@ -1,0 +1,56 @@
+.menu {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.user {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+
+.avatar {
+  width: var(--size-28);
+  height: var(--size-28);
+  border-radius: var(--radius-round);
+  background: linear-gradient(135deg, var(--color-gradient-purple), var(--color-gradient-cyan));
+}
+
+.userName {
+  color: var(--color-text);
+  font-size: var(--font-14);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: var(--space-8) var(--space-10);
+  border: none;
+  border-radius: var(--radius-2xs);
+  background: none;
+  color: var(--color-text);
+  font-size: var(--font-14);
+  font-family: inherit;
+  cursor: pointer;
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.item:hover {
+  background: var(--glass-bg-hover);
+}
+
+.item:focus {
+  outline: none;
+  background: var(--glass-bg-hover);
+}
+
+.itemDanger {
+  color: var(--color-danger-text);
+}
+
+.itemDanger:hover {
+  background: rgb(var(--color-danger) / 0.15);
+}

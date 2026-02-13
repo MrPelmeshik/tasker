@@ -1,3 +1,4 @@
+export { Dropdown } from './Dropdown';
 export { GlassButton } from './GlassButton';
 export { GlassInput } from './GlassInput';
 export { GlassTextarea } from './GlassTextarea';
