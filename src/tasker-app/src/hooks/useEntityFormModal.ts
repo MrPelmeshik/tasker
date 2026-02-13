@@ -24,12 +24,16 @@ export interface UseEntityFormModalOptions<TForm extends object> {
   validate?: (data: TForm) => boolean;
   /** Дополнительные флаги несохранённых изменений (например, смена области) */
   getExtraUnsavedChanges?: (context: { originalData: TForm }) => boolean;
+  /** Колбэк при возврате к просмотру без сохранения (сброс доп. состояния) */
+  onReturnToView?: () => void;
+  /** Колбэк при закрытии без сохранения (сброс доп. состояния) */
+  onDiscard?: () => void;
 }
 
 /**
  * Хук для управления состоянием CRUD-модалок (область, группа, задача).
  * Обеспечивает общую логику: инициализация формы, отслеживание изменений,
- * подтверждения при закрытии с несохранёнными изменениями и удалении.
+ * подтверждения при закрытии с несохранёнными изменениями, удалении и колбэки для сброса доп. состояния при откате.
  */
 export function useEntityFormModal<TForm extends object>(
   options: UseEntityFormModalOptions<TForm>
@@ -44,6 +48,8 @@ export function useEntityFormModal<TForm extends object>(
     onDelete,
     validate = () => true,
     getExtraUnsavedChanges,
+    onReturnToView,
+    onDiscard,
   } = options;
 
   const { addError } = useToast();
@@ -111,6 +117,7 @@ export function useEntityFormModal<TForm extends object>(
 
   const handleConfirmDiscard = () => {
     setShowConfirmModal(false);
+    onDiscard?.();
     onClose();
   };
 
@@ -128,6 +135,7 @@ export function useEntityFormModal<TForm extends object>(
 
   const handleConfirmReturnToView = () => {
     setShowReturnToViewConfirm(false);
+    onReturnToView?.();
     setFormData(originalData);
     setFieldChanges({});
     setIsEditMode(false);

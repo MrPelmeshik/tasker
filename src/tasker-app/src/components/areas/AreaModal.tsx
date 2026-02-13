@@ -205,7 +205,7 @@ interface ParticipantsByRoleProps {
   addMemberError: string | null;
   onAddMemberLoginChange: (v: string) => void;
   onAddMemberRoleChange: (v: AreaRole) => void;
-  onAddMember: () => Promise<void>;
+  onAddMember: () => void | Promise<void>;
   onChangeMemberRole: (m: AreaMemberResponse, r: AreaRole) => void;
   onRemoveMember: (m: AreaMemberResponse) => void;
 }
@@ -343,8 +343,10 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   size = 'medium',
 }) => {
   const { addError } = useToast();
-  const [members, setMembers] = useState<AreaMemberResponse[]>([]);
+  const [originalMembers, setOriginalMembers] = useState<AreaMemberResponse[]>([]);
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AreaRole>>({});
+  const [pendingAdds, setPendingAdds] = useState<Array<{ login: string; role: AreaRole }>>([]);
+  const [pendingRemoves, setPendingRemoves] = useState<Set<string>>(new Set());
 
   const modal = useEntityFormModal<AreaCreateRequest>({
     isOpen,
@@ -356,19 +358,43 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     deps: [area],
     onClose,
     onSave: async (data) => {
-      if (area?.id && Object.keys(pendingRoleChanges).length > 0) {
-        for (const [userId, role] of Object.entries(pendingRoleChanges)) {
-          await areaApi.addMember(area.id, { userId, role });
+      if (area?.id) {
+        for (const { login, role } of pendingAdds) {
+          const effectiveRole = (pendingRoleChanges[`pending-${login}`] ?? role) as AreaRole;
+          await areaApi.addMember(area.id, { login, role: effectiveRole });
         }
+        for (const userId of Array.from(pendingRemoves)) {
+          await areaApi.removeMember(area.id, userId);
+        }
+        for (const [userId, role] of Object.entries(pendingRoleChanges)) {
+          if (!userId.startsWith('pending-')) {
+            await areaApi.addMember(area.id, { userId, role });
+          }
+        }
+        setPendingAdds([]);
+        setPendingRemoves(new Set());
         setPendingRoleChanges({});
         const updated = await areaApi.getMembers(area.id);
-        setMembers(updated);
+        setOriginalMembers(updated);
       }
       await onSave((area ? { ...data, id: area.id } : data) as AreaCreateRequest | AreaUpdateRequest);
     },
     onDelete,
     validate: (data) => Boolean(data.title?.trim()),
-    getExtraUnsavedChanges: () => Object.keys(pendingRoleChanges).length > 0,
+    getExtraUnsavedChanges: () =>
+      Object.keys(pendingRoleChanges).length > 0 ||
+      pendingAdds.length > 0 ||
+      pendingRemoves.size > 0,
+    onReturnToView: () => {
+      setPendingRoleChanges({});
+      setPendingAdds([]);
+      setPendingRemoves(new Set());
+    },
+    onDiscard: () => {
+      setPendingRoleChanges({});
+      setPendingAdds([]);
+      setPendingRemoves(new Set());
+    },
   });
 
   const {
@@ -402,7 +428,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [addMemberLogin, setAddMemberLogin] = useState('');
   const [addMemberRole, setAddMemberRole] = useState<AreaRole>('Executor');
   const [addMemberError, setAddMemberError] = useState<string | null>(null);
-  const [addMemberLoading, setAddMemberLoading] = useState(false);
   const [removeConfirmMember, setRemoveConfirmMember] = useState<AreaMemberResponse | null>(null);
 
   const areaEvents = useEvents('area', area?.id);
@@ -413,7 +438,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     !area ||
     (!membersLoading &&
       currentUserId != null &&
-      members.some((m) => m.userId === currentUserId && canEditArea(m.role)));
+      originalMembers.some((m) => m.userId === currentUserId && canEditArea(m.role)));
 
   // Сброс доп. состояния при открытии
   useEffect(() => {
@@ -422,13 +447,15 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       setAddMemberError(null);
       setRemoveConfirmMember(null);
       setPendingRoleChanges({});
+      setPendingAdds([]);
+      setPendingRemoves(new Set());
     }
   }, [isOpen, area]);
 
   // Загрузка участников и текущего пользователя при открытии модального окна для существующей области
   useEffect(() => {
     if (!isOpen || !area?.id) {
-      setMembers([]);
+      setOriginalMembers([]);
       setCurrentUserId(null);
       return;
     }
@@ -439,7 +466,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       .then(([userRes, membersData]) => {
         if (!cancelled) {
           setCurrentUserId(userRes.success && userRes.data ? userRes.data.id : null);
-          setMembers(membersData);
+          setOriginalMembers(membersData);
         }
       })
       .catch(err => {
@@ -455,30 +482,22 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     return () => { cancelled = true; };
   }, [isOpen, area?.id, addError]);
 
-  /** Добавить участника по логину */
-  const handleAddMember = async () => {
+  /** Добавить участника (отложенно, применится при сохранении) */
+  const handleAddMember = (): void => {
     const login = addMemberLogin.trim();
     if (!login || !area?.id) return;
     setAddMemberError(null);
 
-    if (members.some(m => m.userName === login)) {
+    if (
+      originalMembers.some((m) => m.userName === login) ||
+      pendingAdds.some((p) => p.login === login)
+    ) {
       setAddMemberError('Этот пользователь уже в области. Измените роль в списке участников.');
       return;
     }
 
-    setAddMemberLoading(true);
-    try {
-      await areaApi.addMember(area.id, { login, role: addMemberRole });
-      setAddMemberLogin('');
-      const updated = await areaApi.getMembers(area.id);
-      setMembers(updated);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Ошибка добавления участника';
-      setAddMemberError(msg);
-      addError(parseApiErrorMessage(err));
-    } finally {
-      setAddMemberLoading(false);
-    }
+    setPendingAdds((prev) => [...prev, { login, role: addMemberRole }]);
+    setAddMemberLogin('');
   };
 
   /** Локально изменить роль участника (применится при сохранении окна) */
@@ -488,28 +507,33 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     setPendingRoleChanges(prev => ({ ...prev, [member.userId]: newRole }));
   };
 
-  /** Участники с учётом отложенных изменений ролей (для отображения) */
+  /** Участники с учётом pendingAdds, pendingRemoves и pendingRoleChanges (для отображения) */
   const displayMembers = React.useMemo(() => {
-    return members.map(m => ({
-      ...m,
-      role: (pendingRoleChanges[m.userId] ?? m.role) as AreaRole,
+    const base = originalMembers
+      .filter((m) => !pendingRemoves.has(m.userId))
+      .map((m) => ({
+        ...m,
+        role: (pendingRoleChanges[m.userId] ?? m.role) as AreaRole,
+      }));
+    const fromPending = pendingAdds.map(({ login, role }) => ({
+      userId: `pending-${login}`,
+      userName: login,
+      role: (pendingRoleChanges[`pending-${login}`] ?? role) as AreaRole,
     }));
-  }, [members, pendingRoleChanges]);
+    return [...base, ...fromPending];
+  }, [originalMembers, pendingRemoves, pendingRoleChanges, pendingAdds]);
 
-  /** Подтвердить удаление участника */
-  const handleConfirmRemoveMember = async () => {
+  /** Подтвердить удаление участника (отложенно, применится при сохранении) */
+  const handleConfirmRemoveMember = () => {
     const m = removeConfirmMember;
-    if (!m || !area?.id) return;
+    if (!m) return;
     setRemoveConfirmMember(null);
-    setAddMemberLoading(true);
-    try {
-      await areaApi.removeMember(area.id, m.userId);
-      setMembers(prev => prev.filter(x => x.userId !== m.userId));
-    } catch (err) {
-      setAddMemberError(err instanceof Error ? err.message : 'Ошибка удаления участника');
-      addError(parseApiErrorMessage(err));
-    } finally {
-      setAddMemberLoading(false);
+
+    if (m.userId.startsWith('pending-')) {
+      const login = m.userName;
+      setPendingAdds((prev) => prev.filter((p) => p.login !== login));
+    } else {
+      setPendingRemoves((prev) => new Set([...Array.from(prev), m.userId]));
     }
   };
 
@@ -659,7 +683,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   <ParticipantsByRole
                     members={displayMembers}
                     isViewMode={isViewMode}
-                    addMemberLoading={addMemberLoading}
+                    addMemberLoading={isLoading}
                     addMemberLogin={addMemberLogin}
                     addMemberRole={addMemberRole}
                     addMemberError={addMemberError}
