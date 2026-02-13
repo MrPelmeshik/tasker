@@ -230,11 +230,11 @@ body {
   --surface-subtle-border: rgb(var(--white) / 0.06);
   --surface-subtle-border-strong: rgb(var(--white) / 0.08);
 
-  /* Modal */
-  --modal-overlay-bg: rgba(0, 0, 0, 0.6);
-  --modal-bg: rgba(30, 30, 36, 0.92);
-  --modal-border: rgba(255, 255, 255, 0.12);
-  --modal-highlight: rgba(255, 255, 255, 0.06);
+  /* Modal — glass effect (dark theme) */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.5);
+  --modal-bg: linear-gradient(180deg, rgb(var(--white) / 0.12), rgb(var(--white) / 0.04));
+  --modal-border: var(--glass-border-2);
+  --modal-highlight: var(--glass-radial-default);
 }
 
 /* ─── Light theme ─── */
@@ -336,11 +336,11 @@ body {
   --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.18), transparent 60%);
   --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(0,0,0,0.04), transparent 60%);
 
-  /* Modal — light theme */
-  --modal-overlay-bg: rgba(0, 0, 0, 0.18);
-  --modal-bg: rgba(255, 255, 255, 0.95);
-  --modal-border: rgba(0, 0, 0, 0.12);
-  --modal-highlight: rgba(255, 255, 255, 0.5);
+  /* Modal — glass effect (light theme) */
+  --modal-overlay-bg: rgba(0, 0, 0, 0.15);
+  --modal-bg: var(--glass-gradient-bg);
+  --modal-border: var(--glass-border-2);
+  --modal-highlight: var(--glass-radial-default);
 
   /* Shadows — light theme */
   --shadow-elev-0: 0 2px 8px rgba(0,0,0,0.06);

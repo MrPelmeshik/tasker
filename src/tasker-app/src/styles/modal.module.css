@@ -97,7 +97,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(900px 450px at -10% -20%, var(--modal-highlight), transparent 60%);
+  background: var(--modal-highlight);
 }
 
 .modalContent {
