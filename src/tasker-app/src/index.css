@@ -225,6 +225,9 @@ body {
   --glass-panel-bg: linear-gradient(180deg, rgb(var(--black) / 0.82), rgb(var(--black) / 0.92)),
     linear-gradient(180deg, rgb(var(--white) / 0.08), rgb(var(--white) / 0.02));
 
+  /* Select dropdown list — фон с одинаковой степенью непрозрачности в обеих темах */
+  --glass-select-list-overlay: linear-gradient(180deg, rgb(var(--black) / 0.88), rgb(var(--black) / 0.82));
+
   /* Surface subtle (readonly blocks, cards) */
   --surface-subtle-bg: rgb(var(--white) / 0.04);
   --surface-subtle-border: rgb(var(--white) / 0.06);
@@ -335,6 +338,9 @@ body {
   --glass-radial-warning: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-warning) / 0.18), transparent 60%);
   --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.18), transparent 60%);
   --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(0,0,0,0.04), transparent 60%);
+
+  /* Select dropdown list — светлая тема: белый оверлей для той же степени непрозрачности */
+  --glass-select-list-overlay: linear-gradient(180deg, rgb(var(--black) / 0.92), rgb(var(--black) / 0.85));
 
   /* Modal — glass effect (light theme) */
   --modal-overlay-bg: rgba(0, 0, 0, 0.15);

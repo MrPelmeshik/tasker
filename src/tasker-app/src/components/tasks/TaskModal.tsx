@@ -335,8 +335,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                       value: option.value.toString(),
                       label: option.label
                     }))}
+                    renderOption={(opt, { size }) => (
+                      <TaskStatusBadge status={Number(opt.value) as TaskStatus} size={size} />
+                    )}
+                    renderValue={(opt) => (
+                      <TaskStatusBadge status={Number(opt.value) as TaskStatus} size="s" />
+                    )}
                     disabled={isLoading}
                     fullWidth
+                    size="s"
                   />
                 )}
               </div>

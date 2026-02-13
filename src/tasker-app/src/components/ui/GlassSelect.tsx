@@ -1,18 +1,26 @@
 import React, { useState, useRef, useEffect } from 'react';
 import css from '../../styles/glass-input.module.css';
 
+/** Опция для выбора в GlassSelect */
+export type GlassSelectOption = { value: string; label: string };
+
 type GlassSelectProps = {
   value: string;
   onChange: (value: string) => void;
-  options: Array<{ value: string; label: string }>;
+  options: GlassSelectOption[];
   placeholder?: string;
   label?: string;
   helperText?: string;
   errorText?: string;
   fullWidth?: boolean;
+  /** Размер: влияет на padding триггера, опций и передаётся в renderOption */
   size?: 's' | 'm' | 'l';
   disabled?: boolean;
   className?: string;
+  /** Кастомный рендер опции в списке. Без него — label. */
+  renderOption?: (option: GlassSelectOption, ctx: { size: 's' | 'm' | 'l'; isSelected: boolean }) => React.ReactNode;
+  /** Рендер выбранного значения в триггере. По умолчанию — renderOption ?? label */
+  renderValue?: (option: GlassSelectOption) => React.ReactNode;
 };
 
 export const GlassSelect: React.FC<GlassSelectProps> = ({
@@ -27,6 +35,8 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({
   size = 'm',
   disabled = false,
   className,
+  renderOption,
+  renderValue,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [focusedIndex, setFocusedIndex] = useState(-1);
@@ -138,7 +148,9 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({
           aria-labelledby={label ? `${label}-label` : undefined}
         >
           <span className={css.selectValue}>
-            {selectedOption ? selectedOption.label : placeholder}
+            {selectedOption
+              ? (renderValue?.(selectedOption) ?? renderOption?.(selectedOption, { size, isSelected: true }) ?? selectedOption.label)
+              : placeholder}
           </span>
           <span className={css.selectArrow} aria-hidden="true">
             ▼
@@ -148,27 +160,33 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({
         {isOpen && (
           <ul
             ref={listRef}
-            className={css.customSelectList}
+            className={[css.customSelectList, css[size]].filter(Boolean).join(' ')}
             role="listbox"
             aria-labelledby={label ? `${label}-label` : undefined}
           >
-            {options.map((option, index) => (
-              <li
-                key={option.value}
-                className={[
-                  css.customSelectOption,
-                  value === option.value ? css.selected : '',
-                  index === focusedIndex ? css.focused : ''
-                ].filter(Boolean).join(' ')}
-                onClick={() => handleSelect(option.value)}
-                onMouseEnter={() => setFocusedIndex(index)}
-                onMouseLeave={() => setFocusedIndex(-1)}
-                role="option"
-                aria-selected={value === option.value}
-              >
-                {option.label}
-              </li>
-            ))}
+            {options.map((option, index) => {
+              const isSelected = value === option.value;
+              const content = renderOption
+                ? renderOption(option, { size, isSelected })
+                : option.label;
+              return (
+                <li
+                  key={option.value}
+                  className={[
+                    css.customSelectOption,
+                    isSelected ? css.selected : '',
+                    index === focusedIndex ? css.focused : ''
+                  ].filter(Boolean).join(' ')}
+                  onClick={() => handleSelect(option.value)}
+                  onMouseEnter={() => setFocusedIndex(index)}
+                  onMouseLeave={() => setFocusedIndex(-1)}
+                  role="option"
+                  aria-selected={isSelected}
+                >
+                  <span className={css.customSelectOptionContent}>{content}</span>
+                </li>
+              );
+            })}
           </ul>
         )}
       </div>
