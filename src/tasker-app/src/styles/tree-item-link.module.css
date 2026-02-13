@@ -1,0 +1,56 @@
+/**
+ * Общие стили для текстовых строк дерева (область, папка, задача).
+ * Соответствует TaskCardLink variant="text".
+ */
+
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: var(--space-4);
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
+  padding: var(--space-2) var(--space-2);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  cursor: pointer;
+  transition: background var(--transition-fast), box-shadow var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.root:hover {
+  background: var(--glass-hover-bg);
+  box-shadow: none;
+}
+
+.root:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(var(--color-accent) / 0.4);
+}
+
+.title {
+  font-size: var(--font-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  overflow: hidden;
+  flex: 1;
+  min-width: 0;
+}
+
+/* Счётчик в скобках после названия — приглушённый цвет */
+.count {
+  font-size: var(--font-12);
+  font-weight: var(--font-weight-regular);
+  color: var(--color-text-subtle);
+  flex-shrink: 0;
+}
+
+.typeIcon {
+  flex-shrink: 0;
+  color: var(--glass-icon-default);
+}

@@ -262,11 +262,12 @@
 .xxl { padding: var(--space-14) var(--space-18); border-radius: var(--radius-xl); font-size: var(--font-17); }
 .xxxl{ padding: var(--space-16) var(--space-20); border-radius: var(--radius-2xl); font-size: var(--font-18); }
 
-/* Стили для SVG иконок внутри кнопок */
+/* Стили для SVG иконок внутри кнопок (stroke, без заливки) */
 .btn svg {
   width: 1em;
   height: 1em;
-  fill: currentColor;
+  fill: none;
+  stroke: currentColor;
   flex-shrink: 0;
 }
 

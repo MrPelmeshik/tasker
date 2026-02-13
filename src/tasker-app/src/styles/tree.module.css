@@ -33,95 +33,54 @@
 .areaSection {
   position: relative;
   width: 100%;
-  margin-bottom: var(--space-4);
+  display: flex;
+  flex-direction: column;
   box-sizing: border-box;
 }
-
-/* Базовые стили карточек дерева (area, folder, task) */
+/* Базовые стили карточек дерева — text-вариант (как TaskCardLink) */
 .areaCard,
 .folderCard,
 .taskCard {
   position: relative;
-  background: var(--glass-card-bg-transparent);
-  border: var(--border-1) solid var(--glass-card-border-default);
-  border-radius: var(--radius-2xs);
-  padding: var(--space-4) var(--space-6);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) var(--space-2);
   cursor: pointer;
-  backdrop-filter: var(--glass-backdrop-blur-8);
-  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
-  min-height: var(--tree-min-height);
   box-sizing: border-box;
-  box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
-  overflow: hidden;
+  box-shadow: none;
+  overflow-x: hidden;
+  min-width: 0;
   display: flex;
   align-items: center;
 }
 
 .areaCard {
   width: 100%;
-  transition: all var(--transition-normal);
+  min-width: 0;
+  transition: background var(--transition-normal);
   animation: fadeInUp var(--transition-slow) ease-out;
 }
 
 .folderCard,
 .taskCard {
   flex: 1;
+  min-width: 0;
   max-width: 100%;
-  transition: all var(--transition-fast);
-}
-
-.areaCard::before,
-.folderCard::before,
-.taskCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: var(--glass-radial-subtle);
-}
-
-.areaCard::after,
-.folderCard::after,
-.taskCard::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  box-shadow: 0 0 0 0 rgb(var(--white) / 0);
-  transition: box-shadow var(--transition-fast);
-}
-
-.areaCard::after {
-  transition: box-shadow var(--transition-normal);
+  transition: background var(--transition-fast);
 }
 
 .areaCard:hover,
 .folderCard:hover,
 .taskCard:hover {
-  background: var(--glass-card-bg-hover);
-  border-color: var(--glass-card-border-default-hover);
-  box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
-  filter: saturate(1.04) brightness(1.03);
-}
-
-.areaCard:hover::after,
-.folderCard:hover::after,
-.taskCard:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
+  background: var(--glass-hover-bg);
+  box-shadow: none;
 }
 
 .areaCard.expanded,
 .folderCard.expanded,
 .taskCard.expanded {
-  background: var(--glass-card-bg-selected);
-  border-color: var(--glass-card-border-default-selected);
-  box-shadow: 
-    var(--shadow-elev-2),
-    var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--white) / 0.15);
-  filter: saturate(1.1) brightness(1.05);
+  background: var(--glass-hover-bg);
 }
 
 .areaCard.expanded::after,
@@ -133,41 +92,26 @@
   left: var(--tree-indent);
   width: var(--tree-connecting-line-width);
   height: var(--space-4);
-  background: linear-gradient(
-    to bottom,
-    var(--glass-border-2),
-    var(--glass-border-1)
-  );
+  background: var(--glass-border-1);
   border-radius: 0 0 var(--radius-2xs) var(--radius-2xs);
   z-index: 1;
 }
 
-/* Поддержка пользовательских цветов */
+/* Поддержка пользовательских цветов — лёгкий оттенок */
 .areaCard[data-custom-color],
 .folderCard[data-custom-color],
 .taskCard[data-custom-color] {
   --custom-color: var(--card-custom-color);
   --custom-color-rgb: var(--card-custom-color-rgb);
-  background: rgba(var(--custom-color-rgb), 0.02);
-  border-color: rgba(var(--custom-color-rgb), 0.15);
 }
 
 .areaCard[data-custom-color]:hover,
 .folderCard[data-custom-color]:hover,
-.taskCard[data-custom-color]:hover {
-  background: rgba(var(--custom-color-rgb), 0.05);
-  border-color: rgba(var(--custom-color-rgb), 0.25);
-}
-
+.taskCard[data-custom-color]:hover,
 .areaCard[data-custom-color].expanded,
 .folderCard[data-custom-color].expanded,
 .taskCard[data-custom-color].expanded {
-  background: rgba(var(--custom-color-rgb), 0.08);
-  border-color: rgba(var(--custom-color-rgb), 0.35);
-  box-shadow: 
-    var(--shadow-elev-2),
-    var(--shadow-inset-1),
-    0 0 0 1px rgba(var(--custom-color-rgb), 0.20);
+  background: rgba(var(--custom-color-rgb), 0.06);
 }
 
 /* Общие стили для контента карточек */
@@ -177,11 +121,36 @@
   position: relative;
   z-index: 1;
   display: flex;
+  width: 100%;
+  min-width: 0;
+  gap: var(--tree-row-gap);
+  box-sizing: border-box;
+}
+
+/* Область, папка и задача: одна строка при достаточном месте, перенос кнопок при нехватке */
+.areaContent,
+.folderContent,
+.taskContent {
+  flex-direction: row;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  width: 100%;
-  gap: var(--space-4);
-  box-sizing: border-box;
+}
+
+/* Блок с названием: слева, при переносе — верхняя строка */
+.treeRowMain {
+  display: flex;
+  align-items: center;
+  gap: var(--tree-row-gap);
+  min-width: 0;
+  overflow: hidden;
+  order: -1;
+}
+
+.areaContent .treeRowMain,
+.folderContent .treeRowMain,
+.taskContent .treeRowMain {
+  flex: 1 1 0;
 }
 
 .areaInfo,
@@ -189,6 +158,7 @@
 .taskInfo {
   flex: 1;
   min-width: 0;
+  cursor: pointer;
 }
 
 .areaTitleRow,
@@ -196,7 +166,7 @@
 .taskTitleRow {
   display: flex;
   align-items: center;
-  gap: var(--space-6);
+  gap: var(--tree-row-gap);
 }
 
 .areaTitle,
@@ -230,7 +200,6 @@
   margin-left: var(--tree-indent);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
 }
@@ -242,11 +211,7 @@
   top: 0;
   width: var(--tree-connecting-line-width);
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    var(--glass-border-2),
-    var(--glass-border-1)
-  );
+  background: var(--glass-border-1);
   border-radius: var(--radius-2xs);
   z-index: 1;
 }
@@ -255,7 +220,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: var(--size-44);
+  min-height: var(--tree-min-height);
   width: 100%;
   box-sizing: border-box;
 }
@@ -267,11 +232,7 @@
   top: 50%;
   width: var(--tree-connecting-line-height);
   height: var(--tree-connecting-line-width);
-  background: linear-gradient(
-    to right,
-    var(--glass-border-2),
-    var(--glass-border-1)
-  );
+  background: var(--glass-border-1);
   border-radius: var(--radius-2xs);
   transform: translateY(-50%);
   z-index: 2;
@@ -284,7 +245,6 @@
   margin-left: calc(var(--tree-indent) * 2);
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
 }
@@ -296,11 +256,7 @@
   top: 0;
   width: var(--tree-connecting-line-width);
   height: 100%;
-  background: linear-gradient(
-    to bottom,
-    var(--glass-border-2),
-    var(--glass-border-1)
-  );
+  background: var(--glass-border-1);
   border-radius: var(--radius-2xs);
   z-index: 1;
 }
@@ -309,7 +265,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: var(--size-44);
+  min-height: var(--tree-min-height);
   width: 100%;
   box-sizing: border-box;
 }
@@ -321,11 +277,7 @@
   top: 50%;
   width: var(--tree-connecting-line-height);
   height: var(--tree-connecting-line-width);
-  background: linear-gradient(
-    to right,
-    var(--glass-border-2),
-    var(--glass-border-1)
-  );
+  background: var(--glass-border-1);
   border-radius: var(--radius-2xs);
   transform: translateY(-50%);
   z-index: 2;
@@ -338,7 +290,6 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-4);
   opacity: 0;
   transition: opacity var(--transition-fast);
   flex-shrink: 0;
@@ -354,7 +305,7 @@
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(calc(-1 * var(--space-10)));
   }
   to {
     opacity: 1;
@@ -365,7 +316,7 @@
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(var(--space-20));
   }
   to {
     opacity: 1;
@@ -375,7 +326,7 @@
 
 /* Стили для скроллбара */
 .widgetContent::-webkit-scrollbar {
-  width: 6px;
+  width: var(--tree-scrollbar-width);
 }
 
 .widgetContent::-webkit-scrollbar-track {
@@ -390,4 +341,104 @@
 
 .widgetContent::-webkit-scrollbar-thumb:hover {
   background: var(--glass-scrollbar-thumb-hover);
+}
+
+/* DnD: ручка-захват */
+.dragHandle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 1px;
+  margin-right: 2px;
+  cursor: grab;
+  touch-action: none;
+  flex-shrink: 0;
+  color: var(--glass-icon-default);
+  border-radius: var(--radius-2xs);
+  transition: color var(--transition-fast);
+}
+
+.dragHandle:hover {
+  color: var(--glass-icon-hover);
+}
+
+.dragHandle:active {
+  cursor: grabbing;
+}
+
+/* DnD: валидный drop (можно поместить) */
+.areaCard.isOverValid,
+.folderCard.isOverValid {
+  border-color: var(--dnd-valid-border);
+  background: var(--dnd-valid-bg);
+  box-shadow: var(--dnd-valid-shadow);
+}
+
+/* DnD: невалидный drop (запрещено) */
+.areaCard.isOverInvalid,
+.folderCard.isOverInvalid {
+  border-color: var(--dnd-invalid-border);
+  background: var(--dnd-invalid-bg);
+  opacity: var(--dnd-invalid-opacity);
+}
+
+/* DnD: исходный элемент при перетаскивании */
+.folderItem.isDragging,
+.taskItem.isDragging {
+  opacity: var(--dnd-dragging-opacity);
+}
+
+.folderItem.isDragging .folderCard,
+.taskItem.isDragging .taskCard {
+  outline: var(--border-1) dashed var(--dnd-outline-color);
+}
+
+/* Кнопки действий: только иконки с нормальной яркостью, без фона; акцент при hover без изменения размера */
+.treeActionButton {
+  background: transparent !important;
+  border: var(--border-1) solid transparent !important;
+  color: var(--glass-icon-default);
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+}
+
+.treeActionButton:hover {
+  background: var(--glass-hover-bg) !important;
+  border-color: var(--glass-border-2) !important;
+  color: var(--glass-icon-hover);
+}
+
+/* Кнопки: справа при наличии места, при переносе — на новой строке справа */
+.treeRowActions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+  order: 0;
+}
+
+.areaContent .treeRowActions,
+.folderContent .treeRowActions,
+.taskContent .treeRowActions {
+  margin-left: auto;
+}
+
+/* DnD: DragOverlay превью */
+.dragOverlayCard {
+  padding: var(--space-4) var(--space-6);
+  border-radius: var(--radius-2xs);
+  background: var(--glass-gradient-bg);
+  border: var(--border-1) solid var(--glass-border-4);
+  box-shadow: var(--shadow-elev-3);
+  cursor: grabbing;
+  opacity: var(--dnd-overlay-opacity);
+  min-width: var(--dnd-overlay-min-width);
+  display: flex;
+  align-items: center;
+  gap: var(--tree-row-gap);
+}
+
+.dragHint {
+  font-size: var(--font-12);
+  color: var(--glass-text-muted);
+  margin-top: var(--space-4);
 }

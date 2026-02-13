@@ -1,5 +1,6 @@
 import React from 'react';
 import { TaskStatusBadge } from '../ui/TaskStatusBadge';
+import { CheckSquareIcon } from '../icons';
 import { TaskStatus } from '../../types/task-status';
 import css from '../../styles/task-card-link.module.css';
 
@@ -13,8 +14,8 @@ export interface TaskCardLinkTask {
 export interface TaskCardLinkProps {
   /** Задача для отображения */
   task: TaskCardLinkTask;
-  /** Обработчик клика по всему блоку */
-  onClick: (e: React.MouseEvent) => void;
+  /** Обработчик клика по всему блоку (опционально — в дереве используется кнопка «Просмотреть») */
+  onClick?: (e: React.MouseEvent) => void;
   /** Дополнительные CSS-классы */
   className?: string;
   /** Дополнительные inline-стили (например, для кастомного цвета в дереве) */
@@ -23,6 +24,8 @@ export interface TaskCardLinkProps {
   dataCustomColor?: boolean;
   /** Вариант отображения: card — с фоном и бордером, text — только текст, подсветка при hover */
   variant?: 'card' | 'text';
+  /** Показывать иконку типа (CheckSquareIcon) — для дерева */
+  showTypeIcon?: boolean;
 }
 
 /**
@@ -36,21 +39,28 @@ export const TaskCardLink: React.FC<TaskCardLinkProps> = ({
   style,
   dataCustomColor,
   variant = 'card',
+  showTypeIcon = false,
 }) => (
   <div
-    role="button"
-    tabIndex={0}
+    role={onClick ? 'button' : undefined}
+    tabIndex={onClick ? 0 : undefined}
     className={[css.root, variant === 'text' && css.textVariant, className].filter(Boolean).join(' ')}
     style={style}
     data-custom-color={dataCustomColor ? 'true' : undefined}
     onClick={onClick}
-    onKeyDown={(e) => {
+    onKeyDown={onClick ? (e) => {
       if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
         onClick(e as unknown as React.MouseEvent);
       }
-    }}
+    } : undefined}
   >
+    {showTypeIcon && (
+      <CheckSquareIcon
+        className={css.typeIcon}
+        style={{ width: 14, height: 14 }}
+      />
+    )}
     <TaskStatusBadge
       status={(task.status ?? TaskStatus.InProgress) as TaskStatus}
       size="xs"

@@ -1,7 +1,10 @@
 .root {
   display: flex;
   align-items: center;
+  justify-content: flex-start;
   gap: var(--space-6);
+  flex: 1;
+  min-width: 0;
   padding: var(--space-6) var(--space-8);
   border-radius: var(--radius-xs);
   background: var(--surface-subtle-bg);
@@ -33,6 +36,11 @@
   background: var(--glass-hover-bg);
   border-radius: var(--radius-xs);
   box-shadow: none;
+}
+
+.typeIcon {
+  flex-shrink: 0;
+  color: var(--glass-icon-default);
 }
 
 .title {

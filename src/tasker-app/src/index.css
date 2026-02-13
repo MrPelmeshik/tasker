@@ -191,9 +191,27 @@ body {
 
   /* Tree specific sizes */
   --tree-min-height: 36px;
-  --tree-connecting-line-width: 2px;
-  --tree-connecting-line-height: 12px;
+  --tree-connecting-line-width: 1px;
+  --tree-connecting-line-height: 8px;
   --tree-indent: 16px;
+  --tree-row-gap: 7px;
+  --tree-scrollbar-width: 6px;
+
+  /* DnD (drag-and-drop) */
+  --dnd-dragging-opacity: 0.4;
+  --dnd-overlay-opacity: 0.95;
+  --dnd-invalid-opacity: 0.85;
+  --dnd-overlay-min-width: 160px;
+  --dnd-outline-color: rgb(var(--white) / 0.3);
+  --dnd-valid-border: rgb(var(--color-accent) / 0.6);
+  --dnd-valid-bg: rgb(var(--color-accent) / 0.08);
+  --dnd-valid-shadow: 0 0 0 2px rgb(var(--color-accent) / 0.25);
+  --dnd-invalid-border: rgb(var(--color-danger) / 0.4);
+  --dnd-invalid-bg: rgb(var(--color-danger) / 0.05);
+  --glass-outline-hover: rgb(var(--white) / 0.10);
+  --glass-outline-selected: rgb(var(--white) / 0.15);
+  --glass-icon-default: rgb(var(--white) / 0.45);
+  --glass-icon-hover: rgb(var(--white) / 0.7);
 
   /* Blur radii */
   --blur-6: 6px;
