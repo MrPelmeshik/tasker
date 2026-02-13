@@ -70,16 +70,19 @@
   transition: background var(--transition-fast);
 }
 
-.areaCard:hover,
-.folderCard:hover,
 .taskCard:hover {
   background: var(--glass-hover-bg);
   box-shadow: none;
 }
 
-.areaCard.expanded,
-.folderCard.expanded,
 .taskCard.expanded {
+  background: var(--glass-hover-bg);
+}
+
+.areaCard:hover,
+.areaCard.expanded,
+.folderCard:hover,
+.folderCard.expanded {
   background: var(--glass-hover-bg);
 }
 
@@ -106,10 +109,10 @@
 }
 
 .areaCard[data-custom-color]:hover,
-.folderCard[data-custom-color]:hover,
-.taskCard[data-custom-color]:hover,
 .areaCard[data-custom-color].expanded,
+.folderCard[data-custom-color]:hover,
 .folderCard[data-custom-color].expanded,
+.taskCard[data-custom-color]:hover,
 .taskCard[data-custom-color].expanded {
   background: rgba(var(--custom-color-rgb), 0.06);
 }
@@ -286,7 +289,10 @@
 /* Общие стили для кнопок действий */
 .areaActions,
 .folderActions,
-.taskActions {
+.taskActions,
+.areaCard .treeRowActions,
+.folderCard .treeRowActions,
+.taskCard .treeRowActions {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -297,7 +303,10 @@
 
 .areaCard:hover .areaActions,
 .folderCard:hover .folderActions,
-.taskCard:hover .taskActions {
+.taskCard:hover .taskActions,
+.areaCard:hover .treeRowActions,
+.folderCard:hover .treeRowActions,
+.taskCard:hover .treeRowActions {
   opacity: 1;
 }
 
@@ -393,12 +402,22 @@
   outline: var(--border-1) dashed var(--dnd-outline-color);
 }
 
-/* Кнопки действий: только иконки с нормальной яркостью, без фона; акцент при hover без изменения размера */
+/* Кнопки действий: легковесные иконки по умолчанию, лёгкий эффект стекла при hover */
 .treeActionButton {
   background: transparent !important;
   border: var(--border-1) solid transparent !important;
+  box-shadow: none !important;
   color: var(--glass-icon-default);
-  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  filter: none !important;
+  transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+.treeActionButton::before {
+  display: none !important;
+}
+.treeActionButton::after {
+  box-shadow: none !important;
 }
 
 .treeActionButton:hover {

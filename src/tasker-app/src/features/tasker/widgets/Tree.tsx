@@ -372,13 +372,6 @@ const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ task, onViewDetails }) => {
     <div className={`${css.taskItem} ${isDragging ? css.isDragging : ''}`}>
       <div ref={setNodeRef} className={css.taskCard} style={taskStyle} data-custom-color={task.customColor ? 'true' : undefined}>
         <div className={css.taskContent}>
-          <div className={css.treeRowActions}>
-            <Tooltip content="Просмотреть" placement="top">
-              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onViewDetails(e); }} aria-label="Просмотреть">
-                <EyeIcon style={{ width: 14, height: 14 }} />
-              </GlassButton>
-            </Tooltip>
-          </div>
           <div className={css.treeRowMain}>
             <div className={css.dragHandle} {...attributes} {...listeners}>
               <GripVerticalIcon style={{ width: 12, height: 12 }} />
@@ -387,6 +380,7 @@ const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ task, onViewDetails }) => {
               task={task}
               variant="text"
               showTypeIcon
+              onClick={onViewDetails}
               style={taskStyle}
               dataCustomColor={!!task.customColor}
             />

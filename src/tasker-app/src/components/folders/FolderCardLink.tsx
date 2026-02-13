@@ -30,12 +30,12 @@ export const FolderCardLink: React.FC<FolderCardLinkProps> = ({
   dataCustomColor,
 }) => (
   <div
-    className={css.root}
+    className={`${css.root} ${css.plain}`}
     style={style}
     data-custom-color={dataCustomColor ? 'true' : undefined}
   >
-    <span className={css.count}>({folder.tasksCount + folder.subfoldersCount})</span>
     <FolderIcon className={css.typeIcon} style={{ width: 14, height: 14 }} />
     <span className={css.title}>{folder.title}</span>
+    <span className={css.count}>({folder.tasksCount + folder.subfoldersCount})</span>
   </div>
 );

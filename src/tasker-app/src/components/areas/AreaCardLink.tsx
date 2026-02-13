@@ -30,12 +30,12 @@ export const AreaCardLink: React.FC<AreaCardLinkProps> = ({
   dataCustomColor,
 }) => (
   <div
-    className={css.root}
+    className={`${css.root} ${css.plain}`}
     style={style}
     data-custom-color={dataCustomColor ? 'true' : undefined}
   >
-    <span className={css.count}>({area.foldersCount + area.rootTasksCount})</span>
     <LayoutGridIcon className={css.typeIcon} style={{ width: 14, height: 14 }} />
     <span className={css.title}>{area.title}</span>
+    <span className={css.count}>({area.foldersCount + area.rootTasksCount})</span>
   </div>
 );

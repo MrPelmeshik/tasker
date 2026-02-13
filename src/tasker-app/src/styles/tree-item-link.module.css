@@ -25,6 +25,14 @@
   box-shadow: none;
 }
 
+/* Область и папка — без подсветки при hover */
+.plain {
+  /* модификатор, стили в .root.plain:hover */
+}
+.root.plain:hover {
+  background: transparent;
+}
+
 .root:focus-visible {
   outline: none;
   box-shadow: 0 0 0 2px rgb(var(--color-accent) / 0.4);
