@@ -237,8 +237,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           <div className={css.widgetHeader}>
             <h3 className={css.widgetTitle}>Дерево</h3>
             <Tooltip content="Создать область" placement="bottom">
-              <GlassButton variant="subtle" size="xs" onClick={handlers.handleCreateArea} aria-label="Создать область">
-                <LayoutGridIcon style={{ width: 16, height: 16 }} />
+              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handlers.handleCreateArea} aria-label="Создать область">
+                <LayoutGridIcon style={{ width: 14, height: 14 }} />
               </GlassButton>
             </Tooltip>
           </div>

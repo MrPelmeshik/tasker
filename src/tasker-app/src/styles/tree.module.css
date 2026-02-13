@@ -50,6 +50,7 @@
   box-sizing: border-box;
   box-shadow: none;
   overflow-x: hidden;
+  overflow-y: visible;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -148,6 +149,11 @@
   min-width: 0;
   overflow: hidden;
   order: -1;
+}
+
+/* Единый отступ между иконкой DnD, иконкой типа и названием во всех карточках дерева */
+.treeRowMain > :not(.dragHandle) {
+  gap: var(--tree-row-gap);
 }
 
 .areaContent .treeRowMain,
@@ -358,7 +364,6 @@
   align-items: center;
   justify-content: center;
   padding: var(--space-2) var(--border-1);
-  margin-right: var(--space-2);
   cursor: grab;
   touch-action: none;
   flex-shrink: 0;
