@@ -7,7 +7,7 @@ using TaskerApi.Models.Entities;
 namespace TaskerApi.Services;
 
 /// <summary>
-/// Реализация автоматического логирования событий при создании, обновлении и удалении сущностей Area, Group, Task.
+/// Реализация автоматического логирования событий при создании, обновлении и удалении сущностей Area, Folder, Task.
 /// Ошибки логирования не пробрасываются (fail-safe), чтобы не нарушать основную операцию.
 /// </summary>
 public class EntityEventLogger(
@@ -59,16 +59,8 @@ public class EntityEventLogger(
                         IsActive = true
                     });
                     break;
-                case EntityType.GROUP:
-                    context.EventToGroups.Add(new EventToGroupEntity
-                    {
-                        EventId = eventEntity.Id,
-                        GroupId = entityId,
-                        OwnerUserId = userId,
-                        CreatedAt = now,
-                        UpdatedAt = now,
-                        IsActive = true
-                    });
+                case EntityType.FOLDER:
+                    // Папки не имеют активностей — событие создаётся для аудита, линк не добавляется
                     break;
                 case EntityType.TASK:
                     context.EventToTasks.Add(new EventToTaskEntity

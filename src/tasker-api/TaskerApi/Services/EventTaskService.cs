@@ -17,7 +17,6 @@ public class EventTaskService(
     ICurrentUserService currentUser,
     IEventRepository eventRepository,
     ITaskRepository taskRepository,
-    IGroupRepository groupRepository,
     IAreaRoleService areaRoleService,
     TaskerDbContext context)
     : BaseEventEntityService(logger, currentUser, eventRepository, areaRoleService, context), IEventTaskService
@@ -40,12 +39,7 @@ public class EventTaskService(
         var task = await taskRepository.GetByIdAsync(entityId, cancellationToken);
         if (task == null)
             throw new InvalidOperationException("Задача не найдена");
-
-        var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-        if (group == null)
-            throw new InvalidOperationException("Группа не найдена");
-
-        return group.AreaId;
+        return task.AreaId;
     }
 
     /// <summary>
@@ -56,9 +50,7 @@ public class EventTaskService(
         var task = await taskRepository.GetByIdAsync(entityId, cancellationToken);
         if (task == null)
             throw new InvalidOperationException("Задача не найдена");
-
-        var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-        if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
+        if (!CurrentUser.HasAccessToArea(task.AreaId))
             throw new UnauthorizedAccessException("Доступ к задаче запрещен");
     }
 

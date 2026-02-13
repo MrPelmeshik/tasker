@@ -119,7 +119,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<ITaskRepository, TaskRepository>();
         services.AddScoped<IAreaRepository, AreaRepository>();
-        services.AddScoped<IGroupRepository, GroupRepository>();
+        services.AddScoped<IFolderRepository, FolderRepository>();
         services.AddScoped<ISubtaskRepository, SubtaskRepository>();
         services.AddScoped<IPurposeRepository, PurposeRepository>();
         services.AddScoped<IEventRepository, EventRepository>();
@@ -145,13 +145,12 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IAreaService, AreaService>();
-        services.AddScoped<IGroupService, GroupService>();
+        services.AddScoped<IFolderService, FolderService>();
         services.AddScoped<IPurposeService, PurposeService>();
         services.AddScoped<ITaskService, TaskService>();
         services.AddScoped<ISubtaskService, SubtaskService>();
         services.AddScoped<IUserLogService, UserLogService>();
         services.AddScoped<IEventTaskService, EventTaskService>();
-        services.AddScoped<IEventGroupService, EventGroupService>();
         services.AddScoped<IEventAreaService, EventAreaService>();
         services.AddScoped<IEntityEventLogger, EntityEventLogger>();
         services.AddScoped<IAreaRoleService, AreaRoleService>();

@@ -32,9 +32,9 @@ public interface IAreaRoleService
     Task<bool> CanEditAreaAsync(Guid areaId, CancellationToken cancellationToken = default);
 
     /// <summary>
-    /// Проверить право на редактирование группы
+    /// Проверить право на редактирование папки
     /// </summary>
-    Task<bool> CanEditGroupAsync(Guid areaId, CancellationToken cancellationToken = default);
+    Task<bool> CanEditFolderAsync(Guid areaId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Проверить право на редактирование задачи

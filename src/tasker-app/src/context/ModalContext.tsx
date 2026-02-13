@@ -2,20 +2,20 @@ import React, { createContext, useContext, useState, ReactNode } from 'react';
 import { ActivityModal } from '../components/activities/ActivityModal';
 import { AreaModal } from '../components/areas/AreaModal';
 import { CabinetModal } from '../components/cabinet/CabinetModal';
-import { GroupModal } from '../components/groups/GroupModal';
+import { FolderModal } from '../components/folders/FolderModal';
 import { TaskModal } from '../components/tasks/TaskModal';
-import type { AreaResponse, GroupResponse, TaskResponse, AreaCreateRequest, AreaUpdateRequest, GroupCreateRequest, GroupUpdateRequest, TaskCreateRequest, TaskUpdateRequest } from '../types/api';
+import type { AreaResponse, FolderResponse, TaskResponse, AreaCreateRequest, AreaUpdateRequest, FolderCreateRequest, FolderUpdateRequest, TaskCreateRequest, TaskUpdateRequest } from '../types/api';
 import type { ActivityFormData } from '../components/activities/ActivityModal';
 import type { ModalSize } from '../types/modal-size';
 
 interface ModalContextType {
   openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>, size?: ModalSize) => void;
-  openGroupModal: (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, size?: ModalSize) => void;
-  openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, groupId?: string, areaId?: string, areas?: Array<{ id: string; title: string }>, size?: ModalSize) => void;
+  openFolderModal: (folder: FolderResponse | null, mode: 'create' | 'edit', areas: Array<{ id: string; title: string; description?: string }>, onSave: (data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, parentFolderId?: string | null, size?: ModalSize) => void;
+  openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>, size?: ModalSize) => void;
   openActivityModal: (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
   openCabinetModal: () => void;
   closeAreaModal: () => void;
-  closeGroupModal: () => void;
+  closeFolderModal: () => void;
   closeTaskModal: () => void;
   closeActivityModal: () => void;
   closeCabinetModal: () => void;
@@ -45,29 +45,29 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     size: ModalSize;
   }>({ isOpen: false, area: null, mode: 'create', onSave: null, onDelete: null, size: 'medium' });
 
-  const [groupModal, setGroupModal] = useState<{
+  const [folderModal, setFolderModal] = useState<{
     isOpen: boolean;
-    group: GroupResponse | null;
+    folder: FolderResponse | null;
     mode: 'create' | 'edit';
-    areas: AreaResponse[];
-    onSave: ((data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>) | null;
+    areas: Array<{ id: string; title: string; description?: string }>;
+    onSave: ((data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => Promise<void>) | null;
     onDelete: ((id: string) => Promise<void>) | null;
     areaId?: string;
+    parentFolderId?: string | null;
     size: ModalSize;
-  }>({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, onDelete: null, size: 'medium' });
+  }>({ isOpen: false, folder: null, mode: 'create', areas: [], onSave: null, onDelete: null, size: 'medium' });
 
   const [taskModal, setTaskModal] = useState<{
     isOpen: boolean;
     task: TaskResponse | null;
     mode: 'create' | 'edit';
-    groups: GroupResponse[];
     onSave: ((data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>) | null;
     onDelete: ((id: string) => Promise<void>) | null;
-    groupId?: string;
-    areaId?: string;
+    defaultFolderId?: string;
+    defaultAreaId?: string;
     areas?: Array<{ id: string; title: string }>;
     size: ModalSize;
-  }>({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, onDelete: null, size: 'medium' });
+  }>({ isOpen: false, task: null, mode: 'create', onSave: null, onDelete: null, size: 'medium' });
 
   const [activityModal, setActivityModal] = useState<{
     isOpen: boolean;
@@ -83,12 +83,12 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setAreaModal({ isOpen: true, area, mode, onSave, onDelete: onDelete ?? null, size });
   };
 
-  const openGroupModal = (group: GroupResponse | null, mode: 'create' | 'edit', areas: AreaResponse[], onSave: (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, size: ModalSize = 'medium') => {
-    setGroupModal({ isOpen: true, group, mode, areas, onSave, onDelete: onDelete ?? null, areaId, size });
+  const openFolderModal = (folder: FolderResponse | null, mode: 'create' | 'edit', areas: Array<{ id: string; title: string; description?: string }>, onSave: (data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, parentFolderId?: string | null, size: ModalSize = 'medium') => {
+    setFolderModal({ isOpen: true, folder, mode, areas, onSave, onDelete: onDelete ?? null, areaId, parentFolderId, size });
   };
 
-  const openTaskModal = (task: TaskResponse | null, mode: 'create' | 'edit', groups: GroupResponse[], onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, groupId?: string, areaId?: string, areas?: Array<{ id: string; title: string }>, size: ModalSize = 'medium') => {
-    setTaskModal({ isOpen: true, task, mode, groups, onSave, onDelete: onDelete ?? null, groupId, areaId, areas, size });
+  const openTaskModal = (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>, size: ModalSize = 'medium') => {
+    setTaskModal({ isOpen: true, task, mode, onSave, onDelete: onDelete ?? null, defaultFolderId, defaultAreaId, areas, size });
   };
 
   const openActivityModal = (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => {
@@ -99,12 +99,12 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setAreaModal({ isOpen: false, area: null, mode: 'create', onSave: null, onDelete: null, size: 'medium' });
   };
 
-  const closeGroupModal = () => {
-    setGroupModal({ isOpen: false, group: null, mode: 'create', areas: [], onSave: null, onDelete: null, size: 'medium' });
+  const closeFolderModal = () => {
+    setFolderModal({ isOpen: false, folder: null, mode: 'create', areas: [], onSave: null, onDelete: null, size: 'medium' });
   };
 
   const closeTaskModal = () => {
-    setTaskModal({ isOpen: false, task: null, mode: 'create', groups: [], onSave: null, onDelete: null, areas: undefined, size: 'medium' });
+    setTaskModal({ isOpen: false, task: null, mode: 'create', onSave: null, onDelete: null, areas: undefined, size: 'medium' });
   };
 
   const closeActivityModal = () => {
@@ -120,7 +120,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   };
 
   return (
-    <ModalContext.Provider value={{ openAreaModal, openGroupModal, openTaskModal, openActivityModal, openCabinetModal, closeAreaModal, closeGroupModal, closeTaskModal, closeActivityModal, closeCabinetModal }}>
+    <ModalContext.Provider value={{ openAreaModal, openFolderModal, openTaskModal, openActivityModal, openCabinetModal, closeAreaModal, closeFolderModal, closeTaskModal, closeActivityModal, closeCabinetModal }}>
       {children}
       
       {/* Модальные окна на уровне приложения */}
@@ -134,16 +134,17 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         size={areaModal.size}
       />
 
-      <GroupModal
-        isOpen={groupModal.isOpen}
-        onClose={closeGroupModal}
-        onSave={groupModal.onSave || (() => Promise.resolve())}
-        onDelete={groupModal.onDelete ?? undefined}
-        group={groupModal.group}
-        areas={groupModal.areas}
-        title={groupModal.mode === 'create' ? 'Создание группы' : 'Редактирование группы'}
-        size={groupModal.size}
-        defaultAreaId={groupModal.areaId}
+      <FolderModal
+        isOpen={folderModal.isOpen}
+        onClose={closeFolderModal}
+        onSave={folderModal.onSave || (() => Promise.resolve())}
+        onDelete={folderModal.onDelete ?? undefined}
+        folder={folderModal.folder}
+        areas={folderModal.areas}
+        title={folderModal.mode === 'create' ? 'Создание папки' : 'Редактирование папки'}
+        size={folderModal.size}
+        defaultAreaId={folderModal.areaId}
+        defaultParentFolderId={folderModal.parentFolderId}
       />
 
       <TaskModal
@@ -152,11 +153,10 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
         onSave={taskModal.onSave || (() => Promise.resolve())}
         onDelete={taskModal.onDelete ?? undefined}
         task={taskModal.task}
-        groups={taskModal.groups}
         title={taskModal.mode === 'create' ? 'Создание задачи' : 'Редактирование задачи'}
         size={taskModal.size}
-        defaultGroupId={taskModal.groupId}
-        defaultAreaId={taskModal.areaId}
+        defaultFolderId={taskModal.defaultFolderId}
+        defaultAreaId={taskModal.defaultAreaId}
         areas={taskModal.areas}
       />
 

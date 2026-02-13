@@ -54,10 +54,15 @@ public class TaskController(ITaskService service) : BaseApiController
             return Ok(new { success = true, message = "Задача успешно удалена" });
         });
 
-    [HttpGet("{groupId}")]
-    [UserLog("Получение кратких карточек задач по группе")]
-    public Task<IActionResult> GetTaskSummaryByGroup(Guid groupId, CancellationToken cancellationToken)
-        => ExecuteWithExceptionHandling(async () => Ok(await service.GetTaskSummaryByGroupAsync(groupId, cancellationToken)));
+    [HttpGet("byFolder/{folderId}")]
+    [UserLog("Получение кратких карточек задач по папке")]
+    public Task<IActionResult> GetTaskSummaryByFolder(Guid folderId, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () => Ok(await service.GetTaskSummaryByFolderAsync(folderId, cancellationToken)));
+
+    [HttpGet("byAreaRoot/{areaId}")]
+    [UserLog("Получение кратких карточек задач в корне области")]
+    public Task<IActionResult> GetTaskSummaryByAreaRoot(Guid areaId, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () => Ok(await service.GetTaskSummaryByAreaRootAsync(areaId, cancellationToken)));
 
     [HttpPost]
     [UserLog("Получение недельной активности задач")]

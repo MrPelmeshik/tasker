@@ -8,13 +8,14 @@ namespace TaskerApi.Interfaces.Repositories;
 public interface ITaskRepository : IRepository<TaskEntity, Guid>
 {
     /// <summary>
-    /// Получить задачи по группе
+    /// Получить задачи по папке
     /// </summary>
-    /// <param name="groupId">Идентификатор группы</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <param name="includeDeleted">Включить удаленные записи</param>
-    /// <returns>Список задач</returns>
-    Task<IReadOnlyList<TaskEntity>> GetByGroupIdAsync(Guid groupId, CancellationToken cancellationToken = default, bool includeDeleted = false);
+    Task<IReadOnlyList<TaskEntity>> GetByFolderIdAsync(Guid folderId, CancellationToken cancellationToken = default, bool includeDeleted = false);
+
+    /// <summary>
+    /// Получить задачи в корне области (folder_id = null)
+    /// </summary>
+    Task<IReadOnlyList<TaskEntity>> GetByAreaIdRootAsync(Guid areaId, CancellationToken cancellationToken = default, bool includeDeleted = false);
 
     /// <summary>
     /// Получить задачи по владельцу

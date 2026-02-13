@@ -57,7 +57,7 @@ public async Task<UserEntity> CreateUserAsync(UserEntity user)
 ### 2. Явные транзакции
 - **Когда использовать**: Сложные операции с несколькими сущностями
 - **Преимущества**: Полный контроль, возможность отката
-- **Примеры**: Создание области с группой, перевод задач между группами
+- **Примеры**: Создание области с папкой, перевод задач между папками
 
 ```csharp
 // Явное управление транзакцией
@@ -67,7 +67,7 @@ public async Task<ComplexResult> ComplexOperationAsync()
     try
     {
         await _areaRepository.CreateAsync(area, cancellationToken);
-        await _groupRepository.CreateAsync(group, cancellationToken);
+        await _folderRepository.CreateAsync(folder, cancellationToken);
         await _userAccessRepository.CreateAsync(access, cancellationToken);
         
         await transaction.CommitAsync();
@@ -96,7 +96,7 @@ using var uow = await _unitOfWorkFactory.CreateAsync(cancellationToken, useTrans
 ```csharp
 // ✅ Добавить
 private readonly IAreaRepository _areaRepository;
-private readonly IGroupRepository _groupRepository;
+private readonly IFolderRepository _folderRepository;
 ```
 
 ### Шаг 3: Упростить методы
@@ -155,7 +155,7 @@ public async Task<TransferResult> TransferTasksAsync(TransferTasksRequest reques
         var tasks = await _taskRepository.GetByIdsAsync(request.TaskIds, cancellationToken);
         foreach (var task in tasks)
         {
-            task.GroupId = request.NewGroupId;
+            task.FolderId = request.NewFolderId;
             await _taskRepository.UpdateAsync(task, cancellationToken);
         }
         await transaction.CommitAsync(cancellationToken);

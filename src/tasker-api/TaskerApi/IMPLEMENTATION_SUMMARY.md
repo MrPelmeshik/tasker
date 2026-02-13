@@ -20,7 +20,7 @@
   - `IUserRepository` / `UserRepository`
   - `ITaskRepository` / `TaskRepository`
   - `IAreaRepository` / `AreaRepository`
-  - `IGroupRepository` / `GroupRepository`
+  - `IFolderRepository` / `FolderRepository`
   - `ISubtaskRepository` / `SubtaskRepository`
   - `IPurposeRepository` / `PurposeRepository`
   - `IEventRepository` / `EventRepository`
@@ -31,7 +31,7 @@
 - Убрано наследование от `BaseProvider`
 - Провайдеры теперь используют репозитории
 - Сохранена обратная совместимость интерфейсов
-- Обновлены: `UserProvider`, `TaskProvider`, `AreaProvider`, `GroupProvider`
+- Обновлены: `UserProvider`, `TaskProvider`, `AreaProvider`, `FolderProvider`
 
 ✅ **Обновлен DI контейнер**
 - Зарегистрирован `TaskerDbContext`

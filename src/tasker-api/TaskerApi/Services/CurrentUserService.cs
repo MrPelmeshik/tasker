@@ -26,7 +26,6 @@ public class CurrentUserService: ICurrentUserService
     private readonly IAreaRepository _areaRepository;
     private UserEntity? _user;
     private IReadOnlyList<Guid>? _accessibleAreas;
-    private IReadOnlyList<Guid>? _accessibleGroups;
 
     public CurrentUserService(
         IHttpContextAccessor httpContextAccessor,
@@ -52,11 +51,6 @@ public class CurrentUserService: ICurrentUserService
     /// </summary>
     public IReadOnlyList<Guid> AccessibleAreas =>
         _accessibleAreas ??= LoadAccessibleAreas();
-    
-    /// <summary>
-    /// Список доступных групп для пользователя
-    /// </summary>
-    public IReadOnlyList<Guid> AccessibleGroups => _accessibleGroups ??= LoadAccessibleGroups();
 
     /// <summary>
     /// Получить данные текущего пользователя
@@ -78,16 +72,6 @@ public class CurrentUserService: ICurrentUserService
     }
 
     /// <summary>
-    /// Проверить доступ к группе
-    /// </summary>
-    /// <param name="groupId">Идентификатор группы</param>
-    /// <returns>True, если есть доступ</returns>
-    public bool HasAccessToGroup(Guid groupId)
-    {
-        return AccessibleGroups.Contains(groupId);
-    }
-
-    /// <summary>
     /// Проверить доступ к любой из областей
     /// </summary>
     /// <param name="areaIds">Список идентификаторов областей</param>
@@ -95,16 +79,6 @@ public class CurrentUserService: ICurrentUserService
     public bool HasAccessToArea(IList<Guid> areaIds)
     {
         return areaIds.Any(id => AccessibleAreas.Contains(id));
-    }
-
-    /// <summary>
-    /// Проверить доступ к любой из групп
-    /// </summary>
-    /// <param name="groupIds">Список идентификаторов групп</param>
-    /// <returns>True, если есть доступ к любой группе</returns>
-    public bool HasAccessToGroup(IList<Guid> groupIds)
-    {
-        return groupIds.Any(id => AccessibleGroups.Contains(id));
     }
 
     /// <summary>
@@ -158,10 +132,5 @@ public class CurrentUserService: ICurrentUserService
         {
             return new List<Guid>();
         }
-    }
-
-    private IReadOnlyList<Guid> LoadAccessibleGroups()
-    {
-        return new List<Guid>();
     }
 }

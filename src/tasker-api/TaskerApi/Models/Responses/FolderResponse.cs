@@ -1,70 +1,62 @@
-using TaskerApi.Models.Common;
-using TaskStatus = TaskerApi.Models.Common.TaskStatus;
-
 namespace TaskerApi.Models.Responses;
 
 /// <summary>
-/// Краткая информация о задаче
+/// Ответ с полной информацией о папке
 /// </summary>
-public class TaskSummaryResponse
+public class FolderResponse
 {
     /// <summary>
-    /// Идентификатор задачи
+    /// Уникальный идентификатор папки
     /// </summary>
     public Guid Id { get; set; }
 
     /// <summary>
-    /// Заголовок задачи
+    /// Заголовок папки
     /// </summary>
     public string Title { get; set; } = string.Empty;
 
     /// <summary>
-    /// Описание задачи
+    /// Описание папки
     /// </summary>
     public string? Description { get; set; }
 
     /// <summary>
-    /// Статус задачи
-    /// </summary>
-    public TaskStatus Status { get; set; }
-
-    /// <summary>
-    /// ID области
+    /// Идентификатор области
     /// </summary>
     public Guid AreaId { get; set; }
 
     /// <summary>
-    /// ID папки (null = в корне области)
+    /// Идентификатор родительской папки (null = корень области)
     /// </summary>
-    public Guid? FolderId { get; set; }
+    public Guid? ParentFolderId { get; set; }
 
     /// <summary>
-    /// ID владельца
+    /// Идентификатор пользователя-владельца
     /// </summary>
     public Guid OwnerUserId { get; set; }
 
     /// <summary>
-    /// Имя пользователя-владельца.
+    /// Имя пользователя-владельца
     /// </summary>
     public string OwnerUserName { get; set; } = string.Empty;
 
     /// <summary>
-    /// Дата создания
+    /// Дата и время создания
     /// </summary>
     public DateTimeOffset CreatedAt { get; set; }
 
     /// <summary>
-    /// Дата обновления
+    /// Дата и время последнего обновления
     /// </summary>
     public DateTimeOffset UpdatedAt { get; set; }
 
     /// <summary>
-    /// Признак активности
+    /// Флаг активности
     /// </summary>
     public bool IsActive { get; set; }
 
     /// <summary>
-    /// Дата деактивации
+    /// Дата и время деактивации
     /// </summary>
     public DateTimeOffset? DeactivatedAt { get; set; }
 }

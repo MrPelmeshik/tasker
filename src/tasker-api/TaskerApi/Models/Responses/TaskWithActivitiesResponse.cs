@@ -21,9 +21,14 @@ public class TaskWithActivitiesResponse
     public int Status { get; set; }
 
     /// <summary>
-    /// Идентификатор группы
+    /// Идентификатор области
     /// </summary>
-    public Guid GroupId { get; set; }
+    public Guid AreaId { get; set; }
+
+    /// <summary>
+    /// Идентификатор папки (null = в корне области)
+    /// </summary>
+    public Guid? FolderId { get; set; }
 
     /// <summary>
     /// Есть ли активности до диапазона

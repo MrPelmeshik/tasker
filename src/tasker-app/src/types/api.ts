@@ -44,24 +44,27 @@ export interface AreaMemberResponse {
   role: AreaRole;
 }
 
-// Типы для Group API
-export interface GroupCreateRequest {
+// Типы для Folder API
+export interface FolderCreateRequest {
   title: string;
   description?: string;
   areaId: string;
+  parentFolderId?: string | null;
 }
 
-export interface GroupUpdateRequest {
+export interface FolderUpdateRequest {
   title: string;
   description?: string;
   areaId: string;
+  parentFolderId?: string | null;
 }
 
-export interface GroupResponse {
+export interface FolderResponse {
   id: string;
   title: string;
   description?: string;
   areaId: string;
+  parentFolderId?: string | null;
   ownerUserId: string;
   ownerUserName?: string;
   createdAt: Date;
@@ -70,27 +73,26 @@ export interface GroupResponse {
   deactivatedAt?: Date;
 }
 
-export interface GroupCreateResponse {
-  groupId: string;
-}
-
 // Типы для Tree виджета
 export interface AreaShortCardResponse {
   id: string;
   title: string;
   description?: string;
-  groupsCount: number;
+  foldersCount: number;
+  rootTasksCount: number;
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
 }
 
-export interface GroupSummaryResponse {
+export interface FolderSummaryResponse {
   id: string;
   title: string;
   description?: string;
   areaId: string;
+  parentFolderId?: string | null;
   tasksCount: number;
+  subfoldersCount: number;
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
@@ -100,23 +102,26 @@ export interface GroupSummaryResponse {
 export interface TaskCreateRequest {
   title: string;
   description?: string;
-  groupId: string;
-  status: number; // TaskStatus enum value
+  areaId: string;
+  folderId?: string | null;
+  status: number;
 }
 
 export interface TaskUpdateRequest {
   title: string;
   description?: string;
-  groupId: string;
-  status: number; // TaskStatus enum value
+  areaId: string;
+  folderId?: string | null;
+  status: number;
 }
 
 export interface TaskResponse {
   id: string;
   title: string;
   description?: string;
-  groupId: string;
-  status: number; // TaskStatus enum value
+  areaId: string;
+  folderId?: string | null;
+  status: number;
   ownerUserId: string;
   ownerUserName?: string;
   createdAt: Date;
@@ -133,7 +138,9 @@ export interface TaskSummaryResponse {
   id: string;
   title: string;
   description?: string;
-  status: number; // TaskStatus enum value
+  status: number;
+  areaId: string;
+  folderId?: string | null;
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
@@ -168,7 +175,8 @@ export interface TaskWithActivitiesResponse {
   taskId: string;
   taskName: string;
   status: number;
-  groupId: string;
+  areaId: string;
+  folderId?: string | null;
   carryWeeks: number;
   hasFutureActivities: boolean;
   days: TaskDayActivity[];

@@ -149,14 +149,14 @@ public async Task<ComplexOperationResponse> ComplexOperationAsync(ComplexRequest
         var area = new AreaEntity { /* ... */ };
         await _areaRepository.CreateAsync(area, cancellationToken);
         
-        // Создание группы в области
-        var group = new GroupEntity { AreaId = area.Id, /* ... */ };
-        await _groupRepository.CreateAsync(group, cancellationToken);
+        // Создание папки в области
+        var folder = new FolderEntity { AreaId = area.Id, /* ... */ };
+        await _folderRepository.CreateAsync(folder, cancellationToken);
         
-        // Создание задач в группе
+        // Создание задач в папке
         var tasks = request.Tasks.Select(t => new TaskEntity 
         { 
-            GroupId = group.Id, 
+            FolderId = folder.Id, 
             /* ... */ 
         }).ToList();
         await _taskRepository.CreateAsync(tasks, cancellationToken);
@@ -214,16 +214,16 @@ public async Task<TransferResult> TransferTasksAsync(TransferTasksRequest reques
         // Получение задач
         var tasks = await _taskRepository.GetByIdsAsync(request.TaskIds, cancellationToken);
         
-        // Обновление группы для всех задач
+        // Обновление папки для всех задач
         foreach (var task in tasks)
         {
-            task.GroupId = request.NewGroupId;
+            task.FolderId = request.NewFolderId;
             await _taskRepository.UpdateAsync(task, cancellationToken);
         }
         
-        // Обновление статистики групп
-        await UpdateGroupStatisticsAsync(request.OldGroupId, cancellationToken);
-        await UpdateGroupStatisticsAsync(request.NewGroupId, cancellationToken);
+        // Обновление статистики папок
+        await UpdateFolderStatisticsAsync(request.OldFolderId, cancellationToken);
+        await UpdateFolderStatisticsAsync(request.NewFolderId, cancellationToken);
         
         await transaction.CommitAsync();
         return new TransferResult { /* ... */ };

@@ -1,20 +1,17 @@
 import { useState, useEffect } from 'react';
-import {
-  fetchEventsByTask,
-  fetchEventsByGroup,
-  fetchEventsByArea,
-} from '../../services/api';
+import { fetchEventsByTask, fetchEventsByArea } from '../../services/api';
 import type { EventResponse } from '../../types/api';
 import { toIsoDateString } from '../../utils/api-date';
 
 /**
- * Хук загрузки событий по сущности (задача, группа, область).
- * @param entityType Тип сущности
+ * Хук загрузки событий по сущности (задача или область).
+ * Папки не имеют активностей.
+ * @param entityType Тип сущности: 'task' | 'area'
  * @param entityId Идентификатор сущности (при undefined загрузка не выполняется)
  * @param date Опциональная дата ISO YYYY-MM-DD — фильтр по дню
  */
 export function useEvents(
-  entityType: 'task' | 'group' | 'area',
+  entityType: 'task' | 'area',
   entityId: string | undefined,
   date?: string
 ): { events: EventResponse[]; loading: boolean; error: string | null } {
@@ -32,9 +29,7 @@ export function useEvents(
         const data =
           entityType === 'task'
             ? await fetchEventsByTask(entityId)
-            : entityType === 'group'
-              ? await fetchEventsByGroup(entityId)
-              : await fetchEventsByArea(entityId);
+            : await fetchEventsByArea(entityId);
         if (!cancelled) {
           const raw = data ?? [];
           const filtered = date

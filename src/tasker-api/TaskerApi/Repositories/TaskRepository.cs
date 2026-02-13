@@ -20,15 +20,19 @@ public class TaskRepository : BaseRepository<TaskEntity, Guid>, ITaskRepository
     }
 
     /// <summary>
-    /// Получает задачи по идентификатору группы
+    /// Получает задачи по идентификатору папки
     /// </summary>
-    /// <param name="groupId">Идентификатор группы</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <param name="includeDeleted">Включать ли удаленные задачи</param>
-    /// <returns>Список задач в указанной группе</returns>
-    public async Task<IReadOnlyList<TaskEntity>> GetByGroupIdAsync(Guid groupId, CancellationToken cancellationToken = default, bool includeDeleted = false)
+    public async Task<IReadOnlyList<TaskEntity>> GetByFolderIdAsync(Guid folderId, CancellationToken cancellationToken = default, bool includeDeleted = false)
     {
-        return await FindAsync(t => t.GroupId == groupId, cancellationToken, includeDeleted);
+        return await FindAsync(t => t.FolderId == folderId, cancellationToken, includeDeleted);
+    }
+
+    /// <summary>
+    /// Получает задачи в корне области (folder_id = null)
+    /// </summary>
+    public async Task<IReadOnlyList<TaskEntity>> GetByAreaIdRootAsync(Guid areaId, CancellationToken cancellationToken = default, bool includeDeleted = false)
+    {
+        return await FindAsync(t => t.AreaId == areaId && t.FolderId == null, cancellationToken, includeDeleted);
     }
 
     /// <summary>

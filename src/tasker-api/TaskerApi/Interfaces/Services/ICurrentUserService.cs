@@ -23,11 +23,6 @@ public interface ICurrentUserService
     IReadOnlyList<Guid> AccessibleAreas { get; }
     
     /// <summary>
-    /// Список доступных групп для пользователя
-    /// </summary>
-    IReadOnlyList<Guid> AccessibleGroups { get; }
-    
-    /// <summary>
     /// Проверить доступ к области
     /// </summary>
     /// <param name="areaId">Идентификатор области</param>
@@ -40,18 +35,4 @@ public interface ICurrentUserService
     /// <param name="areaId">Список идентификаторов областей</param>
     /// <returns>True если есть доступ ко всем областям</returns>
     bool HasAccessToArea(IList<Guid> areaId);
-    
-    /// <summary>
-    /// Проверить доступ к группе
-    /// </summary>
-    /// <param name="groupId">Идентификатор группы</param>
-    /// <returns>True если есть доступ</returns>
-    bool HasAccessToGroup(Guid groupId);
-    
-    /// <summary>
-    /// Проверить доступ к списку групп
-    /// </summary>
-    /// <param name="groupIds">Список идентификаторов групп</param>
-    /// <returns>True если есть доступ ко всем группам</returns>
-    bool HasAccessToGroup(IList<Guid> groupIds);
 }

@@ -30,9 +30,9 @@ public class TaskerDbContext : DbContext
     public DbSet<AreaEntity> Areas { get; set; }
     
     /// <summary>
-    /// Коллекция групп задач
+    /// Коллекция папок
     /// </summary>
-    public DbSet<GroupEntity> Groups { get; set; }
+    public DbSet<FolderEntity> Folders { get; set; }
     
     /// <summary>
     /// Коллекция задач
@@ -70,11 +70,6 @@ public class TaskerDbContext : DbContext
     public DbSet<EventToAreaEntity> EventToAreas { get; set; }
     
     /// <summary>
-    /// Связующая таблица между событиями и группами
-    /// </summary>
-    public DbSet<EventToGroupEntity> EventToGroups { get; set; }
-    
-    /// <summary>
     /// Связующая таблица между событиями и задачами
     /// </summary>
     public DbSet<EventToTaskEntity> EventToTasks { get; set; }
@@ -103,7 +98,7 @@ public class TaskerDbContext : DbContext
         // Глобальный фильтр: по умолчанию возвращать только активные записи (IsActive = true)
         ConfigureSoftDeleteFilters(modelBuilder);
 
-        // Каскадные фильтры: задачи и группы возвращаются только если активны родительские сущности
+        // Каскадные фильтры: задачи и папки возвращаются только если активны родительские сущности
         ConfigureCascadingActiveFilters(modelBuilder);
 
         modelBuilder.Entity<UserEntity>(entity =>
@@ -130,15 +125,20 @@ public class TaskerDbContext : DbContext
             entity.Property(e => e.Description).HasMaxLength(1000);
         });
 
-        modelBuilder.Entity<GroupEntity>(entity =>
+        modelBuilder.Entity<FolderEntity>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(1000);
-            
-            entity.HasOne(g => g.Area)
+
+            entity.HasOne(f => f.Area)
                 .WithMany()
                 .HasForeignKey(e => e.AreaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(f => f.ParentFolder)
+                .WithMany()
+                .HasForeignKey(e => e.ParentFolderId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -147,10 +147,15 @@ public class TaskerDbContext : DbContext
             entity.HasKey(e => e.Id);
             entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
             entity.Property(e => e.Description).HasMaxLength(2000);
-            
-            entity.HasOne(t => t.Group)
+
+            entity.HasOne(t => t.Area)
                 .WithMany()
-                .HasForeignKey(e => e.GroupId)
+                .HasForeignKey(e => e.AreaId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            entity.HasOne(t => t.Folder)
+                .WithMany()
+                .HasForeignKey(e => e.FolderId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
@@ -243,22 +248,6 @@ public class TaskerDbContext : DbContext
                 .OnDelete(DeleteBehavior.Restrict);
         });
 
-        modelBuilder.Entity<EventToGroupEntity>(entity =>
-        {
-            entity.ToTable("events_2_groups");
-            entity.HasKey(e => new { e.EventId, e.GroupId });
-            
-            entity.HasOne<GroupEntity>()
-                .WithMany()
-                .HasForeignKey(e => e.GroupId)
-                .OnDelete(DeleteBehavior.Restrict);
-                
-            entity.HasOne<EventEntity>()
-                .WithMany()
-                .HasForeignKey(e => e.EventId)
-                .OnDelete(DeleteBehavior.Restrict);
-        });
-
         modelBuilder.Entity<EventToTaskEntity>(entity =>
         {
             entity.ToTable("events_2_tasks");
@@ -333,19 +322,18 @@ public class TaskerDbContext : DbContext
     }
 
     /// <summary>
-    /// Настраивает каскадные Query Filter для Task и Group: возвращать только записи,
-    /// у которых активны все родительские сущности по иерархии Area → Group → Task.
+    /// Настраивает каскадные Query Filter для Task и Folder: возвращать только записи,
+    /// у которых активны все родительские сущности по иерархии Area → Folder → Task.
     /// </summary>
-    /// <param name="modelBuilder">Построитель модели Entity Framework</param>
     private void ConfigureCascadingActiveFilters(ModelBuilder modelBuilder)
     {
-        // Задачи: task.IsActive AND группа активна AND область группы активна
+        // Задачи: task.IsActive AND область активна AND (папка null или папка активна)
         modelBuilder.Entity<TaskEntity>().HasQueryFilter(t =>
-            t.IsActive && t.Group != null && t.Group.IsActive && t.Group.Area != null && t.Group.Area.IsActive);
+            t.IsActive && t.Area != null && t.Area.IsActive && (t.FolderId == null || (t.Folder != null && t.Folder.IsActive)));
 
-        // Группы: group.IsActive AND область активна
-        modelBuilder.Entity<GroupEntity>().HasQueryFilter(g =>
-            g.IsActive && g.Area != null && g.Area.IsActive);
+        // Папки: folder.IsActive AND область активна
+        modelBuilder.Entity<FolderEntity>().HasQueryFilter(f =>
+            f.IsActive && f.Area != null && f.Area.IsActive);
     }
 
     /// <summary>

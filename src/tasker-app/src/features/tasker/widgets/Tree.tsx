@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import glassWidgetStyles from '../../../styles/glass-widget.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
@@ -6,52 +6,55 @@ import { GlassTag } from '../../../components/ui/GlassTag';
 import { TaskCardLink } from '../../../components/tasks';
 import { useModal, useTaskUpdate, useToast } from '../../../context';
 import { parseApiErrorMessage } from '../../../utils/parse-api-error';
-import type { 
-  WidgetSizeProps, 
-  AreaShortCard, 
-  GroupSummary,
+import type {
+  WidgetSizeProps,
+  AreaShortCard,
+  FolderSummary,
   TaskSummary,
-  AreaCreateRequest, 
-  AreaUpdateRequest, 
-  GroupCreateRequest, 
-  GroupUpdateRequest,
+  AreaCreateRequest,
+  AreaUpdateRequest,
+  FolderCreateRequest,
+  FolderUpdateRequest,
   TaskCreateRequest,
-  TaskUpdateRequest
+  TaskUpdateRequest,
 } from '../../../types';
-import { 
-  fetchAreaShortCard, 
-  fetchAreaById, 
-  createArea, 
+import {
+  fetchAreaShortCard,
+  fetchAreaById,
+  createArea,
   updateArea,
   deleteArea,
-  fetchGroupShortCardByAreaForTree, 
-  fetchGroupById, 
-  createGroup, 
-  updateGroup,
-  deleteGroup,
-  fetchTaskSummaryByGroup,
+  fetchRootFoldersByArea,
+  fetchChildFolders,
+  fetchFolderById,
+  createFolder,
+  updateFolder,
+  deleteFolder,
+  fetchTaskSummaryByFolder,
+  fetchTaskSummaryByAreaRoot,
   fetchTaskById,
   createTask,
   updateTask,
-  deleteTask
+  deleteTask,
 } from '../../../services/api';
 import css from '../../../styles/tree.module.css';
 import { EyeIcon } from '../../../components/icons';
 import { hexToRgb } from '../../../utils/color';
 
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
-  const { openAreaModal, openGroupModal, openTaskModal } = useModal();
+  const { openAreaModal, openFolderModal, openTaskModal } = useModal();
   const { notifyTaskUpdate } = useTaskUpdate();
   const { addError } = useToast();
-  const [areas, setAreas] = useState<AreaShortCard[]>([]);
-  const [groupsByArea, setGroupsByArea] = useState<Map<string, GroupSummary[]>>(new Map());
-  const [tasksByGroup, setTasksByGroup] = useState<Map<string, TaskSummary[]>>(new Map());
-  const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
-  const [loading, setLoading] = useState(true);
-  const [loadingGroups, setLoadingGroups] = useState<Set<string>>(new Set());
-  const [loadingTasks, setLoadingTasks] = useState<Set<string>>(new Set());
 
+  const [areas, setAreas] = useState<AreaShortCard[]>([]);
+  const [foldersByArea, setFoldersByArea] = useState<Map<string, FolderSummary[]>>(new Map());
+  const [foldersByParent, setFoldersByParent] = useState<Map<string, FolderSummary[]>>(new Map());
+  const [tasksByArea, setTasksByArea] = useState<Map<string, TaskSummary[]>>(new Map());
+  const [tasksByFolder, setTasksByFolder] = useState<Map<string, TaskSummary[]>>(new Map());
+  const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
+  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+  const [loading, setLoading] = useState(true);
+  const [loadingContent, setLoadingContent] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const loadAreas = async () => {
@@ -67,194 +70,130 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         setLoading(false);
       }
     };
-
     loadAreas();
   }, [addError]);
 
-  const toggleArea = async (areaId: string) => {
-    setExpandedAreas(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(areaId)) {
-        newSet.delete(areaId);
-      } else {
-        newSet.add(areaId);
-        // Загружаем группы для области, если их еще нет
-        if (!groupsByArea.has(areaId)) {
-          loadGroupsForArea(areaId);
-        }
+  const loadAreaContent = useCallback(async (areaId: string) => {
+    try {
+      setLoadingContent((prev) => new Set(prev).add(`area:${areaId}`));
+      const [folders, tasks] = await Promise.all([
+        fetchRootFoldersByArea(areaId),
+        fetchTaskSummaryByAreaRoot(areaId),
+      ]);
+      setFoldersByArea((prev) => new Map(prev).set(areaId, folders));
+      setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
+    } catch (error) {
+      console.error(`Ошибка загрузки содержимого области ${areaId}:`, error);
+      setFoldersByArea((prev) => new Map(prev).set(areaId, []));
+      setTasksByArea((prev) => new Map(prev).set(areaId, []));
+      addError(parseApiErrorMessage(error));
+    } finally {
+      setLoadingContent((prev) => {
+        const next = new Set(prev);
+        next.delete(`area:${areaId}`);
+        return next;
+      });
+    }
+  }, [addError]);
+
+  const loadFolderContent = useCallback(async (folderId: string, areaId: string) => {
+    try {
+      setLoadingContent((prev) => new Set(prev).add(`folder:${folderId}`));
+      const [subfolders, tasks] = await Promise.all([
+        fetchChildFolders(folderId, areaId),
+        fetchTaskSummaryByFolder(folderId),
+      ]);
+      setFoldersByParent((prev) => new Map(prev).set(folderId, subfolders));
+      setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
+    } catch (error) {
+      console.error(`Ошибка загрузки содержимого папки ${folderId}:`, error);
+      setFoldersByParent((prev) => new Map(prev).set(folderId, []));
+      setTasksByFolder((prev) => new Map(prev).set(folderId, []));
+      addError(parseApiErrorMessage(error));
+    } finally {
+      setLoadingContent((prev) => {
+        const next = new Set(prev);
+        next.delete(`folder:${folderId}`);
+        return next;
+      });
+    }
+  }, [addError]);
+
+  const toggleArea = (areaId: string) => {
+    setExpandedAreas((prev) => {
+      const next = new Set(prev);
+      if (next.has(areaId)) next.delete(areaId);
+      else {
+        next.add(areaId);
+        if (!foldersByArea.has(areaId) && !tasksByArea.has(areaId)) loadAreaContent(areaId);
       }
-      return newSet;
+      return next;
     });
   };
 
-  const loadGroupsForArea = async (areaId: string) => {
-    try {
-      setLoadingGroups(prev => new Set(prev).add(areaId));
-      const groups = await fetchGroupShortCardByAreaForTree(areaId);
-      setGroupsByArea(prev => new Map(prev).set(areaId, groups));
-    } catch (error) {
-      console.error(`Ошибка загрузки групп для области ${areaId}:`, error);
-      setGroupsByArea(prev => new Map(prev).set(areaId, []));
-      addError(parseApiErrorMessage(error));
-    } finally {
-      setLoadingGroups(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(areaId);
-        return newSet;
-      });
-    }
-  };
-
-  const toggleGroup = async (groupId: string) => {
-    setExpandedGroups(prev => {
-      const newSet = new Set(prev);
-      if (newSet.has(groupId)) {
-        newSet.delete(groupId);
-      } else {
-        newSet.add(groupId);
-        // Загружаем задачи для группы, если их еще нет
-        if (!tasksByGroup.has(groupId)) {
-          loadTasksForGroup(groupId);
-        }
+  const toggleFolder = (folderId: string, areaId: string) => {
+    setExpandedFolders((prev) => {
+      const next = new Set(prev);
+      if (next.has(folderId)) next.delete(folderId);
+      else {
+        next.add(folderId);
+        if (!foldersByParent.has(folderId) && !tasksByFolder.has(folderId)) loadFolderContent(folderId, areaId);
       }
-      return newSet;
+      return next;
     });
   };
 
-  const loadTasksForGroup = async (groupId: string) => {
-    try {
-      setLoadingTasks(prev => new Set(prev).add(groupId));
-      const tasks = await fetchTaskSummaryByGroup(groupId);
-      setTasksByGroup(prev => new Map(prev).set(groupId, tasks));
-    } catch (error) {
-      console.error(`Ошибка загрузки задач для группы ${groupId}:`, error);
-      setTasksByGroup(prev => new Map(prev).set(groupId, []));
-      addError(parseApiErrorMessage(error));
-    } finally {
-      setLoadingTasks(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(groupId);
-        return newSet;
-      });
-    }
-  };
-
-  // Обработчики для областей
-  const handleCreateArea = () => {
-    openAreaModal(null, 'create', handleAreaSave);
-  };
-
-  const handleViewAreaDetails = async (areaId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handleCreateArea = () => openAreaModal(null, 'create', handleAreaSave);
+  const handleViewAreaDetails = async (areaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       const area = await fetchAreaById(areaId);
-      if (area) {
-        openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
-      }
+      if (area) openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
     } catch (error) {
       console.error('Ошибка загрузки области:', error);
       addError(parseApiErrorMessage(error));
     }
   };
-
-  const handleCreateGroupForArea = (areaId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    const areasForModal = areas.map(area => ({
-      id: area.id,
-      title: area.title,
-      description: area.description,
-      ownerUserId: '',
-      createdAt: new Date(0),
-      updatedAt: new Date(0),
-      isActive: true,
-    }));
-    openGroupModal(null, 'create', areasForModal, (data, groupId) => handleGroupSave(data, groupId), undefined, areaId);
+  const handleCreateFolderForArea = (areaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+    openFolderModal(null, 'create', areasForModal, (data, folderId) => handleFolderSave(data, folderId), undefined, areaId, null);
   };
-
-  const handleCreateTaskForGroup = (groupId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
-    
-    // Находим область, к которой принадлежит группа
-    let targetAreaId = '';
-    for (const [areaId, groups] of Array.from(groupsByArea.entries())) {
-      if (groups.some((group: GroupSummary) => group.id === groupId)) {
-        targetAreaId = areaId;
-        break;
-      }
-    }
-    
-    // Показываем только группы из той же области
-    const groupsForModal = targetAreaId 
-      ? (groupsByArea.get(targetAreaId) || []).map(group => ({
-          id: group.id,
-          title: group.title,
-          description: group.description,
-          areaId: group.areaId,
-          ownerUserId: '',
-          createdAt: new Date(0),
-          updatedAt: new Date(0),
-          isActive: true,
-        }))
-      : [];
-      
-    const areasForTaskModal = areas.map(a => ({ id: a.id, title: a.title }));
-    openTaskModal(null, 'create', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), undefined, groupId, targetAreaId, areasForTaskModal);
+  const handleCreateFolderForFolder = (folderId: string, areaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+    openFolderModal(null, 'create', areasForModal, (data, fid) => handleFolderSave(data, fid), undefined, areaId, folderId);
   };
-
-  // Обработчики для групп
-  const handleViewGroupDetails = async (groupId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handleCreateTaskForArea = (areaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
+    openTaskModal(null, 'create', (data, taskId) => handleTaskSave(data, taskId), undefined, undefined, areaId, areasForTaskModal);
+  };
+  const handleCreateTaskForFolder = (folderId: string, areaId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
+    openTaskModal(null, 'create', (data, taskId) => handleTaskSave(data, taskId), undefined, folderId, areaId, areasForTaskModal);
+  };
+  const handleViewFolderDetails = async (folderId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
-      const group = await fetchGroupById(groupId);
-      if (group) {
-        const areasForModal = areas.map(area => ({
-          id: area.id,
-          title: area.title,
-          description: area.description,
-          ownerUserId: '',
-          createdAt: new Date(0),
-          updatedAt: new Date(0),
-          isActive: true,
-        }));
-        openGroupModal(group, 'edit', areasForModal, (data, groupId) => handleGroupSave(data, groupId), handleGroupDelete);
+      const folder = await fetchFolderById(folderId);
+      if (folder) {
+        const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+        openFolderModal(folder, 'edit', areasForModal, (data, fid) => handleFolderSave(data, fid), handleFolderDelete);
       }
     } catch (error) {
-      console.error('Ошибка загрузки группы:', error);
+      console.error('Ошибка загрузки папки:', error);
       addError(parseApiErrorMessage(error));
     }
   };
-
-  // Обработчики для задач
-  const handleViewTaskDetails = async (taskId: string, event: React.MouseEvent) => {
-    event.stopPropagation();
+  const handleViewTaskDetails = async (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     try {
       const task = await fetchTaskById(taskId);
       if (task) {
-        // Находим область, к которой принадлежит группа задачи
-        let targetAreaId = '';
-        for (const [areaId, groups] of Array.from(groupsByArea.entries())) {
-          if (groups.some((group: GroupSummary) => group.id === task.groupId)) {
-            targetAreaId = areaId;
-            break;
-          }
-        }
-        
-        // Показываем только группы из той же области
-        const groupsForModal = targetAreaId 
-          ? (groupsByArea.get(targetAreaId) || []).map(group => ({
-              id: group.id,
-              title: group.title,
-              description: group.description,
-              areaId: group.areaId,
-              ownerUserId: '',
-              createdAt: new Date(0),
-              updatedAt: new Date(0),
-              isActive: true,
-            }))
-          : [];
-          
-        const areasForTaskModal = areas.map(a => ({ id: a.id, title: a.title }));
-        openTaskModal(task, 'edit', groupsForModal, (data, taskId) => handleTaskSave(data, taskId), handleTaskDelete, undefined, undefined, areasForTaskModal);
+        const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
+        openTaskModal(task, 'edit', (data, tid) => handleTaskSave(data, tid), handleTaskDelete, undefined, undefined, areasForTaskModal);
       }
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
@@ -262,13 +201,29 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     }
   };
 
-  // Обработчики удаления
+  const handleAreaSave = async (data: AreaCreateRequest | (AreaUpdateRequest & { id?: string })) => {
+    try {
+      const d = data as { id?: string } & AreaCreateRequest;
+      if (!d.id) await createArea(data as AreaCreateRequest);
+      else await updateArea(d.id, data as AreaUpdateRequest);
+      const updated = await fetchAreaShortCard();
+      setAreas(updated);
+    } catch (error) {
+      console.error('Ошибка сохранения области:', error);
+      throw error;
+    }
+  };
   const handleAreaDelete = async (id: string) => {
     try {
       await deleteArea(id);
-      const updatedAreas = await fetchAreaShortCard();
-      setAreas(updatedAreas);
-      setGroupsByArea(prev => {
+      const updated = await fetchAreaShortCard();
+      setAreas(updated);
+      setFoldersByArea((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+      setTasksByArea((prev) => {
         const next = new Map(prev);
         next.delete(id);
         return next;
@@ -278,228 +233,172 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       throw error;
     }
   };
-
-  const handleGroupDelete = async (id: string) => {
+  const handleFolderSave = async (data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => {
     try {
-      const group = await fetchGroupById(id);
-      const areaId = group?.areaId;
-      await deleteGroup(id);
-      if (areaId) {
-        const updatedGroups = await fetchGroupShortCardByAreaForTree(areaId);
-        setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
-        setAreas(prev => prev.map(area =>
-          area.id === areaId ? { ...area, groupsCount: updatedGroups.length } : area
-        ));
+      const areaId = data.areaId;
+      if (!folderId) {
+        await createFolder(data as FolderCreateRequest);
+      } else {
+        await updateFolder(folderId, data as FolderUpdateRequest);
       }
-      setTasksByGroup(prev => {
+      const rootFolders = await fetchRootFoldersByArea(areaId);
+      setFoldersByArea((prev) => new Map(prev).set(areaId, rootFolders));
+      if (data.parentFolderId) {
+        const children = await fetchChildFolders(data.parentFolderId, areaId);
+        setFoldersByParent((prev) => new Map(prev).set(data.parentFolderId!, children));
+      }
+      setAreas((prev) => prev.map((a) => (a.id === areaId ? { ...a, foldersCount: rootFolders.length } : a)));
+    } catch (error) {
+      console.error('Ошибка сохранения папки:', error);
+      throw error;
+    }
+  };
+  const handleFolderDelete = async (id: string) => {
+    try {
+      const folder = await fetchFolderById(id);
+      const areaId = folder?.areaId;
+      const parentId = folder?.parentFolderId;
+      await deleteFolder(id);
+      if (areaId) {
+        const rootFolders = await fetchRootFoldersByArea(areaId);
+        setFoldersByArea((prev) => new Map(prev).set(areaId, rootFolders));
+        if (parentId) {
+          const children = await fetchChildFolders(parentId, areaId);
+          setFoldersByParent((prev) => new Map(prev).set(parentId, children));
+        }
+        setAreas((prev) => prev.map((a) => (a.id === areaId ? { ...a, foldersCount: rootFolders.length } : a)));
+      }
+      setFoldersByParent((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+      setTasksByFolder((prev) => {
         const next = new Map(prev);
         next.delete(id);
         return next;
       });
     } catch (error) {
-      console.error('Ошибка удаления группы:', error);
+      console.error('Ошибка удаления папки:', error);
       throw error;
     }
   };
-
+  const handleTaskSave = async (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => {
+    try {
+      const areaId = data.areaId;
+      const folderId = data.folderId ?? undefined;
+      if (!taskId) {
+        await createTask(data as TaskCreateRequest);
+      } else {
+        await updateTask(taskId, data as TaskUpdateRequest);
+      }
+      if (folderId) {
+        const tasks = await fetchTaskSummaryByFolder(folderId);
+        setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
+      } else {
+        const tasks = await fetchTaskSummaryByAreaRoot(areaId);
+        setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
+      }
+      notifyTaskUpdate(taskId, folderId);
+    } catch (error) {
+      console.error('Ошибка сохранения задачи:', error);
+      throw error;
+    }
+  };
   const handleTaskDelete = async (id: string) => {
     try {
       const task = await fetchTaskById(id);
-      const groupId = task?.groupId;
+      const folderId = task?.folderId ?? undefined;
+      const areaId = task?.areaId;
       await deleteTask(id);
-      if (groupId) {
-        const updatedTasks = await fetchTaskSummaryByGroup(groupId);
-        setTasksByGroup(prev => new Map(prev).set(groupId, updatedTasks));
-        setGroupsByArea(prev => {
-          const newMap = new Map<string, GroupSummary[]>();
-          prev.forEach((groups, areaId) => {
-            const updatedGroups = groups.map((g: GroupSummary) =>
-              g.id === groupId ? { ...g, tasksCount: updatedTasks.length } : g
-            );
-            newMap.set(areaId, updatedGroups);
-          });
-          return newMap;
-        });
+      if (folderId && areaId) {
+        const tasks = await fetchTaskSummaryByFolder(folderId);
+        setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
+      } else if (areaId) {
+        const tasks = await fetchTaskSummaryByAreaRoot(areaId);
+        setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
       }
-      notifyTaskUpdate(id, groupId);
+      notifyTaskUpdate(id, folderId);
     } catch (error) {
       console.error('Ошибка удаления задачи:', error);
       throw error;
     }
   };
 
-  // Обработчики сохранения
-  const handleAreaSave = async (data: AreaCreateRequest | (AreaUpdateRequest & { id?: string })) => {
-    try {
-      const dataWithId = data as { id?: string } & AreaCreateRequest;
-      const isCreate = !dataWithId.id;
-      
-      if (isCreate) {
-        await createArea(data as AreaCreateRequest);
-      } else {
-        await updateArea(dataWithId.id!, data as AreaUpdateRequest);
-      }
-      
-      // Перезагружаем список областей
-      const updatedAreas = await fetchAreaShortCard();
-      setAreas(updatedAreas);
-    } catch (error) {
-      console.error('Ошибка сохранения области:', error);
-      throw error;
-    }
+  const renderFolder = (folder: FolderSummary, areaId: string, depth: number) => {
+    const isExpanded = expandedFolders.has(folder.id);
+    const subfolders = foldersByParent.get(folder.id) ?? [];
+    const tasks = tasksByFolder.get(folder.id) ?? [];
+    const isLoading = loadingContent.has(`folder:${folder.id}`);
+    const customColorStyle = folder.customColor ? { '--card-custom-color': folder.customColor, '--card-custom-color-rgb': hexToRgb(folder.customColor) } as React.CSSProperties : {};
+
+    return (
+      <React.Fragment key={folder.id}>
+        <div className={css.folderItem} style={{ marginLeft: `calc(var(--tree-indent) * ${depth})` }}>
+          <div
+            className={`${css.folderCard} ${isExpanded ? css.expanded : ''}`}
+            onClick={() => toggleFolder(folder.id, areaId)}
+            data-custom-color={folder.customColor ? 'true' : undefined}
+            style={customColorStyle}
+          >
+            <div className={css.folderContent}>
+              <div className={css.folderInfo}>
+                <div className={css.folderTitleRow}>
+                  <GlassTag variant="subtle" size="xs">
+                    {folder.tasksCount + folder.subfoldersCount}
+                  </GlassTag>
+                  <div className={css.folderTitle}>{folder.title}</div>
+                </div>
+              </div>
+              <div className={css.folderActions}>
+                <GlassButton variant="subtle" size="xs" onClick={(e) => handleViewFolderDetails(folder.id, e)}>
+                  <EyeIcon />
+                </GlassButton>
+                <GlassButton variant="subtle" size="xs" onClick={(e) => handleCreateFolderForFolder(folder.id, areaId, e)}>
+                  Создать папку
+                </GlassButton>
+                <GlassButton variant="subtle" size="xs" onClick={(e) => handleCreateTaskForFolder(folder.id, areaId, e)}>
+                  Создать задачу
+                </GlassButton>
+              </div>
+            </div>
+          </div>
+        </div>
+        {isExpanded && (
+          <div className={css.tasksSection} style={{ marginLeft: `calc(var(--tree-indent) * ${depth + 1})` }}>
+            {isLoading ? (
+              <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+            ) : (
+              <>
+                {subfolders.map((sf) => renderFolder(sf, areaId, depth + 1))}
+                {tasks.map((task) => {
+                  const taskStyle = task.customColor ? { '--card-custom-color': task.customColor, '--card-custom-color-rgb': hexToRgb(task.customColor) } as React.CSSProperties : {};
+                  return (
+                    <div key={task.id} className={css.taskItem}>
+                      <TaskCardLink
+                        task={task}
+                        onClick={(e) => handleViewTaskDetails(task.id, e)}
+                        className={css.taskCard}
+                        style={taskStyle}
+                        dataCustomColor={!!task.customColor}
+                      />
+                    </div>
+                  );
+                })}
+                {subfolders.length === 0 && tasks.length === 0 && (
+                  <div className={glassWidgetStyles.placeholder}>Пусто</div>
+                )}
+              </>
+            )}
+          </div>
+        )}
+      </React.Fragment>
+    );
   };
-
-  const handleGroupSave = async (data: GroupCreateRequest | GroupUpdateRequest, groupId?: string) => {
-    try {
-      // Определяем режим по наличию groupId
-      const isCreate = !groupId;
-      
-      if (isCreate) {
-        await createGroup(data as GroupCreateRequest);
-        // Перезагружаем группы для соответствующей области
-        const areaId = data.areaId;
-        if (areaId) {
-          const updatedGroups = await fetchGroupShortCardByAreaForTree(areaId);
-          setGroupsByArea(prev => new Map(prev).set(areaId, updatedGroups));
-          
-          // Обновляем счетчик групп в карточке области
-          setAreas(prev => prev.map(area => 
-            area.id === areaId 
-              ? { ...area, groupsCount: updatedGroups.length }
-              : area
-          ));
-        }
-      } else {
-        // Получаем текущую группу для определения старой области
-        const currentGroup = await fetchGroupById(groupId);
-        const oldAreaId = currentGroup?.areaId;
-        
-        await updateGroup(groupId, data as GroupUpdateRequest);
-        
-        // Перезагружаем группы для новой области
-        const newAreaId = data.areaId;
-        if (newAreaId) {
-          const updatedGroups = await fetchGroupShortCardByAreaForTree(newAreaId);
-          setGroupsByArea(prev => new Map(prev).set(newAreaId, updatedGroups));
-          
-          // Обновляем счетчик групп в карточке новой области
-          setAreas(prev => prev.map(area => 
-            area.id === newAreaId 
-              ? { ...area, groupsCount: updatedGroups.length }
-              : area
-          ));
-        }
-        
-        // Перезагружаем группы для старой области, если она отличается от новой
-        if (oldAreaId && oldAreaId !== newAreaId) {
-          const updatedOldGroups = await fetchGroupShortCardByAreaForTree(oldAreaId);
-          setGroupsByArea(prev => new Map(prev).set(oldAreaId, updatedOldGroups));
-          
-          // Обновляем счетчик групп в карточке старой области
-          setAreas(prev => prev.map(area => 
-            area.id === oldAreaId 
-              ? { ...area, groupsCount: updatedOldGroups.length }
-              : area
-          ));
-        }
-      }
-    } catch (error) {
-      console.error('Ошибка сохранения группы:', error);
-      throw error;
-    }
-  };
-
-  const handleTaskSave = async (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => {
-    try {
-      // Определяем режим по наличию taskId
-      const isCreate = !taskId;
-      
-      if (isCreate) {
-        await createTask(data as TaskCreateRequest);
-        // Перезагружаем задачи для соответствующей группы
-        const groupId = data.groupId;
-        if (groupId) {
-          const updatedTasks = await fetchTaskSummaryByGroup(groupId);
-          setTasksByGroup(prev => new Map(prev).set(groupId, updatedTasks));
-          
-          // Обновляем счетчик задач в карточке группы
-          setGroupsByArea(prev => {
-            const newMap = new Map(prev);
-            newMap.forEach((groups, areaId) => {
-              const updatedGroups = groups.map((group: GroupSummary) => 
-                group.id === groupId 
-                  ? { ...group, tasksCount: updatedTasks.length }
-                  : group
-              );
-              newMap.set(areaId, updatedGroups);
-            });
-            return newMap;
-          });
-        }
-        
-        // Уведомляем об обновлении задачи
-        notifyTaskUpdate(undefined, data.groupId);
-      } else {
-        // Получаем текущую задачу для определения старой группы
-        const currentTask = await fetchTaskById(taskId);
-        const oldGroupId = currentTask?.groupId;
-        await updateTask(taskId, data as TaskUpdateRequest);
-        
-        // Перезагружаем задачи для новой группы
-        const newGroupId = data.groupId;
-        if (newGroupId) {
-          const updatedTasks = await fetchTaskSummaryByGroup(newGroupId);
-          setTasksByGroup(prev => new Map(prev).set(newGroupId, updatedTasks));
-          
-          // Обновляем счетчик задач в карточке новой группы
-          setGroupsByArea(prev => {
-            const newMap = new Map(prev);
-            newMap.forEach((groups, areaId) => {
-              const updatedGroups = groups.map((group: GroupSummary) => 
-                group.id === newGroupId 
-                  ? { ...group, tasksCount: updatedTasks.length }
-                  : group
-              );
-              newMap.set(areaId, updatedGroups);
-            });
-            return newMap;
-          });
-        }
-        
-        // Перезагружаем задачи для старой группы, если она отличается от новой
-        if (oldGroupId && oldGroupId !== newGroupId) {
-          const updatedOldTasks = await fetchTaskSummaryByGroup(oldGroupId);
-          setTasksByGroup(prev => new Map(prev).set(oldGroupId, updatedOldTasks));
-          
-          // Обновляем счетчик задач в карточке старой группы
-          setGroupsByArea(prev => {
-            const newMap = new Map(prev);
-            newMap.forEach((groups, areaId) => {
-              const updatedGroups = groups.map((group: GroupSummary) => 
-                group.id === oldGroupId 
-                  ? { ...group, tasksCount: updatedOldTasks.length }
-                  : group
-              );
-              newMap.set(areaId, updatedGroups);
-            });
-            return newMap;
-          });
-        }
-        
-        // Уведомляем об обновлении задачи
-        notifyTaskUpdate(taskId, data.groupId);
-      }
-    } catch (error) {
-      console.error('Ошибка сохранения задачи:', error);
-      throw error;
-    }
-  };
-
-
 
   if (loading) {
     return (
-      <GlassWidget title="Иерархия областей и групп" colSpan={colSpan} rowSpan={rowSpan}>
+      <GlassWidget title="Иерархия" colSpan={colSpan} rowSpan={rowSpan}>
         <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
       </GlassWidget>
     );
@@ -510,166 +409,81 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       <div className={css.tree}>
         <div className={css.widgetHeader}>
           <h3 className={css.widgetTitle}>Дерево</h3>
-          <GlassButton 
-            variant="subtle"
-            size="xs"
-            onClick={handleCreateArea}
-          >
-            Cоздать область
+          <GlassButton variant="subtle" size="xs" onClick={handleCreateArea}>
+            Создать область
           </GlassButton>
         </div>
-
         <div className={css.widgetContent}>
           {areas.length === 0 ? (
-            <div className={glassWidgetStyles.placeholder}>
-              Нет доступных областей
-            </div>
+            <div className={glassWidgetStyles.placeholder}>Нет доступных областей</div>
           ) : (
             areas.map((area) => {
-              const customColorStyle = area.customColor ? {
-                '--card-custom-color': area.customColor,
-                '--card-custom-color-rgb': hexToRgb(area.customColor)
-              } as React.CSSProperties : {};
-              
+              const isExpanded = expandedAreas.has(area.id);
+              const folders = foldersByArea.get(area.id) ?? [];
+              const tasks = tasksByArea.get(area.id) ?? [];
+              const isLoading = loadingContent.has(`area:${area.id}`);
+              const customColorStyle = area.customColor ? { '--card-custom-color': area.customColor, '--card-custom-color-rgb': hexToRgb(area.customColor) } as React.CSSProperties : {};
+
               return (
-              <div key={area.id} className={css.areaSection}>
-                <div 
-                  className={`${css.areaCard} ${expandedAreas.has(area.id) ? css.expanded : ''}`}
-                  onClick={() => toggleArea(area.id)}
-                  data-custom-color={area.customColor ? 'true' : undefined}
-                  style={customColorStyle}
-                >
-                <div className={css.areaContent}>
-                  <div className={css.areaInfo}>
-                    <div className={css.areaTitleRow}>
-                      <GlassTag 
-                        variant="subtle" 
-                        size="xs"
-                      >
-                        {area.groupsCount}
-                      </GlassTag>
-                      <div className={css.areaTitle}>{area.title}</div>
+                <div key={area.id} className={css.areaSection}>
+                  <div
+                    className={`${css.areaCard} ${isExpanded ? css.expanded : ''}`}
+                    onClick={() => toggleArea(area.id)}
+                    data-custom-color={area.customColor ? 'true' : undefined}
+                    style={customColorStyle}
+                  >
+                    <div className={css.areaContent}>
+                      <div className={css.areaInfo}>
+                        <div className={css.areaTitleRow}>
+                          <GlassTag variant="subtle" size="xs">
+                            {area.foldersCount + area.rootTasksCount}
+                          </GlassTag>
+                          <div className={css.areaTitle}>{area.title}</div>
+                        </div>
+                      </div>
+                      <div className={css.areaActions}>
+                        <GlassButton variant="subtle" size="xs" onClick={(e) => handleViewAreaDetails(area.id, e)}>
+                          <EyeIcon />
+                        </GlassButton>
+                        <GlassButton variant="subtle" size="xs" onClick={(e) => handleCreateFolderForArea(area.id, e)}>
+                          Создать папку
+                        </GlassButton>
+                        <GlassButton variant="subtle" size="xs" onClick={(e) => handleCreateTaskForArea(area.id, e)}>
+                          Создать задачу
+                        </GlassButton>
+                      </div>
                     </div>
                   </div>
-                  <div className={css.areaActions}>
-                    <GlassButton 
-                      variant="subtle"
-                      size="xs"
-                      onClick={(e: React.MouseEvent) => handleViewAreaDetails(area.id, e)}
-                    >
-                      <EyeIcon />
-                    </GlassButton>
-                    <GlassButton 
-                      variant="subtle"
-                      size="xs"
-                      onClick={(e: React.MouseEvent) => handleCreateGroupForArea(area.id, e)}
-                    >
-                      Cоздать группу
-                    </GlassButton>
-                  </div>
-                </div>
-              </div>
-              
-              {expandedAreas.has(area.id) && (
-                <div className={css.groupsSection}>
-                  {loadingGroups.has(area.id) ? (
-                    <div className={glassWidgetStyles.placeholder}>Загрузка групп...</div>
-                  ) : (
-                    (() => {
-                      const groups = groupsByArea.get(area.id) || [];
-                      return groups.length === 0 ? (
-                        <div className={glassWidgetStyles.placeholder}>Нет групп в этой области</div>
+                  {isExpanded && (
+                    <div className={css.foldersSection}>
+                      {isLoading ? (
+                        <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
                       ) : (
-                        groups.map((group) => {
-                          const groupCustomColorStyle = group.customColor ? {
-                            '--card-custom-color': group.customColor,
-                            '--card-custom-color-rgb': hexToRgb(group.customColor)
-                          } as React.CSSProperties : {};
-                          
-                          return (
-                          <React.Fragment key={group.id}>
-                            <div className={css.groupItem}>
-                              <div 
-                                className={`${css.groupCard} ${expandedGroups.has(group.id) ? css.expanded : ''}`}
-                                onClick={() => toggleGroup(group.id)}
-                                data-custom-color={group.customColor ? 'true' : undefined}
-                                style={groupCustomColorStyle}
-                              >
-                                <div className={css.groupContent}>
-                                  <div className={css.groupInfo}>
-                                    <div className={css.groupTitleRow}>
-                                      <GlassTag 
-                                        variant="subtle" 
-                                        size="xs"
-                                      >
-                                        {group.tasksCount}
-                                      </GlassTag>
-                                      <div className={css.groupTitle}>{group.title}</div>
-                                    </div>
-                                  </div>
-                                  <div className={css.groupActions}>
-                                    <GlassButton 
-                                      variant="subtle"
-                                      size="xs"
-                                      onClick={(e: React.MouseEvent) => handleViewGroupDetails(group.id, e)}
-                                    >
-                                      <EyeIcon />
-                                    </GlassButton>
-                                    <GlassButton 
-                                      variant="subtle"
-                                      size="xs"
-                                      onClick={(e: React.MouseEvent) => handleCreateTaskForGroup(group.id, e)}
-                                    >
-                                      Cоздать задачу
-                                    </GlassButton>
-                                  </div>
-                                </div>
+                        <>
+                          {folders.map((f) => renderFolder(f, area.id, 1))}
+                          {tasks.map((task) => {
+                            const taskStyle = task.customColor ? { '--card-custom-color': task.customColor, '--card-custom-color-rgb': hexToRgb(task.customColor) } as React.CSSProperties : {};
+                            return (
+                              <div key={task.id} className={css.taskItem}>
+                                <TaskCardLink
+                                  task={task}
+                                  onClick={(e) => handleViewTaskDetails(task.id, e)}
+                                  className={css.taskCard}
+                                  style={taskStyle}
+                                  dataCustomColor={!!task.customColor}
+                                />
                               </div>
-                            </div>
-                            
-                            {expandedGroups.has(group.id) && (
-                              <div className={css.tasksSection}>
-                                {loadingTasks.has(group.id) ? (
-                                  <div className={glassWidgetStyles.placeholder}>Загрузка задач...</div>
-                                ) : (
-                                  (() => {
-                                    const tasks = tasksByGroup.get(group.id) || [];
-                                    return tasks.length === 0 ? (
-                                      <div className={glassWidgetStyles.placeholder}>Нет задач в этой группе</div>
-                                    ) : (
-                                      tasks.map((task) => {
-                                        const taskCustomColorStyle = task.customColor ? {
-                                          '--card-custom-color': task.customColor,
-                                          '--card-custom-color-rgb': hexToRgb(task.customColor)
-                                        } as React.CSSProperties : {};
-                                        
-                                        return (
-                                        <div key={task.id} className={css.taskItem}>
-                                          <TaskCardLink
-                                            task={task}
-                                            onClick={(e) => handleViewTaskDetails(task.id, e)}
-                                            className={css.taskCard}
-                                            style={taskCustomColorStyle}
-                                            dataCustomColor={!!task.customColor}
-                                          />
-                                        </div>
-                                        );
-                                      })
-                                    );
-                                  })()
-                                )}
-                              </div>
-                            )}
-                          </React.Fragment>
-                          );
-                        })
-                      );
-                    })()
+                            );
+                          })}
+                          {folders.length === 0 && tasks.length === 0 && (
+                            <div className={glassWidgetStyles.placeholder}>Нет папок и задач</div>
+                          )}
+                        </>
+                      )}
+                    </div>
                   )}
                 </div>
-              )}
-            </div>
-            );
+              );
             })
           )}
         </div>

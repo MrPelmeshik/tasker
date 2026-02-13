@@ -31,9 +31,14 @@ public interface ITaskService
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
 
     /// <summary>
-    /// Получить краткие карточки задач по группе
+    /// Получить краткие карточки задач по папке
     /// </summary>
-    Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByGroupAsync(Guid groupId, CancellationToken cancellationToken);
+    Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByFolderAsync(Guid folderId, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Получить краткие карточки задач в корне области
+    /// </summary>
+    Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByAreaRootAsync(Guid areaId, CancellationToken cancellationToken);
 
     /// <summary>
     /// Получить недельную активность задач

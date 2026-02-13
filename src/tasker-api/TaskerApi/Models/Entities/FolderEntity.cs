@@ -1,0 +1,81 @@
+using System.ComponentModel.DataAnnotations.Schema;
+using TaskerApi.Interfaces.Models.Entities;
+
+namespace TaskerApi.Models.Entities;
+
+/// <summary>
+///     Папки
+/// </summary>
+[Table("folders")]
+public class FolderEntity :
+    IDbEntity,
+    IAutoIdBaseEntity<Guid>,
+    ISoftDeleteBaseEntity,
+    IUpdatedDateBaseEntity,
+    ICreatedDateBaseEntity,
+    IOwnerUserBaseEntity
+{
+    /// <summary>
+    ///     Заголовок папки
+    /// </summary>
+    [Column("title")]
+    public string Title { get; set; } = string.Empty;
+
+    /// <summary>
+    ///     Описание папки
+    /// </summary>
+    [Column("description")]
+    public string? Description { get; set; }
+
+    /// <summary>
+    ///     Идентификатор области
+    /// </summary>
+    [Column("area_id")]
+    public Guid AreaId { get; set; }
+
+    /// <summary>
+    ///     Идентификатор родительской папки (null = корень области)
+    /// </summary>
+    [Column("parent_folder_id")]
+    public Guid? ParentFolderId { get; set; }
+
+    /// <summary>
+    ///     Навигационное свойство к области (для каскадных query filters)
+    /// </summary>
+    public AreaEntity? Area { get; set; }
+
+    /// <summary>
+    ///     Навигационное свойство к родительской папке
+    /// </summary>
+    public FolderEntity? ParentFolder { get; set; }
+
+    /// <summary>
+    ///     Дата и время создания.
+    /// </summary>
+    public DateTimeOffset CreatedAt { get; set; }
+
+    /// <summary>
+    ///     Идентификатор пользователя-владельца.
+    /// </summary>
+    public Guid OwnerUserId { get; set; }
+
+    /// <summary>
+    ///     Уникальный идентификатор папки.
+    /// </summary>
+    public Guid Id { get; set; }
+
+    /// <summary>
+    ///     Дата и время деактивации (мягкое удаление).
+    /// </summary>
+    public DateTimeOffset? DeactivatedAt { get; set; }
+
+    /// <summary>
+    ///     Флаг активности записи.
+    /// </summary>
+    public bool IsActive { get; set; }
+
+    /// <summary>
+    ///     Дата и время последнего обновления.
+    /// </summary>
+    public DateTimeOffset UpdatedAt { get; set; }
+}

@@ -10,8 +10,6 @@ import {
   buildTaskWithActivitiesFilter,
   dateRangeFromWeek,
   fetchTaskById,
-  fetchGroupById,
-  fetchGroupsByArea,
   fetchAreaShortCard,
   updateTask,
   deleteTask,
@@ -26,7 +24,7 @@ import { formatDateOnly } from '../../../utils/date';
 import { buildWeekDays, getWeekEndIso } from '../../../utils/week';
 
 /** Минимальные данные задачи для строки (полная задача — через fetchTaskById) */
-type TaskRowTask = Pick<TaskResponse, 'id' | 'groupId' | 'title' | 'status'>;
+type TaskRowTask = Pick<TaskResponse, 'id' | 'areaId' | 'folderId' | 'title' | 'status'>;
 
 /** Строка таблицы: задача + активность по дням */
 type TaskRow = {
@@ -75,7 +73,8 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         days: item.days,
         task: {
           id: item.taskId,
-          groupId: item.groupId,
+          areaId: item.areaId,
+          folderId: item.folderId,
           title: item.taskName,
           status: item.status,
         },
@@ -104,7 +103,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         eventDate: data.date,
       });
       await loadData();
-      notifyTaskUpdate(task.id, task.groupId);
+      notifyTaskUpdate(task.id, task.folderId ?? undefined);
     },
     [loadData, notifyTaskUpdate]
   );
@@ -114,7 +113,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     try {
       await updateTask(taskId, data);
       await loadData();
-      notifyTaskUpdate(taskId, data.groupId);
+      notifyTaskUpdate(taskId, data.folderId ?? undefined);
     } catch (error) {
       console.error('Ошибка сохранения задачи:', error);
       throw error;
@@ -140,14 +139,9 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
         try {
           const fullTask = await fetchTaskById(task.id);
           if (!fullTask) return;
-          const group = await fetchGroupById(fullTask.groupId);
-          if (!group) return;
-          const [groupsForModal, areasData] = await Promise.all([
-            fetchGroupsByArea(group.areaId),
-            fetchAreaShortCard(),
-          ]);
+          const areasData = await fetchAreaShortCard();
           const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
-          openTaskModal(fullTask, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
+          openTaskModal(fullTask, 'edit', (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
         } catch (error) {
           console.error('Ошибка загрузки задачи:', error);
           addError(parseApiErrorMessage(error));
@@ -163,14 +157,9 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     try {
       const task = await fetchTaskById(taskId);
       if (!task) return;
-      const group = await fetchGroupById(task.groupId);
-      if (!group) return;
-      const [groupsForModal, areasData] = await Promise.all([
-        fetchGroupsByArea(group.areaId),
-        fetchAreaShortCard(),
-      ]);
+      const areasData = await fetchAreaShortCard();
       const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
-      openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
+      openTaskModal(task, 'edit', (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
       addError(parseApiErrorMessage(error));

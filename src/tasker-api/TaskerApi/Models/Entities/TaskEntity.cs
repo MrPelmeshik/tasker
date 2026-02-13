@@ -30,15 +30,26 @@ public class TaskEntity :
     public string? Description { get; set; }
 
     /// <summary>
-    /// ID группы
+    /// ID области
     /// </summary>
-    [Column("group_id")]
-    public Guid GroupId { get; set; }
+    [Column("area_id")]
+    public Guid AreaId { get; set; }
 
     /// <summary>
-    /// Навигационное свойство к группе (для каскадных query filters)
+    /// ID папки (null = в корне области)
     /// </summary>
-    public GroupEntity? Group { get; set; }
+    [Column("folder_id")]
+    public Guid? FolderId { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство к области (для каскадных query filters)
+    /// </summary>
+    public AreaEntity? Area { get; set; }
+
+    /// <summary>
+    /// Навигационное свойство к папке (для каскадных query filters)
+    /// </summary>
+    public FolderEntity? Folder { get; set; }
 
     /// <summary>
     /// Статус задачи

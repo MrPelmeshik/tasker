@@ -50,7 +50,7 @@ public class AreaRoleService(
     }
 
     /// <inheritdoc />
-    public async Task<bool> CanEditGroupAsync(Guid areaId, CancellationToken cancellationToken = default)
+    public async Task<bool> CanEditFolderAsync(Guid areaId, CancellationToken cancellationToken = default)
     {
         var role = await GetUserRoleAsync(areaId, currentUserService.UserId, cancellationToken);
         return role is AreaRole.Owner or AreaRole.Administrator or AreaRole.Executor;

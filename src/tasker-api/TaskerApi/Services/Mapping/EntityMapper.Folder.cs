@@ -5,20 +5,22 @@ using TaskerApi.Models.Responses;
 namespace TaskerApi.Services.Mapping;
 
 /// <summary>
-/// Маппинг для Area (partial)
+/// Маппинг для Folder (partial)
 /// </summary>
 public static partial class EntityMapper
 {
     /// <summary>
-    /// Маппинг AreaEntity в AreaResponse
+    /// Маппинг FolderEntity в FolderResponse
     /// </summary>
-    public static AreaResponse ToAreaResponse(this AreaEntity entity, string ownerUserName = "")
+    public static FolderResponse ToFolderResponse(this FolderEntity entity, string ownerUserName = "")
     {
-        return new AreaResponse
+        return new FolderResponse
         {
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
+            AreaId = entity.AreaId,
+            ParentFolderId = entity.ParentFolderId,
             OwnerUserId = entity.OwnerUserId,
             OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
@@ -29,53 +31,40 @@ public static partial class EntityMapper
     }
 
     /// <summary>
-    /// Маппинг AreaEntity в AreaShortCardResponse
+    /// Маппинг FolderEntity в FolderSummaryResponse
     /// </summary>
-    public static AreaShortCardResponse ToAreaShortCardResponse(this AreaEntity entity, int foldersCount = 0, int rootTasksCount = 0, string ownerUserName = "")
+    public static FolderSummaryResponse ToFolderSummaryResponse(this FolderEntity entity, int tasksCount = 0, int subfoldersCount = 0, string ownerUserName = "")
     {
-        return new AreaShortCardResponse
+        return new FolderSummaryResponse
         {
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            FoldersCount = foldersCount,
-            RootTasksCount = rootTasksCount,
+            AreaId = entity.AreaId,
+            ParentFolderId = entity.ParentFolderId,
             OwnerUserId = entity.OwnerUserId,
             OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
-            IsActive = entity.IsActive
-        };
-    }
-
-    /// <summary>
-    /// Маппинг AreaEntity в AreaCreateResponse
-    /// </summary>
-    public static AreaCreateResponse ToAreaCreateResponse(this AreaEntity entity)
-    {
-        return new AreaCreateResponse
-        {
-            Id = entity.Id,
-            Title = entity.Title,
-            Description = entity.Description,
-            OwnerUserId = entity.OwnerUserId,
-            CreatedAt = entity.CreatedAt,
-            UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
-            DeactivatedAt = entity.DeactivatedAt
+            DeactivatedAt = entity.DeactivatedAt,
+            TasksCount = tasksCount,
+            SubfoldersCount = subfoldersCount
         };
     }
 
     /// <summary>
-    /// Маппинг AreaCreateRequest в AreaEntity
+    /// Маппинг FolderCreateRequest в FolderEntity
     /// </summary>
-    public static AreaEntity ToAreaEntity(this AreaCreateRequest request, Guid ownerUserId)
+    public static FolderEntity ToFolderEntity(this FolderCreateRequest request, Guid ownerUserId)
     {
-        return new AreaEntity
+        return new FolderEntity
         {
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
+            AreaId = request.AreaId,
+            ParentFolderId = request.ParentFolderId,
             OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -84,13 +73,14 @@ public static partial class EntityMapper
     }
 
     /// <summary>
-    /// Маппинг AreaUpdateRequest в AreaEntity
+    /// Маппинг FolderUpdateRequest в FolderEntity
     /// </summary>
-    public static void UpdateAreaEntity(this AreaUpdateRequest request, AreaEntity entity)
+    public static void UpdateFolderEntity(this FolderUpdateRequest request, FolderEntity entity)
     {
         entity.Title = request.Title;
         entity.Description = request.Description;
+        entity.AreaId = request.AreaId;
+        entity.ParentFolderId = request.ParentFolderId;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
     }
-
 }

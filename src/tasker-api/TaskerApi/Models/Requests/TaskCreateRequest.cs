@@ -23,10 +23,15 @@ public class TaskCreateRequest
     public string? Description { get; set; }
 
     /// <summary>
-    /// ID группы
+    /// ID области
     /// </summary>
-    [Required(ErrorMessage = "ID группы обязателен")]
-    public Guid GroupId { get; set; }
+    [Required(ErrorMessage = "ID области обязателен")]
+    public Guid AreaId { get; set; }
+
+    /// <summary>
+    /// ID папки (null = в корне области)
+    /// </summary>
+    public Guid? FolderId { get; set; }
 
     /// <summary>
     /// Статус задачи

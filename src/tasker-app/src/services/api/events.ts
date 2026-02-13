@@ -24,14 +24,6 @@ export async function fetchEventsByTask(taskId: string): Promise<EventResponse[]
 }
 
 /**
- * Получить список событий по идентификатору группы
- * GET /api/event/byGroup/{groupId}
- */
-export async function fetchEventsByGroup(groupId: string): Promise<EventResponse[]> {
-  return apiFetch<EventResponse[]>(`/event/byGroup/${groupId}`);
-}
-
-/**
  * Получить список событий по идентификатору области
  * GET /api/event/byArea/{areaId}
  */

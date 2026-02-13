@@ -1,4 +1,3 @@
-using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
 
 namespace TaskerApi.Services.Base;
@@ -79,25 +78,4 @@ public abstract class BaseService(ILogger logger, ICurrentUserService currentUse
         }
     }
 
-    /// <summary>
-    /// Проверить доступ к группе через область
-    /// </summary>
-    /// <param name="groupId">Идентификатор группы</param>
-    /// <param name="groupRepository">Репозиторий групп</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <exception cref="InvalidOperationException">Выбрасывается если группа не найдена</exception>
-    /// <exception cref="UnauthorizedAccessException">Выбрасывается при отсутствии доступа</exception>
-    protected async Task EnsureAccessToGroupAsync(
-        Guid groupId, 
-        IGroupRepository groupRepository, 
-        CancellationToken cancellationToken)
-    {
-        var group = await groupRepository.GetByIdAsync(groupId, cancellationToken);
-        if (group == null)
-        {
-            throw new InvalidOperationException($"Группа {groupId} не найдена");
-        }
-
-        EnsureAccessToArea(group.AreaId);
-    }
 }

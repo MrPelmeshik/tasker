@@ -50,16 +50,16 @@ export class TaskApiClient {
     return tasks.filter(task => task.isActive);
   }
 
-  // Получить задачи по группе
-  async getTasksByGroup(groupId: string): Promise<TaskResponse[]> {
+  // Получить задачи по папке
+  async getTasksByFolder(folderId: string): Promise<TaskResponse[]> {
     const tasks = await this.getAll();
-    return tasks.filter(task => task.groupId === groupId);
+    return tasks.filter(task => task.folderId === folderId);
   }
 
-  // Получить активные задачи по группе
-  async getActiveTasksByGroup(groupId: string): Promise<TaskResponse[]> {
-    const tasks = await this.getTasksByGroup(groupId);
-    return tasks.filter(task => task.isActive);
+  // Получить задачи в корне области
+  async getTasksByAreaRoot(areaId: string): Promise<TaskResponse[]> {
+    const tasks = await this.getAll();
+    return tasks.filter(task => task.areaId === areaId && !task.folderId);
   }
 
   // Получить задачи по владельцу
@@ -74,9 +74,14 @@ export class TaskApiClient {
     return tasks.filter(task => task.isActive);
   }
 
-  // Получить краткие карточки задач по группе для Tree виджета
-  async getTaskSummaryByGroup(groupId: string): Promise<TaskSummaryResponse[]> {
-    return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByGroup/${groupId}`);
+  // Получить краткие карточки задач по папке для Tree виджета
+  async getTaskSummaryByFolder(folderId: string): Promise<TaskSummaryResponse[]> {
+    return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByFolder/byFolder/${folderId}`);
+  }
+
+  // Получить краткие карточки задач в корне области
+  async getTaskSummaryByAreaRoot(areaId: string): Promise<TaskSummaryResponse[]> {
+    return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByAreaRoot/byAreaRoot/${areaId}`);
   }
 
   // Получить недельную активность задач
@@ -127,11 +132,12 @@ export const createTask = (data: TaskCreateRequest) => taskApi.create(data);
 export const updateTask = (id: string, data: TaskUpdateRequest) => taskApi.update(id, data);
 export const deleteTask = (id: string) => taskApi.delete(id);
 export const fetchActiveTasks = () => taskApi.getActiveTasks();
-export const fetchTasksByGroup = (groupId: string) => taskApi.getTasksByGroup(groupId);
-export const fetchActiveTasksByGroup = (groupId: string) => taskApi.getActiveTasksByGroup(groupId);
+export const fetchTasksByFolder = (folderId: string) => taskApi.getTasksByFolder(folderId);
+export const fetchTasksByAreaRoot = (areaId: string) => taskApi.getTasksByAreaRoot(areaId);
 export const fetchTasksByOwner = (ownerUserId: string) => taskApi.getTasksByOwner(ownerUserId);
 export const fetchActiveTasksByOwner = (ownerUserId: string) => taskApi.getActiveTasksByOwner(ownerUserId);
-export const fetchTaskSummaryByGroup = (groupId: string) => taskApi.getTaskSummaryByGroup(groupId);
+export const fetchTaskSummaryByFolder = (folderId: string) => taskApi.getTaskSummaryByFolder(folderId);
+export const fetchTaskSummaryByAreaRoot = (areaId: string) => taskApi.getTaskSummaryByAreaRoot(areaId);
 export const fetchWeeklyTasks = (params: { weekStartIso: string }) => taskApi.getWeeklyTasks(params);
 export const fetchTasksWithActivities = (filter: TaskWithActivitiesFilterRequest) => taskApi.getTasksWithActivities(filter);
 

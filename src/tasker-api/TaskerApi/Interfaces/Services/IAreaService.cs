@@ -53,11 +53,4 @@ public interface IAreaService
     /// <returns>Список кратких карточек областей</returns>
     Task<IEnumerable<AreaShortCardResponse>> GetAreaShortCardAsync(CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Создать область с группой по умолчанию
-    /// </summary>
-    /// <param name="request">Данные для создания области с группой</param>
-    /// <param name="cancellationToken">Токен отмены</param>
-    /// <returns>Созданная область с группой</returns>
-    Task<CreateAreaWithGroupResponse> CreateWithDefaultGroupAsync(CreateAreaWithGroupRequest request, CancellationToken cancellationToken);
 }

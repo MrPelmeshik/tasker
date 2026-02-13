@@ -17,11 +17,9 @@ public class SubtaskService(
     ICurrentUserService currentUser,
     ISubtaskRepository subtaskRepository,
     ITaskRepository taskRepository,
-    IGroupRepository groupRepository,
     TaskerDbContext context)
     : ISubtaskService
 {
-    private readonly IGroupRepository groupRepository = groupRepository;
     /// <summary>
     /// Получить все подзадачи
     /// </summary>
@@ -39,8 +37,7 @@ public class SubtaskService(
                 var task = await taskRepository.GetByIdAsync(subtask.TaskId, cancellationToken);
                 if (task != null)
                 {
-                    var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-                    if (group != null && currentUser.HasAccessToArea(group.AreaId))
+                    if (currentUser.HasAccessToArea(task.AreaId))
                     {
                         accessibleSubtasks.Add(subtask);
                     }
@@ -77,8 +74,7 @@ public class SubtaskService(
             {
                 throw new InvalidOperationException("Задача не найдена");
             }
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.HasAccessToArea(group.AreaId))
+            if (!currentUser.HasAccessToArea(task.AreaId))
             {
                 return null;
             }
@@ -108,8 +104,7 @@ public class SubtaskService(
                 throw new InvalidOperationException("Задача не найдена");
             }
 
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.HasAccessToArea(group.AreaId))
+            if (!currentUser.HasAccessToArea(task.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }
@@ -149,8 +144,7 @@ public class SubtaskService(
             {
                 throw new InvalidOperationException("Задача не найдена");
             }
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.HasAccessToArea(group.AreaId))
+            if (!currentUser.HasAccessToArea(task.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной подзадаче запрещен");
             }
@@ -188,8 +182,7 @@ public class SubtaskService(
             {
                 throw new InvalidOperationException("Задача не найдена");
             }
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.HasAccessToArea(group.AreaId))
+            if (!currentUser.HasAccessToArea(task.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной подзадаче запрещен");
             }
@@ -219,8 +212,7 @@ public class SubtaskService(
                 throw new InvalidOperationException("Задача не найдена");
             }
 
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !currentUser.HasAccessToArea(group.AreaId))
+            if (!currentUser.HasAccessToArea(task.AreaId))
             {
                 throw new UnauthorizedAccessException("Доступ к данной задаче запрещен");
             }

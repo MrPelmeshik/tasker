@@ -4,8 +4,8 @@ import { ActivityList } from './ActivityList';
 import { useEvents } from './useEvents';
 
 export interface ActivityChainProps {
-  /** Тип сущности: задача, группа или область */
-  entityType: 'task' | 'group' | 'area';
+  /** Тип сущности: задача или область (папки не имеют активностей) */
+  entityType: 'task' | 'area';
   /** Идентификатор сущности */
   entityId: string;
   /** Опциональная дата (ISO YYYY-MM-DD): показывать только активности за этот день */

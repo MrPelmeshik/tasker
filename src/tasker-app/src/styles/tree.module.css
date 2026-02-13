@@ -37,9 +37,9 @@
   box-sizing: border-box;
 }
 
-/* Базовые стили карточек дерева (area, group, task) */
+/* Базовые стили карточек дерева (area, folder, task) */
 .areaCard,
-.groupCard,
+.folderCard,
 .taskCard {
   position: relative;
   background: var(--glass-card-bg-transparent);
@@ -63,7 +63,7 @@
   animation: fadeInUp var(--transition-slow) ease-out;
 }
 
-.groupCard,
+.folderCard,
 .taskCard {
   flex: 1;
   max-width: 100%;
@@ -71,7 +71,7 @@
 }
 
 .areaCard::before,
-.groupCard::before,
+.folderCard::before,
 .taskCard::before {
   content: '';
   position: absolute;
@@ -82,7 +82,7 @@
 }
 
 .areaCard::after,
-.groupCard::after,
+.folderCard::after,
 .taskCard::after {
   content: '';
   position: absolute;
@@ -98,7 +98,7 @@
 }
 
 .areaCard:hover,
-.groupCard:hover,
+.folderCard:hover,
 .taskCard:hover {
   background: var(--glass-card-bg-hover);
   border-color: var(--glass-card-border-default-hover);
@@ -107,13 +107,13 @@
 }
 
 .areaCard:hover::after,
-.groupCard:hover::after,
+.folderCard:hover::after,
 .taskCard:hover::after {
   box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
 }
 
 .areaCard.expanded,
-.groupCard.expanded,
+.folderCard.expanded,
 .taskCard.expanded {
   background: var(--glass-card-bg-selected);
   border-color: var(--glass-card-border-default-selected);
@@ -125,7 +125,7 @@
 }
 
 .areaCard.expanded::after,
-.groupCard.expanded::after,
+.folderCard.expanded::after,
 .taskCard.expanded::after {
   content: '';
   position: absolute;
@@ -144,7 +144,7 @@
 
 /* Поддержка пользовательских цветов */
 .areaCard[data-custom-color],
-.groupCard[data-custom-color],
+.folderCard[data-custom-color],
 .taskCard[data-custom-color] {
   --custom-color: var(--card-custom-color);
   --custom-color-rgb: var(--card-custom-color-rgb);
@@ -153,14 +153,14 @@
 }
 
 .areaCard[data-custom-color]:hover,
-.groupCard[data-custom-color]:hover,
+.folderCard[data-custom-color]:hover,
 .taskCard[data-custom-color]:hover {
   background: rgba(var(--custom-color-rgb), 0.05);
   border-color: rgba(var(--custom-color-rgb), 0.25);
 }
 
 .areaCard[data-custom-color].expanded,
-.groupCard[data-custom-color].expanded,
+.folderCard[data-custom-color].expanded,
 .taskCard[data-custom-color].expanded {
   background: rgba(var(--custom-color-rgb), 0.08);
   border-color: rgba(var(--custom-color-rgb), 0.35);
@@ -172,7 +172,7 @@
 
 /* Общие стили для контента карточек */
 .areaContent,
-.groupContent,
+.folderContent,
 .taskContent {
   position: relative;
   z-index: 1;
@@ -185,14 +185,14 @@
 }
 
 .areaInfo,
-.groupInfo,
+.folderInfo,
 .taskInfo {
   flex: 1;
   min-width: 0;
 }
 
 .areaTitleRow,
-.groupTitleRow,
+.folderTitleRow,
 .taskTitleRow {
   display: flex;
   align-items: center;
@@ -200,7 +200,7 @@
 }
 
 .areaTitle,
-.groupTitle {
+.folderTitle {
   font-size: var(--font-12);
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
@@ -225,7 +225,7 @@
   min-width: 0;
 }
 
-.groupsSection {
+.foldersSection {
   position: relative;
   margin-left: var(--tree-indent);
   display: flex;
@@ -235,7 +235,7 @@
   animation: slideDown var(--transition-normal) ease-out;
 }
 
-.groupsSection::before {
+.foldersSection::before {
   content: '';
   position: absolute;
   left: calc(-1 * var(--tree-indent));
@@ -251,7 +251,7 @@
   z-index: 1;
 }
 
-.groupItem {
+.folderItem {
   position: relative;
   display: flex;
   align-items: center;
@@ -260,7 +260,7 @@
   box-sizing: border-box;
 }
 
-.groupItem::before {
+.folderItem::before {
   content: '';
   position: absolute;
   left: calc(-1 * var(--tree-indent));
@@ -333,7 +333,7 @@
 
 /* Общие стили для кнопок действий */
 .areaActions,
-.groupActions,
+.folderActions,
 .taskActions {
   display: flex;
   align-items: center;
@@ -345,7 +345,7 @@
 }
 
 .areaCard:hover .areaActions,
-.groupCard:hover .groupActions,
+.folderCard:hover .folderActions,
 .taskCard:hover .taskActions {
   opacity: 1;
 }

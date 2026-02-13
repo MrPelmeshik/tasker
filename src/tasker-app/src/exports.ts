@@ -5,7 +5,7 @@ export * from './components/ui';
 export * from './components/common';
 export * from './components/icons';
 export * from './components/areas';
-export * from './components/groups';
+export * from './components/folders';
 
 // Сервисы
 export * from './services/api';

@@ -11,9 +11,9 @@ public enum EntityType
     AREA = 0,
     
     /// <summary>
-    /// Группа задач.
+    /// Папка задач.
     /// </summary>
-    GROUP,
+    FOLDER,
     
     /// <summary>
     /// Задача.

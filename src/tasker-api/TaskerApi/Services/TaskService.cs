@@ -22,7 +22,8 @@ public class TaskService(
     ILogger<TaskService> logger,
     ICurrentUserService currentUser,
     ITaskRepository taskRepository,
-    IGroupRepository groupRepository,
+    IAreaRepository areaRepository,
+    IFolderRepository folderRepository,
     IEventRepository eventRepository,
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
@@ -40,12 +41,7 @@ public class TaskService(
         try
         {
             var tasks = await taskRepository.GetAllAsync(cancellationToken);
-
-            var groupIds = tasks.Select(t => t.GroupId).Distinct().ToHashSet();
-            var groups = await groupRepository.FindAsync(g => groupIds.Contains(g.Id), cancellationToken);
-            var groupsByArea = groups.Where(g => CurrentUser.HasAccessToArea(g.AreaId)).Select(g => g.Id).ToHashSet();
-
-            var accessibleTasks = tasks.Where(t => groupsByArea.Contains(t.GroupId)).ToList();
+            var accessibleTasks = tasks.Where(t => CurrentUser.HasAccessToArea(t.AreaId)).ToList();
 
             return accessibleTasks.Select(t => t.ToTaskResponse());
         }
@@ -72,11 +68,8 @@ public class TaskService(
                 return null;
             }
 
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null || !CurrentUser.HasAccessToArea(group.AreaId))
-            {
+            if (!CurrentUser.HasAccessToArea(task.AreaId))
                 return null;
-            }
 
             var user = await userRepository.GetByIdAsync(task.OwnerUserId, cancellationToken);
             return task.ToTaskResponse(user?.Name ?? "");
@@ -98,16 +91,22 @@ public class TaskService(
     {
         try
         {
-            var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
-            if (group == null)
+            var area = await areaRepository.GetByIdAsync(request.AreaId, cancellationToken);
+            if (area == null)
+                throw new InvalidOperationException("Область не найдена");
+
+            if (!CurrentUser.HasAccessToArea(request.AreaId))
+                throw new UnauthorizedAccessException("Доступ к области запрещен");
+
+            if (request.FolderId.HasValue)
             {
-                throw new InvalidOperationException("Группа не найдена");
+                var folder = await folderRepository.GetByIdAsync(request.FolderId.Value, cancellationToken);
+                if (folder == null || folder.AreaId != request.AreaId)
+                    throw new InvalidOperationException("Папка не найдена или принадлежит другой области");
             }
 
-            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(group.AreaId, cancellationToken))
-            {
-                throw new UnauthorizedAccessException("Только владелец области может создавать задачи");
-            }
+            if (!await areaRoleService.CanEditTaskAsync(request.AreaId, cancellationToken))
+                throw new UnauthorizedAccessException("Нет прав на создание задач в области");
 
             var task = request.ToTaskEntity(currentUser.UserId);
 
@@ -141,24 +140,26 @@ public class TaskService(
                 throw new InvalidOperationException("Задача не найдена");
             }
 
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null)
-            {
-                throw new InvalidOperationException("Группа не найдена");
-            }
+            if (!CurrentUser.HasAccessToArea(task.AreaId))
+                throw new UnauthorizedAccessException("Доступ к задаче запрещен");
 
-            if (!await areaRoleService.CanEditTaskAsync(group.AreaId, cancellationToken))
-            {
+            if (!await areaRoleService.CanEditTaskAsync(task.AreaId, cancellationToken))
                 throw new UnauthorizedAccessException("Нет прав на редактирование задачи");
-            }
 
-            // При переносе в другую группу — проверяем доступ к новой области
-            if (request.GroupId != task.GroupId)
+            if (request.AreaId != task.AreaId || request.FolderId != task.FolderId)
             {
-                var newGroup = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
-                if (newGroup == null)
-                    throw new InvalidOperationException("Целевая группа не найдена");
-                if (!await areaRoleService.CanEditTaskAsync(newGroup.AreaId, cancellationToken))
+                if (!CurrentUser.HasAccessToArea(request.AreaId))
+                    throw new UnauthorizedAccessException("Доступ к целевой области запрещен");
+                var area = await areaRepository.GetByIdAsync(request.AreaId, cancellationToken);
+                if (area == null)
+                    throw new InvalidOperationException("Целевая область не найдена");
+                if (request.FolderId.HasValue)
+                {
+                    var folder = await folderRepository.GetByIdAsync(request.FolderId.Value, cancellationToken);
+                    if (folder == null || folder.AreaId != request.AreaId)
+                        throw new InvalidOperationException("Целевая папка не найдена или в другой области");
+                }
+                if (!await areaRoleService.CanEditTaskAsync(request.AreaId, cancellationToken))
                     throw new UnauthorizedAccessException("Нет прав на редактирование в целевой области");
             }
 
@@ -196,16 +197,11 @@ public class TaskService(
                 throw new InvalidOperationException("Задача не найдена");
             }
 
-            var group = await groupRepository.GetByIdAsync(task.GroupId, cancellationToken);
-            if (group == null)
-            {
-                throw new InvalidOperationException("Группа не найдена");
-            }
+            if (!CurrentUser.HasAccessToArea(task.AreaId))
+                throw new UnauthorizedAccessException("Доступ к задаче запрещен");
 
-            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(group.AreaId, cancellationToken))
-            {
+            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(task.AreaId, cancellationToken))
                 throw new UnauthorizedAccessException("Только владелец области может удалять задачи");
-            }
 
             await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.DELETE, task.Title, null, cancellationToken);
 
@@ -229,16 +225,22 @@ public class TaskService(
         using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
         try
         {
-            var group = await groupRepository.GetByIdAsync(request.GroupId, cancellationToken);
-            if (group == null)
+            var area = await areaRepository.GetByIdAsync(request.AreaId, cancellationToken);
+            if (area == null)
+                throw new InvalidOperationException("Область не найдена");
+
+            if (!CurrentUser.HasAccessToArea(request.AreaId))
+                throw new UnauthorizedAccessException("Доступ к области запрещен");
+
+            if (request.FolderId.HasValue)
             {
-                throw new InvalidOperationException("Группа не найдена");
+                var folder = await folderRepository.GetByIdAsync(request.FolderId.Value, cancellationToken);
+                if (folder == null || folder.AreaId != request.AreaId)
+                    throw new InvalidOperationException("Папка не найдена или принадлежит другой области");
             }
 
-            if (!await areaRoleService.CanCreateOrDeleteStructureAsync(group.AreaId, cancellationToken))
-            {
-                throw new UnauthorizedAccessException("Только владелец области может создавать задачи");
-            }
+            if (!await areaRoleService.CanEditTaskAsync(request.AreaId, cancellationToken))
+                throw new UnauthorizedAccessException("Нет прав на создание задач");
 
             var task = request.ToTaskEntity(currentUser.UserId);
 
@@ -263,26 +265,42 @@ public class TaskService(
     }
 
     /// <summary>
-    /// Получить сводку задач по группе
+    /// Получить сводку задач по папке
     /// </summary>
-    /// <param name="groupId">Идентификатор группы</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Список сводок задач</returns>
-    public async Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByGroupAsync(Guid groupId, CancellationToken cancellationToken)
+    public async Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByFolderAsync(Guid folderId, CancellationToken cancellationToken)
     {
         return await ExecuteWithErrorHandling(async () =>
         {
-            await EnsureAccessToGroupAsync(groupId, groupRepository, cancellationToken);
+            var folder = await folderRepository.GetByIdAsync(folderId, cancellationToken);
+            if (folder == null || !CurrentUser.HasAccessToArea(folder.AreaId))
+                throw new UnauthorizedAccessException("Доступ к папке запрещен");
 
-            var tasks = await taskRepository.GetByGroupIdAsync(groupId, cancellationToken);
-
-            // Пакетная загрузка имён владельцев
+            var tasks = await taskRepository.GetByFolderIdAsync(folderId, cancellationToken);
             var userIds = tasks.Select(t => t.OwnerUserId).Distinct().ToHashSet();
             var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
             var userNames = users.ToDictionary(u => u.Id, u => u.Name);
 
             return tasks.Select(t => t.ToTaskSummaryResponse(userNames.GetValueOrDefault(t.OwnerUserId, "")));
-        }, nameof(GetTaskSummaryByGroupAsync), new { groupId });
+        }, nameof(GetTaskSummaryByFolderAsync), new { folderId });
+    }
+
+    /// <summary>
+    /// Получить сводку задач в корне области
+    /// </summary>
+    public async Task<IEnumerable<TaskSummaryResponse>> GetTaskSummaryByAreaRootAsync(Guid areaId, CancellationToken cancellationToken)
+    {
+        return await ExecuteWithErrorHandling(async () =>
+        {
+            if (!CurrentUser.HasAccessToArea(areaId))
+                throw new UnauthorizedAccessException("Доступ к области запрещен");
+
+            var tasks = await taskRepository.GetByAreaIdRootAsync(areaId, cancellationToken);
+            var userIds = tasks.Select(t => t.OwnerUserId).Distinct().ToHashSet();
+            var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
+            var userNames = users.ToDictionary(u => u.Id, u => u.Name);
+
+            return tasks.Select(t => t.ToTaskSummaryResponse(userNames.GetValueOrDefault(t.OwnerUserId, "")));
+        }, nameof(GetTaskSummaryByAreaRootAsync), new { areaId });
     }
 
     /// <summary>
@@ -303,10 +321,7 @@ public class TaskService(
                 t => t.Status == TaskStatus.InProgress,
                 cancellationToken);
 
-            var groupIds = inProgressTasks.Select(t => t.GroupId).Distinct().ToHashSet();
-            var groups = await groupRepository.FindAsync(g => groupIds.Contains(g.Id), cancellationToken);
-            var accessibleGroupIds = groups.Where(g => CurrentUser.HasAccessToArea(g.AreaId)).Select(g => g.Id).ToHashSet();
-            var tasksWithAccess = inProgressTasks.Where(t => accessibleGroupIds.Contains(t.GroupId)).ToList();
+            var tasksWithAccess = inProgressTasks.Where(t => CurrentUser.HasAccessToArea(t.AreaId)).ToList();
 
             if (tasksWithAccess.Count == 0)
                 return new List<TaskWeeklyActivityResponse>();
@@ -415,10 +430,7 @@ public class TaskService(
 
             var allCandidateTasks = await taskRepository.FindAsync(t => candidateTaskIds.Contains(t.Id), cancellationToken);
 
-            var groupIds = allCandidateTasks.Select(t => t.GroupId).Distinct().ToHashSet();
-            var groups = await groupRepository.FindAsync(g => groupIds.Contains(g.Id), cancellationToken);
-            var accessibleGroupIds = groups.Where(g => CurrentUser.HasAccessToArea(g.AreaId)).Select(g => g.Id).ToHashSet();
-            var tasksWithAccess = allCandidateTasks.Where(t => accessibleGroupIds.Contains(t.GroupId)).ToList();
+            var tasksWithAccess = allCandidateTasks.Where(t => CurrentUser.HasAccessToArea(t.AreaId)).ToList();
 
             if (tasksWithAccess.Count == 0)
                 return new TaskWithActivitiesPagedResponse { Items = [], TotalCount = 0, Page = request.Page, Limit = request.Limit };
@@ -456,7 +468,8 @@ public class TaskService(
                     TaskId = task.Id,
                     TaskName = taskNames.GetValueOrDefault(task.Id, ""),
                     Status = (int)task.Status,
-                    GroupId = task.GroupId,
+                    AreaId = task.AreaId,
+                    FolderId = task.FolderId,
                     CarryWeeks = carryWeeks > 0 ? 1 : 0,
                     HasFutureActivities = hasFutureActivities,
                     Days = rangeDates.Select(d => new TaskDayActivityResponse

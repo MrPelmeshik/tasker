@@ -2,9 +2,9 @@ import React, { createContext, useContext, useState, useCallback, ReactNode } fr
 
 interface TaskUpdateContextType {
   // Функция для уведомления об обновлении задач
-  notifyTaskUpdate: (taskId?: string, groupId?: string) => void;
+  notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
   // Функция для подписки на обновления задач
-  subscribeToTaskUpdates: (callback: (taskId?: string, groupId?: string) => void) => () => void;
+  subscribeToTaskUpdates: (callback: (taskId?: string, folderId?: string) => void) => () => void;
   // Функция для принудительного обновления всех компонентов
   forceRefresh: () => void;
 }
@@ -24,20 +24,20 @@ interface TaskUpdateProviderProps {
 }
 
 export const TaskUpdateProvider: React.FC<TaskUpdateProviderProps> = ({ children }) => {
-  const [subscribers, setSubscribers] = useState<Set<(taskId?: string, groupId?: string) => void>>(new Set());
+  const [subscribers, setSubscribers] = useState<Set<(taskId?: string, folderId?: string) => void>>(new Set());
   const [refreshCounter, setRefreshCounter] = useState(0);
 
-  const notifyTaskUpdate = useCallback((taskId?: string, groupId?: string) => {
+  const notifyTaskUpdate = useCallback((taskId?: string, folderId?: string) => {
     subscribers.forEach(callback => {
       try {
-        callback(taskId, groupId);
+        callback(taskId, folderId);
       } catch (error) {
         console.error('Ошибка в callback обновления задачи:', error);
       }
     });
   }, [subscribers]);
 
-  const subscribeToTaskUpdates = useCallback((callback: (taskId?: string, groupId?: string) => void) => {
+  const subscribeToTaskUpdates = useCallback((callback: (taskId?: string, folderId?: string) => void) => {
     setSubscribers(prev => new Set(prev).add(callback));
     
     // Возвращаем функцию отписки

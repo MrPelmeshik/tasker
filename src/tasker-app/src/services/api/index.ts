@@ -4,7 +4,7 @@ export { loginRequest, registerRequest, getCurrentUser, updateProfile, logoutReq
 
 // Экспорт API клиентов
 export { areaApi, AreaApiClient } from './areas';
-export { groupApi, GroupApiClient } from './groups';
+export { folderApi, FolderApiClient } from './folders';
 export * from './tasks';
 export * from './events';
 
@@ -20,20 +20,16 @@ export {
   fetchAreaShortCard 
 } from './areas';
 
-// Экспорт отдельных функций из groups
+// Экспорт отдельных функций из folders
 export { 
-  fetchGroups, 
-  fetchGroupById, 
-  createGroup, 
-  updateGroup, 
-  deleteGroup, 
-  fetchActiveGroups, 
-  fetchGroupsByArea, 
-  fetchActiveGroupsByArea, 
-  fetchGroupsByOwner, 
-  fetchActiveGroupsByOwner, 
-  fetchGroupShortCardByAreaForTree 
-} from './groups';
+  fetchFolders, 
+  fetchFolderById, 
+  createFolder, 
+  updateFolder, 
+  deleteFolder, 
+  fetchRootFoldersByArea, 
+  fetchChildFolders 
+} from './folders';
 
 // Экспорт отдельных функций из tasks
 export { 
@@ -48,11 +44,12 @@ export {
   updateTask,
   deleteTask,
   fetchActiveTasks,
-  fetchTasksByGroup,
-  fetchActiveTasksByGroup,
+  fetchTasksByFolder,
+  fetchTasksByAreaRoot,
   fetchTasksByOwner,
   fetchActiveTasksByOwner,
-  fetchTaskSummaryByGroup,
+  fetchTaskSummaryByFolder,
+  fetchTaskSummaryByAreaRoot,
   fetchWeeklyTasks,
   fetchTasksWithActivities,
   getMonday,
@@ -69,7 +66,6 @@ export {
   createEventForTask,
   EventTypeActivity,
   fetchEventsByTask,
-  fetchEventsByGroup,
   fetchEventsByArea,
 } from './events';
 

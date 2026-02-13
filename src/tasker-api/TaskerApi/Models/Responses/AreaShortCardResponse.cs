@@ -21,9 +21,14 @@ public class AreaShortCardResponse
     public string? Description { get; set; }
     
     /// <summary>
-    /// Количество групп в области.
+    /// Количество корневых папок в области.
     /// </summary>
-    public int GroupCount { get; set; }
+    public int FoldersCount { get; set; }
+
+    /// <summary>
+    /// Количество задач в корне области (без папки).
+    /// </summary>
+    public int RootTasksCount { get; set; }
     
     /// <summary>
     /// Идентификатор пользователя-владельца.

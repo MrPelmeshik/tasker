@@ -4,7 +4,7 @@ using TaskerApi.Models.Responses;
 namespace TaskerApi.Services.Mapping;
 
 /// <summary>
-/// Составные маппинги (Area+Group, Area+UserAreaAccess и т.д.) (partial)
+/// Составные маппинги (Area+Folder, Area+UserAreaAccess и т.д.) (partial)
 /// </summary>
 public static partial class EntityMapper
 {
@@ -24,15 +24,4 @@ public static partial class EntityMapper
         };
     }
 
-    /// <summary>
-    /// Маппинг для создания CreateAreaWithGroupResponse
-    /// </summary>
-    public static CreateAreaWithGroupResponse ToCreateAreaWithGroupResponse(this AreaEntity area, GroupEntity group)
-    {
-        return new CreateAreaWithGroupResponse
-        {
-            Area = area.ToAreaResponse(),
-            DefaultGroup = group.ToGroupResponse()
-        };
-    }
 }

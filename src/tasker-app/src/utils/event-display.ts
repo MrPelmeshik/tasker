@@ -19,7 +19,8 @@ const FIELD_LABELS: Record<string, string> = {
   Title: 'Заголовок',
   Description: 'Описание',
   Status: 'Статус',
-  GroupId: 'Группа',
+  AreaId: 'Область',
+  FolderId: 'Папка',
 };
 
 /** Форматирует значение для отображения */
@@ -28,7 +29,7 @@ function formatValue(key: string, value: unknown): string {
   if (key === 'Status' && typeof value === 'number') {
     return getTaskStatusText(value as import('../types/task-status').TaskStatus) ?? String(value);
   }
-  if (key === 'GroupId' && typeof value === 'string') {
+  if ((key === 'AreaId' || key === 'FolderId') && typeof value === 'string') {
     return value.slice(0, 8) + '…';
   }
   const s = String(value);

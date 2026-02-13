@@ -19,7 +19,8 @@ public static partial class EntityMapper
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            GroupId = entity.GroupId,
+            AreaId = entity.AreaId,
+            FolderId = entity.FolderId,
             OwnerUserId = entity.OwnerUserId,
             OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
@@ -40,7 +41,8 @@ public static partial class EntityMapper
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
-            GroupId = entity.GroupId,
+            AreaId = entity.AreaId,
+            FolderId = entity.FolderId,
             OwnerUserId = entity.OwnerUserId,
             OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
@@ -62,7 +64,8 @@ public static partial class EntityMapper
             Title = request.Title,
             Description = request.Description,
             Status = ResolveTaskStatusOnCreate(request.Status),
-            GroupId = request.GroupId,
+            AreaId = request.AreaId,
+            FolderId = request.FolderId,
             OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -77,28 +80,10 @@ public static partial class EntityMapper
     {
         entity.Title = request.Title;
         entity.Description = request.Description;
-        entity.GroupId = request.GroupId;
+        entity.AreaId = request.AreaId;
+        entity.FolderId = request.FolderId;
         entity.Status = request.Status;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
-    }
-
-    /// <summary>
-    /// Маппинг для создания задачи по умолчанию
-    /// </summary>
-    public static TaskEntity ToDefaultTaskEntity(this CreateGroupWithTaskRequest request, Guid groupId, Guid ownerUserId)
-    {
-        return new TaskEntity
-        {
-            Id = Guid.NewGuid(),
-            Title = request.TaskTitle,
-            Description = request.TaskDescription,
-            Status = Models.Common.TaskStatus.New,
-            GroupId = groupId,
-            OwnerUserId = ownerUserId,
-            CreatedAt = DateTimeOffset.UtcNow,
-            UpdatedAt = DateTimeOffset.UtcNow,
-            IsActive = true
-        };
     }
 
     /// <summary>
@@ -112,7 +97,8 @@ public static partial class EntityMapper
             Title = request.Title,
             Description = request.Description,
             Status = Models.Common.TaskStatus.New,
-            GroupId = request.GroupId,
+            AreaId = request.AreaId,
+            FolderId = request.FolderId,
             OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,

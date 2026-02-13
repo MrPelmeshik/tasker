@@ -24,9 +24,14 @@ public class TaskResponse
     public string? Description { get; set; }
 
     /// <summary>
-    /// ID группы
+    /// ID области
     /// </summary>
-    public Guid GroupId { get; set; }
+    public Guid AreaId { get; set; }
+
+    /// <summary>
+    /// ID папки (null = в корне области)
+    /// </summary>
+    public Guid? FolderId { get; set; }
 
     /// <summary>
     /// Статус задачи

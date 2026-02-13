@@ -3,7 +3,7 @@ using TaskerApi.Models.Common;
 namespace TaskerApi.Interfaces.Services;
 
 /// <summary>
-/// Сервис автоматического логирования событий при изменении сущностей (Area, Group, Task).
+/// Сервис автоматического логирования событий при изменении сущностей (Area, Folder, Task).
 /// </summary>
 public interface IEntityEventLogger
 {

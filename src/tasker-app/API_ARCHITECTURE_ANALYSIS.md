@@ -2,7 +2,7 @@
 
 ## Обзор
 
-Создана универсальная архитектура API клиентов для работы с областями и группами, которая обеспечивает:
+Создана универсальная архитектура API клиентов для работы с областями и папками, которая обеспечивает:
 
 1. **Переиспользование кода** - базовый класс для CRUD операций
 2. **Типобезопасность** - полная типизация TypeScript
@@ -40,13 +40,13 @@ class AreaApiClient extends BaseApiClient<AreaResponse, AreaCreateRequest, AreaU
   // Специфичные методы для областей
 }
 
-class GroupApiClient {
+class FolderApiClient {
   // Композиция вместо наследования для особых случаев
 }
 ```
 
 **Преимущества**:
-- Гибкость для особых случаев (GroupCreateResponse)
+- Гибкость для особых случаев (FolderCreateResponse)
 - Сохранение переиспользования кода
 - Четкое разделение ответственности
 
@@ -80,11 +80,11 @@ export function useAreas() {
   // Управление состоянием областей
 }
 
-export function useGroups() {
-  // Управление состоянием групп
+export function useFolders() {
+  // Управление состоянием папок
 }
 
-export function useAreasAndGroups() {
+export function useAreasAndFolders() {
   // Комбинированный хук
 }
 ```
@@ -105,8 +105,8 @@ export const AreaManager: React.FC = () => {
   // Готовый компонент для управления областями
 }
 
-export const GroupManager: React.FC = () => {
-  // Готовый компонент для управления группами
+export const FolderManager: React.FC = () => {
+  // Готовый компонент для управления папками
 }
 ```
 
@@ -125,8 +125,7 @@ src/
 │   └── api/
 │       ├── base.ts               # Базовый API клиент
 │       ├── areas.ts              # API клиент для областей
-│       ├── groups.ts             # API клиент для групп
-│       ├── areas-groups.ts       # Совместимость
+│       ├── folders.ts            # API клиент для папок
 │       ├── client.ts             # HTTP клиент
 │       ├── index.ts              # Экспорт
 │       └── README.md             # Документация
@@ -136,8 +135,8 @@ src/
 │   ├── areas/
 │   │   ├── AreaManager.tsx       # Компонент областей
 │   │   └── index.ts
-│   └── groups/
-│       ├── GroupManager.tsx      # Компонент групп
+│   └── folders/
+│       ├── FolderManager.tsx     # Компонент папок
 │       └── index.ts
 └── pages/
     └── ManagementPage.tsx        # Страница управления
@@ -200,13 +199,13 @@ src/
 // 1. Определить типы
 interface TaskResponse extends BaseEntity {
   areaId: string;
-  groupId: string;
+  folderId: string;
   // ... другие поля
 }
 
 interface TaskCreateRequest extends CreateRequest {
   areaId: string;
-  groupId: string;
+  folderId: string;
 }
 
 // 2. Создать API клиент
@@ -216,9 +215,9 @@ export class TaskApiClient extends BaseApiClient<TaskResponse, TaskCreateRequest
   }
   
   // Добавить специфичные методы
-  async getTasksByGroup(groupId: string): Promise<TaskResponse[]> {
+  async getTasksByFolder(folderId: string): Promise<TaskResponse[]> {
     const tasks = await this.getAll();
-    return tasks.filter(task => task.groupId === groupId);
+    return tasks.filter(task => task.folderId === folderId);
   }
 }
 
@@ -233,12 +232,12 @@ export function useTasks() {
 
 ```typescript
 const MyComponent: React.FC = () => {
-  const { areas, groups, createArea, createGroup } = useAreasAndGroups();
+  const { areas, folders, createArea, createFolder } = useAreasAndFolders();
   
   return (
     <div>
       <AreaManager />
-      <GroupManager />
+      <FolderManager />
     </div>
   );
 };

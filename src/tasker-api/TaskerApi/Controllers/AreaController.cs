@@ -60,20 +60,6 @@ public class AreaController(IAreaService service, IAreaMemberService memberServi
         => ExecuteWithExceptionHandling(async () => Ok(await service.GetAreaShortCardAsync(cancellationToken)));
 
     /// <summary>
-    /// Создать область с группой по умолчанию (сложная операция с транзакцией)
-    /// </summary>
-    [HttpPost("with-group")]
-    [UserLog("Создание области с группой по умолчанию")]
-    public Task<IActionResult> CreateWithDefaultGroup([FromBody] CreateAreaWithGroupRequest request, CancellationToken cancellationToken)
-        => ExecuteWithExceptionHandling(async () =>
-        {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-            var result = await service.CreateWithDefaultGroupAsync(request, cancellationToken);
-            return CreatedAtAction(nameof(GetById), new { id = result.Area.Id }, result);
-        });
-
-    /// <summary>
     /// Получить список участников области
     /// </summary>
     [HttpGet("{areaId}")]

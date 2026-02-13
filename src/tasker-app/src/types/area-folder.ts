@@ -7,24 +7,21 @@ export interface Area {
   deactivatedAt?: Date;
   isActive: boolean;
   updatedAt: Date;
-  customColor?: string; // Hex цвет для кастомной окраски карточки
+  customColor?: string;
 }
 
-export interface Group {
+export interface Folder {
   id: string;
   title: string;
   description?: string;
   areaId: string;
+  parentFolderId?: string | null;
   ownerUserId: string;
   createdAt: Date;
   deactivatedAt?: Date;
   isActive: boolean;
   updatedAt: Date;
-  customColor?: string; // Hex цвет для кастомной окраски карточки
-}
-
-export interface AreaWithGroups extends Area {
-  groups: Group[];
+  customColor?: string;
 }
 
 // Типы для Tree виджета
@@ -32,46 +29,52 @@ export interface AreaShortCard {
   id: string;
   title: string;
   description?: string;
-  groupsCount: number;
+  foldersCount: number;
+  rootTasksCount: number;
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
-  customColor?: string; // Hex цвет для кастомной окраски карточки
+  customColor?: string;
 }
 
-export interface GroupSummary {
+export interface FolderSummary {
   id: string;
   title: string;
   description?: string;
   areaId: string;
+  parentFolderId?: string | null;
   tasksCount: number;
+  subfoldersCount: number;
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
-  customColor?: string; // Hex цвет для кастомной окраски карточки
+  customColor?: string;
 }
 
 export interface Task {
   id: string;
   title: string;
   description?: string;
-  groupId: string;
-  status: number; // TaskStatus enum value
+  areaId: string;
+  folderId?: string | null;
+  status: number;
   ownerUserId: string;
   createdAt: Date;
   deactivatedAt?: Date;
   isActive: boolean;
   updatedAt: Date;
-  customColor?: string; // Hex цвет для кастомной окраски карточки
+  customColor?: string;
 }
 
 export interface TaskSummary {
   id: string;
   title: string;
   description?: string;
-  status: number; // TaskStatus enum value
+  status: number;
+  areaId: string;
+  folderId?: string | null;
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
-  customColor?: string; // Hex цвет для кастомной окраски карточки
+  customColor?: string;
 }

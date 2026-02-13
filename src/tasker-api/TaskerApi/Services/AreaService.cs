@@ -18,7 +18,8 @@ public class AreaService(
     ILogger<AreaService> logger,
     ICurrentUserService currentUser,
     IAreaRepository areaRepository,
-    IGroupRepository groupRepository,
+    IFolderRepository folderRepository,
+    ITaskRepository taskRepository,
     IUserAreaAccessRepository userAreaAccessRepository,
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
@@ -164,45 +165,6 @@ public class AreaService(
     }
 
     /// <summary>
-    /// Создать область с группой по умолчанию (сложная операция с явной транзакцией)
-    /// </summary>
-    /// <param name="request">Данные для создания области с группой</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Созданная область с группой</returns>
-    public async Task<CreateAreaWithGroupResponse> CreateWithDefaultGroupAsync(CreateAreaWithGroupRequest request, CancellationToken cancellationToken)
-    {
-        using var transaction = await context.Database.BeginTransactionAsync(cancellationToken);
-        try
-        {
-            var area = request.ToAreaEntity(currentUser.UserId);
-
-            var createdArea = await areaRepository.CreateAsync(area, cancellationToken);
-
-            await entityEventLogger.LogAsync(EntityType.AREA, createdArea.Id, EventType.CREATE, createdArea.Title, null, cancellationToken);
-
-            var defaultGroup = createdArea.ToDefaultGroupEntity(currentUser.UserId);
-
-            var createdGroup = await groupRepository.CreateAsync(defaultGroup, cancellationToken);
-
-            await entityEventLogger.LogAsync(EntityType.GROUP, createdGroup.Id, EventType.CREATE, createdGroup.Title, null, cancellationToken);
-
-            var userAccess = createdArea.ToUserAreaAccessEntity(currentUser.UserId, currentUser.UserId, AreaRole.Owner);
-
-            await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
-
-            await transaction.CommitAsync(cancellationToken);
-
-            return createdArea.ToCreateAreaWithGroupResponse(createdGroup);
-        }
-        catch (Exception ex)
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            logger.LogError(ex, "Ошибка создания области с группой по умолчанию");
-            throw;
-        }
-    }
-
-    /// <summary>
     /// Получить краткие карточки областей
     /// </summary>
     /// <param name="cancellationToken">Токен отмены операции</param>
@@ -223,11 +185,11 @@ public class AreaService(
 
             foreach (var area in accessibleAreas)
             {
-                var groups = await groupRepository.GetByAreaIdAsync(area.Id, cancellationToken);
-                var groupCount = groups.Count;
+                var rootFolders = await folderRepository.GetRootByAreaIdAsync(area.Id, cancellationToken);
+                var rootTasks = await taskRepository.GetByAreaIdRootAsync(area.Id, cancellationToken);
                 var ownerName = userNames.GetValueOrDefault(area.OwnerUserId, "");
 
-                result.Add(area.ToAreaShortCardResponse(groupCount, ownerName));
+                result.Add(area.ToAreaShortCardResponse(rootFolders.Count, rootTasks.Count, ownerName));
             }
 
             return result;
