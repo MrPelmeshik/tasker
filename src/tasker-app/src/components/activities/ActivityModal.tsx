@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
-import { GlassButton } from '../ui/GlassButton';
-import { GlassInput } from '../ui/GlassInput';
-import { GlassTextarea } from '../ui/GlassTextarea';
-import { XIcon } from '../icons/XIcon';
-import { SaveIcon } from '../icons/SaveIcon';
-import { EyeIcon } from '../icons/EyeIcon';
+import {
+  GlassInput,
+  GlassTextarea,
+  ModalCloseButton,
+  ModalSaveButton,
+  ModalViewButton,
+} from '../ui';
 import { ActivityList } from './ActivityList';
 import { useToast } from '../../context/ToastContext';
 import { parseApiErrorMessage } from '../../utils/parse-api-error';
@@ -76,29 +77,20 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
         <div className={css.modalHeader}>
           <h3 className={css.modalTitle}>Добавить активность</h3>
           <div className={css.modalActions}>
-            <GlassButton variant="subtle" size="xs" onClick={onClose} disabled={isLoading}>
-              <XIcon />
-            </GlassButton>
-            <GlassButton
-              variant="primary"
-              size="xs"
+            <ModalCloseButton onClick={onClose} disabled={isLoading} />
+            <ModalSaveButton
               onClick={handleSave}
               disabled={!title.trim() || isLoading}
-            >
-              <SaveIcon />
-            </GlassButton>
+            />
           </div>
         </div>
         <div className={css.modalBody}>
           <div className={activityModalCss.taskCard} style={{ marginBottom: 'var(--space-16)' }}>
-            <GlassButton
-              size="xxs"
-              variant="subtle"
+            <ModalViewButton
+              tooltip="Подробнее о задаче"
               onClick={onOpenTaskDetails}
               className={activityModalCss.taskCardButton}
-            >
-              <EyeIcon />
-            </GlassButton>
+            />
             <span>{task.title}</span>
           </div>
           {date && (

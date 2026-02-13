@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
-import { GlassButton } from '../ui/GlassButton';
-import { GlassInput } from '../ui/GlassInput';
-import { GlassTextarea } from '../ui/GlassTextarea';
-import { GlassSelect } from '../ui';
-import { XIcon } from '../icons/XIcon';
-import { SaveIcon } from '../icons/SaveIcon';
-import { ResetIcon } from '../icons/ResetIcon';
-import { EditIcon } from '../icons/EditIcon';
-import { DeleteIcon } from '../icons/DeleteIcon';
+import {
+  GlassInput,
+  GlassTextarea,
+  GlassSelect,
+  ModalCloseButton,
+  ModalCancelButton,
+  ModalSaveButton,
+  ModalDeleteButton,
+  ModalEditButton,
+  ModalResetFieldButton,
+} from '../ui';
 import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
@@ -172,64 +174,29 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             {isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи'}
           </h3>
           <div className={css.modalActions}>
-            <GlassButton
-              variant="subtle"
-              size="xs"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              <XIcon />
-            </GlassButton>
+            <ModalCloseButton onClick={handleClose} disabled={isLoading} />
             {isViewMode ? (
               <>
-                <GlassButton
+                <ModalEditButton
                   variant="primary"
-                  size="xs"
                   onClick={() => setIsEditMode(true)}
                   disabled={isLoading}
-                >
-                  <EditIcon />
-                </GlassButton>
+                />
                 {task && onDelete && (
-                  <GlassButton
-                    variant="danger"
-                    size="xs"
-                    onClick={handleDeleteRequest}
-                    disabled={isLoading}
-                  >
-                    <DeleteIcon />
-                  </GlassButton>
+                  <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />
                 )}
               </>
             ) : (
               <>
                 {task && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xs"
-                    onClick={handleReturnToView}
-                    disabled={isLoading}
-                  >
-                    Отмена
-                  </GlassButton>
+                  <ModalCancelButton onClick={handleReturnToView} disabled={isLoading} />
                 )}
-                <GlassButton
-                  variant="primary"
-                  size="xs"
+                <ModalSaveButton
                   onClick={handleSave}
                   disabled={!hasChanges || !formData.title.trim() || !formData.groupId || isLoading}
-                >
-                  <SaveIcon />
-                </GlassButton>
+                />
                 {task && onDelete && (
-                  <GlassButton
-                    variant="danger"
-                    size="xs"
-                    onClick={handleDeleteRequest}
-                    disabled={isLoading}
-                  >
-                    <DeleteIcon />
-                  </GlassButton>
+                  <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />
                 )}
               </>
             )}
@@ -246,14 +213,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                     Область *
                   </label>
                   {!isViewMode && areaChanged && (
-                    <GlassButton
-                      variant="subtle"
-                      size="xxs"
+                    <ModalResetFieldButton
                       onClick={handleResetArea}
                       className={formCss.resetButton}
-                    >
-                      <ResetIcon />
-                    </GlassButton>
+                    />
                   )}
                 </div>
                 <div className={formCss.fieldContainer}>
@@ -287,14 +250,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   Группа *
                 </label>
                 {!isViewMode && fieldChanges.groupId && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('groupId')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>
@@ -327,14 +286,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   Название задачи *
                 </label>
                 {!isViewMode && fieldChanges.title && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('title')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>
@@ -361,14 +316,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   Статус
                 </label>
                 {!isViewMode && fieldChanges.status && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('status')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>
@@ -398,14 +349,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   Описание
                 </label>
                 {!isViewMode && fieldChanges.description && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('description')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>

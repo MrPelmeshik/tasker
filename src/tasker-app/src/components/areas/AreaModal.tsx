@@ -14,15 +14,18 @@ import {
 } from '@dnd-kit/core';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
-import { GlassButton } from '../ui/GlassButton';
-import { GlassInput } from '../ui/GlassInput';
-import { GlassTextarea } from '../ui/GlassTextarea';
-import { GlassSelect } from '../ui/GlassSelect';
-import { XIcon } from '../icons/XIcon';
-import { SaveIcon } from '../icons/SaveIcon';
-import { ResetIcon } from '../icons/ResetIcon';
-import { EditIcon } from '../icons/EditIcon';
-import { DeleteIcon } from '../icons/DeleteIcon';
+import {
+  GlassButton,
+  GlassInput,
+  GlassTextarea,
+  GlassSelect,
+  ModalCloseButton,
+  ModalCancelButton,
+  ModalSaveButton,
+  ModalDeleteButton,
+  ModalEditButton,
+  ModalResetFieldButton,
+} from '../ui';
 import { PlusIcon } from '../icons/PlusIcon';
 import { GripVerticalIcon } from '../icons/GripVerticalIcon';
 import { ActivityList } from '../activities/ActivityList';
@@ -82,9 +85,7 @@ const DraggableMemberCard: React.FC<DraggableMemberCardProps> = ({ member, disab
         <GripVerticalIcon style={{ width: 14, height: 14, color: 'rgb(var(--white) / 0.45)' }} />
       </span>
       <span className={formCss.readonlyMetaValue} style={{ flex: 1 }}>{member.userName || '—'}</span>
-      <GlassButton variant="danger" size="xxs" onClick={onRemove} disabled={disabled}>
-        <DeleteIcon />
-      </GlassButton>
+      <ModalDeleteButton size="xxs" onClick={onRemove} disabled={disabled} />
     </li>
   );
 };
@@ -375,7 +376,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     fieldChanges,
     handleFieldChange,
     handleResetField,
-    hasChanges,
     hasUnsavedChanges,
     showConfirmModal,
     showReturnToViewConfirm,
@@ -526,66 +526,31 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             {isViewMode ? 'Область' : area ? 'Редактирование области' : 'Создание области'}
           </h3>
           <div className={css.modalActions}>
-            <GlassButton
-              variant="subtle"
-              size="xs"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              <XIcon />
-            </GlassButton>
+            <ModalCloseButton onClick={handleClose} disabled={isLoading} />
             {isViewMode ? (
               <>
                 {canEdit && (
-                  <GlassButton
+                  <ModalEditButton
                     variant="primary"
-                    size="xs"
                     onClick={() => setIsEditMode(true)}
                     disabled={isLoading}
-                  >
-                    <EditIcon />
-                  </GlassButton>
+                  />
                 )}
                 {canEdit && area && onDelete && (
-                  <GlassButton
-                    variant="danger"
-                    size="xs"
-                    onClick={handleDeleteRequest}
-                    disabled={isLoading}
-                  >
-                    <DeleteIcon />
-                  </GlassButton>
+                  <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />
                 )}
               </>
             ) : (
               <>
                 {area && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xs"
-                    onClick={handleReturnToView}
-                    disabled={isLoading}
-                  >
-                    Отмена
-                  </GlassButton>
+                  <ModalCancelButton onClick={handleReturnToView} disabled={isLoading} />
                 )}
-                <GlassButton
-                  variant="primary"
-                  size="xs"
+                <ModalSaveButton
                   onClick={handleSave}
                   disabled={!hasUnsavedChanges || !formData.title.trim() || isLoading}
-                >
-                  <SaveIcon />
-                </GlassButton>
+                />
                 {area && onDelete && (
-                  <GlassButton
-                    variant="danger"
-                    size="xs"
-                    onClick={handleDeleteRequest}
-                    disabled={isLoading}
-                  >
-                    <DeleteIcon />
-                  </GlassButton>
+                  <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />
                 )}
               </>
             )}
@@ -601,14 +566,10 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   Название области *
                 </label>
                 {!isViewMode && fieldChanges.title && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('title')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>
@@ -635,14 +596,10 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   Описание
                 </label>
                 {!isViewMode && fieldChanges.description && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('description')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>

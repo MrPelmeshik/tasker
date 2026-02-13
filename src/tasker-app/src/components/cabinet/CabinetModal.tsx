@@ -1,8 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Modal } from '../common/Modal';
-import { GlassButton } from '../ui/GlassButton';
-import { GlassInput } from '../ui/GlassInput';
-import { XIcon, EditIcon } from '../icons';
+import { GlassInput, ModalCloseButton, ModalCancelButton, ModalSaveButton, ModalEditButton } from '../ui';
 import { useToast } from '../../context/ToastContext';
 import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { getCurrentUser, updateProfile } from '../../services/api/auth';
@@ -173,9 +171,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
         <div className={css.modalHeader}>
           <h3 className={css.modalTitle}>Личный кабинет</h3>
           <div className={css.modalActions}>
-            <GlassButton variant="subtle" size="xs" onClick={onClose} aria-label="Закрыть">
-              <XIcon />
-            </GlassButton>
+            <ModalCloseButton onClick={onClose} />
           </div>
         </div>
 
@@ -192,17 +188,11 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
                   <div className={cabinetCss.sectionHeaderActions}>
                     {isEditMode ? (
                       <>
-                        <GlassButton variant="subtle" size="xs" onClick={handleCancelEdit} disabled={saving}>
-                          Отмена
-                        </GlassButton>
-                        <GlassButton variant="primary" size="xs" onClick={handleSaveProfile} disabled={saving}>
-                          Сохранить
-                        </GlassButton>
+                        <ModalCancelButton onClick={handleCancelEdit} disabled={saving} />
+                        <ModalSaveButton onClick={handleSaveProfile} disabled={saving} />
                       </>
                     ) : user ? (
-                      <GlassButton variant="subtle" size="xs" onClick={handleStartEdit}>
-                        <EditIcon />
-                      </GlassButton>
+                      <ModalEditButton onClick={handleStartEdit} />
                     ) : null}
                   </div>
                 </div>

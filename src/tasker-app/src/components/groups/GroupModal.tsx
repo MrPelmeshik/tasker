@@ -1,15 +1,17 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
-import { GlassButton } from '../ui/GlassButton';
-import { GlassInput } from '../ui/GlassInput';
-import { GlassTextarea } from '../ui/GlassTextarea';
-import { GlassSelect } from '../ui';
-import { XIcon } from '../icons/XIcon';
-import { SaveIcon } from '../icons/SaveIcon';
-import { ResetIcon } from '../icons/ResetIcon';
-import { EditIcon } from '../icons/EditIcon';
-import { DeleteIcon } from '../icons/DeleteIcon';
+import {
+  GlassInput,
+  GlassTextarea,
+  GlassSelect,
+  ModalCloseButton,
+  ModalCancelButton,
+  ModalSaveButton,
+  ModalDeleteButton,
+  ModalEditButton,
+  ModalResetFieldButton,
+} from '../ui';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
@@ -104,64 +106,29 @@ export const GroupModal: React.FC<GroupModalProps> = ({
             {isViewMode ? 'Группа' : group ? 'Редактирование группы' : 'Создание группы'}
           </h3>
           <div className={css.modalActions}>
-            <GlassButton
-              variant="subtle"
-              size="xs"
-              onClick={handleClose}
-              disabled={isLoading}
-            >
-              <XIcon />
-            </GlassButton>
+            <ModalCloseButton onClick={handleClose} disabled={isLoading} />
             {isViewMode ? (
               <>
-                <GlassButton
+                <ModalEditButton
                   variant="primary"
-                  size="xs"
                   onClick={() => setIsEditMode(true)}
                   disabled={isLoading}
-                >
-                  <EditIcon />
-                </GlassButton>
+                />
                 {group && onDelete && (
-                  <GlassButton
-                    variant="danger"
-                    size="xs"
-                    onClick={handleDeleteRequest}
-                    disabled={isLoading}
-                  >
-                    <DeleteIcon />
-                  </GlassButton>
+                  <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />
                 )}
               </>
             ) : (
               <>
                 {group && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xs"
-                    onClick={handleReturnToView}
-                    disabled={isLoading}
-                  >
-                    Отмена
-                  </GlassButton>
+                  <ModalCancelButton onClick={handleReturnToView} disabled={isLoading} />
                 )}
-                <GlassButton
-                  variant="primary"
-                  size="xs"
+                <ModalSaveButton
                   onClick={handleSave}
                   disabled={!hasChanges || !formData.title.trim() || !formData.areaId || isLoading}
-                >
-                  <SaveIcon />
-                </GlassButton>
+                />
                 {group && onDelete && (
-                  <GlassButton
-                    variant="danger"
-                    size="xs"
-                    onClick={handleDeleteRequest}
-                    disabled={isLoading}
-                  >
-                    <DeleteIcon />
-                  </GlassButton>
+                  <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />
                 )}
               </>
             )}
@@ -177,14 +144,10 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                   Область *
                 </label>
                 {!isViewMode && fieldChanges.areaId && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('areaId')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>
@@ -217,14 +180,10 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                   Название группы *
                 </label>
                 {!isViewMode && fieldChanges.title && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('title')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>
@@ -251,14 +210,10 @@ export const GroupModal: React.FC<GroupModalProps> = ({
                   Описание
                 </label>
                 {!isViewMode && fieldChanges.description && (
-                  <GlassButton
-                    variant="subtle"
-                    size="xxs"
+                  <ModalResetFieldButton
                     onClick={() => handleResetField('description')}
                     className={formCss.resetButton}
-                  >
-                    <ResetIcon />
-                  </GlassButton>
+                  />
                 )}
               </div>
               <div className={formCss.fieldContainer}>
