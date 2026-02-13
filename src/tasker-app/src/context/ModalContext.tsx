@@ -8,7 +8,7 @@ import type { AreaResponse, FolderResponse, TaskResponse, AreaCreateRequest, Are
 import type { ActivityFormData } from '../components/activities/ActivityModal';
 import type { ModalSize } from '../types/modal-size';
 
-interface ModalContextType {
+export interface ModalContextType {
   openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>, size?: ModalSize) => void;
   openFolderModal: (folder: FolderResponse | null, mode: 'create' | 'edit', areas: Array<{ id: string; title: string; description?: string }>, onSave: (data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, parentFolderId?: string | null, size?: ModalSize) => void;
   openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>, size?: ModalSize) => void;

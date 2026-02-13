@@ -1,0 +1,21 @@
+/**
+ * Базовые стили для карточек-ссылок (область, папка, задача).
+ * Используется в tree-item-link и task-card-link.
+ */
+
+.title {
+  font-size: var(--font-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  line-height: var(--line-height-tight);
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.typeIcon {
+  flex-shrink: 0;
+  color: var(--glass-icon-default);
+}

@@ -35,19 +35,11 @@
 
 .root:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(var(--color-accent) / 0.4);
+  box-shadow: var(--focus-ring);
 }
 
 .title {
-  font-size: var(--font-12);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-  line-height: var(--line-height-tight);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  overflow: hidden;
-  flex: 1;
-  min-width: 0;
+  composes: title from './card-link-base.module.css';
 }
 
 /* Счётчик в скобках после названия — приглушённый цвет */
@@ -59,6 +51,5 @@
 }
 
 .typeIcon {
-  flex-shrink: 0;
-  color: var(--glass-icon-default);
+  composes: typeIcon from './card-link-base.module.css';
 }

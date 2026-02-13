@@ -11,7 +11,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-8);
-  max-width: min(420px, calc(100vw - var(--space-48)));
+  max-width: min(var(--container-max-width-sm), calc(100vw - var(--space-48)));
   pointer-events: none;
 }
 
@@ -33,9 +33,9 @@
   color: var(--color-text);
   font-size: var(--font-14);
   line-height: var(--line-height-normal);
-  min-width: 280px;
-  max-width: 420px;
-  animation: toastSlideIn 220ms ease-out;
+  min-width: var(--container-min-width-toast);
+  max-width: var(--container-max-width-sm);
+  animation: toastSlideIn var(--animation-toast-in) ease-out;
 }
 
 .itemExiting {
@@ -88,8 +88,8 @@
 
 .icon {
   flex-shrink: 0;
-  width: 20px;
-  height: 20px;
+  width: var(--size-20);
+  height: var(--size-20);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -106,8 +106,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  width: var(--space-24);
+  height: var(--space-24);
   padding: 0;
   border: none;
   border-radius: var(--radius-s);
@@ -115,7 +115,7 @@
   color: var(--color-text);
   cursor: pointer;
   opacity: 0.7;
-  transition: opacity 160ms ease, background 160ms ease;
+  transition: opacity var(--transition-tooltip), background var(--transition-tooltip);
 }
 
 .closeBtn:hover {
@@ -131,7 +131,7 @@
 @keyframes toastSlideIn {
   from {
     opacity: 0;
-    transform: translateX(24px);
+    transform: translateX(var(--space-24));
   }
   to {
     opacity: 1;
@@ -146,6 +146,6 @@
   }
   to {
     opacity: 0;
-    transform: translateX(24px);
+    transform: translateX(var(--space-24));
   }
 }

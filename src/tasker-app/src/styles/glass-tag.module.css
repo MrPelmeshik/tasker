@@ -77,13 +77,13 @@
 
 /* Варианты цветов - более ярковыраженные */
 .primary { 
-  border-color: rgb(var(--color-accent) / 0.40);
+  border-color: var(--variant-primary-border);
   background: var(--glass-gradient-primary);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-accent) / 0.20);
+    var(--variant-primary-ring);
 }
 
 .primary::before {
@@ -91,13 +91,13 @@
 }
 
 .danger { 
-  border-color: rgb(var(--color-danger) / 0.40);
+  border-color: var(--variant-danger-border);
   background: var(--glass-gradient-danger);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-danger) / 0.20);
+    var(--variant-danger-ring);
 }
 
 .danger::before {
@@ -105,13 +105,13 @@
 }
 
 .success { 
-  border-color: rgb(var(--color-success) / 0.40);
+  border-color: var(--variant-success-border);
   background: var(--glass-gradient-success);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-success) / 0.20);
+    var(--variant-success-ring);
 }
 
 .success::before {
@@ -119,13 +119,13 @@
 }
 
 .warning { 
-  border-color: rgb(var(--color-warning) / 0.40);
+  border-color: var(--variant-warning-border);
   background: var(--glass-gradient-warning);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-warning) / 0.20);
+    var(--variant-warning-ring);
 }
 
 .warning::before {
@@ -133,13 +133,13 @@
 }
 
 .info { 
-  border-color: rgb(var(--color-info) / 0.40);
+  border-color: var(--variant-info-border);
   background: var(--glass-gradient-info);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-info) / 0.20);
+    var(--variant-info-ring);
 }
 
 .info::before {

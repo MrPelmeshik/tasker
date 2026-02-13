@@ -64,10 +64,10 @@
 .compact {
   padding: 0;
   border-radius: var(--radius-round);
-  min-width: 12px;
-  min-height: 12px;
-  width: 12px;
-  height: 12px;
+  min-width: var(--icon-s);
+  min-height: var(--icon-s);
+  width: var(--icon-s);
+  height: var(--icon-s);
 }
 
 .compact.badge:hover {
@@ -75,42 +75,42 @@
 }
 
 .compact.xs {
-  min-width: 10px;
-  min-height: 10px;
-  width: 10px;
-  height: 10px;
+  min-width: var(--icon-xs);
+  min-height: var(--icon-xs);
+  width: var(--icon-xs);
+  height: var(--icon-xs);
 }
 
 .compact.s {
-  min-width: 12px;
-  min-height: 12px;
-  width: 12px;
-  height: 12px;
+  min-width: var(--icon-s);
+  min-height: var(--icon-s);
+  width: var(--icon-s);
+  height: var(--icon-s);
 }
 
 .compact.m {
-  min-width: 14px;
-  min-height: 14px;
-  width: 14px;
-  height: 14px;
+  min-width: var(--icon-m);
+  min-height: var(--icon-m);
+  width: var(--icon-m);
+  height: var(--icon-m);
 }
 
 .compact.l {
-  min-width: 18px;
-  min-height: 18px;
-  width: 18px;
-  height: 18px;
+  min-width: var(--icon-l);
+  min-height: var(--icon-l);
+  width: var(--icon-l);
+  height: var(--icon-l);
 }
 
 /* Статусы — стеклянные варианты по аналогии с GlassTag */
 /* 1 — Новая (info) */
 .badge[data-status="1"] {
-  border-color: rgb(var(--color-info) / 0.40);
+  border-color: var(--variant-info-border);
   background: var(--glass-gradient-info);
   box-shadow:
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-info) / 0.20);
+    var(--variant-info-ring);
 }
 
 .badge[data-status="1"]::before {
@@ -119,12 +119,12 @@
 
 /* 2 — В ожидании (warning) */
 .badge[data-status="2"] {
-  border-color: rgb(var(--color-warning) / 0.40);
+  border-color: var(--variant-warning-border);
   background: var(--glass-gradient-warning);
   box-shadow:
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-warning) / 0.20);
+    var(--variant-warning-ring);
 }
 
 .badge[data-status="2"]::before {
@@ -133,12 +133,12 @@
 
 /* 3 — В работе (success) */
 .badge[data-status="3"] {
-  border-color: rgb(var(--color-success) / 0.40);
+  border-color: var(--variant-success-border);
   background: var(--glass-gradient-success);
   box-shadow:
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-success) / 0.20);
+    var(--variant-success-ring);
 }
 
 .badge[data-status="3"]::before {
@@ -159,12 +159,12 @@
 
 /* 5 — Отменена (danger) */
 .badge[data-status="5"] {
-  border-color: rgb(var(--color-danger) / 0.40);
+  border-color: var(--variant-danger-border);
   background: var(--glass-gradient-danger);
   box-shadow:
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-danger) / 0.20);
+    var(--variant-danger-ring);
 }
 
 .badge[data-status="5"]::before {

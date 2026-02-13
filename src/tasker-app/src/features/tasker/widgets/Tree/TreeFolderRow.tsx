@@ -1,0 +1,122 @@
+import React from 'react';
+import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { GlassButton } from '../../../../components/ui/GlassButton';
+import { FolderCardLink } from '../../../../components/folders';
+import { Tooltip } from '../../../../components/ui';
+import { GripVerticalIcon, FolderIcon, CheckSquareIcon, EyeIcon } from '../../../../components/icons';
+import { useCustomColorStyle } from '../../../../hooks';
+import { handleExpandKeyDown } from '../../../../utils/keyboard';
+import { isValidDrop } from './treeUtils';
+import type { FolderSummary, TaskSummary } from '../../../../types';
+import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
+import css from '../../../../styles/tree.module.css';
+
+export interface TreeFolderRowProps {
+  folder: FolderSummary;
+  areaId: string;
+  depth: number;
+  isExpanded: boolean;
+  subfolders: FolderSummary[];
+  tasks: TaskSummary[];
+  isLoading: boolean;
+  activeDrag: { id: string; data: { type: string; folder?: FolderSummary; task?: TaskSummary } } | null;
+  foldersByArea: Map<string, FolderSummary[]>;
+  foldersByParent: Map<string, FolderSummary[]>;
+  onToggle: () => void;
+  onViewDetails: (e: React.MouseEvent) => void;
+  onCreateFolder: (e: React.MouseEvent) => void;
+  onCreateTask: (e: React.MouseEvent) => void;
+  renderFolder: (folder: FolderSummary, areaId: string, depth: number) => React.ReactNode;
+  renderTask: (task: TaskSummary) => React.ReactNode;
+}
+
+/** Строка папки с drag handle и droppable */
+export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
+  folder,
+  areaId,
+  depth,
+  isExpanded,
+  subfolders,
+  tasks,
+  isLoading,
+  activeDrag,
+  foldersByArea,
+  foldersByParent,
+  onToggle,
+  onViewDetails,
+  onCreateFolder,
+  onCreateTask,
+  renderFolder,
+  renderTask,
+}) => {
+  const hasChildren = folder.tasksCount + folder.subfoldersCount > 0;
+  const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({
+    id: `folder-${folder.id}`,
+    data: { type: 'folder', folder },
+  });
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: `folder-${folder.id}`, data: { folder } });
+  const canDrop = isValidDrop(activeDrag?.data, `folder-${folder.id}`, foldersByArea, foldersByParent);
+  const customColorStyle = useCustomColorStyle(folder.customColor);
+
+  return (
+    <React.Fragment>
+      <div className={`${css.folderItem} ${isDragging ? css.isDragging : ''}`} style={{ marginLeft: `calc(var(--tree-indent) * ${depth})`, width: `calc(100% - (var(--tree-indent) * ${depth}))` }}>
+        <div
+          ref={(node) => {
+            setDroppableRef(node);
+            setDraggableRef(node);
+          }}
+          className={`${css.folderCard} ${isExpanded ? css.expanded : ''} ${isOver && canDrop ? css.isOverValid : ''} ${isOver && !canDrop ? css.isOverInvalid : ''}`}
+          data-custom-color={folder.customColor ? 'true' : undefined}
+          style={customColorStyle}
+          onClick={hasChildren ? onToggle : undefined}
+          role={hasChildren ? 'button' : undefined}
+          tabIndex={hasChildren ? 0 : undefined}
+          onKeyDown={hasChildren ? (e) => handleExpandKeyDown(e, onToggle) : undefined}
+        >
+          <div className={css.folderContent}>
+            <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
+              <Tooltip content="Просмотреть" placement="top">
+                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onViewDetails(e); }} aria-label="Просмотреть">
+                  <EyeIcon style={{ width: 14, height: 14 }} />
+                </GlassButton>
+              </Tooltip>
+              <Tooltip content="Создать папку" placement="top">
+                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateFolder(e); }} aria-label="Создать папку">
+                  <FolderIcon style={{ width: 14, height: 14 }} />
+                </GlassButton>
+              </Tooltip>
+              <Tooltip content="Создать задачу" placement="top">
+                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateTask(e); }} aria-label="Создать задачу">
+                  <CheckSquareIcon style={{ width: 14, height: 14 }} />
+                </GlassButton>
+              </Tooltip>
+            </div>
+            <div className={css.treeRowMain}>
+              <div className={css.dragHandle} {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
+                <GripVerticalIcon style={{ width: 12, height: 12 }} />
+              </div>
+              <FolderCardLink
+                folder={folder}
+                style={customColorStyle}
+                dataCustomColor={!!folder.customColor}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      {hasChildren && isExpanded && (
+        <div className={css.tasksSection} style={{ marginLeft: `calc(var(--tree-indent) * ${depth + 1})` }}>
+          {isLoading ? (
+            <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+          ) : (
+            <>
+              {subfolders.map((sf) => renderFolder(sf, areaId, depth + 1))}
+              {tasks.map((task) => renderTask(task))}
+            </>
+          )}
+        </div>
+      )}
+    </React.Fragment>
+  );
+};

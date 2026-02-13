@@ -15,7 +15,7 @@
   box-shadow:
     var(--shadow-elev-1),
     var(--shadow-inset-1);
-  transition: box-shadow 220ms ease, background 220ms ease, border-color 220ms ease, filter 220ms ease;
+  transition: box-shadow var(--transition-normal), background var(--transition-normal), border-color var(--transition-normal), filter var(--transition-normal);
 }
 
 .btn::after {
@@ -25,7 +25,7 @@
   border-radius: inherit;
   pointer-events: none;
   box-shadow: 0 0 0 0 rgb(var(--white) / 0);
-  transition: box-shadow 220ms ease;
+  transition: box-shadow var(--transition-normal);
 }
 
 .btn::before {
@@ -65,13 +65,13 @@
 
 /* Primary variant - яркий акцентный цвет */
 .primary { 
-  border-color: rgb(var(--color-accent) / 0.35);
+  border-color: var(--variant-primary-border);
   background: var(--glass-gradient-primary);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-accent) / 0.15);
+    var(--variant-primary-ring);
 }
 
 .primary::before {
@@ -105,13 +105,13 @@
 
 /* Danger variant - яркий красный цвет */
 .danger { 
-  border-color: rgb(var(--color-danger) / 0.35);
+  border-color: var(--variant-danger-border);
   background: var(--glass-gradient-danger);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-danger) / 0.15);
+    var(--variant-danger-ring);
 }
 
 .danger::before {
@@ -145,13 +145,13 @@
 
 /* Success variant - яркий зеленый цвет */
 .success { 
-  border-color: rgb(var(--color-success) / 0.35);
+  border-color: var(--variant-success-border);
   background: var(--glass-gradient-success);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-success) / 0.15);
+    var(--variant-success-ring);
 }
 
 .success::before {
@@ -185,13 +185,13 @@
 
 /* Warning variant - яркий оранжевый цвет */
 .warning { 
-  border-color: rgb(var(--color-warning) / 0.35);
+  border-color: var(--variant-warning-border);
   background: var(--glass-gradient-warning);
   color: var(--color-text);
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--color-warning) / 0.15);
+    var(--variant-warning-ring);
 }
 
 .warning::before {
@@ -317,9 +317,9 @@
     var(--shadow-inset-1);
   pointer-events: none;
   transition:
-    transform 360ms cubic-bezier(.2,.8,.2,1),
-    width 360ms cubic-bezier(.2,.8,.2,1),
-    height 360ms cubic-bezier(.2,.8,.2,1);
+    transform var(--transition-slow) cubic-bezier(.2,.8,.2,1),
+    width var(--transition-slow) cubic-bezier(.2,.8,.2,1),
+    height var(--transition-slow) cubic-bezier(.2,.8,.2,1);
 }
 
 /* Toggle group button styles */

@@ -11,15 +11,15 @@
   color: var(--color-text);
   background: var(--glass-panel-bg);
   box-shadow: var(--shadow-elev-2), var(--shadow-inset-0);
-  backdrop-filter: blur(24px) saturate(200%);
-  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  backdrop-filter: var(--glass-tooltip-blur);
+  -webkit-backdrop-filter: var(--glass-tooltip-blur);
   border: var(--border-1) solid rgb(var(--white) / 0.10);
   font-size: var(--font-12);
   line-height: var(--line-height-snug);
   z-index: 9999;
-  min-width: 140px;
+  min-width: var(--container-min-width-dropdown);
   padding: var(--space-4);
-  transition: opacity 160ms ease, visibility 160ms ease;
+  transition: opacity var(--transition-tooltip), visibility var(--transition-tooltip);
 }
 
 @media (prefers-reduced-motion: reduce) {

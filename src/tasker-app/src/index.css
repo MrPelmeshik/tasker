@@ -123,6 +123,18 @@ body {
   --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.30), transparent 60%);
   --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.08), transparent 60%);
 
+  /* Варианты primary/danger/success/warning/info — border и ring для единообразия */
+  --variant-primary-border: rgb(var(--color-accent) / 0.40);
+  --variant-primary-ring: 0 0 0 1px rgb(var(--color-accent) / 0.20);
+  --variant-danger-border: rgb(var(--color-danger) / 0.40);
+  --variant-danger-ring: 0 0 0 1px rgb(var(--color-danger) / 0.20);
+  --variant-success-border: rgb(var(--color-success) / 0.40);
+  --variant-success-ring: 0 0 0 1px rgb(var(--color-success) / 0.20);
+  --variant-warning-border: rgb(var(--color-warning) / 0.40);
+  --variant-warning-ring: 0 0 0 1px rgb(var(--color-warning) / 0.20);
+  --variant-info-border: rgb(var(--color-info) / 0.40);
+  --variant-info-ring: 0 0 0 1px rgb(var(--color-info) / 0.20);
+
   /* Spacing scale */
   --space-0: 0px;
   --space-2: 2px;
@@ -189,6 +201,26 @@ body {
   --size-48: 48px;
   --size-col-task-min: 260px;
 
+  /* Размеры контейнеров */
+  --container-max-width-sm: 420px;
+  --container-max-width-form: 480px;
+  --container-min-width-dropdown: 140px;
+  --container-min-width-toast: 280px;
+
+  /* Breakpoints (для reference в медиа-запросах) */
+  --bp-sm: 640px;
+  --bp-md: 768px;
+  --bp-lg: 900px;
+  --bp-xl: 1000px;
+  --bp-2xl: 1280px;
+  --bp-3xl: 1600px;
+
+  /* Иконки и мелкие элементы */
+  --icon-xs: 10px;
+  --icon-s: 12px;
+  --icon-m: 14px;
+  --icon-l: 18px;
+
   /* Tree specific sizes */
   --tree-min-height: 36px;
   --tree-connecting-line-width: 1px;
@@ -238,6 +270,25 @@ body {
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.4s ease;
+  --transition-fast-ms: 200;
+  --transition-normal-ms: 220;
+  --transition-slow-ms: 360;
+  --transition-tooltip: 160ms ease;
+  --animation-toast-in: 220ms;
+
+  /* Focus ring — единый для всего приложения */
+  --focus-ring: 0 0 0 2px rgb(var(--color-accent) / 0.4);
+
+  /* Tooltip/Dropdown blur */
+  --glass-tooltip-blur: blur(24px) saturate(200%);
+
+  /* Tooltip max-widths */
+  --tooltip-max-width-s: 240px;
+  --tooltip-max-width-m: 320px;
+  --tooltip-max-width-l: 420px;
+
+  /* Декоративные градиенты (для fallback glass без backdrop-filter) */
+  --glass-accent-pink: rgba(255, 0, 160, 0.16);
 
   /* Glass panel (dropdown, tooltip) */
   --glass-panel-bg: linear-gradient(180deg, rgb(var(--black) / 0.82), rgb(var(--black) / 0.92)),

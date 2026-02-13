@@ -22,7 +22,7 @@
 
 .root:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 2px rgb(var(--color-accent) / 0.4);
+  box-shadow: var(--focus-ring);
 }
 
 /* Вариант без обводки: только текст, подсветка при hover */
@@ -39,17 +39,9 @@
 }
 
 .typeIcon {
-  flex-shrink: 0;
-  color: var(--glass-icon-default);
+  composes: typeIcon from './card-link-base.module.css';
 }
 
 .title {
-  font-size: var(--font-12);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-  line-height: var(--line-height-tight);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  flex: 1;
-  min-width: 0;
+  composes: title from './card-link-base.module.css';
 }
