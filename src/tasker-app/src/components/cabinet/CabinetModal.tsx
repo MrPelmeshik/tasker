@@ -263,7 +263,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
                               placeholder="Повторите пароль"
                             />
                             {saveError && (
-                              <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error)', fontSize: 'var(--font-12)' }}>
+                              <div className={`${formCss.fieldValueReadonly} ${formCss.fieldValueReadonlyError}`}>
                                 {saveError}
                               </div>
                             )}

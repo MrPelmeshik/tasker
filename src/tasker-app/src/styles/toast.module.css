@@ -32,7 +32,7 @@
   -webkit-backdrop-filter: var(--glass-backdrop-blur-10);
   color: var(--color-text);
   font-size: var(--font-14);
-  line-height: 1.4;
+  line-height: var(--line-height-normal);
   min-width: 280px;
   max-width: 420px;
   animation: toastSlideIn 220ms ease-out;

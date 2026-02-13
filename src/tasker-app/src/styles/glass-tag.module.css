@@ -15,8 +15,8 @@
     var(--shadow-elev-1),
     var(--shadow-inset-1);
   font-size: var(--font-12);
-  font-weight: 500;
-  line-height: 1.2;
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
   white-space: nowrap;
   user-select: none;
 }

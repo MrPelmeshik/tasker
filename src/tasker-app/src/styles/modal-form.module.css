@@ -20,7 +20,7 @@
 
 .fieldLabel {
   font-size: var(--font-14);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
   margin: 0;
   flex: 1;
@@ -69,11 +69,11 @@
 
 .readonlyMetaTitle {
   font-size: var(--font-12);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: rgb(var(--white) / 0.5);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-uppercase);
 }
 
 .readonlyMetaRow {
@@ -88,10 +88,30 @@
   color: rgb(var(--white) / 0.45);
 }
 
+/** Вариант метки с уменьшенным размером (для групп ролей) */
+.readonlyMetaLabelSmall {
+  font-size: var(--font-11);
+  color: rgb(var(--white) / 0.45);
+  margin-bottom: var(--space-4);
+}
+
+/** Плейсхолдер пустой группы (DnD подсказка) */
+.readonlyMetaPlaceholder {
+  padding: var(--space-6) 0;
+  color: rgb(var(--white) / 0.35);
+  font-size: var(--font-11);
+}
+
+/** Метка/текст с ошибкой */
+.readonlyMetaLabelError {
+  color: var(--color-error);
+  font-size: var(--font-12);
+}
+
 .readonlyMetaValue {
   font-size: var(--font-12);
   color: var(--color-text);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
 }
 
 /**
@@ -103,7 +123,7 @@
   padding: var(--space-10) var(--space-12);
   border-radius: var(--radius-m);
   font-size: var(--font-15);
-  line-height: 1.5;
+  line-height: var(--line-height-relaxed);
   color: var(--color-text);
   background: var(--surface-subtle-bg);
   border: var(--border-1) solid var(--surface-subtle-border-strong);
@@ -116,6 +136,12 @@
   color: rgb(var(--white) / 0.4);
 }
 
+/** Вариант для отображения ошибки (уменьшенный шрифт) */
+.fieldValueReadonlyError {
+  color: var(--color-error);
+  font-size: var(--font-12);
+}
+
 /**
  * Многострочный вариант для описания.
  * min-height соответствует textarea rows={4}.
@@ -125,7 +151,7 @@
   padding: var(--space-10) var(--space-12);
   border-radius: var(--radius-m);
   font-size: var(--font-15);
-  line-height: 1.5;
+  line-height: var(--line-height-relaxed);
   color: var(--color-text);
   background: var(--surface-subtle-bg);
   border: var(--border-1) solid var(--surface-subtle-border-strong);

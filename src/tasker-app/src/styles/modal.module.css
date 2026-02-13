@@ -69,7 +69,7 @@
 
 .modalConfirm .modalTitle {
   font-size: var(--font-16);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
 }
 
 .modalConfirm .modalBody {
@@ -79,7 +79,7 @@
 
 .modalConfirm .confirmMessage {
   font-size: var(--font-14);
-  line-height: 1.6;
+  line-height: var(--line-height-loose);
   color: var(--color-text);
   margin: 0;
 }
@@ -120,7 +120,7 @@
 
 .modalTitle {
   font-size: var(--font-18);
-  font-weight: 600;
+  font-weight: var(--font-weight-semibold);
   color: var(--color-text);
   margin: 0;
   display: flex;
@@ -151,7 +151,7 @@
 .confirmMessage {
   color: var(--color-text-muted);
   font-size: var(--font-14);
-  line-height: 1.5;
+  line-height: var(--line-height-relaxed);
   margin: 0;
 }
 

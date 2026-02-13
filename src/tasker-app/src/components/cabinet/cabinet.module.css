@@ -22,11 +22,11 @@
 
 .sectionTitle {
   font-size: var(--font-12);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: rgb(var(--white) / 0.5);
   margin: 0;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: var(--letter-spacing-uppercase);
 }
 
 .profileBlock {

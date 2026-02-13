@@ -16,7 +16,7 @@
 
 .widgetTitle {
   font-size: var(--font-18);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
   margin: 0;
 }
@@ -202,18 +202,18 @@
 .areaTitle,
 .groupTitle {
   font-size: var(--font-12);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
-  line-height: 1.2;
+  line-height: var(--line-height-tight);
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
 .taskTitle {
   font-size: var(--font-12);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
-  line-height: 1.2;
+  line-height: var(--line-height-tight);
   word-wrap: break-word;
   overflow-wrap: break-word;
   flex: 1;

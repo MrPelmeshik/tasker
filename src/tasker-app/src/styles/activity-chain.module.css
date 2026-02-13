@@ -19,7 +19,7 @@
   color: var(--color-text);
   font-family: inherit;
   font-size: var(--font-14);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   text-align: left;
   transition: background 0.15s ease;
 }
@@ -112,7 +112,7 @@
 
 .eventTitle {
   font-size: var(--font-13);
-  font-weight: 500;
+  font-weight: var(--font-weight-medium);
   color: var(--color-text);
   flex: 1;
   min-width: 0;
@@ -135,5 +135,5 @@
   margin-top: var(--space-6);
   font-size: var(--font-12);
   color: rgb(var(--white) / 0.6);
-  line-height: 1.4;
+  line-height: var(--line-height-normal);
 }

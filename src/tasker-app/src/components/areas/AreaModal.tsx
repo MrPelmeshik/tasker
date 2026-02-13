@@ -159,7 +159,7 @@ const RoleGroupSection: React.FC<RoleGroupSectionProps> = ({
   const label = AREA_ROLE_LABELS[role] ?? role;
   return (
     <div style={{ flexShrink: 0 }}>
-      <div className={formCss.readonlyMetaLabel} style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--font-11)' }}>{label}</div>
+      <div className={formCss.readonlyMetaLabelSmall}>{label}</div>
       <ul
         ref={isDroppable && !isViewMode ? setNodeRef : undefined}
         style={{
@@ -173,7 +173,7 @@ const RoleGroupSection: React.FC<RoleGroupSectionProps> = ({
         }}
       >
         {members.length === 0 && isDroppable && !isViewMode ? (
-          <li style={{ padding: 'var(--space-6) 0', color: 'rgb(var(--white) / 0.35)', fontSize: 'var(--font-11)' }}>
+          <li className={formCss.readonlyMetaPlaceholder}>
             Перетащите сюда для роли «{label}»
           </li>
         ) : (
@@ -325,7 +325,7 @@ const ParticipantsByRole: React.FC<ParticipantsByRoleProps> = ({
             </GlassButton>
           </div>
           {addMemberError && (
-            <span className={formCss.readonlyMetaLabel} style={{ color: 'var(--color-error)', fontSize: 'var(--font-12)' }}>{addMemberError}</span>
+            <span className={formCss.readonlyMetaLabelError}>{addMemberError}</span>
           )}
         </div>
       )}
@@ -654,7 +654,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 {membersLoading ? (
                   <div className={formCss.fieldValueReadonly}>Загрузка…</div>
                 ) : membersError ? (
-                  <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error)' }}>{membersError}</div>
+                  <div className={`${formCss.fieldValueReadonly} ${formCss.fieldValueReadonlyError}`}>{membersError}</div>
                 ) : (
                   <ParticipantsByRole
                     members={displayMembers}
