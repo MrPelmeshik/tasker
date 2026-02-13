@@ -1,4 +1,17 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
+import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+  useDraggable,
+  useDroppable,
+  type DragEndEvent,
+  type DragStartEvent,
+} from '@dnd-kit/core';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { GlassButton } from '../ui/GlassButton';
@@ -11,15 +24,17 @@ import { ResetIcon } from '../icons/ResetIcon';
 import { EditIcon } from '../icons/EditIcon';
 import { DeleteIcon } from '../icons/DeleteIcon';
 import { PlusIcon } from '../icons/PlusIcon';
+import { GripVerticalIcon } from '../icons/GripVerticalIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
 import { areaApi } from '../../services/api/areas';
+import { getCurrentUser } from '../../services/api/auth';
 import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import { formatDateTime } from '../../utils/date';
-import { AREA_ROLE_LABELS, getAddableRoles } from '../../utils/area-role';
+import { AREA_ROLE_LABELS, AREA_ROLES_ORDERED, DROPPABLE_ROLES, getAddableRoles, canEditArea } from '../../utils/area-role';
 import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaMemberResponse, AreaRole } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 
@@ -34,6 +49,287 @@ export interface AreaModalProps {
   size?: ModalSize;
 }
 
+/** Карточка участника с поддержкой перетаскивания (для ролей кроме Owner, только в режиме редактирования) */
+interface DraggableMemberCardProps {
+  member: AreaMemberResponse;
+  disabled: boolean;
+  onRemove: () => void;
+}
+
+const memberRowStyle: React.CSSProperties = {
+  alignItems: 'center',
+  padding: 'var(--space-4) 0',
+  borderBottom: '1px solid rgb(var(--white) / 0.05)',
+};
+
+const DraggableMemberCard: React.FC<DraggableMemberCardProps> = ({ member, disabled, onRemove }) => {
+  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
+    id: member.userId,
+    data: { member },
+  });
+  return (
+    <li
+      ref={setNodeRef}
+      className={formCss.readonlyMetaRow}
+      style={{
+        ...memberRowStyle,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    >
+      <span {...attributes} {...listeners} style={{ cursor: 'grab', padding: 'var(--space-2)', marginRight: 'var(--space-2)', touchAction: 'none' }} aria-label="Перетащить">
+        <GripVerticalIcon style={{ width: 14, height: 14, color: 'rgb(var(--white) / 0.45)' }} />
+      </span>
+      <span className={formCss.readonlyMetaValue} style={{ flex: 1 }}>{member.userName || '—'}</span>
+      <GlassButton variant="danger" size="xxs" onClick={onRemove} disabled={disabled}>
+        <DeleteIcon />
+      </GlassButton>
+    </li>
+  );
+};
+
+/** Превью карточки при перетаскивании (для DragOverlay) */
+interface MemberCardOverlayProps {
+  member: AreaMemberResponse;
+}
+
+const MemberCardOverlay: React.FC<MemberCardOverlayProps> = ({ member }) => (
+  <li
+    className={formCss.readonlyMetaRow}
+    style={{
+      alignItems: 'center',
+      padding: 'var(--space-8) var(--space-12)',
+      borderBottom: '1px solid rgb(var(--white) / 0.06)',
+      background: 'var(--glass-gradient-bg)',
+      borderRadius: 'var(--radius-m)',
+      border: '1px solid rgb(var(--white) / 0.12)',
+      boxShadow: 'var(--shadow-elev-2)',
+      listStyle: 'none',
+      minWidth: 200,
+      pointerEvents: 'none',
+    }}
+  >
+    <span style={{ padding: 'var(--space-4)', marginRight: 'var(--space-4)' }}>
+      <GripVerticalIcon style={{ width: 16, height: 16, color: 'rgb(var(--white) / 0.5)' }} />
+    </span>
+    <span className={formCss.readonlyMetaValue} style={{ flex: 1 }}>{member.userName || '—'}</span>
+    <span className={formCss.readonlyMetaLabel}>{AREA_ROLE_LABELS[member.role] ?? member.role}</span>
+  </li>
+);
+
+/** Статичная карточка участника (Owner - без перетаскивания и удаления) */
+interface StaticMemberCardProps {
+  member: AreaMemberResponse;
+}
+
+const StaticMemberCard: React.FC<StaticMemberCardProps> = ({ member }) => (
+  <li className={formCss.readonlyMetaRow} style={memberRowStyle}>
+    <span style={{ width: 22 }} />
+    <span className={formCss.readonlyMetaValue} style={{ flex: 1 }}>{member.userName || '—'}</span>
+    <span className={formCss.readonlyMetaLabel}>{AREA_ROLE_LABELS[member.role] ?? member.role}</span>
+  </li>
+);
+
+/** Группа участников по роли с droppable-зоной (для смены роли перетаскиванием) */
+interface RoleGroupSectionProps {
+  role: AreaRole;
+  members: AreaMemberResponse[];
+  isViewMode: boolean;
+  isDroppable: boolean;
+  disabled: boolean;
+  onRemoveMember: (m: AreaMemberResponse) => void;
+  onChangeMemberRole: (m: AreaMemberResponse, r: AreaRole) => void;
+}
+
+const RoleGroupSection: React.FC<RoleGroupSectionProps> = ({
+  role,
+  members,
+  isViewMode,
+  isDroppable,
+  disabled,
+  onRemoveMember,
+  onChangeMemberRole,
+}) => {
+  const { setNodeRef, isOver } = useDroppable({
+    id: role,
+    disabled: !isDroppable || isViewMode,
+  });
+  const label = AREA_ROLE_LABELS[role] ?? role;
+  return (
+    <div style={{ flexShrink: 0 }}>
+      <div className={formCss.readonlyMetaLabel} style={{ marginBottom: 'var(--space-4)', fontSize: 'var(--font-11)' }}>{label}</div>
+      <ul
+        ref={isDroppable && !isViewMode ? setNodeRef : undefined}
+        style={{
+          listStyle: 'none',
+          margin: 0,
+          padding: 0,
+          minHeight: isDroppable && !isViewMode ? 28 : 0,
+          borderRadius: 'var(--radius-xs)',
+          backgroundColor: isOver ? 'rgb(var(--white) / 0.06)' : undefined,
+          transition: 'background-color 150ms ease',
+        }}
+      >
+        {members.length === 0 && isDroppable && !isViewMode ? (
+          <li style={{ padding: 'var(--space-6) 0', color: 'rgb(var(--white) / 0.35)', fontSize: 'var(--font-11)' }}>
+            Перетащите сюда для роли «{label}»
+          </li>
+        ) : (
+          members.map(m =>
+            m.role === 'Owner' || isViewMode ? (
+              <StaticMemberCard key={m.userId} member={m} />
+            ) : (
+              <DraggableMemberCard
+                key={m.userId}
+                member={m}
+                disabled={disabled}
+                onRemove={() => onRemoveMember(m)}
+              />
+            )
+          )
+        )}
+      </ul>
+    </div>
+  );
+};
+
+/** Блок участников с группировкой по ролям и DnD */
+interface ParticipantsByRoleProps {
+  members: AreaMemberResponse[];
+  isViewMode: boolean;
+  addMemberLoading: boolean;
+  addMemberLogin: string;
+  addMemberRole: AreaRole;
+  addMemberError: string | null;
+  onAddMemberLoginChange: (v: string) => void;
+  onAddMemberRoleChange: (v: AreaRole) => void;
+  onAddMember: () => Promise<void>;
+  onChangeMemberRole: (m: AreaMemberResponse, r: AreaRole) => void;
+  onRemoveMember: (m: AreaMemberResponse) => void;
+}
+
+const ParticipantsByRole: React.FC<ParticipantsByRoleProps> = ({
+  members,
+  isViewMode,
+  addMemberLoading,
+  addMemberLogin,
+  addMemberRole,
+  addMemberError,
+  onAddMemberLoginChange,
+  onAddMemberRoleChange,
+  onAddMember,
+  onChangeMemberRole,
+  onRemoveMember,
+}) => {
+  const [activeMember, setActiveMember] = useState<AreaMemberResponse | null>(null);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+  );
+
+  const handleDragStart = (event: DragStartEvent) => {
+    const member = event.active.data?.current?.member as AreaMemberResponse | undefined;
+    if (member) setActiveMember(member);
+  };
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    setActiveMember(null);
+    if (!over) return;
+    if (over.id === active.id) return;
+    const member = active.data?.current?.member as AreaMemberResponse | undefined;
+    if (!member || member.role === 'Owner') return;
+    let newRole: AreaRole | null = null;
+    const overId = String(over.id);
+    if (DROPPABLE_ROLES.includes(overId as AreaRole)) {
+      newRole = overId as AreaRole;
+    } else {
+      const targetMember = over.data?.current?.member as AreaMemberResponse | undefined;
+      if (targetMember) newRole = targetMember.role;
+    }
+    if (!newRole || !DROPPABLE_ROLES.includes(newRole) || member.role === newRole) return;
+    onChangeMemberRole(member, newRole);
+  };
+
+  const membersByRole = React.useMemo((): Record<AreaRole, AreaMemberResponse[]> => {
+    const map: Record<AreaRole, AreaMemberResponse[]> = {
+      Owner: [],
+      Administrator: [],
+      Executor: [],
+      Observer: [],
+    };
+    for (const m of members) {
+      const r = m.role as AreaRole;
+      if (map[r]) map[r].push(m);
+    }
+    return map;
+  }, [members]);
+
+  const disabled = addMemberLoading;
+
+  return (
+    <>
+      <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd} onDragCancel={() => setActiveMember(null)}>
+        <div
+          className={`${formCss.readonlyMeta} ${!isViewMode ? formCss.readonlyMetaEditable : ''}`}
+          style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-12)' }}
+        >
+          {AREA_ROLES_ORDERED.map((role: AreaRole) => (
+            <RoleGroupSection
+              key={role}
+              role={role}
+              members={membersByRole[role] ?? []}
+              isViewMode={isViewMode}
+              isDroppable={DROPPABLE_ROLES.includes(role)}
+              disabled={disabled}
+              onRemoveMember={onRemoveMember}
+              onChangeMemberRole={onChangeMemberRole}
+            />
+          ))}
+        </div>
+        {createPortal(
+          <DragOverlay zIndex={1100} style={{ cursor: 'grabbing' }}>
+            {activeMember ? <MemberCardOverlay member={activeMember} /> : null}
+          </DragOverlay>,
+          document.body
+        )}
+      </DndContext>
+      {!isViewMode && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', marginTop: 'var(--space-12)' }}>
+          <div style={{ display: 'flex', gap: 'var(--space-8)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
+            <GlassInput
+              value={addMemberLogin}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => onAddMemberLoginChange(e.target.value)}
+              placeholder="Логин участника"
+              disabled={addMemberLoading}
+              fullWidth
+              type="text"
+            />
+            <GlassSelect
+              value={addMemberRole}
+              onChange={(v) => onAddMemberRoleChange(v as AreaRole)}
+              options={getAddableRoles()}
+              disabled={addMemberLoading}
+              placeholder="Роль"
+            />
+            <GlassButton
+              variant="primary"
+              size="xs"
+              onClick={onAddMember}
+              disabled={!addMemberLogin.trim() || addMemberLoading}
+            >
+              <PlusIcon /> Добавить
+            </GlassButton>
+          </div>
+          {addMemberError && (
+            <span className={formCss.readonlyMetaLabel} style={{ color: 'var(--color-error, #e53e3e)', fontSize: 'var(--font-12)' }}>{addMemberError}</span>
+          )}
+        </div>
+      )}
+    </>
+  );
+};
+
 export const AreaModal: React.FC<AreaModalProps> = ({
   isOpen,
   onClose,
@@ -43,6 +339,9 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   title = 'Область',
   size = 'medium',
 }) => {
+  const [members, setMembers] = useState<AreaMemberResponse[]>([]);
+  const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AreaRole>>({});
+
   const modal = useEntityFormModal<AreaCreateRequest>({
     isOpen,
     entity: area,
@@ -52,9 +351,20 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         : { title: '', description: '' },
     deps: [area],
     onClose,
-    onSave: (data) => onSave((area ? { ...data, id: area.id } : data) as AreaCreateRequest | AreaUpdateRequest),
+    onSave: async (data) => {
+      if (area?.id && Object.keys(pendingRoleChanges).length > 0) {
+        for (const [userId, role] of Object.entries(pendingRoleChanges)) {
+          await areaApi.addMember(area.id, { userId, role });
+        }
+        setPendingRoleChanges({});
+        const updated = await areaApi.getMembers(area.id);
+        setMembers(updated);
+      }
+      await onSave((area ? { ...data, id: area.id } : data) as AreaCreateRequest | AreaUpdateRequest);
+    },
     onDelete,
     validate: (data) => Boolean(data.title?.trim()),
+    getExtraUnsavedChanges: () => Object.keys(pendingRoleChanges).length > 0,
   });
 
   const {
@@ -83,22 +393,24 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     isLoading,
   } = modal;
 
-  /** Участники области */
-  const [members, setMembers] = useState<AreaMemberResponse[]>([]);
   const [membersLoading, setMembersLoading] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [membersError, setMembersError] = useState<string | null>(null);
-  /** Форма добавления участника */
   const [addMemberLogin, setAddMemberLogin] = useState('');
   const [addMemberRole, setAddMemberRole] = useState<AreaRole>('Executor');
   const [addMemberError, setAddMemberError] = useState<string | null>(null);
   const [addMemberLoading, setAddMemberLoading] = useState(false);
-  /** Подтверждение удаления участника */
   const [removeConfirmMember, setRemoveConfirmMember] = useState<AreaMemberResponse | null>(null);
-  /** ID участника, у которого меняется роль (для индикатора загрузки) */
-  const [updatingMemberId, setUpdatingMemberId] = useState<string | null>(null);
 
   const areaEvents = useEvents('area', area?.id);
   const isViewMode = Boolean(area && !isEditMode);
+
+  /** Право на редактирование: создание новой области или роль Owner/Administrator */
+  const canEdit =
+    !area ||
+    (!membersLoading &&
+      currentUserId != null &&
+      members.some((m) => m.userId === currentUserId && canEditArea(m.role)));
 
   // Сброс доп. состояния при открытии
   useEffect(() => {
@@ -106,23 +418,25 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       setAddMemberLogin('');
       setAddMemberError(null);
       setRemoveConfirmMember(null);
-      setUpdatingMemberId(null);
+      setPendingRoleChanges({});
     }
   }, [isOpen, area]);
 
-  // Загрузка участников при открытии модального окна для существующей области
+  // Загрузка участников и текущего пользователя при открытии модального окна для существующей области
   useEffect(() => {
     if (!isOpen || !area?.id) {
       setMembers([]);
+      setCurrentUserId(null);
       return;
     }
     let cancelled = false;
     setMembersLoading(true);
     setMembersError(null);
-    areaApi.getMembers(area.id)
-      .then(data => {
+    Promise.all([getCurrentUser(), areaApi.getMembers(area.id)])
+      .then(([userRes, membersData]) => {
         if (!cancelled) {
-          setMembers(data);
+          setCurrentUserId(userRes.success && userRes.data ? userRes.data.id : null);
+          setMembers(membersData);
         }
       })
       .catch(err => {
@@ -161,21 +475,20 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     }
   };
 
-  /** Изменить роль участника области */
-  const handleChangeMemberRole = async (member: AreaMemberResponse, newRole: AreaRole) => {
-    if (!area?.id || member.role === 'Owner' || member.role === newRole) return;
-    setUpdatingMemberId(member.userId);
+  /** Локально изменить роль участника (применится при сохранении окна) */
+  const handleChangeMemberRole = (member: AreaMemberResponse, newRole: AreaRole) => {
+    if (member.role === 'Owner' || member.role === newRole) return;
     setAddMemberError(null);
-    try {
-      await areaApi.addMember(area.id, { userId: member.userId, role: newRole });
-      const updated = await areaApi.getMembers(area.id);
-      setMembers(updated);
-    } catch (err) {
-      setAddMemberError(err instanceof Error ? err.message : 'Ошибка изменения роли');
-    } finally {
-      setUpdatingMemberId(null);
-    }
+    setPendingRoleChanges(prev => ({ ...prev, [member.userId]: newRole }));
   };
+
+  /** Участники с учётом отложенных изменений ролей (для отображения) */
+  const displayMembers = React.useMemo(() => {
+    return members.map(m => ({
+      ...m,
+      role: (pendingRoleChanges[m.userId] ?? m.role) as AreaRole,
+    }));
+  }, [members, pendingRoleChanges]);
 
   /** Подтвердить удаление участника */
   const handleConfirmRemoveMember = async () => {
@@ -216,15 +529,17 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             </GlassButton>
             {isViewMode ? (
               <>
-                <GlassButton
-                  variant="primary"
-                  size="xs"
-                  onClick={() => setIsEditMode(true)}
-                  disabled={isLoading}
-                >
-                  <EditIcon />
-                </GlassButton>
-                {area && onDelete && (
+                {canEdit && (
+                  <GlassButton
+                    variant="primary"
+                    size="xs"
+                    onClick={() => setIsEditMode(true)}
+                    disabled={isLoading}
+                  >
+                    <EditIcon />
+                  </GlassButton>
+                )}
+                {canEdit && area && onDelete && (
                   <GlassButton
                     variant="danger"
                     size="xs"
@@ -251,7 +566,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   variant="primary"
                   size="xs"
                   onClick={handleSave}
-                  disabled={!hasChanges || !formData.title.trim() || isLoading}
+                  disabled={!hasUnsavedChanges || !formData.title.trim() || isLoading}
                 >
                   <SaveIcon />
                 </GlassButton>
@@ -377,74 +692,19 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 ) : membersError ? (
                   <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error, #e53e3e)' }}>{membersError}</div>
                 ) : (
-                  <>
-                    <ul style={{ listStyle: 'none', margin: 0, padding: 0, display: 'flex', flexDirection: 'column', gap: 'var(--space-8)' }}>
-                      {members.map(m => (
-                        <li key={m.userId} className={formCss.readonlyMetaRow} style={{ alignItems: 'center', padding: 'var(--space-8) 0', borderBottom: '1px solid rgb(var(--white) / 0.06)' }}>
-                          <span className={formCss.readonlyMetaValue} style={{ flex: 1 }}>{m.userName || '—'}</span>
-                          {m.role === 'Owner' ? (
-                            <span className={formCss.readonlyMetaLabel}>{AREA_ROLE_LABELS[m.role] ?? m.role}</span>
-                          ) : !isViewMode ? (
-                            <GlassSelect
-                              value={m.role}
-                              onChange={(v) => handleChangeMemberRole(m, v as AreaRole)}
-                              options={getAddableRoles()}
-                              disabled={addMemberLoading || updatingMemberId === m.userId}
-                              placeholder="Роль"
-                              size="s"
-                            />
-                          ) : (
-                            <span className={formCss.readonlyMetaLabel}>{AREA_ROLE_LABELS[m.role] ?? m.role}</span>
-                          )}
-                          {!isViewMode && m.role !== 'Owner' && (
-                            <GlassButton
-                              variant="subtle"
-                              size="xxs"
-                              onClick={() => setRemoveConfirmMember(m)}
-                              disabled={addMemberLoading || updatingMemberId === m.userId}
-                            >
-                              <DeleteIcon />
-                            </GlassButton>
-                          )}
-                        </li>
-                      ))}
-                    </ul>
-                    {!isViewMode && (
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--space-8)', marginTop: 'var(--space-12)' }}>
-                        <div style={{ display: 'flex', gap: 'var(--space-8)', flexWrap: 'wrap', alignItems: 'flex-end' }}>
-                          <GlassInput
-                            value={addMemberLogin}
-                            onChange={(e: React.ChangeEvent<HTMLInputElement>) => {
-                              setAddMemberLogin(e.target.value);
-                              setAddMemberError(null);
-                            }}
-                            placeholder="Логин участника"
-                            disabled={addMemberLoading}
-                            fullWidth
-                            type="text"
-                          />
-                          <GlassSelect
-                            value={addMemberRole}
-                            onChange={(v) => setAddMemberRole(v as AreaRole)}
-                            options={getAddableRoles()}
-                            disabled={addMemberLoading}
-                            placeholder="Роль"
-                          />
-                          <GlassButton
-                            variant="primary"
-                            size="xs"
-                            onClick={handleAddMember}
-                            disabled={!addMemberLogin.trim() || addMemberLoading}
-                          >
-                            <PlusIcon /> Добавить
-                          </GlassButton>
-                        </div>
-                        {addMemberError && (
-                          <span className={formCss.readonlyMetaLabel} style={{ color: 'var(--color-error, #e53e3e)', fontSize: 'var(--font-12)' }}>{addMemberError}</span>
-                        )}
-                      </div>
-                    )}
-                  </>
+                  <ParticipantsByRole
+                    members={displayMembers}
+                    isViewMode={isViewMode}
+                    addMemberLoading={addMemberLoading}
+                    addMemberLogin={addMemberLogin}
+                    addMemberRole={addMemberRole}
+                    addMemberError={addMemberError}
+                    onAddMemberLoginChange={(v) => { setAddMemberLogin(v); setAddMemberError(null); }}
+                    onAddMemberRoleChange={(v) => setAddMemberRole(v as AreaRole)}
+                    onAddMember={handleAddMember}
+                    onChangeMemberRole={handleChangeMemberRole}
+                    onRemoveMember={(m) => setRemoveConfirmMember(m)}
+                  />
                 )}
               </div>
             )}

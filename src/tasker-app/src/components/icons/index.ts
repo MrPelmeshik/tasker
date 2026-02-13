@@ -7,5 +7,6 @@ export { PlusIcon } from './PlusIcon';
 export { XIcon } from './XIcon';
 export { SaveIcon } from './SaveIcon';
 export { ResetIcon } from './ResetIcon';
+export { GripVerticalIcon } from './GripVerticalIcon';
 export { SunIcon } from './SunIcon';
 export { MoonIcon } from './MoonIcon';

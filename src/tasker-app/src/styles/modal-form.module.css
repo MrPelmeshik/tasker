@@ -60,6 +60,13 @@
   border: var(--border-1) solid rgb(var(--white) / 0.06);
 }
 
+/* Вариант для режима редактирования — светлее, как у полей ввода */
+.readonlyMetaEditable {
+  background: var(--glass-gradient-bg-subtle);
+  border-color: rgb(var(--white) / 0.12);
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
+}
+
 .readonlyMetaTitle {
   font-size: var(--font-12);
   font-weight: 500;
