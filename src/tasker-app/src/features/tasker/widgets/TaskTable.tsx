@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState, useCallback } from 'react';
-import { GlassWidget, GlassButton, GlassTag, TaskStatusBadge, Tooltip } from '../../../components';
-import { EyeIcon } from '../../../components/icons';
+import { GlassWidget, GlassButton, GlassTag, Tooltip } from '../../../components';
+import { TaskCardLink } from '../../../components/tasks';
 import type { WidgetSizeProps } from '../../../types';
 import type { TaskResponse, TaskUpdateRequest } from '../../../types/api';
 import { TaskStatus } from '../../../types/task-status';
@@ -259,22 +259,12 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                     ) : null}
                   </td>
                   <td className={`${css.td} ${css.colTask}`}>
-                    <div className={css.taskCell}>
-                      <GlassButton
-                        size="xxs"
-                        variant="subtle"
-                        onClick={(e: React.MouseEvent) => handleViewTaskDetails(row.taskId, e)}
-                        className={css.taskButton}
-                      >
-                        <EyeIcon />
-                      </GlassButton>
-                      <TaskStatusBadge
-                        status={(row.task.status ?? TaskStatus.InProgress) as TaskStatus}
-                        size="xs"
-                        variant="compact"
-                      />
-                      <span>{row.taskName}</span>
-                    </div>
+                    <TaskCardLink
+                      task={row.task}
+                      onClick={(e) => handleViewTaskDetails(row.taskId, e)}
+                      className={css.taskCell}
+                      variant="text"
+                    />
                   </td>
                 </tr>
               ))}

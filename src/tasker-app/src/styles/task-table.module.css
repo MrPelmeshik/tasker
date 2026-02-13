@@ -221,20 +221,7 @@
 
 .muted { color: var(--color-text-subtle); }
 
-/* Task cell with button container */
+/* Task cell — компактная карточка задачи (TaskCardLink) */
 .taskCell {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-}
-
-.taskButton {
-  opacity: 0;
-  transition: opacity 200ms ease-in-out;
-  flex-shrink: 0;
-}
-
-/* Show button on row hover */
-.table tbody tr:hover .taskButton {
-  opacity: 1;
+  /* Минимальные переопределения — TaskCardLink задаёт свои стили */
 }

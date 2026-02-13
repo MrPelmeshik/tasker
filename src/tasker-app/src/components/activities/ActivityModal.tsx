@@ -5,9 +5,9 @@ import {
   GlassTextarea,
   ModalCloseButton,
   ModalSaveButton,
-  ModalViewButton,
 } from '../ui';
 import { ActivityList } from './ActivityList';
+import { TaskCardLink } from '../tasks';
 import { useToast } from '../../context/ToastContext';
 import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { useEvents } from './useEvents';
@@ -85,14 +85,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           </div>
         </div>
         <div className={css.modalBody}>
-          <div className={activityModalCss.taskCard} style={{ marginBottom: 'var(--space-16)' }}>
-            <ModalViewButton
-              tooltip="Подробнее о задаче"
-              onClick={onOpenTaskDetails}
-              className={activityModalCss.taskCardButton}
-            />
-            <span>{task.title}</span>
-          </div>
+          <TaskCardLink
+            task={{ id: task.id, title: task.title, status: task.status }}
+            onClick={() => onOpenTaskDetails()}
+            className={activityModalCss.taskCard}
+          />
           {date && (
             <div style={{ marginBottom: 'var(--space-16)' }}>
               <ActivityList

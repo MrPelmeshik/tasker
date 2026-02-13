@@ -1,0 +1,47 @@
+.root {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-xs);
+  background: var(--surface-subtle-bg);
+  border: var(--border-1) solid var(--surface-subtle-border);
+  cursor: pointer;
+  transition: background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
+  box-sizing: border-box;
+}
+
+.root:hover {
+  background: var(--glass-card-bg-hover);
+  border-color: var(--glass-card-border-default-hover);
+  box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
+}
+
+.root:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px rgb(var(--color-accent) / 0.4);
+}
+
+/* Вариант без обводки: только текст, подсветка при hover */
+.textVariant {
+  background: transparent;
+  border: none;
+  padding: var(--space-2) var(--space-4);
+}
+
+.textVariant:hover {
+  background: var(--glass-hover-bg);
+  border-radius: var(--radius-xs);
+  box-shadow: none;
+}
+
+.title {
+  font-size: var(--font-12);
+  font-weight: 500;
+  color: var(--color-text);
+  line-height: 1.2;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  flex: 1;
+  min-width: 0;
+}

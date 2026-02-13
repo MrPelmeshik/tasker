@@ -1,14 +1,3 @@
 .taskCard {
-  display: flex;
-  align-items: center;
-  gap: var(--space-8);
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-xs);
-  background: var(--surface-subtle-bg);
-  border: var(--border-1) solid var(--surface-subtle-border);
-}
-
-.taskCardButton {
-  opacity: 1;
-  flex-shrink: 0;
+  margin-bottom: var(--space-16);
 }

@@ -3,7 +3,7 @@ import glassWidgetStyles from '../../../styles/glass-widget.module.css';
 import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
-import { TaskStatusBadge } from '../../../components/ui/TaskStatusBadge';
+import { TaskCardLink } from '../../../components/tasks';
 import { useModal, useTaskUpdate, useToast } from '../../../context';
 import { parseApiErrorMessage } from '../../../utils/parse-api-error';
 import type { 
@@ -16,8 +16,7 @@ import type {
   GroupCreateRequest, 
   GroupUpdateRequest,
   TaskCreateRequest,
-  TaskUpdateRequest,
-  TaskStatus
+  TaskUpdateRequest
 } from '../../../types';
 import { 
   fetchAreaShortCard, 
@@ -646,33 +645,13 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                                         
                                         return (
                                         <div key={task.id} className={css.taskItem}>
-                                          <div 
+                                          <TaskCardLink
+                                            task={task}
+                                            onClick={(e) => handleViewTaskDetails(task.id, e)}
                                             className={css.taskCard}
-                                            data-custom-color={task.customColor ? 'true' : undefined}
                                             style={taskCustomColorStyle}
-                                          >
-                                            <div className={css.taskContent}>
-                                              <div className={css.taskInfo}>
-                                                <div className={css.taskTitleRow}>
-                                                  <div className={css.taskTitle}>{task.title}</div>
-                                                  <TaskStatusBadge
-                                                    status={task.status as TaskStatus}
-                                                    size="xs"
-                                                    variant="compact"
-                                                  />
-                                                </div>
-                                              </div>
-                                              <div className={css.taskActions}>
-                                                <GlassButton 
-                                                  variant="subtle"
-                                                  size="xs"
-                                                  onClick={(e: React.MouseEvent) => handleViewTaskDetails(task.id, e)}
-                                                >
-                                                  <EyeIcon />
-                                                </GlassButton>
-                                              </div>
-                                            </div>
-                                          </div>
+                                            dataCustomColor={!!task.customColor}
+                                          />
                                         </div>
                                         );
                                       })
