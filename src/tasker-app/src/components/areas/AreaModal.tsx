@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DndContext,
@@ -31,6 +31,7 @@ import { GripVerticalIcon } from '../icons/GripVerticalIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
+import { useTaskUpdate } from '../../context';
 import { useToast } from '../../context/ToastContext';
 import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { areaApi } from '../../services/api/areas';
@@ -431,7 +432,21 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const [removeConfirmMember, setRemoveConfirmMember] = useState<AreaMemberResponse | null>(null);
 
   const areaEvents = useEvents('area', area?.id);
+  const { subscribeToTaskUpdates } = useTaskUpdate();
+  const [membersRefreshTrigger, setMembersRefreshTrigger] = useState(0);
+  const refetchRef = useRef(areaEvents.refetch);
+  refetchRef.current = areaEvents.refetch;
   const isViewMode = Boolean(area && !isEditMode);
+
+  useEffect(() => {
+    const unsub = subscribeToTaskUpdates((_taskId, _folderId, payload) => {
+      if (payload?.areaId === area?.id) {
+        refetchRef.current();
+        setMembersRefreshTrigger((t) => t + 1);
+      }
+    });
+    return unsub;
+  }, [subscribeToTaskUpdates, area?.id]);
 
   /** Право на редактирование: создание новой области или роль Owner/Administrator */
   const canEdit =
@@ -480,7 +495,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         if (!cancelled) setMembersLoading(false);
       });
     return () => { cancelled = true; };
-  }, [isOpen, area?.id, addError]);
+  }, [isOpen, area?.id, addError, membersRefreshTrigger]);
 
   /** Добавить участника (отложенно, применится при сохранении) */
   const handleAddMember = (): void => {

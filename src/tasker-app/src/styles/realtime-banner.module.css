@@ -1,0 +1,15 @@
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  border-radius: var(--radius-m);
+  font-size: 0.875rem;
+}
+
+.text {
+  color: var(--color-text-muted);
+}

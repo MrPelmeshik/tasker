@@ -14,8 +14,6 @@ import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import { findFolderById } from './treeUtils';
 import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
 
-const TREE_POLL_INTERVAL_MS = 30_000;
-
 export interface UseTreeDataOptions {
   addError: (message: string) => void;
   subscribeToTaskUpdates: (callback: () => void) => () => void;
@@ -131,19 +129,6 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     const unsubscribe = subscribeToTaskUpdates(() => refreshTree());
     return unsubscribe;
   }, [subscribeToTaskUpdates, refreshTree]);
-
-  useEffect(() => {
-    const id = setInterval(() => refreshTree(), TREE_POLL_INTERVAL_MS);
-    return () => clearInterval(id);
-  }, [refreshTree]);
-
-  useEffect(() => {
-    const onVisibilityChange = () => {
-      if (document.visibilityState === 'visible') refreshTree();
-    };
-    document.addEventListener('visibilitychange', onVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', onVisibilityChange);
-  }, [refreshTree]);
 
   const toggleArea = useCallback(
     (areaId: string) => {

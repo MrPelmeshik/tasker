@@ -85,6 +85,11 @@ public class TaskerDbContext : DbContext
     public DbSet<EventToSubtaskEntity> EventToSubtasks { get; set; }
 
     /// <summary>
+    /// Refresh-токены (инвалидация при logout)
+    /// </summary>
+    public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
+
+    /// <summary>
     /// Настраивает модель базы данных, определяя связи между сущностями, ограничения и индексы
     /// </summary>
     /// <param name="modelBuilder">Построитель модели Entity Framework</param>
@@ -294,6 +299,16 @@ public class TaskerDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(e => e.EventId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RefreshTokenEntity>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.HasIndex(e => e.TokenHash).IsUnique();
+            entity.HasOne<UserEntity>()
+                .WithMany()
+                .HasForeignKey(e => e.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
     }
     

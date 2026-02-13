@@ -7,6 +7,7 @@ import { Tree } from '../features/tasker/widgets/Tree';
 import { DeadlinesList } from '../features/tasker/widgets/DeadlinesList';
 import { WidgetPanel } from '../components/common/WidgetPanel';
 import { WidgetPlaceholder } from '../components/common/WidgetPlaceholder';
+import { RealtimeBanner } from '../components/common/RealtimeBanner';
 
 export const TaskerPage: React.FC = () => {
   const layout = {
@@ -19,6 +20,7 @@ export const TaskerPage: React.FC = () => {
   };
   return (
     <div className={styles.taskerPageContainer}>
+      <RealtimeBanner />
       <WidgetPanel>
         <WidgetPlaceholder {...layout.placeholder1} />
         <TaskTable {...layout.taskTable} />

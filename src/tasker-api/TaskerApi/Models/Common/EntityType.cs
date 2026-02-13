@@ -19,4 +19,9 @@ public enum EntityType
     /// Задача.
     /// </summary>
     TASK,
+
+    /// <summary>
+    /// Событие/активность.
+    /// </summary>
+    EVENT,
 }

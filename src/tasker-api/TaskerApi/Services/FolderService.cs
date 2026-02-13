@@ -22,7 +22,8 @@ public class FolderService(
     ITaskRepository taskRepository,
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
-    IAreaRoleService areaRoleService)
+    IAreaRoleService areaRoleService,
+    IRealtimeNotifier realtimeNotifier)
     : BaseService(logger, currentUser), IFolderService
 {
     /// <summary>
@@ -81,6 +82,7 @@ public class FolderService(
             var created = await folderRepository.CreateAsync(folder, cancellationToken);
 
             await entityEventLogger.LogAsync(EntityType.FOLDER, created.Id, EventType.CREATE, created.Title, null, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, created.Id, created.AreaId, created.ParentFolderId, "Create", cancellationToken);
 
             return created.ToFolderResponse();
         }, nameof(CreateAsync), request);
@@ -119,6 +121,7 @@ public class FolderService(
 
             var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, folder);
             await entityEventLogger.LogAsync(EntityType.FOLDER, id, EventType.UPDATE, folder.Title, messageJson, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, id, folder.AreaId, folder.ParentFolderId, "Update", cancellationToken);
 
             return folder.ToFolderResponse();
         }, nameof(UpdateAsync), new { id, request });
@@ -139,6 +142,7 @@ public class FolderService(
                 throw new UnauthorizedAccessException("Только владелец области может удалять папки");
 
             await entityEventLogger.LogAsync(EntityType.FOLDER, id, EventType.DELETE, folder.Title, null, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, id, folder.AreaId, folder.ParentFolderId, "Delete", cancellationToken);
             await folderRepository.DeleteAsync(id, cancellationToken);
         }, nameof(DeleteAsync), new { id });
     }
@@ -197,17 +201,24 @@ public class FolderService(
 
     private async Task<List<FolderSummaryResponse>> ToFolderSummaryList(IReadOnlyList<FolderEntity> folders, CancellationToken cancellationToken)
     {
+        if (folders.Count == 0)
+            return new List<FolderSummaryResponse>();
+
+        var folderIds = folders.Select(f => f.Id).ToList();
+        var taskCounts = await taskRepository.GetTaskCountByFolderIdsAsync(folderIds, cancellationToken);
+        var subfolderCounts = await folderRepository.GetSubfolderCountByFolderIdsAsync(folderIds, cancellationToken);
+
         var userIds = folders.Select(f => f.OwnerUserId).Distinct().ToHashSet();
         var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
         var userNames = users.ToDictionary(u => u.Id, u => u.Name);
-        var result = new List<FolderSummaryResponse>();
 
+        var result = new List<FolderSummaryResponse>();
         foreach (var folder in folders)
         {
-            var tasks = await taskRepository.GetByFolderIdAsync(folder.Id, cancellationToken);
-            var subfolders = await folderRepository.GetByParentIdAsync(folder.Id, cancellationToken);
+            var taskCount = taskCounts.GetValueOrDefault(folder.Id, 0);
+            var subfolderCount = subfolderCounts.GetValueOrDefault(folder.Id, 0);
             var ownerName = userNames.GetValueOrDefault(folder.OwnerUserId, "");
-            result.Add(folder.ToFolderSummaryResponse(tasks.Count, subfolders.Count, ownerName));
+            result.Add(folder.ToFolderSummaryResponse(taskCount, subfolderCount, ownerName));
         }
 
         return result;

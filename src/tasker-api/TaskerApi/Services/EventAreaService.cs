@@ -1,6 +1,7 @@
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Repositories;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -18,12 +19,17 @@ public class EventAreaService(
     IEventRepository eventRepository,
     IAreaRepository areaRepository,
     IAreaRoleService areaRoleService,
+    IRealtimeNotifier realtimeNotifier,
     TaskerDbContext context)
     : BaseEventEntityService(logger, currentUser, eventRepository, areaRoleService, context), IEventAreaService
 {
     /// <inheritdoc />
-    public Task<EventCreateResponse> AddEventAsync(EventCreateEntityRequest item, CancellationToken cancellationToken)
-        => AddEventCoreAsync(item, cancellationToken);
+    public async Task<EventCreateResponse> AddEventAsync(EventCreateEntityRequest item, CancellationToken cancellationToken)
+    {
+        var result = await AddEventCoreAsync(item, cancellationToken);
+        await realtimeNotifier.NotifyEntityChangedAsync(Models.Common.EntityType.EVENT, item.EntityId, item.EntityId, null, "Create", cancellationToken);
+        return result;
+    }
 
     /// <inheritdoc />
     public async Task<IReadOnlyList<EventResponse>> GetEventsByAreaIdAsync(Guid areaId, CancellationToken cancellationToken)

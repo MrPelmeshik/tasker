@@ -41,4 +41,44 @@ public class FolderRepository : BaseRepository<FolderEntity, Guid>, IFolderRepos
             .FirstOrDefaultAsync(cancellationToken);
         return folder?.ParentFolderId;
     }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, int>> GetRootCountByAreaIdsAsync(IEnumerable<Guid> areaIds, CancellationToken cancellationToken = default)
+    {
+        var ids = areaIds.ToHashSet();
+        if (ids.Count == 0)
+            return new Dictionary<Guid, int>();
+
+        var counts = await DbSet
+            .AsNoTracking()
+            .Where(f => ids.Contains(f.AreaId) && f.ParentFolderId == null && f.IsActive)
+            .GroupBy(f => f.AreaId)
+            .Select(g => new { AreaId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var result = ids.ToDictionary(id => id, _ => 0);
+        foreach (var c in counts)
+            result[c.AreaId] = c.Count;
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<IReadOnlyDictionary<Guid, int>> GetSubfolderCountByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default)
+    {
+        var ids = folderIds.ToHashSet();
+        if (ids.Count == 0)
+            return new Dictionary<Guid, int>();
+
+        var counts = await DbSet
+            .AsNoTracking()
+            .Where(f => f.ParentFolderId.HasValue && ids.Contains(f.ParentFolderId.Value) && f.IsActive)
+            .GroupBy(f => f.ParentFolderId!.Value)
+            .Select(g => new { FolderId = g.Key, Count = g.Count() })
+            .ToListAsync(cancellationToken);
+
+        var result = ids.ToDictionary(id => id, _ => 0);
+        foreach (var c in counts)
+            result[c.FolderId] = c.Count;
+        return result;
+    }
 }

@@ -34,10 +34,12 @@ public class TaskWithActivitiesFilterRequest
     /// <summary>
     /// Номер страницы (1-based). Пагинация применяется только при одновременном указании Page и Limit
     /// </summary>
+    [Range(1, 10000, ErrorMessage = "Page должен быть от 1 до 10000")]
     public int? Page { get; set; }
 
     /// <summary>
     /// Размер страницы. Пагинация применяется только при одновременном указании Page и Limit
     /// </summary>
+    [Range(1, 500, ErrorMessage = "Limit должен быть от 1 до 500")]
     public int? Limit { get; set; }
 }

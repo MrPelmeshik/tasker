@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchEventsByTask, fetchEventsByArea } from '../../services/api';
 import type { EventResponse } from '../../types/api';
 import { toIsoDateString } from '../../utils/api-date';
@@ -14,10 +14,13 @@ export function useEvents(
   entityType: 'task' | 'area',
   entityId: string | undefined,
   date?: string
-): { events: EventResponse[]; loading: boolean; error: string | null } {
+): { events: EventResponse[]; loading: boolean; error: string | null; refetch: () => void } {
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [trigger, setTrigger] = useState(0);
+
+  const refetch = useCallback(() => setTrigger((t) => t + 1), []);
 
   useEffect(() => {
     if (!entityId) return;
@@ -50,7 +53,7 @@ export function useEvents(
     return () => {
       cancelled = true;
     };
-  }, [entityType, entityId, date]);
+  }, [entityType, entityId, date, trigger]);
 
-  return { events, loading, error };
+  return { events, loading, error, refetch };
 }

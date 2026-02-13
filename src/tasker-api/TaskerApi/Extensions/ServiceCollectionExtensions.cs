@@ -23,6 +23,10 @@ public static class ServiceCollectionExtensions
     /// <summary>
     /// Добавляет CORS для Tasker API
     /// </summary>
+    /// <summary>
+    /// Добавляет CORS для Tasker API.
+    /// В production при пустых allowedOrigins выбрасывается исключение (AllowAnyOrigin несовместим с AllowCredentials).
+    /// </summary>
     public static IServiceCollection AddTaskerCors(this IServiceCollection services, IConfiguration configuration)
     {
         var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
@@ -33,6 +37,10 @@ public static class ServiceCollectionExtensions
                 .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
             allowedOrigins = allowedOrigins.Concat(csv).Distinct(StringComparer.OrdinalIgnoreCase).ToArray();
         }
+
+        var isProduction = string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Production", StringComparison.OrdinalIgnoreCase);
+        if (allowedOrigins.Length == 0 && isProduction)
+            throw new InvalidOperationException("CORS: в production необходимо задать Cors:AllowedOrigins или Cors:AllowedOriginsCsv. AllowAnyOrigin несовместим с AllowCredentials.");
 
         services.AddCors(options =>
         {
@@ -89,6 +97,19 @@ public static class ServiceCollectionExtensions
                 RoleClaimType = ClaimTypes.Role,
                 ClockSkew = TimeSpan.FromSeconds(30)
             };
+            options.Events = new JwtBearerEvents
+            {
+                OnMessageReceived = context =>
+                {
+                    var accessToken = context.Request.Query["access_token"];
+                    var path = context.HttpContext.Request.Path;
+                    if (!string.IsNullOrEmpty(accessToken) && path.StartsWithSegments("/hubs"))
+                    {
+                        context.Token = accessToken;
+                    }
+                    return Task.CompletedTask;
+                }
+            };
         })
         .AddNegotiate();
 
@@ -125,6 +146,7 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEventRepository, EventRepository>();
         services.AddScoped<IUserLogRepository, UserLogRepository>();
         services.AddScoped<IUserAreaAccessRepository, UserAreaAccessRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
 
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
@@ -155,6 +177,10 @@ public static class ServiceCollectionExtensions
         services.AddScoped<IEntityEventLogger, EntityEventLogger>();
         services.AddScoped<IAreaRoleService, AreaRoleService>();
         services.AddScoped<IAreaMemberService, AreaMemberService>();
+        services.AddScoped<IHubAreaAccessService, HubAreaAccessService>();
+        services.AddSingleton<IConnectionAreaTracker, ConnectionAreaTracker>();
+        services.AddScoped<IRealtimeNotifier, RealtimeNotifier>();
+        services.AddHostedService<RefreshTokenCleanupHostedService>();
 
         return services;
     }

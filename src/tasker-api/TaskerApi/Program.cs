@@ -7,6 +7,7 @@ builder.Services.AddControllers();
 
 builder.Services.AddTaskerCors(builder.Configuration);
 builder.Services.AddTaskerAuthentication(builder.Configuration);
+builder.Services.AddSignalR();
 builder.Services.AddTaskerServices(builder.Configuration);
 builder.Services.AddTaskerSwagger();
 
@@ -27,5 +28,6 @@ app.UseCors("DefaultCors");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapHub<TaskerApi.Hubs.TaskerHub>("/hubs/tasker");
 
 app.Run();

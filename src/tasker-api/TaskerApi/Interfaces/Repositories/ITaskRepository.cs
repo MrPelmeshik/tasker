@@ -25,4 +25,14 @@ public interface ITaskRepository : IRepository<TaskEntity, Guid>
     /// <param name="includeDeleted">Включить удаленные записи</param>
     /// <returns>Список задач</returns>
     Task<IReadOnlyList<TaskEntity>> GetByOwnerIdAsync(Guid ownerUserId, CancellationToken cancellationToken = default, bool includeDeleted = false);
+
+    /// <summary>
+    /// Получить количество задач в корне по списку областей (пакетный запрос)
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> GetRootTaskCountByAreaIdsAsync(IEnumerable<Guid> areaIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Получить количество задач по списку папок (пакетный запрос)
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> GetTaskCountByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default);
 }

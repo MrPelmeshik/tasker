@@ -50,30 +50,6 @@ export class TaskApiClient {
     return tasks.filter(task => task.isActive);
   }
 
-  // Получить задачи по папке
-  async getTasksByFolder(folderId: string): Promise<TaskResponse[]> {
-    const tasks = await this.getAll();
-    return tasks.filter(task => task.folderId === folderId);
-  }
-
-  // Получить задачи в корне области
-  async getTasksByAreaRoot(areaId: string): Promise<TaskResponse[]> {
-    const tasks = await this.getAll();
-    return tasks.filter(task => task.areaId === areaId && !task.folderId);
-  }
-
-  // Получить задачи по владельцу
-  async getTasksByOwner(ownerUserId: string): Promise<TaskResponse[]> {
-    const tasks = await this.getAll();
-    return tasks.filter(task => task.ownerUserId === ownerUserId);
-  }
-
-  // Получить активные задачи по владельцу
-  async getActiveTasksByOwner(ownerUserId: string): Promise<TaskResponse[]> {
-    const tasks = await this.getTasksByOwner(ownerUserId);
-    return tasks.filter(task => task.isActive);
-  }
-
   // Получить краткие карточки задач по папке для Tree виджета
   async getTaskSummaryByFolder(folderId: string): Promise<TaskSummaryResponse[]> {
     return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByFolder/byFolder/${folderId}`);
@@ -132,10 +108,6 @@ export const createTask = (data: TaskCreateRequest) => taskApi.create(data);
 export const updateTask = (id: string, data: TaskUpdateRequest) => taskApi.update(id, data);
 export const deleteTask = (id: string) => taskApi.delete(id);
 export const fetchActiveTasks = () => taskApi.getActiveTasks();
-export const fetchTasksByFolder = (folderId: string) => taskApi.getTasksByFolder(folderId);
-export const fetchTasksByAreaRoot = (areaId: string) => taskApi.getTasksByAreaRoot(areaId);
-export const fetchTasksByOwner = (ownerUserId: string) => taskApi.getTasksByOwner(ownerUserId);
-export const fetchActiveTasksByOwner = (ownerUserId: string) => taskApi.getActiveTasksByOwner(ownerUserId);
 export const fetchTaskSummaryByFolder = (folderId: string) => taskApi.getTaskSummaryByFolder(folderId);
 export const fetchTaskSummaryByAreaRoot = (areaId: string) => taskApi.getTaskSummaryByAreaRoot(areaId);
 export const fetchWeeklyTasks = (params: { weekStartIso: string }) => taskApi.getWeeklyTasks(params);

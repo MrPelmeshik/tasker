@@ -184,11 +184,16 @@ public class AuthController(
     [AllowAnonymous]
     [ProducesResponseType(typeof(ApiResponse<object>), 200)]
     [ProducesResponseType(typeof(ApiResponse<object>), 500)]
-    public IActionResult Logout()
+    public async Task<IActionResult> Logout()
     {
         try
         {
-            // Удаляем refresh cookie
+            string? refreshToken = null;
+            if (Request.Cookies.TryGetValue("refreshToken", out var cookieValue) && !string.IsNullOrWhiteSpace(cookieValue))
+                refreshToken = cookieValue;
+
+            await authService.RevokeRefreshTokenAsync(refreshToken);
+
             if (Request.Cookies.ContainsKey("refreshToken"))
             {
                 Response.Cookies.Append("refreshToken", string.Empty, new CookieOptions

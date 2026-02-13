@@ -16,7 +16,8 @@ public class AreaMemberService(
     IUserAreaAccessRepository userAreaAccessRepository,
     IUserRepository userRepository,
     IAreaRoleService areaRoleService,
-    ICurrentUserService currentUserService)
+    ICurrentUserService currentUserService,
+    IRealtimeNotifier realtimeNotifier)
     : IAreaMemberService
 {
     /// <inheritdoc />
@@ -111,6 +112,7 @@ public class AreaMemberService(
             var userAccess = area.ToUserAreaAccessEntity(targetUserId, currentUserService.UserId, request.Role);
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
         }
+        await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, areaId, areaId, null, "Update", cancellationToken);
     }
 
     /// <inheritdoc />
@@ -136,6 +138,7 @@ public class AreaMemberService(
             throw new UnauthorizedAccessException("Нет прав на удаление участников");
 
         await userAreaAccessRepository.DeleteAsync(access.Id, cancellationToken);
+        await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, areaId, areaId, null, "Update", cancellationToken);
     }
 
     /// <inheritdoc />
@@ -178,5 +181,6 @@ public class AreaMemberService(
 
         area.OwnerUserId = request.NewOwnerUserId;
         await areaRepository.UpdateAsync(area, cancellationToken);
+        await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, areaId, areaId, null, "Update", cancellationToken);
     }
 }

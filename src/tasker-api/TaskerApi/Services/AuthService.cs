@@ -1,5 +1,6 @@
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
+using System.Security.Cryptography;
 using System.Text;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
@@ -21,7 +22,8 @@ namespace TaskerApi.Services;
 public class AuthService(
     ILogger<AuthService> logger,
     IOptions<JwtSettings> jwtOptions,
-    IUserRepository userRepository) : IAuthService
+    IUserRepository userRepository,
+    IRefreshTokenRepository refreshTokenRepository) : IAuthService
 {
     private readonly JwtSettings _jwt = ValidateJwtSettings(jwtOptions.Value);
 
@@ -89,6 +91,10 @@ public class AuthService(
             }
 
             var tokens = CreateTokens(user);
+            var tokenHash = ComputeTokenHash(tokens.refreshToken);
+            var expiresAt = DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays);
+            await refreshTokenRepository.StoreAsync(user.Id, tokenHash, expiresAt, CancellationToken.None);
+
             var response = user.ToAuthResponse(tokens.accessToken, _jwt.AccessTokenLifetimeMinutes * 60);
 
             return (ApiResponse<AuthResponse>.SuccessResult(response, "Авторизация выполнена успешно"), tokens.refreshToken);
@@ -141,33 +147,46 @@ public class AuthService(
     /// </summary>
     /// <param name="request">Данные для обновления токена</param>
     /// <returns>Новый токен доступа и refresh токен</returns>
-    public Task<(ApiResponse<RefreshTokenResponse> response, string refreshToken)> RefreshTokenAsync(RefreshTokenRequest request)
+    public async Task<(ApiResponse<RefreshTokenResponse> response, string refreshToken)> RefreshTokenAsync(RefreshTokenRequest request)
     {
         try
         {
+            var tokenHash = ComputeTokenHash(request.RefreshToken);
+            var isValid = await refreshTokenRepository.IsValidAsync(tokenHash, CancellationToken.None);
+            if (!isValid)
+            {
+                return (ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный или отозванный refresh токен"), string.Empty);
+            }
+
             var principal = ValidateTokenInternal(request.RefreshToken, validateLifetime: true, expectedTokenType: "refresh");
             if (principal == null)
             {
-                return Task.FromResult((ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"), string.Empty));
+                return (ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"), string.Empty);
             }
 
             var sub = principal.FindFirstValue(ClaimTypes.NameIdentifier);
             var name = principal.FindFirstValue(ClaimTypes.Name) ?? string.Empty;
             if (!Guid.TryParse(sub, out var userId))
             {
-                return Task.FromResult((ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"), string.Empty));
+                return (ApiResponse<RefreshTokenResponse>.ErrorResult("Неверный refresh токен"), string.Empty);
             }
+
+            await refreshTokenRepository.RevokeByTokenHashAsync(tokenHash, CancellationToken.None);
 
             var accessToken = CreateJwtToken(userId, name, tokenType: "access", TimeSpan.FromMinutes(_jwt.AccessTokenLifetimeMinutes));
             var refreshToken = CreateJwtToken(userId, name, tokenType: "refresh", TimeSpan.FromDays(_jwt.RefreshTokenLifetimeDays));
 
+            var newTokenHash = ComputeTokenHash(refreshToken);
+            var expiresAt = DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays);
+            await refreshTokenRepository.StoreAsync(userId, newTokenHash, expiresAt, CancellationToken.None);
+
             var response = EntityMapper.ToRefreshTokenResponse(accessToken, _jwt.AccessTokenLifetimeMinutes * 60);
-            return Task.FromResult((ApiResponse<RefreshTokenResponse>.SuccessResult(response), refreshToken));
+            return (ApiResponse<RefreshTokenResponse>.SuccessResult(response), refreshToken);
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Ошибка обновления refresh токена");
-            return Task.FromResult((ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"), string.Empty));
+            return (ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"), string.Empty);
         }
     }
 
@@ -304,6 +323,29 @@ public class AuthService(
             signingCredentials: creds);
 
         return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
+    /// <inheritdoc />
+    public async Task RevokeRefreshTokenAsync(string? refreshToken, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return;
+
+        try
+        {
+            var tokenHash = ComputeTokenHash(refreshToken);
+            await refreshTokenRepository.RevokeByTokenHashAsync(tokenHash, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Не удалось отозвать refresh-токен");
+        }
+    }
+
+    private static string ComputeTokenHash(string token)
+    {
+        var hash = SHA256.HashData(Encoding.UTF8.GetBytes(token));
+        return Convert.ToHexString(hash).ToLowerInvariant();
     }
 
     private ClaimsPrincipal? ValidateTokenInternal(string token, bool validateLifetime, string expectedTokenType)

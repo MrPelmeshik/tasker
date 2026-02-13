@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
 import {
@@ -16,6 +16,7 @@ import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
+import { useTaskUpdate } from '../../context';
 import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
@@ -114,7 +115,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   } = modal;
 
   const taskEvents = useEvents('task', task?.id);
+  const { subscribeToTaskUpdates } = useTaskUpdate();
+  const refetchRef = useRef(taskEvents.refetch);
+  refetchRef.current = taskEvents.refetch;
   const isViewMode = Boolean(task && !isEditMode);
+
+  useEffect(() => {
+    const unsub = subscribeToTaskUpdates((_taskId, _folderId, payload) => {
+      if (payload?.taskId === task?.id) {
+        refetchRef.current();
+      }
+    });
+    return unsub;
+  }, [subscribeToTaskUpdates, task?.id]);
 
   /** Загрузка папок при выборе области */
   useEffect(() => {

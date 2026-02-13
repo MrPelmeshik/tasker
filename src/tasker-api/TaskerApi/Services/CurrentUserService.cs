@@ -124,8 +124,8 @@ public class CurrentUserService: ICurrentUserService
         {
             var userAreaAccesses = _userAreaAccessRepository.GetByUserIdAsync(UserId, CancellationToken.None).Result;
             var fromAccess = userAreaAccesses.Select(uaa => uaa.AreaId).ToHashSet();
-            var areas = _areaRepository.GetAllAsync(CancellationToken.None).Result;
-            var fromOwner = areas.Where(a => a.OwnerUserId == UserId).Select(a => a.Id);
+            var ownerAreas = _areaRepository.GetByOwnerIdAsync(UserId, CancellationToken.None).Result;
+            var fromOwner = ownerAreas.Select(a => a.Id);
             return fromAccess.Union(fromOwner).Distinct().ToList();
         }
         catch

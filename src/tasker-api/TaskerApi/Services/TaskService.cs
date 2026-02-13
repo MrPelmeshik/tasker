@@ -28,6 +28,7 @@ public class TaskService(
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
     IAreaRoleService areaRoleService,
+    IRealtimeNotifier realtimeNotifier,
     TaskerDbContext context)
     : BaseService(logger, currentUser), ITaskService
 {
@@ -113,6 +114,7 @@ public class TaskService(
             var createdTask = await taskRepository.CreateAsync(task, cancellationToken);
 
             await entityEventLogger.LogAsync(EntityType.TASK, createdTask.Id, EventType.CREATE, createdTask.Title, null, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.TASK, createdTask.Id, createdTask.AreaId, createdTask.FolderId, "Create", cancellationToken);
 
             return createdTask.ToTaskResponse();
         }
@@ -172,6 +174,7 @@ public class TaskService(
             var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, task);
 
             await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.UPDATE, task.Title, messageJson, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.TASK, id, task.AreaId, task.FolderId, "Update", cancellationToken);
 
             return task.ToTaskResponse();
         }
@@ -204,6 +207,7 @@ public class TaskService(
                 throw new UnauthorizedAccessException("Только владелец области может удалять задачи");
 
             await entityEventLogger.LogAsync(EntityType.TASK, id, EventType.DELETE, task.Title, null, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.TASK, id, task.AreaId, task.FolderId, "Delete", cancellationToken);
 
             await taskRepository.DeleteAsync(id, cancellationToken);
         }
@@ -251,6 +255,7 @@ public class TaskService(
             var createdEvent = await eventRepository.CreateAsync(eventEntity, cancellationToken);
 
             await entityEventLogger.LogAsync(EntityType.TASK, createdTask.Id, EventType.CREATE, createdTask.Title, null, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.TASK, createdTask.Id, createdTask.AreaId, createdTask.FolderId, "Create", cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);
 

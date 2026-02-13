@@ -21,4 +21,14 @@ public interface IFolderRepository : IRepository<FolderEntity, Guid>
     /// Получить родительскую папку по id (для проверки циклов)
     /// </summary>
     Task<Guid?> GetParentFolderIdAsync(Guid folderId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Получить количество корневых папок по списку областей (пакетный запрос)
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> GetRootCountByAreaIdsAsync(IEnumerable<Guid> areaIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Получить количество подпапок по списку папок (пакетный запрос)
+    /// </summary>
+    Task<IReadOnlyDictionary<Guid, int>> GetSubfolderCountByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default);
 }

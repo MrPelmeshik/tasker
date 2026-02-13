@@ -97,3 +97,52 @@ REACT_APP_API_BASE=https://api.example.com/api
 Примечания по аутентификации:
 - Фронт хранит только access-токен (в sessionStorage). Refresh-токен хранится на стороне сервера в httpOnly cookie и не доступен JS.
 - Вызовы `/auth/login`, `/auth/refresh`, `/auth/logout` отправляются с `credentials: 'include'` для обмена cookie.
+
+### Real-time обновления (SignalR WebSocket)
+
+Приложение использует SignalR для push-уведомлений об изменениях. Hub доступен по пути `/hubs/tasker` (на том же хосте, что и REST API, без префикса `/api`).
+
+**REACT_APP_API_BASE:** можно указать с `/api` (например `http://localhost:8080/api`) или без — клиент автоматически формирует URL Hub.
+
+---
+
+## Настройка reverse proxy для WebSocket
+
+При развёртывании за Nginx или другим reverse proxy необходимо настроить поддержку WebSocket для пути `/hubs/`:
+
+**Nginx:**
+```nginx
+location /hubs/ {
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+    proxy_set_header Host $host;
+    proxy_cache_bypass $http_upgrade;
+    proxy_read_timeout 86400;
+    proxy_pass http://backend;
+}
+```
+
+**Kubernetes Ingress (аннотация):**
+```yaml
+nginx.ingress.kubernetes.io/proxy-read-timeout: "86400"
+nginx.ingress.kubernetes.io/proxy-send-timeout: "86400"
+```
+
+При использовании внешнего балансировщика (AWS ALB, CloudFlare и т.п.) необходимо включить поддержку WebSocket.
+
+---
+
+## Масштабирование (несколько реплик API)
+
+SignalR по умолчанию держит состояние в памяти. При нескольких репликах API возможны два подхода:
+
+1. **Sticky sessions:** Настроить балансировщик так, чтобы один клиент всегда попадал на одну реплику (например, nginx `ip_hash`, Kubernetes `sessionAffinity: ClientIP`).
+
+2. **Redis backplane:** `services.AddSignalR().AddStackExchangeRedis(...)` — сообщения рассылаются между репликами через Redis.
+
+---
+
+## Рекомендации
+
+- Рекомендуется не открывать чрезмерное количество вкладок с приложением одновременно (например, >10).

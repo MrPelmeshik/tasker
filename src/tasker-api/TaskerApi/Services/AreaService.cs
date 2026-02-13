@@ -24,6 +24,7 @@ public class AreaService(
     IUserRepository userRepository,
     IEntityEventLogger entityEventLogger,
     IAreaRoleService areaRoleService,
+    IRealtimeNotifier realtimeNotifier,
     TaskerDbContext context)
     : BaseService(logger, currentUser), IAreaService
 {
@@ -90,6 +91,7 @@ public class AreaService(
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
 
             await entityEventLogger.LogAsync(EntityType.AREA, createdArea.Id, EventType.CREATE, createdArea.Title, null, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, createdArea.Id, createdArea.Id, null, "Create", cancellationToken);
 
             return createdArea.ToAreaCreateResponse();
         }, nameof(CreateAsync), request);
@@ -125,6 +127,7 @@ public class AreaService(
             var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, existingArea);
 
             await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.UPDATE, existingArea.Title, messageJson, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, id, id, null, "Update", cancellationToken);
         }
         catch (Exception ex)
         {
@@ -154,6 +157,7 @@ public class AreaService(
             }
 
             await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.DELETE, existingArea.Title, null, cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, id, id, null, "Delete", cancellationToken);
 
             await areaRepository.DeleteAsync(id, cancellationToken);
         }
@@ -181,15 +185,17 @@ public class AreaService(
             var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
             var userNames = users.ToDictionary(u => u.Id, u => u.Name);
 
-            var result = new List<AreaShortCardResponse>();
+            var areaIds = accessibleAreas.Select(a => a.Id).ToList();
+            var rootFolderCounts = await folderRepository.GetRootCountByAreaIdsAsync(areaIds, cancellationToken);
+            var rootTaskCounts = await taskRepository.GetRootTaskCountByAreaIdsAsync(areaIds, cancellationToken);
 
+            var result = new List<AreaShortCardResponse>();
             foreach (var area in accessibleAreas)
             {
-                var rootFolders = await folderRepository.GetRootByAreaIdAsync(area.Id, cancellationToken);
-                var rootTasks = await taskRepository.GetByAreaIdRootAsync(area.Id, cancellationToken);
+                var rootFolderCount = rootFolderCounts.GetValueOrDefault(area.Id, 0);
+                var rootTaskCount = rootTaskCounts.GetValueOrDefault(area.Id, 0);
                 var ownerName = userNames.GetValueOrDefault(area.OwnerUserId, "");
-
-                result.Add(area.ToAreaShortCardResponse(rootFolders.Count, rootTasks.Count, ownerName));
+                result.Add(area.ToAreaShortCardResponse(rootFolderCount, rootTaskCount, ownerName));
             }
 
             return result;

@@ -52,4 +52,11 @@ public interface IAuthService
     /// <param name="request">Данные для обновления</param>
     /// <returns>Обновлённая информация о пользователе</returns>
     Task<ApiResponse<UserInfo>> UpdateProfileAsync(Guid userId, ProfileUpdateRequest request);
+
+    /// <summary>
+    /// Отозвать refresh-токен (инвалидация при logout)
+    /// </summary>
+    /// <param name="refreshToken">Refresh токен из cookie</param>
+    /// <param name="cancellationToken">Токен отмены</param>
+    Task RevokeRefreshTokenAsync(string? refreshToken, CancellationToken cancellationToken = default);
 }
