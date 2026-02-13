@@ -6,8 +6,9 @@ import type { TaskResponse, TaskUpdateRequest } from '../../../types/api';
 import { TaskStatus } from '../../../types/task-status';
 import css from '../../../styles/task-table.module.css';
 import {
-  fetchTasks,
-  fetchWeeklyTasks,
+  fetchTasksWithActivities,
+  buildTaskWithActivitiesFilter,
+  dateRangeFromWeek,
   fetchTaskById,
   fetchGroupById,
   fetchGroupsByArea,
@@ -16,14 +17,16 @@ import {
   deleteTask,
   createEventForTask,
   EventTypeActivity,
-  type TaskWeeklyActivity,
   type TaskDayActivity,
 } from '../../../services/api';
 import { useModal, useTaskUpdate, useToast } from '../../../context';
 import { useWeek } from '../../../hooks';
 import { parseApiErrorMessage } from '../../../utils/parse-api-error';
 import { formatDateOnly } from '../../../utils/date';
-import { buildWeekDays, getWeekEndIso, buildWeekDates } from '../../../utils/week';
+import { buildWeekDays, getWeekEndIso } from '../../../utils/week';
+
+/** Минимальные данные задачи для строки (полная задача — через fetchTaskById) */
+type TaskRowTask = Pick<TaskResponse, 'id' | 'groupId' | 'title' | 'status'>;
 
 /** Строка таблицы: задача + активность по дням */
 type TaskRow = {
@@ -32,7 +35,7 @@ type TaskRow = {
   carryWeeks: number;
   hasFutureActivities: boolean;
   days: TaskDayActivity[];
-  task: TaskResponse;
+  task: TaskRowTask;
 };
 
 function intensityClass(count: number): string {
@@ -56,33 +59,27 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     let alive = true;
     setLoading(true);
     try {
-      const [tasksRes, weeklyRes] = await Promise.all([
-        fetchTasks(),
-        fetchWeeklyTasks({ weekStartIso }),
-      ]);
+      const filter = buildTaskWithActivitiesFilter({
+        ...dateRangeFromWeek(weekStartIso),
+        statuses: [TaskStatus.InProgress, TaskStatus.Pending],
+        includeTasksWithActivitiesInRange: true,
+      });
+      const res = await fetchTasksWithActivities(filter);
       if (!alive) return;
 
-      const inProgressTasks = tasksRes.filter(t => t.status === TaskStatus.InProgress);
-      const weeklyByTaskId = new Map<string, TaskWeeklyActivity>();
-      weeklyRes.forEach(a => weeklyByTaskId.set(a.taskId, a));
-
-      const weekDates = buildWeekDates(weekStartIso);
-      const merged: TaskRow[] = inProgressTasks.map(task => {
-        const activity = weeklyByTaskId.get(task.id);
-        const daysMap = activity ? new Map(activity.days.map(d => [d.date, d.count])) : null;
-        const days: TaskDayActivity[] = weekDates.map(date => ({
-          date,
-          count: daysMap?.get(date) ?? 0,
-        }));
-        return {
-          taskId: task.id,
-          taskName: task.title,
-          carryWeeks: activity?.carryWeeks ?? 0,
-          hasFutureActivities: activity?.hasFutureActivities ?? false,
-          days,
-          task,
-        };
-      });
+      const merged: TaskRow[] = res.items.map(item => ({
+        taskId: item.taskId,
+        taskName: item.taskName,
+        carryWeeks: item.carryWeeks,
+        hasFutureActivities: item.hasFutureActivities,
+        days: item.days,
+        task: {
+          id: item.taskId,
+          groupId: item.groupId,
+          title: item.taskName,
+          status: item.status,
+        },
+      }));
 
       setRows(merged);
     } catch (error) {
@@ -136,25 +133,27 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   }, [loadData, notifyTaskUpdate]);
 
   const handleDayCellClick = useCallback(
-    (task: TaskResponse, date: string, event: React.MouseEvent) => {
+    (task: TaskRowTask, date: string, event: React.MouseEvent) => {
       event.stopPropagation();
       const onOpenTaskDetails = async () => {
         closeActivityModal();
         try {
-          const group = await fetchGroupById(task.groupId);
+          const fullTask = await fetchTaskById(task.id);
+          if (!fullTask) return;
+          const group = await fetchGroupById(fullTask.groupId);
           if (!group) return;
           const [groupsForModal, areasData] = await Promise.all([
             fetchGroupsByArea(group.areaId),
             fetchAreaShortCard(),
           ]);
           const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
-          openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
+          openTaskModal(fullTask, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
         } catch (error) {
           console.error('Ошибка загрузки задачи:', error);
           addError(parseApiErrorMessage(error));
         }
       };
-      openActivityModal(task, date, handleActivitySaveForTask(task), onOpenTaskDetails);
+      openActivityModal(task as TaskResponse, date, handleActivitySaveForTask(task as TaskResponse), onOpenTaskDetails);
     },
     [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, addError]
   );

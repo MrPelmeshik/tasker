@@ -54,9 +54,16 @@ export {
   fetchActiveTasksByOwner,
   fetchTaskSummaryByGroup,
   fetchWeeklyTasks,
+  fetchTasksWithActivities,
   getMonday,
   getMondayIso
 } from './tasks';
+
+export {
+  type TaskWithActivitiesFilter,
+  dateRangeFromWeek,
+  buildTaskWithActivitiesFilter,
+} from './filters';
 
 export {
   createEventForTask,
@@ -69,5 +76,8 @@ export {
 // Экспорт типов
 export type {
   TaskWeeklyActivity,
-  TaskDayActivity
+  TaskDayActivity,
+  TaskWithActivitiesFilterRequest,
+  TaskWithActivitiesResponse,
+  TaskWithActivitiesPagedResponse,
 } from '../../types/api';

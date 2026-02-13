@@ -153,6 +153,35 @@ export interface TaskDayActivity {
   count: number;
 }
 
+/** Запрос на получение задач с активностями (отражение backend) */
+export interface TaskWithActivitiesFilterRequest {
+  dateFrom: string;
+  dateTo: string;
+  statuses?: number[];
+  includeTasksWithActivitiesInRange?: boolean;
+  page?: number;
+  limit?: number;
+}
+
+/** Карточка задачи с активностями по дням для отображения в таблице */
+export interface TaskWithActivitiesResponse {
+  taskId: string;
+  taskName: string;
+  status: number;
+  groupId: string;
+  carryWeeks: number;
+  hasFutureActivities: boolean;
+  days: TaskDayActivity[];
+}
+
+/** Ответ со списком задач и метаданными пагинации */
+export interface TaskWithActivitiesPagedResponse {
+  items: TaskWithActivitiesResponse[];
+  totalCount: number;
+  page?: number | null;
+  limit?: number | null;
+}
+
 // Типы для Events API (активности)
 export type EventType = number; // 0=UNKNOWN, 1=CREATE, 2=UPDATE, 3=DELETE, 4=NOTE, 5=ACTIVITY
 

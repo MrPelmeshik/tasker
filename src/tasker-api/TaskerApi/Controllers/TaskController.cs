@@ -63,4 +63,12 @@ public class TaskController(ITaskService service) : BaseApiController
     [UserLog("Получение недельной активности задач")]
     public Task<IActionResult> GetWeeklyActivity([FromBody] TaskWeeklyActivityRequest request, CancellationToken cancellationToken)
         => ExecuteWithExceptionHandling(async () => Ok(await service.GetWeeklyActivityAsync(request, cancellationToken)));
+
+    /// <summary>
+    /// Получить задачи с активностями по гибкому фильтру (диапазон дат, статусы, пагинация)
+    /// </summary>
+    [HttpPost]
+    [UserLog("Получение задач с активностями")]
+    public Task<IActionResult> GetTasksWithActivities([FromBody] TaskWithActivitiesFilterRequest request, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () => Ok(await service.GetTasksWithActivitiesAsync(request, cancellationToken)));
 }

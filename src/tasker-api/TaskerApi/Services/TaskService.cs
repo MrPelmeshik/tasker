@@ -361,4 +361,139 @@ public class TaskService(
             throw;
         }
     }
+
+    /// <summary>
+    /// Получить задачи с активностями по гибкому фильтру (диапазон дат, статусы, пагинация)
+    /// </summary>
+    /// <param name="request">Параметры фильтра</param>
+    /// <param name="cancellationToken">Токен отмены операции</param>
+    /// <returns>Задачи с активностями по дням и метаданные пагинации</returns>
+    public async Task<TaskWithActivitiesPagedResponse> GetTasksWithActivitiesAsync(TaskWithActivitiesFilterRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            if (!DateTimeOffset.TryParse(request.DateFrom + "T00:00:00Z", null, DateTimeStyles.AssumeUniversal, out var dateFrom))
+                throw new ArgumentException("Некорректная дата начала диапазона");
+            if (!DateTimeOffset.TryParse(request.DateTo + "T23:59:59.999Z", null, DateTimeStyles.AssumeUniversal, out var dateTo))
+                throw new ArgumentException("Некорректная дата конца диапазона");
+            if (dateTo < dateFrom)
+                throw new ArgumentException("Дата конца не может быть раньше даты начала");
+
+            var rangeStart = new DateTimeOffset(dateFrom.Year, dateFrom.Month, dateFrom.Day, 0, 0, 0, TimeSpan.Zero);
+            var rangeEnd = new DateTimeOffset(dateTo.Year, dateTo.Month, dateTo.Day, 23, 59, 59, TimeSpan.Zero);
+
+            var candidateTaskIds = new HashSet<Guid>();
+
+            // По статусам (если заданы)
+            if (request.Statuses is { Length: > 0 } statuses)
+            {
+                var statusSet = statuses.ToHashSet();
+                var tasksByStatus = await taskRepository.FindAsync(t => statusSet.Contains((int)t.Status), cancellationToken);
+                foreach (var t in tasksByStatus)
+                    candidateTaskIds.Add(t.Id);
+            }
+
+            // Задачи с активностями в диапазоне
+            if (request.IncludeTasksWithActivitiesInRange)
+            {
+                var taskIdsWithActivities = await context.EventToTasks
+                    .AsNoTracking()
+                    .Where(et => et.IsActive)
+                    .Join(context.Events.Where(e => e.EventType == EventType.ACTIVITY && e.IsActive &&
+                        e.EventDate >= rangeStart && e.EventDate <= rangeEnd),
+                        et => et.EventId,
+                        e => e.Id,
+                        (et, _) => et.TaskId)
+                    .Distinct()
+                    .ToListAsync(cancellationToken);
+                foreach (var id in taskIdsWithActivities)
+                    candidateTaskIds.Add(id);
+            }
+
+            if (candidateTaskIds.Count == 0)
+                return new TaskWithActivitiesPagedResponse { Items = [], TotalCount = 0, Page = request.Page, Limit = request.Limit };
+
+            var allCandidateTasks = await taskRepository.FindAsync(t => candidateTaskIds.Contains(t.Id), cancellationToken);
+
+            var groupIds = allCandidateTasks.Select(t => t.GroupId).Distinct().ToHashSet();
+            var groups = await groupRepository.FindAsync(g => groupIds.Contains(g.Id), cancellationToken);
+            var accessibleGroupIds = groups.Where(g => CurrentUser.HasAccessToArea(g.AreaId)).Select(g => g.Id).ToHashSet();
+            var tasksWithAccess = allCandidateTasks.Where(t => accessibleGroupIds.Contains(t.GroupId)).ToList();
+
+            if (tasksWithAccess.Count == 0)
+                return new TaskWithActivitiesPagedResponse { Items = [], TotalCount = 0, Page = request.Page, Limit = request.Limit };
+
+            var taskIds = tasksWithAccess.Select(t => t.Id).ToHashSet();
+            var taskNames = tasksWithAccess.ToDictionary(t => t.Id, t => t.Title);
+
+            var activityQuery = context.EventToTasks
+                .AsNoTracking()
+                .Where(et => taskIds.Contains(et.TaskId) && et.IsActive)
+                .Join(context.Events.Where(e => e.EventType == EventType.ACTIVITY && e.IsActive),
+                    et => et.EventId,
+                    e => e.Id,
+                    (et, e) => new { et.TaskId, EventDate = e.EventDate });
+
+            var activities = await activityQuery.ToListAsync(cancellationToken);
+
+            var rangeDates = new List<string>();
+            for (var d = rangeStart; d <= rangeEnd; d = d.AddDays(1))
+                rangeDates.Add(d.ToString("yyyy-MM-dd"));
+
+            var result = new List<TaskWithActivitiesResponse>();
+            foreach (var task in tasksWithAccess)
+            {
+                var taskActivities = activities.Where(a => a.TaskId == task.Id).ToList();
+                var byDate = taskActivities
+                    .GroupBy(a => a.EventDate.UtcDateTime.ToString("yyyy-MM-dd"))
+                    .ToDictionary(g => g.Key, g => g.Count());
+
+                var carryWeeks = taskActivities.Count(a => a.EventDate < rangeStart);
+                var hasFutureActivities = taskActivities.Any(a => a.EventDate > rangeEnd);
+
+                result.Add(new TaskWithActivitiesResponse
+                {
+                    TaskId = task.Id,
+                    TaskName = taskNames.GetValueOrDefault(task.Id, ""),
+                    Status = (int)task.Status,
+                    GroupId = task.GroupId,
+                    CarryWeeks = carryWeeks > 0 ? 1 : 0,
+                    HasFutureActivities = hasFutureActivities,
+                    Days = rangeDates.Select(d => new TaskDayActivityResponse
+                    {
+                        Date = d,
+                        Count = byDate.GetValueOrDefault(d, 0)
+                    }).ToList()
+                });
+            }
+
+            var totalCount = result.Count;
+            var page = request.Page;
+            var limit = request.Limit;
+
+            if (page.HasValue && limit.HasValue && limit.Value > 0)
+            {
+                var skip = (page.Value - 1) * limit.Value;
+                result = result.Skip(skip).Take(limit.Value).ToList();
+            }
+            else
+            {
+                page = null;
+                limit = null;
+            }
+
+            return new TaskWithActivitiesPagedResponse
+            {
+                Items = result,
+                TotalCount = totalCount,
+                Page = page,
+                Limit = limit
+            };
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Ошибка получения задач с активностями");
+            throw;
+        }
     }
+}

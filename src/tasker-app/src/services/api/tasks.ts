@@ -6,7 +6,9 @@ import type {
   TaskUpdateRequest, 
   TaskCreateResponse, 
   TaskSummaryResponse,
-  TaskWeeklyActivity
+  TaskWeeklyActivity,
+  TaskWithActivitiesFilterRequest,
+  TaskWithActivitiesPagedResponse,
 } from '../../types/api';
 
 // API клиент для работы с задачами
@@ -95,6 +97,16 @@ export class TaskApiClient {
     });
   }
 
+  /**
+   * Получить задачи с активностями по гибкому фильтру
+   */
+  async getTasksWithActivities(filter: TaskWithActivitiesFilterRequest): Promise<TaskWithActivitiesPagedResponse> {
+    return apiFetch<TaskWithActivitiesPagedResponse>(`/task/getTasksWithActivities`, {
+      method: 'POST',
+      body: JSON.stringify(filter),
+    });
+  }
+
   // Получить номер недели по ISO 8601
   private getWeekNumber(date: Date): number {
     const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
@@ -121,6 +133,7 @@ export const fetchTasksByOwner = (ownerUserId: string) => taskApi.getTasksByOwne
 export const fetchActiveTasksByOwner = (ownerUserId: string) => taskApi.getActiveTasksByOwner(ownerUserId);
 export const fetchTaskSummaryByGroup = (groupId: string) => taskApi.getTaskSummaryByGroup(groupId);
 export const fetchWeeklyTasks = (params: { weekStartIso: string }) => taskApi.getWeeklyTasks(params);
+export const fetchTasksWithActivities = (filter: TaskWithActivitiesFilterRequest) => taskApi.getTasksWithActivities(filter);
 
 // Утилитарная функция для получения понедельника (в локальном времени)
 export function getMonday(date: Date): Date {

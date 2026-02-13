@@ -39,6 +39,11 @@ public interface ITaskService
     /// Получить недельную активность задач
     /// </summary>
     Task<IEnumerable<TaskWeeklyActivityResponse>> GetWeeklyActivityAsync(TaskWeeklyActivityRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Получить задачи с активностями по гибкому фильтру
+    /// </summary>
+    Task<TaskWithActivitiesPagedResponse> GetTasksWithActivitiesAsync(TaskWithActivitiesFilterRequest request, CancellationToken cancellationToken);
 }
 
 
