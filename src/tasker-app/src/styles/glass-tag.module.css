@@ -83,7 +83,7 @@
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(0,200,255,0.20);
+    0 0 0 1px rgb(var(--color-accent) / 0.20);
 }
 
 .primary::before {
@@ -97,7 +97,7 @@
   box-shadow: 
     var(--shadow-elev-1),
     var(--shadow-inset-1),
-    0 0 0 1px rgba(255,64,64,0.20);
+    0 0 0 1px rgb(var(--color-danger) / 0.20);
 }
 
 .danger::before {

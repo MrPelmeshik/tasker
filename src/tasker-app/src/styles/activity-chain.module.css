@@ -2,8 +2,8 @@
 .chain {
   margin-top: var(--space-20);
   border-radius: var(--radius-xs);
-  background: rgb(var(--white) / 0.04);
-  border: var(--border-1) solid rgb(var(--white) / 0.06);
+  background: var(--surface-subtle-bg);
+  border: var(--border-1) solid var(--surface-subtle-border);
   overflow: hidden;
 }
 
@@ -45,7 +45,7 @@
 
 .body {
   padding: 0 var(--space-16) var(--space-16);
-  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
+  border-top: var(--border-1) solid var(--surface-subtle-border);
 }
 
 .typeFilter {
@@ -84,7 +84,7 @@
 }
 
 .messageError {
-  color: var(--color-error, #e57373);
+  color: var(--color-error);
 }
 
 .eventList {
@@ -99,8 +99,8 @@
 .eventItem {
   padding: var(--space-8) var(--space-12);
   border-radius: var(--radius-xs);
-  background: rgb(var(--white) / 0.03);
-  border: var(--border-1) solid rgb(var(--white) / 0.04);
+  background: var(--surface-subtle-bg);
+  border: var(--border-1) solid var(--surface-subtle-border);
 }
 
 .eventMain {

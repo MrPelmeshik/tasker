@@ -1,5 +1,5 @@
 import React from 'react';
-import { TaskStatus, getTaskStatusText, getTaskStatusColor } from '../../types/task-status';
+import { TaskStatus, getTaskStatusText } from '../../types/task-status';
 import { Tooltip } from './Tooltip';
 import css from '../../styles/task-status-badge.module.css';
 
@@ -20,7 +20,6 @@ export const TaskStatusBadge: React.FC<TaskStatusBadgeProps> = ({
   className
 }) => {
   const text = getTaskStatusText(status);
-  const color = getTaskStatusColor(status);
 
   const badgeClass = [
     css.badge,
@@ -33,7 +32,6 @@ export const TaskStatusBadge: React.FC<TaskStatusBadgeProps> = ({
     <span
       className={badgeClass}
       data-status={String(status)}
-      style={{ '--status-color': color } as React.CSSProperties}
     >
       {variant === 'default' ? text : null}
     </span>

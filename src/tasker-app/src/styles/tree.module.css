@@ -37,27 +37,42 @@
   box-sizing: border-box;
 }
 
-.areaCard {
+/* Базовые стили карточек дерева (area, group, task) */
+.areaCard,
+.groupCard,
+.taskCard {
   position: relative;
   background: var(--glass-card-bg-transparent);
   border: var(--border-1) solid var(--glass-card-border-default);
   border-radius: var(--radius-2xs);
   padding: var(--space-4) var(--space-6);
   cursor: pointer;
-  transition: all var(--transition-normal);
   backdrop-filter: var(--glass-backdrop-blur-8);
   -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
-  width: 100%;
   min-height: var(--tree-min-height);
   box-sizing: border-box;
-  animation: fadeInUp var(--transition-slow) ease-out;
   box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
   overflow: hidden;
   display: flex;
   align-items: center;
 }
 
-.areaCard::before {
+.areaCard {
+  width: 100%;
+  transition: all var(--transition-normal);
+  animation: fadeInUp var(--transition-slow) ease-out;
+}
+
+.groupCard,
+.taskCard {
+  flex: 1;
+  max-width: 100%;
+  transition: all var(--transition-fast);
+}
+
+.areaCard::before,
+.groupCard::before,
+.taskCard::before {
   content: '';
   position: absolute;
   inset: 0;
@@ -66,28 +81,40 @@
   background: var(--glass-radial-subtle);
 }
 
-.areaCard::after {
+.areaCard::after,
+.groupCard::after,
+.taskCard::after {
   content: '';
   position: absolute;
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
   box-shadow: 0 0 0 0 rgb(var(--white) / 0);
+  transition: box-shadow var(--transition-fast);
+}
+
+.areaCard::after {
   transition: box-shadow var(--transition-normal);
 }
 
-.areaCard:hover {
+.areaCard:hover,
+.groupCard:hover,
+.taskCard:hover {
   background: var(--glass-card-bg-hover);
   border-color: var(--glass-card-border-default-hover);
   box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
   filter: saturate(1.04) brightness(1.03);
 }
 
-.areaCard:hover::after {
+.areaCard:hover::after,
+.groupCard:hover::after,
+.taskCard:hover::after {
   box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
 }
 
-.areaCard.expanded {
+.areaCard.expanded,
+.groupCard.expanded,
+.taskCard.expanded {
   background: var(--glass-card-bg-selected);
   border-color: var(--glass-card-border-default-selected);
   box-shadow: 
@@ -97,7 +124,9 @@
   filter: saturate(1.1) brightness(1.05);
 }
 
-.areaCard.expanded::after {
+.areaCard.expanded::after,
+.groupCard.expanded::after,
+.taskCard.expanded::after {
   content: '';
   position: absolute;
   bottom: calc(-1 * var(--space-4));
@@ -113,21 +142,26 @@
   z-index: 1;
 }
 
-/* Custom color support for area cards */
-.areaCard[data-custom-color] {
+/* Поддержка пользовательских цветов */
+.areaCard[data-custom-color],
+.groupCard[data-custom-color],
+.taskCard[data-custom-color] {
   --custom-color: var(--card-custom-color);
   --custom-color-rgb: var(--card-custom-color-rgb);
-  
   background: rgba(var(--custom-color-rgb), 0.02);
   border-color: rgba(var(--custom-color-rgb), 0.15);
 }
 
-.areaCard[data-custom-color]:hover {
+.areaCard[data-custom-color]:hover,
+.groupCard[data-custom-color]:hover,
+.taskCard[data-custom-color]:hover {
   background: rgba(var(--custom-color-rgb), 0.05);
   border-color: rgba(var(--custom-color-rgb), 0.25);
 }
 
-.areaCard[data-custom-color].expanded {
+.areaCard[data-custom-color].expanded,
+.groupCard[data-custom-color].expanded,
+.taskCard[data-custom-color].expanded {
   background: rgba(var(--custom-color-rgb), 0.08);
   border-color: rgba(var(--custom-color-rgb), 0.35);
   box-shadow: 
@@ -243,95 +277,6 @@
   z-index: 2;
 }
 
-.groupCard {
-  position: relative;
-  background: var(--glass-card-bg-transparent);
-  border: var(--border-1) solid var(--glass-card-border-default);
-  border-radius: var(--radius-2xs);
-  padding: var(--space-4) var(--space-6);
-  flex: 1;
-  transition: all var(--transition-fast);
-  backdrop-filter: var(--glass-backdrop-blur-8);
-  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
-  min-height: var(--tree-min-height);
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  max-width: 100%;
-  overflow: hidden;
-  box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
-}
-
-.groupCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: var(--glass-radial-subtle);
-}
-
-.groupCard::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  box-shadow: 0 0 0 0 rgb(var(--white) / 0);
-  transition: box-shadow var(--transition-fast);
-}
-
-.groupCard:hover {
-  background: var(--glass-card-bg-hover);
-  border-color: var(--glass-card-border-default-hover);
-  box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
-  filter: saturate(1.04) brightness(1.03);
-}
-
-.groupCard:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
-}
-
-/* Custom color support for group cards */
-.groupCard[data-custom-color] {
-  --custom-color: var(--card-custom-color);
-  --custom-color-rgb: var(--card-custom-color-rgb);
-  
-  background: rgba(var(--custom-color-rgb), 0.02);
-  border-color: rgba(var(--custom-color-rgb), 0.15);
-}
-
-.groupCard[data-custom-color]:hover {
-  background: rgba(var(--custom-color-rgb), 0.05);
-  border-color: rgba(var(--custom-color-rgb), 0.25);
-}
-
-.groupCard.expanded {
-  background: var(--glass-card-bg-selected);
-  border-color: var(--glass-card-border-default-selected);
-  box-shadow: 
-    var(--shadow-elev-2),
-    var(--shadow-inset-1),
-    0 0 0 1px rgb(var(--white) / 0.15);
-  filter: saturate(1.1) brightness(1.05);
-}
-
-.groupCard.expanded::after {
-  content: '';
-  position: absolute;
-  bottom: calc(-1 * var(--space-4));
-  left: var(--tree-indent);
-  width: var(--tree-connecting-line-width);
-  height: var(--space-4);
-  background: linear-gradient(
-    to bottom,
-    var(--glass-border-2),
-    var(--glass-border-1)
-  );
-  border-radius: 0 0 var(--radius-2xs) var(--radius-2xs);
-  z-index: 1;
-}
-
 /* Стили для задач */
 
 .tasksSection {
@@ -384,69 +329,6 @@
   border-radius: var(--radius-2xs);
   transform: translateY(-50%);
   z-index: 2;
-}
-
-.taskCard {
-  position: relative;
-  background: var(--glass-card-bg-transparent);
-  border: var(--border-1) solid var(--glass-card-border-default);
-  border-radius: var(--radius-2xs);
-  padding: var(--space-4) var(--space-6);
-  flex: 1;
-  transition: all var(--transition-fast);
-  backdrop-filter: var(--glass-backdrop-blur-8);
-  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
-  min-height: var(--tree-min-height);
-  display: flex;
-  align-items: center;
-  box-sizing: border-box;
-  max-width: 100%;
-  overflow: hidden;
-  box-shadow: var(--shadow-elev-1), var(--shadow-inset-0);
-}
-
-.taskCard::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  background: var(--glass-radial-subtle);
-}
-
-.taskCard::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  pointer-events: none;
-  box-shadow: 0 0 0 0 rgb(var(--white) / 0);
-  transition: box-shadow var(--transition-fast);
-}
-
-.taskCard:hover {
-  background: var(--glass-card-bg-hover);
-  border-color: var(--glass-card-border-default-hover);
-  box-shadow: var(--shadow-elev-2), var(--shadow-inset-1);
-  filter: saturate(1.04) brightness(1.03);
-}
-
-.taskCard:hover::after {
-  box-shadow: 0 0 0 var(--border-2) rgb(var(--white) / 0.10);
-}
-
-/* Custom color support for task cards */
-.taskCard[data-custom-color] {
-  --custom-color: var(--card-custom-color);
-  --custom-color-rgb: var(--card-custom-color-rgb);
-  
-  background: rgba(var(--custom-color-rgb), 0.02);
-  border-color: rgba(var(--custom-color-rgb), 0.15);
-}
-
-.taskCard[data-custom-color]:hover {
-  background: rgba(var(--custom-color-rgb), 0.05);
-  border-color: rgba(var(--custom-color-rgb), 0.25);
 }
 
 /* Общие стили для кнопок действий */

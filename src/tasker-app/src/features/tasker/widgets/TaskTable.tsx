@@ -19,8 +19,9 @@ import {
   type TaskWeeklyActivity,
   type TaskDayActivity,
 } from '../../../services/api';
-import { useModal, useTaskUpdate } from '../../../context';
+import { useModal, useTaskUpdate, useToast } from '../../../context';
 import { useWeek } from '../../../hooks';
+import { parseApiErrorMessage } from '../../../utils/parse-api-error';
 import { formatDateOnly } from '../../../utils/date';
 import { buildWeekDays, getWeekEndIso, buildWeekDates } from '../../../utils/week';
 
@@ -49,6 +50,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const [rows, setRows] = useState<TaskRow[]>([]);
   const { openTaskModal, openActivityModal, closeActivityModal } = useModal();
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
+  const { addError } = useToast();
 
   const loadData = useCallback(async () => {
     let alive = true;
@@ -85,12 +87,15 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       setRows(merged);
     } catch (error) {
       console.error('Ошибка загрузки задач:', error);
-      if (alive) setRows([]);
+      if (alive) {
+        setRows([]);
+        addError(parseApiErrorMessage(error));
+      }
     } finally {
       if (alive) setLoading(false);
     }
     return () => { alive = false; };
-  }, [weekStartIso]);
+  }, [weekStartIso, addError]);
 
   const handleActivitySaveForTask = useCallback(
     (task: TaskResponse) => async (data: { title: string; description: string; date: string }) => {
@@ -146,11 +151,12 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
         } catch (error) {
           console.error('Ошибка загрузки задачи:', error);
+          addError(parseApiErrorMessage(error));
         }
       };
       openActivityModal(task, date, handleActivitySaveForTask(task), onOpenTaskDetails);
     },
-    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask]
+    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, addError]
   );
 
   const handleViewTaskDetails = useCallback(async (taskId: string, event: React.MouseEvent) => {
@@ -168,8 +174,9 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       openTaskModal(task, 'edit', groupsForModal, (data, id) => handleTaskSave(data as TaskUpdateRequest, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
+      addError(parseApiErrorMessage(error));
     }
-  }, [openTaskModal, handleTaskSave, handleTaskDelete]);
+  }, [openTaskModal, handleTaskSave, handleTaskDelete, addError]);
 
   useEffect(() => {
     loadData();

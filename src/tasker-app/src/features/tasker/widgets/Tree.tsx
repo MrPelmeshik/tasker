@@ -4,7 +4,8 @@ import { GlassWidget } from '../../../components/common/GlassWidget';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { GlassTag } from '../../../components/ui/GlassTag';
 import { TaskStatusBadge } from '../../../components/ui/TaskStatusBadge';
-import { useModal, useTaskUpdate } from '../../../context';
+import { useModal, useTaskUpdate, useToast } from '../../../context';
+import { parseApiErrorMessage } from '../../../utils/parse-api-error';
 import type { 
   WidgetSizeProps, 
   AreaShortCard, 
@@ -42,6 +43,7 @@ import { hexToRgb } from '../../../utils/color';
 export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { openAreaModal, openGroupModal, openTaskModal } = useModal();
   const { notifyTaskUpdate } = useTaskUpdate();
+  const { addError } = useToast();
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
   const [groupsByArea, setGroupsByArea] = useState<Map<string, GroupSummary[]>>(new Map());
   const [tasksByGroup, setTasksByGroup] = useState<Map<string, TaskSummary[]>>(new Map());
@@ -61,13 +63,14 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       } catch (error) {
         console.error('Ошибка загрузки областей:', error);
         setAreas([]);
+        addError(parseApiErrorMessage(error));
       } finally {
         setLoading(false);
       }
     };
 
     loadAreas();
-  }, []);
+  }, [addError]);
 
   const toggleArea = async (areaId: string) => {
     setExpandedAreas(prev => {
@@ -93,6 +96,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     } catch (error) {
       console.error(`Ошибка загрузки групп для области ${areaId}:`, error);
       setGroupsByArea(prev => new Map(prev).set(areaId, []));
+      addError(parseApiErrorMessage(error));
     } finally {
       setLoadingGroups(prev => {
         const newSet = new Set(prev);
@@ -126,6 +130,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     } catch (error) {
       console.error(`Ошибка загрузки задач для группы ${groupId}:`, error);
       setTasksByGroup(prev => new Map(prev).set(groupId, []));
+      addError(parseApiErrorMessage(error));
     } finally {
       setLoadingTasks(prev => {
         const newSet = new Set(prev);
@@ -149,6 +154,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       }
     } catch (error) {
       console.error('Ошибка загрузки области:', error);
+      addError(parseApiErrorMessage(error));
     }
   };
 
@@ -215,6 +221,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       }
     } catch (error) {
       console.error('Ошибка загрузки группы:', error);
+      addError(parseApiErrorMessage(error));
     }
   };
 
@@ -252,6 +259,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
       }
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
+      addError(parseApiErrorMessage(error));
     }
   };
 

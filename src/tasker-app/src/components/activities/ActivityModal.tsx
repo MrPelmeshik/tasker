@@ -7,6 +7,8 @@ import { XIcon } from '../icons/XIcon';
 import { SaveIcon } from '../icons/SaveIcon';
 import { EyeIcon } from '../icons/EyeIcon';
 import { ActivityList } from './ActivityList';
+import { useToast } from '../../context/ToastContext';
+import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { useEvents } from './useEvents';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
@@ -39,6 +41,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   date,
   onOpenTaskDetails,
 }) => {
+  const { addError } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -61,6 +64,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       onClose();
     } catch (error) {
       console.error('Ошибка сохранения активности:', error);
+      addError(parseApiErrorMessage(error));
     } finally {
       setIsLoading(false);
     }

@@ -39,12 +39,12 @@
 }
 
 .item:hover {
-  background: var(--glass-bg-hover);
+  background: var(--glass-hover-bg);
 }
 
 .item:focus {
   outline: none;
-  background: var(--glass-bg-hover);
+  background: var(--glass-hover-bg);
 }
 
 .itemDanger {

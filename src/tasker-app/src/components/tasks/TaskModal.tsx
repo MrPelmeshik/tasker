@@ -14,6 +14,8 @@ import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
+import { useToast } from '../../context/ToastContext';
+import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
@@ -52,6 +54,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   defaultAreaId,
   areas,
 }) => {
+  const { addError } = useToast();
   const [allGroups, setAllGroups] = useState<GroupResponse[]>([]);
   const [selectedAreaId, setSelectedAreaId] = useState<string>('');
 
@@ -122,9 +125,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         .catch((err) => {
           console.error('Ошибка загрузки групп:', err);
           setAllGroups([]);
+          addError(parseApiErrorMessage(err));
         });
     }
-  }, [isOpen, areas]);
+  }, [isOpen, areas, addError]);
 
   /** Синхронизация selectedAreaId с группой */
   useEffect(() => {

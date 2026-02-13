@@ -3,6 +3,8 @@ import { Modal } from '../common/Modal';
 import { GlassButton } from '../ui/GlassButton';
 import { GlassInput } from '../ui/GlassInput';
 import { XIcon, EditIcon } from '../icons';
+import { useToast } from '../../context/ToastContext';
+import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { getCurrentUser, updateProfile } from '../../services/api/auth';
 import { areaApi } from '../../services/api/areas';
 import css from '../../styles/modal.module.css';
@@ -19,6 +21,7 @@ export interface CabinetModalProps {
 }
 
 export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) => {
+  const { addError } = useToast();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [areasWithRoles, setAreasWithRoles] = useState<AreaWithRole[]>([]);
   const [loading, setLoading] = useState(false);
@@ -78,11 +81,15 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
           });
           setAreasWithRoles(withRoles);
         } else {
-          setError(userRes.message || 'Ошибка загрузки профиля');
+          const msg = userRes.message || 'Ошибка загрузки профиля';
+          setError(msg);
+          addError(msg);
         }
       } catch (err) {
         if (!cancelled) {
-          setError(err instanceof Error ? err.message : 'Ошибка загрузки');
+          const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
+          setError(msg);
+          addError(parseApiErrorMessage(err));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -91,7 +98,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
 
     load();
     return () => { cancelled = true; };
-  }, [isOpen]);
+  }, [isOpen, addError]);
 
   const handleStartEdit = () => {
     setSaveError(null);
@@ -145,10 +152,14 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
         setConfirmNewPassword('');
         setIsEditMode(false);
       } else {
-        setSaveError(res.message || 'Ошибка сохранения');
+        const msg = res.message || 'Ошибка сохранения';
+        setSaveError(msg);
+        addError(msg);
       }
     } catch (err) {
-      setSaveError(err instanceof Error ? err.message : 'Ошибка сохранения');
+      const msg = err instanceof Error ? err.message : 'Ошибка сохранения';
+      setSaveError(msg);
+      addError(parseApiErrorMessage(err));
     } finally {
       setSaving(false);
     }
@@ -172,7 +183,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
           {loading ? (
             <div className={cabinetCss.loading}>Загрузка…</div>
           ) : error ? (
-            <div className={cabinetCss.loading} style={{ color: 'var(--color-error, #e53e3e)' }}>{error}</div>
+            <div className={cabinetCss.loading} style={{ color: 'var(--color-error)' }}>{error}</div>
           ) : (
             <>
               <section className={cabinetCss.section}>
@@ -262,7 +273,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
                               placeholder="Повторите пароль"
                             />
                             {saveError && (
-                              <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error, #e53e3e)', fontSize: 'var(--font-12)' }}>
+                              <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error)', fontSize: 'var(--font-12)' }}>
                                 {saveError}
                               </div>
                             )}

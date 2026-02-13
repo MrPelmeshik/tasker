@@ -38,6 +38,7 @@ body {
   --color-accent: 0 200 255; /* rgb tuple */
   --color-danger: 255 64 64; /* rgb tuple */
   --color-danger-text: #ff8080;
+  --color-error: var(--color-danger-text);
   --color-success: 34 197 94; /* rgb tuple */
   --color-warning: 245 158 11; /* rgb tuple */
   --color-info: 59 130 246; /* rgb tuple */
@@ -67,6 +68,7 @@ body {
   
   /* Additional glass colors for specific use cases */
   --glass-hover-bg: rgba(255, 255, 255, 0.03);
+  --glass-bg-hover: var(--glass-hover-bg);
   --glass-text-muted: rgba(255, 255, 255, 0.5);
   --glass-scrollbar-track: rgba(255, 255, 255, 0.05);
   --glass-scrollbar-thumb: rgba(255, 255, 255, 0.2);
@@ -139,6 +141,7 @@ body {
   --space-24: 24px;
   --space-28: 28px;
   --space-32: 32px;
+  --space-48: 48px;
 
   /* Font size scale */
   --font-10: 10px;
@@ -163,6 +166,7 @@ body {
   --size-32: 32px;
   --size-40: 40px;
   --size-44: 44px;
+  --size-48: 48px;
   --size-col-task-min: 260px;
 
   /* Tree specific sizes */
@@ -180,6 +184,7 @@ body {
   --scrollbar-size: 8px;
 
   /* Shadows */
+  --shadow-elev-0: 0 2px 8px rgba(0,0,0,0.12);
   --shadow-elev-1: 0 8px 18px rgba(0,0,0,0.28);
   --shadow-elev-2: 0 10px 22px rgba(0,0,0,0.32);
   --shadow-elev-3: 0 12px 26px rgba(0,0,0,0.34);
@@ -195,6 +200,15 @@ body {
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.4s ease;
+
+  /* Glass panel (dropdown, tooltip) */
+  --glass-panel-bg: linear-gradient(180deg, rgb(var(--black) / 0.82), rgb(var(--black) / 0.92)),
+    linear-gradient(180deg, rgb(var(--white) / 0.08), rgb(var(--white) / 0.02));
+
+  /* Surface subtle (readonly blocks, cards) */
+  --surface-subtle-bg: rgb(var(--white) / 0.04);
+  --surface-subtle-border: rgb(var(--white) / 0.06);
+  --surface-subtle-border-strong: rgb(var(--white) / 0.08);
 
   /* Modal */
   --modal-overlay-bg: rgba(0, 0, 0, 0.6);
@@ -248,6 +262,7 @@ body {
   --glass-accent-shadow: rgba(0, 140, 200, 0.15);
 
   --glass-hover-bg: rgba(0, 0, 0, 0.03);
+  --glass-bg-hover: var(--glass-hover-bg);
   --glass-text-muted: rgba(0, 0, 0, 0.45);
   --glass-scrollbar-track: rgba(0, 0, 0, 0.05);
   --glass-scrollbar-thumb: rgba(0, 0, 0, 0.18);
@@ -260,6 +275,11 @@ body {
   --glass-card-border-default: rgba(0, 0, 0, 0.08);
   --glass-card-border-default-hover: rgba(0, 0, 0, 0.14);
   --glass-card-border-default-selected: rgba(0, 0, 0, 0.22);
+
+  /* Surface subtle — light theme */
+  --surface-subtle-bg: rgba(0, 0, 0, 0.03);
+  --surface-subtle-border: rgba(0, 0, 0, 0.06);
+  --surface-subtle-border-strong: rgba(0, 0, 0, 0.08);
 
   /* Common glass gradients — light theme */
   --glass-gradient-bg: linear-gradient(180deg, rgba(255,255,255,0.70), rgba(255,255,255,0.40));
@@ -303,6 +323,7 @@ body {
   --modal-highlight: rgba(255, 255, 255, 0.5);
 
   /* Shadows — light theme */
+  --shadow-elev-0: 0 2px 8px rgba(0,0,0,0.06);
   --shadow-elev-1: 0 8px 18px rgba(0,0,0,0.08);
   --shadow-elev-2: 0 10px 22px rgba(0,0,0,0.10);
   --shadow-elev-3: 0 12px 26px rgba(0,0,0,0.12);

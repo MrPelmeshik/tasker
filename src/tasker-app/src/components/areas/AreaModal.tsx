@@ -28,6 +28,8 @@ import { GripVerticalIcon } from '../icons/GripVerticalIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
+import { useToast } from '../../context/ToastContext';
+import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { areaApi } from '../../services/api/areas';
 import { getCurrentUser } from '../../services/api/auth';
 import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
@@ -322,7 +324,7 @@ const ParticipantsByRole: React.FC<ParticipantsByRoleProps> = ({
             </GlassButton>
           </div>
           {addMemberError && (
-            <span className={formCss.readonlyMetaLabel} style={{ color: 'var(--color-error, #e53e3e)', fontSize: 'var(--font-12)' }}>{addMemberError}</span>
+            <span className={formCss.readonlyMetaLabel} style={{ color: 'var(--color-error)', fontSize: 'var(--font-12)' }}>{addMemberError}</span>
           )}
         </div>
       )}
@@ -339,6 +341,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   title = 'Область',
   size = 'medium',
 }) => {
+  const { addError } = useToast();
   const [members, setMembers] = useState<AreaMemberResponse[]>([]);
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AreaRole>>({});
 
@@ -441,14 +444,16 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       })
       .catch(err => {
         if (!cancelled) {
-          setMembersError(err instanceof Error ? err.message : 'Ошибка загрузки участников');
+          const msg = err instanceof Error ? err.message : 'Ошибка загрузки участников';
+          setMembersError(msg);
+          addError(parseApiErrorMessage(err));
         }
       })
       .finally(() => {
         if (!cancelled) setMembersLoading(false);
       });
     return () => { cancelled = true; };
-  }, [isOpen, area?.id]);
+  }, [isOpen, area?.id, addError]);
 
   /** Добавить участника по логину */
   const handleAddMember = async () => {
@@ -470,6 +475,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ошибка добавления участника';
       setAddMemberError(msg);
+      addError(parseApiErrorMessage(err));
     } finally {
       setAddMemberLoading(false);
     }
@@ -501,6 +507,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       setMembers(prev => prev.filter(x => x.userId !== m.userId));
     } catch (err) {
       setAddMemberError(err instanceof Error ? err.message : 'Ошибка удаления участника');
+      addError(parseApiErrorMessage(err));
     } finally {
       setAddMemberLoading(false);
     }
@@ -690,7 +697,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 {membersLoading ? (
                   <div className={formCss.fieldValueReadonly}>Загрузка…</div>
                 ) : membersError ? (
-                  <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error, #e53e3e)' }}>{membersError}</div>
+                  <div className={formCss.fieldValueReadonly} style={{ color: 'var(--color-error)' }}>{membersError}</div>
                 ) : (
                   <ParticipantsByRole
                     members={displayMembers}

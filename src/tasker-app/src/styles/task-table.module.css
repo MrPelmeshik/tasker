@@ -154,7 +154,7 @@
   backdrop-filter: var(--glass-backdrop-blur-6);
   -webkit-backdrop-filter: var(--glass-backdrop-blur-6);
   background:
-    linear-gradient(var(--heat, rgba(0, 200, 255, 0.06)), var(--heat, rgba(0, 200, 255, 0.06)));
+    linear-gradient(var(--heat, rgb(var(--color-accent) / 0.06)), var(--heat, rgb(var(--color-accent) / 0.06)));
   box-shadow: inset 0 1px 0 rgb(var(--white) / 0.12);
   will-change: transform, border-radius, box-shadow, filter;
   transition:
@@ -167,12 +167,12 @@
 
 
 
-.intensity0 { --heat: rgba(0, 200, 255, 0.04); }
-.intensity1 { --heat: rgba(0, 200, 255, 0.09); }
-.intensity2 { --heat: rgba(0, 200, 255, 0.15); }
-.intensity3 { --heat: rgba(0, 200, 255, 0.22); }
-.intensity4 { --heat: rgba(0, 200, 255, 0.32); }
-.intensity5 { --heat: rgba(0, 200, 255, 0.44); }
+.intensity0 { --heat: rgb(var(--color-accent) / 0.04); }
+.intensity1 { --heat: rgb(var(--color-accent) / 0.09); }
+.intensity2 { --heat: rgb(var(--color-accent) / 0.15); }
+.intensity3 { --heat: rgb(var(--color-accent) / 0.22); }
+.intensity4 { --heat: rgb(var(--color-accent) / 0.32); }
+.intensity5 { --heat: rgb(var(--color-accent) / 0.44); }
 
 .heatCell:hover {
   box-shadow: inset 0 1px 0 rgb(var(--white) / 0.20);
