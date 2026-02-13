@@ -44,6 +44,8 @@ export interface UseTreeHandlersOptions
   setFoldersByParent: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;
   setTasksByArea: React.Dispatch<React.SetStateAction<Map<string, TaskSummary[]>>>;
   setTasksByFolder: React.Dispatch<React.SetStateAction<Map<string, TaskSummary[]>>>;
+  setExpandedAreas: React.Dispatch<React.SetStateAction<Set<string>>>;
+  setExpandedFolders: React.Dispatch<React.SetStateAction<Set<string>>>;
   loadFolderContent: (folderId: string, areaId: string) => Promise<void>;
   foldersByParent: Map<string, FolderSummary[]>;
   addError: (message: string) => void;
@@ -58,6 +60,8 @@ export function useTreeHandlers({
   setFoldersByParent,
   setTasksByArea,
   setTasksByFolder,
+  setExpandedAreas,
+  setExpandedFolders,
   loadFolderContent,
   foldersByParent,
   addError,
@@ -121,14 +125,16 @@ export function useTreeHandlers({
         if (data.parentFolderId) {
           const children = await fetchChildFolders(data.parentFolderId, areaId);
           setFoldersByParent((prev) => new Map(prev).set(data.parentFolderId!, children));
+          setExpandedFolders((prev) => new Set(prev).add(data.parentFolderId!));
         }
         setAreas((prev) => prev.map((a) => (a.id === areaId ? { ...a, foldersCount: rootFolders.length } : a)));
+        setExpandedAreas((prev) => new Set(prev).add(areaId));
       } catch (error) {
         console.error('Ошибка сохранения папки:', error);
         throw error;
       }
     },
-    [setAreas, setFoldersByArea, setFoldersByParent]
+    [setAreas, setFoldersByArea, setFoldersByParent, setExpandedAreas, setExpandedFolders]
   );
 
   const handleFolderDelete = useCallback(
@@ -178,17 +184,22 @@ export function useTreeHandlers({
         if (folderId) {
           const tasks = await fetchTaskSummaryByFolder(folderId);
           setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
+          setExpandedFolders((prev) => new Set(prev).add(folderId));
         } else {
           const tasks = await fetchTaskSummaryByAreaRoot(areaId);
           setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
+          setAreas((prev) =>
+            prev.map((a) => (a.id === areaId ? { ...a, rootTasksCount: tasks.length } : a))
+          );
         }
+        setExpandedAreas((prev) => new Set(prev).add(areaId));
         notifyTaskUpdate(taskId, folderId);
       } catch (error) {
         console.error('Ошибка сохранения задачи:', error);
         throw error;
       }
     },
-    [setTasksByArea, setTasksByFolder, notifyTaskUpdate]
+    [setAreas, setTasksByArea, setTasksByFolder, setExpandedAreas, setExpandedFolders, notifyTaskUpdate]
   );
 
   const handleTaskDelete = useCallback(
@@ -204,6 +215,9 @@ export function useTreeHandlers({
         } else if (areaId) {
           const tasks = await fetchTaskSummaryByAreaRoot(areaId);
           setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
+          setAreas((prev) =>
+            prev.map((a) => (a.id === areaId ? { ...a, rootTasksCount: tasks.length } : a))
+          );
         }
         notifyTaskUpdate(id, folderId);
       } catch (error) {
@@ -211,7 +225,7 @@ export function useTreeHandlers({
         throw error;
       }
     },
-    [setTasksByArea, setTasksByFolder, notifyTaskUpdate]
+    [setAreas, setTasksByArea, setTasksByFolder, notifyTaskUpdate]
   );
 
   const handleCreateArea = useCallback(() => {

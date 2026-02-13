@@ -74,6 +74,8 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     setFoldersByParent,
     setTasksByArea,
     setTasksByFolder,
+    setExpandedAreas,
+    setExpandedFolders,
     loadFolderContent,
     foldersByParent,
     addError,

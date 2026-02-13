@@ -49,7 +49,8 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
   renderFolder,
   renderTask,
 }) => {
-  const hasChildren = folder.tasksCount + folder.subfoldersCount > 0;
+  /** Показывать контент: либо по данным из бэкенда, либо по уже загруженным подпапкам/задачам (актуально после создания) */
+  const hasChildren = subfolders.length + tasks.length > 0 || folder.tasksCount + folder.subfoldersCount > 0;
   const { attributes, listeners, setNodeRef: setDraggableRef, isDragging } = useDraggable({
     id: `folder-${folder.id}`,
     data: { type: 'folder', folder },

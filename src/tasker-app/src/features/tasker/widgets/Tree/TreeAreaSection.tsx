@@ -46,7 +46,8 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
   onViewTaskDetails,
   renderFolder,
 }) => {
-  const hasChildren = area.foldersCount + area.rootTasksCount > 0;
+  /** Показывать контент: либо по данным из бэкенда, либо по уже загруженным папкам/задачам (актуально после создания) */
+  const hasChildren = folders.length + tasks.length > 0 || area.foldersCount + area.rootTasksCount > 0;
   const { setNodeRef, isOver } = useDroppable({ id: `area-root-${area.id}`, data: {} });
   const canDrop = isValidDrop(activeDrag?.data, `area-root-${area.id}`, foldersByArea, foldersByParent);
   const customColorStyle = useCustomColorStyle(area.customColor);
