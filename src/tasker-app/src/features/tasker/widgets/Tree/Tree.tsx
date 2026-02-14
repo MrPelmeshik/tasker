@@ -22,15 +22,28 @@ import {
   updateTask,
 } from '../../../../services/api';
 import { GlassWidget } from '../../../../components/common/GlassWidget';
-import { LayoutGridIcon, UnfoldVerticalIcon, FoldVerticalIcon } from '../../../../components/icons';
+import { LayoutGridIcon, UnfoldVerticalIcon, FoldVerticalIcon, FilterIcon, SortIcon } from '../../../../components/icons';
 import { Tooltip } from '../../../../components/ui/Tooltip';
 import { GlassButton } from '../../../../components/ui/GlassButton';
+import { GlassSelect } from '../../../../components/ui/GlassSelect';
+import { TaskStatusBadge } from '../../../../components/ui/TaskStatusBadge';
+import type { TaskStatus } from '../../../../types/task-status';
+import { getTaskStatusOptions } from '../../../../types/task-status';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
 import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import type { WidgetSizeProps, FolderSummary } from '../../../../types';
 import type { FolderResponse } from '../../../../types/api';
 import type { EntityType } from '../../../../utils/entity-links';
-import { collisionDetection, parseDropTarget, isValidDrop, type DragPayload } from './treeUtils';
+import {
+  collisionDetection,
+  parseDropTarget,
+  isValidDrop,
+  filterTasksByStatus,
+  sortTasks,
+  TREE_SORT_PRESET_OPTIONS,
+  type DragPayload,
+  type TreeSortPreset,
+} from './treeUtils';
 import { useTreeData } from './useTreeData';
 import { useTreeHandlers } from './useTreeHandlers';
 import { TreeAreaSection } from './TreeAreaSection';
@@ -39,6 +52,47 @@ import { TreeTaskRow } from './TreeTaskRow';
 import { TreeDndOverlay } from './TreeDndOverlay';
 import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
 import css from '../../../../styles/tree.module.css';
+
+const TREE_FILTERS_STORAGE_KEY = 'tasker-tree-filters';
+
+function loadTreeFilters(): { enabledStatuses: Set<TaskStatus>; sortPreset: TreeSortPreset } {
+  try {
+    const raw = localStorage.getItem(TREE_FILTERS_STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw) as { enabledStatuses?: number[]; sortPreset?: string };
+      const enabledStatuses =
+        Array.isArray(parsed.enabledStatuses) && parsed.enabledStatuses.length > 0
+          ? new Set(parsed.enabledStatuses as TaskStatus[])
+          : new Set(getTaskStatusOptions().map((o) => o.value as TaskStatus));
+      const validPresets = new Set(TREE_SORT_PRESET_OPTIONS.map((o) => o.value));
+      const sortPreset =
+        typeof parsed.sortPreset === 'string' && validPresets.has(parsed.sortPreset as TreeSortPreset)
+          ? (parsed.sortPreset as TreeSortPreset)
+          : 'statusAscAlpha';
+      return { enabledStatuses, sortPreset };
+    }
+  } catch {
+    /* ignore */
+  }
+  return {
+    enabledStatuses: new Set(getTaskStatusOptions().map((o) => o.value as TaskStatus)),
+    sortPreset: 'statusAscAlpha',
+  };
+}
+
+function saveTreeFilters(enabledStatuses: Set<TaskStatus>, sortPreset: TreeSortPreset): void {
+  try {
+    localStorage.setItem(
+      TREE_FILTERS_STORAGE_KEY,
+      JSON.stringify({
+        enabledStatuses: Array.from(enabledStatuses),
+        sortPreset,
+      })
+    );
+  } catch {
+    /* ignore */
+  }
+}
 
 export interface TreeProps extends WidgetSizeProps {
   /** Deep link для открытия сущности при загрузке страницы */
@@ -104,6 +158,38 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
 
   const [activeDrag, setActiveDrag] = useState<{ id: string; data: DragPayload } | null>(null);
   const processedDeepLinkRef = useRef<string | null>(null);
+
+  const [filterState, setFilterState] = useState(loadTreeFilters);
+  const { enabledStatuses, sortPreset } = filterState;
+  const hasStatusFilter = enabledStatuses.size < 5;
+
+  useEffect(() => {
+    saveTreeFilters(enabledStatuses, sortPreset);
+  }, [enabledStatuses, sortPreset]);
+
+  const toggleStatus = useCallback((status: TaskStatus) => {
+    setFilterState((prev) => {
+      const next = new Set(prev.enabledStatuses);
+      if (next.has(status)) {
+        next.delete(status);
+      } else {
+        next.add(status);
+      }
+      return { ...prev, enabledStatuses: next };
+    });
+  }, []);
+
+  const setSortPreset = useCallback((preset: TreeSortPreset) => {
+    setFilterState((prev) => ({ ...prev, sortPreset: preset }));
+  }, []);
+
+  const filterAndSortTasks = useCallback(
+    (tasks: import('../../../../types').TaskSummary[]) => {
+      const filtered = hasStatusFilter ? filterTasksByStatus(tasks, enabledStatuses) : tasks;
+      return sortTasks(filtered, sortPreset);
+    },
+    [enabledStatuses, sortPreset, hasStatusFilter]
+  );
 
   useEffect(() => {
     if (loading || !initialDeepLink) return;
@@ -326,8 +412,11 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
   const renderFolder = useCallback(
     (folder: FolderSummary, areaId: string, depth: number) => {
       const subfolders = foldersByParent.get(folder.id) ?? [];
-      const tasks = tasksByFolder.get(folder.id) ?? [];
+      const rawTasks = tasksByFolder.get(folder.id) ?? [];
+      const tasks = filterAndSortTasks(rawTasks);
       const isLoading = loadingContent.has(`folder:${folder.id}`);
+      const displayCount = hasStatusFilter ? subfolders.length + tasks.length : undefined;
+      const totalCount = hasStatusFilter ? folder.tasksCount + folder.subfoldersCount : undefined;
       return (
         <TreeFolderRow
           key={folder.id}
@@ -338,6 +427,8 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
           subfolders={subfolders}
           tasks={tasks}
           isLoading={isLoading}
+          displayCount={displayCount}
+          totalCount={totalCount}
           activeDrag={activeDrag}
           foldersByArea={foldersByArea}
           foldersByParent={foldersByParent}
@@ -350,7 +441,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
         />
       );
     },
-    [expandedFolders, foldersByParent, tasksByFolder, loadingContent, activeDrag, foldersByArea, toggleFolder, handlers]
+    [expandedFolders, foldersByParent, tasksByFolder, loadingContent, activeDrag, foldersByArea, toggleFolder, handlers, filterAndSortTasks, hasStatusFilter]
   );
 
   const innerContent = (
@@ -384,31 +475,73 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
               )}
             </GlassButton>
           </Tooltip>
+          <div className={css.treeStatusFiltersBlock}>
+            <span className={css.treeStatusFiltersBlockIcon} aria-hidden>
+              <FilterIcon style={{ width: 14, height: 14 }} />
+            </span>
+            <div className={css.treeStatusFilters}>
+              {getTaskStatusOptions().map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  className={`${css.treeStatusFilterBtn} ${enabledStatuses.has(opt.value as TaskStatus) ? '' : css.treeStatusFilterBtnDisabled}`}
+                  onClick={() => toggleStatus(opt.value as TaskStatus)}
+                  aria-label={opt.label}
+                  aria-pressed={enabledStatuses.has(opt.value as TaskStatus)}
+                >
+                  <TaskStatusBadge status={opt.value as TaskStatus} size="xs" variant="compact" />
+                </button>
+              ))}
+            </div>
+          </div>
+          <GlassSelect
+            value={sortPreset}
+            onChange={(v) => setSortPreset(v as TreeSortPreset)}
+            options={TREE_SORT_PRESET_OPTIONS}
+            size="s"
+            placeholder="Сортировка"
+            className={css.treeSortSelect}
+            renderValue={(opt) => (
+              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <SortIcon style={{ width: 14, height: 14, flexShrink: 0 }} />
+                {opt.label}
+              </span>
+            )}
+          />
         </div>
         {loading ? (
           <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
         ) : areas.length === 0 ? (
           <div className={glassWidgetStyles.placeholder}>Нет доступных областей</div>
         ) : (
-          areas.map((area) => (
-            <TreeAreaSection
-              key={area.id}
-              area={area}
-              isExpanded={expandedAreas.has(area.id)}
-              folders={foldersByArea.get(area.id) ?? []}
-              tasks={tasksByArea.get(area.id) ?? []}
-              isLoading={loadingContent.has(`area:${area.id}`)}
-              activeDrag={activeDrag}
-              foldersByArea={foldersByArea}
-              foldersByParent={foldersByParent}
-              onToggle={() => toggleArea(area.id)}
-              onViewDetails={(e) => handlers.handleViewAreaDetails(area.id, e)}
-              onCreateFolder={(e) => handlers.handleCreateFolderForArea(area.id, e)}
-              onCreateTask={(e) => handlers.handleCreateTaskForArea(area.id, e)}
-              onViewTaskDetails={handlers.handleViewTaskDetails}
-              renderFolder={renderFolder}
-            />
-          ))
+          areas.map((area) => {
+            const rawTasks = tasksByArea.get(area.id) ?? [];
+            const filteredTasks = filterAndSortTasks(rawTasks);
+            const folders = foldersByArea.get(area.id) ?? [];
+            const displayCount = hasStatusFilter ? folders.length + filteredTasks.length : undefined;
+            const totalCount = hasStatusFilter ? area.foldersCount + area.rootTasksCount : undefined;
+            return (
+              <TreeAreaSection
+                key={area.id}
+                area={area}
+                isExpanded={expandedAreas.has(area.id)}
+                folders={folders}
+                tasks={filteredTasks}
+                isLoading={loadingContent.has(`area:${area.id}`)}
+                displayCount={displayCount}
+                totalCount={totalCount}
+                activeDrag={activeDrag}
+                foldersByArea={foldersByArea}
+                foldersByParent={foldersByParent}
+                onToggle={() => toggleArea(area.id)}
+                onViewDetails={(e) => handlers.handleViewAreaDetails(area.id, e)}
+                onCreateFolder={(e) => handlers.handleCreateFolderForArea(area.id, e)}
+                onCreateTask={(e) => handlers.handleCreateTaskForArea(area.id, e)}
+                onViewTaskDetails={handlers.handleViewTaskDetails}
+                renderFolder={renderFolder}
+              />
+            );
+          })
         )}
       </div>
     </div>

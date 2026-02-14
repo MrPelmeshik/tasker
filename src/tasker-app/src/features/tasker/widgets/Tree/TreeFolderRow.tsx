@@ -21,6 +21,10 @@ export interface TreeFolderRowProps {
   subfolders: FolderSummary[];
   tasks: TaskSummary[];
   isLoading: boolean;
+  /** При активном фильтре: отображаемое количество */
+  displayCount?: number;
+  /** При активном фильтре: полное количество (для формата displayed/total) */
+  totalCount?: number;
   activeDrag: { id: string; data: { type: string; folder?: FolderSummary; task?: TaskSummary } } | null;
   foldersByArea: Map<string, FolderSummary[]>;
   foldersByParent: Map<string, FolderSummary[]>;
@@ -41,6 +45,8 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
   subfolders,
   tasks,
   isLoading,
+  displayCount,
+  totalCount,
   activeDrag,
   foldersByArea,
   foldersByParent,
@@ -116,6 +122,8 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
               folder={folder}
               style={customColorStyle}
               dataCustomColor={!!folder.customColor}
+              displayCount={displayCount}
+              totalCount={totalCount}
             />
           </div>
         </div>

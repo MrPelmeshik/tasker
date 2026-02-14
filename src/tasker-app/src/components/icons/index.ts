@@ -20,3 +20,6 @@ export { SunIcon } from './SunIcon';
 export { MoonIcon } from './MoonIcon';
 export { UnfoldVerticalIcon } from './UnfoldVerticalIcon';
 export { FoldVerticalIcon } from './FoldVerticalIcon';
+export { ArrowUpDownIcon } from './ArrowUpDownIcon';
+export { FilterIcon } from './FilterIcon';
+export { SortIcon } from './SortIcon';

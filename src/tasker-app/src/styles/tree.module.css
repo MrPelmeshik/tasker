@@ -74,6 +74,94 @@
   padding: var(--space-4) !important;
 }
 
+/** Обёртка блока фильтров: иконка + кнопки статусов (высота как у treeTopActionButton) */
+.treeStatusFiltersBlock {
+  display: flex;
+  align-items: center;
+  gap: var(--tree-row-gap);
+  min-height: var(--size-28);
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-xs);
+  border: var(--border-1) solid rgb(var(--white) / 0.08);
+  background: var(--glass-bg-1);
+}
+
+/** Иконка в блоке фильтров — цвет как у treeActionButton */
+.treeStatusFiltersBlockIcon {
+  color: var(--glass-icon-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/** Блок кнопок фильтрации по статусам */
+.treeStatusFilters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+/** Кнопка статуса в фильтре (компактный бейдж) */
+.treeStatusFilterBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-2xs);
+  background: transparent;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.treeStatusFilterBtn:hover {
+  background: var(--glass-hover-bg);
+}
+
+.treeStatusFilterBtnDisabled {
+  opacity: 0.4;
+}
+
+.treeStatusFilterBtnDisabled:hover {
+  opacity: 0.6;
+}
+
+/** Селект сортировки в тулбаре — компактная ширина */
+.treeSortSelect {
+  min-width: 200px;
+  max-width: 260px;
+}
+
+/** Меню выбора пресета сортировки (устарело, используется GlassSelect) */
+.treeSortMenu {
+  display: flex;
+  flex-direction: column;
+  min-width: 220px;
+}
+
+.treeSortMenuItem {
+  display: block;
+  width: 100%;
+  padding: var(--space-6) var(--space-8);
+  border: none;
+  border-radius: var(--radius-xs);
+  background: transparent;
+  color: var(--color-text);
+  font-size: var(--font-13);
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.treeSortMenuItem:hover {
+  background: var(--glass-hover-bg);
+}
+
+.treeSortMenuItemActive {
+  background: var(--glass-card-bg-selected);
+  color: rgb(var(--color-accent) / 1);
+}
+
 .areaCard {
   position: relative;
   background: transparent;

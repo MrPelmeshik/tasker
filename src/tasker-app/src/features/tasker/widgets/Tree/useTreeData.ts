@@ -39,16 +39,23 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
   foldersByAreaRef.current = foldersByArea;
   foldersByParentRef.current = foldersByParent;
 
+  /** Сортировка по title A→Z (области и папки всегда в алфавитном порядке) */
+  const sortByTitle = useCallback(<T extends { title?: string }>(items: T[]): T[] => {
+    return [...items].sort((a, b) =>
+      (a.title ?? '').localeCompare(b.title ?? '', undefined, { sensitivity: 'base' })
+    );
+  }, []);
+
   const refreshAreas = useCallback(async () => {
     try {
       const data = await fetchAreaShortCard();
-      setAreas(data);
+      setAreas(sortByTitle(data));
     } catch (error) {
       console.error('Ошибка загрузки областей:', error);
       setAreas([]);
       addError(parseApiErrorMessage(error));
     }
-  }, [addError]);
+  }, [addError, sortByTitle]);
 
   const loadAreaContent = useCallback(async (areaId: string): Promise<FolderSummary[]> => {
     try {
@@ -57,9 +64,10 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
         fetchRootFoldersByArea(areaId),
         fetchTaskSummaryByAreaRoot(areaId),
       ]);
-      setFoldersByArea((prev) => new Map(prev).set(areaId, folders));
+      const sorted = sortByTitle(folders);
+      setFoldersByArea((prev) => new Map(prev).set(areaId, sorted));
       setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
-      return folders;
+      return sorted;
     } catch (error) {
       console.error(`Ошибка загрузки содержимого области ${areaId}:`, error);
       setFoldersByArea((prev) => new Map(prev).set(areaId, []));
@@ -73,7 +81,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
         return next;
       });
     }
-  }, [addError]);
+  }, [addError, sortByTitle]);
 
   const loadFolderContent = useCallback(async (folderId: string, areaId: string): Promise<FolderSummary[]> => {
     try {
@@ -82,9 +90,10 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
         fetchChildFolders(folderId, areaId),
         fetchTaskSummaryByFolder(folderId),
       ]);
-      setFoldersByParent((prev) => new Map(prev).set(folderId, subfolders));
+      const sorted = sortByTitle(subfolders);
+      setFoldersByParent((prev) => new Map(prev).set(folderId, sorted));
       setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
-      return subfolders;
+      return sorted;
     } catch (error) {
       console.error(`Ошибка загрузки содержимого папки ${folderId}:`, error);
       setFoldersByParent((prev) => new Map(prev).set(folderId, []));
@@ -98,7 +107,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
         return next;
       });
     }
-  }, [addError]);
+  }, [addError, sortByTitle]);
 
   const refreshTree = useCallback(async () => {
     try {

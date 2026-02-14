@@ -20,6 +20,10 @@ export interface TreeAreaSectionProps {
   folders: FolderSummary[];
   tasks: TaskSummary[];
   isLoading: boolean;
+  /** При активном фильтре: отображаемое количество */
+  displayCount?: number;
+  /** При активном фильтре: полное количество (для формата displayed/total) */
+  totalCount?: number;
   activeDrag: { id: string; data: { type: string; folder?: FolderSummary; task?: TaskSummary } } | null;
   foldersByArea: Map<string, FolderSummary[]>;
   foldersByParent: Map<string, FolderSummary[]>;
@@ -38,6 +42,8 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
   folders,
   tasks,
   isLoading,
+  displayCount,
+  totalCount,
   activeDrag,
   foldersByArea,
   foldersByParent,
@@ -103,6 +109,8 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
               area={area}
               style={customColorStyle}
               dataCustomColor={!!area.customColor}
+              displayCount={displayCount}
+              totalCount={totalCount}
             />
           </div>
         </div>
