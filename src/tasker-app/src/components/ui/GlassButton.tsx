@@ -47,10 +47,12 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
   }, [value, toggleGroup]);
 
   useLayoutEffect(() => {
-    if (toggleGroup) {
+    if (!toggleGroup) return;
+    const rafId = requestAnimationFrame(() => {
       updateIndicator();
-    }
-  }, [updateIndicator, options, children, size, fullWidth, equalWidth]);
+    });
+    return () => cancelAnimationFrame(rafId);
+  }, [toggleGroup, value, updateIndicator, options, children, size, fullWidth, equalWidth]);
 
   React.useEffect(() => {
     if (toggleGroup) {

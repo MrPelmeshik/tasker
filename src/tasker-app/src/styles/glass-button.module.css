@@ -288,13 +288,11 @@
   gap: var(--space-6);
   padding: 0;
   border-radius: var(--radius-l);
-  border: var(--border-1) solid rgb(var(--white) / 0.10);
-  background: var(--glass-gradient-bg-subtle);
-  backdrop-filter: var(--glass-backdrop-blur-8);
-  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
-  box-shadow:
-    var(--shadow-elev-1),
-    var(--shadow-inset-0);
+  border: var(--border-1) solid rgb(var(--white) / 0.06);
+  background: linear-gradient(180deg, rgb(var(--white) / 0.06), rgb(var(--white) / 0.02));
+  backdrop-filter: var(--glass-backdrop-blur-6);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-6);
+  box-shadow: var(--shadow-elev-0);
   box-sizing: border-box;
   overflow: hidden; /* clip indicator corners to container to avoid mismatched rounding */
 }
@@ -310,8 +308,10 @@
   width: 0;
   height: 100%;
   border-radius: var(--radius-m);
-  border: var(--border-1) solid rgb(var(--white) / 0.12);
-  background: var(--glass-gradient-bg);
+  border: var(--border-1) solid rgb(var(--white) / 0.15);
+  background: var(--glass-radial-default), var(--glass-gradient-bg);
+  backdrop-filter: var(--glass-backdrop-blur-8);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
   box-shadow:
     var(--shadow-elev-1),
     var(--shadow-inset-1);
@@ -333,12 +333,27 @@
   color: rgb(var(--white) / 0.80);
   background: transparent;
   border: var(--border-1) solid transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  box-shadow: none;
   cursor: pointer;
   transition: border-color 200ms ease, background 200ms ease, box-shadow 200ms ease, filter 200ms ease;
 }
 
-.toggleRoot .btn:hover {
-  filter: saturate(1.04) brightness(1.03);
+.toggleRoot .btn:hover,
+.toggleRoot .btn:active {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.toggleRoot .btn::before {
+  background: none;
+}
+
+.toggleRoot .btn:hover::after,
+.toggleRoot .btn:active::after {
+  box-shadow: none;
 }
 
 .toggleRoot .btn.selected {
