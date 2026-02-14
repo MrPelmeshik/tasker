@@ -43,9 +43,11 @@ import css from '../../../../styles/tree.module.css';
 export interface TreeProps extends WidgetSizeProps {
   /** Deep link для открытия сущности при загрузке страницы */
   initialDeepLink?: { entityType: EntityType; entityId: string };
+  /** Режим встраивания: без обёртки GlassWidget (используется внутри SidebarTabsWidget) */
+  embedded?: boolean;
 }
 
-export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink }) => {
+export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, embedded }) => {
   const { openAreaModal, openFolderModal, openTaskModal } = useModal();
   const { notifyTaskUpdate, subscribeToTaskUpdates } = useTaskUpdate();
   const { addError, addSuccess } = useToast();
@@ -340,6 +342,74 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink })
     [expandedFolders, foldersByParent, tasksByFolder, loadingContent, activeDrag, foldersByArea, toggleFolder, handlers]
   );
 
+  const innerContent = (
+    <div className={css.tree}>
+      <div className={css.widgetHeader}>
+        <h3 className={css.widgetTitle}>Дерево</h3>
+        <Tooltip content="Создать область" placement="bottom">
+          <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handlers.handleCreateArea} aria-label="Создать область">
+            <LayoutGridIcon style={{ width: 14, height: 14 }} />
+          </GlassButton>
+        </Tooltip>
+      </div>
+      {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
+      <div className={css.widgetContent}>
+        {loading ? (
+          <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+        ) : areas.length === 0 ? (
+          <div className={glassWidgetStyles.placeholder}>Нет доступных областей</div>
+        ) : (
+          areas.map((area) => (
+            <TreeAreaSection
+              key={area.id}
+              area={area}
+              isExpanded={expandedAreas.has(area.id)}
+              folders={foldersByArea.get(area.id) ?? []}
+              tasks={tasksByArea.get(area.id) ?? []}
+              isLoading={loadingContent.has(`area:${area.id}`)}
+              activeDrag={activeDrag}
+              foldersByArea={foldersByArea}
+              foldersByParent={foldersByParent}
+              onToggle={() => toggleArea(area.id)}
+              onViewDetails={(e) => handlers.handleViewAreaDetails(area.id, e)}
+              onCreateFolder={(e) => handlers.handleCreateFolderForArea(area.id, e)}
+              onCreateTask={(e) => handlers.handleCreateTaskForArea(area.id, e)}
+              onViewTaskDetails={handlers.handleViewTaskDetails}
+              renderFolder={renderFolder}
+            />
+          ))
+        )}
+      </div>
+    </div>
+  );
+
+  const dndContent = (
+    <DndContext
+      sensors={sensors}
+      collisionDetection={collisionDetection}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      onDragCancel={() => setActiveDrag(null)}
+    >
+      {innerContent}
+      {createPortal(
+        <DragOverlay zIndex={1100} style={{ cursor: 'grabbing' }}>
+          {activeDrag?.data.type === 'folder' && activeDrag.data.folder && (
+            <TreeDndOverlay type="folder" folder={activeDrag.data.folder} />
+          )}
+          {activeDrag?.data.type === 'task' && activeDrag.data.task && (
+            <TreeDndOverlay type="task" task={activeDrag.data.task} />
+          )}
+        </DragOverlay>,
+        document.body
+      )}
+    </DndContext>
+  );
+
+  if (embedded) {
+    return dndContent;
+  }
+
   if (loading) {
     return (
       <GlassWidget title="Иерархия" colSpan={colSpan} rowSpan={rowSpan}>
@@ -350,61 +420,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink })
 
   return (
     <GlassWidget colSpan={colSpan} rowSpan={rowSpan}>
-      <DndContext
-        sensors={sensors}
-        collisionDetection={collisionDetection}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-        onDragCancel={() => setActiveDrag(null)}
-      >
-        <div className={css.tree}>
-          <div className={css.widgetHeader}>
-            <h3 className={css.widgetTitle}>Дерево</h3>
-            <Tooltip content="Создать область" placement="bottom">
-              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handlers.handleCreateArea} aria-label="Создать область">
-                <LayoutGridIcon style={{ width: 14, height: 14 }} />
-              </GlassButton>
-            </Tooltip>
-          </div>
-          {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
-          <div className={css.widgetContent}>
-            {areas.length === 0 ? (
-              <div className={glassWidgetStyles.placeholder}>Нет доступных областей</div>
-            ) : (
-              areas.map((area) => (
-                <TreeAreaSection
-                  key={area.id}
-                  area={area}
-                  isExpanded={expandedAreas.has(area.id)}
-                  folders={foldersByArea.get(area.id) ?? []}
-                  tasks={tasksByArea.get(area.id) ?? []}
-                  isLoading={loadingContent.has(`area:${area.id}`)}
-                  activeDrag={activeDrag}
-                  foldersByArea={foldersByArea}
-                  foldersByParent={foldersByParent}
-                  onToggle={() => toggleArea(area.id)}
-                  onViewDetails={(e) => handlers.handleViewAreaDetails(area.id, e)}
-                  onCreateFolder={(e) => handlers.handleCreateFolderForArea(area.id, e)}
-                  onCreateTask={(e) => handlers.handleCreateTaskForArea(area.id, e)}
-                  onViewTaskDetails={handlers.handleViewTaskDetails}
-                  renderFolder={renderFolder}
-                />
-              ))
-            )}
-          </div>
-        </div>
-        {createPortal(
-          <DragOverlay zIndex={1100} style={{ cursor: 'grabbing' }}>
-            {activeDrag?.data.type === 'folder' && activeDrag.data.folder && (
-              <TreeDndOverlay type="folder" folder={activeDrag.data.folder} />
-            )}
-            {activeDrag?.data.type === 'task' && activeDrag.data.task && (
-              <TreeDndOverlay type="task" task={activeDrag.data.task} />
-            )}
-          </DragOverlay>,
-          document.body
-        )}
-      </DndContext>
+      {dndContent}
     </GlassWidget>
   );
 };

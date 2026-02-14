@@ -1,0 +1,23 @@
+/**
+ * Стили единого виджета сайдбара с вкладками.
+ */
+
+.tabBar {
+  margin-bottom: var(--space-12);
+}
+
+.content {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.tabPanel {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

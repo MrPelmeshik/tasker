@@ -52,7 +52,7 @@
 
 .sidebarPanel .panelGrid {
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr 1fr 1fr;
+  grid-template-rows: 1fr;
   grid-auto-rows: unset;
   flex: 1;
   min-height: 0;

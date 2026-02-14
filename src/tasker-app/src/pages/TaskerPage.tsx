@@ -1,9 +1,7 @@
 import React from 'react';
 import styles from '../styles/tasker-page.module.css';
 import { TaskTable } from '../features/tasker/widgets/TaskTable';
-import { LastActionList } from '../features/tasker/widgets/LastActionList';
-import { Tree } from '../features/tasker/widgets/Tree';
-import { DeadlinesList } from '../features/tasker/widgets/DeadlinesList';
+import { SidebarTabsWidget } from '../features/tasker/widgets/SidebarTabsWidget';
 import { WidgetPanel } from '../components/common/WidgetPanel';
 import { RealtimeBanner } from '../components/common/RealtimeBanner';
 import { useDeepLink } from '../hooks';
@@ -23,9 +21,7 @@ export const TaskerPage: React.FC = () => {
       </div>
       <div className={styles.sidebarArea}>
         <WidgetPanel variant="sidebar">
-          <DeadlinesList colSpan={1} rowSpan={1} />
-          <Tree colSpan={1} rowSpan={1} initialDeepLink={initialDeepLink} />
-          <LastActionList colSpan={1} rowSpan={1} />
+          <SidebarTabsWidget colSpan={1} rowSpan={1} initialDeepLink={initialDeepLink} />
         </WidgetPanel>
       </div>
     </div>
