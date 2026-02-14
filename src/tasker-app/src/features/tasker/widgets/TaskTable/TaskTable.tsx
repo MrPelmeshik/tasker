@@ -113,7 +113,11 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                         className={`${css.td} ${css.colArea}`}
                         rowSpan={group.rows.length}
                       >
-                        <span className={css.areaLabel}>{group.areaTitle}</span>
+                        <div className={css.areaLabelClip}>
+                          <div className={css.areaLabelWrapper}>
+                            <span className={css.areaLabel}>{group.areaTitle}</span>
+                          </div>
+                        </div>
                       </td>
                     ) : null}
                     <td className={`${css.td} ${css.colTask}`}>

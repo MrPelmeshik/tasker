@@ -77,6 +77,25 @@
   background: transparent;
   z-index: 1;
   border-right: var(--border-1) solid rgb(var(--white) / 0.06);
+  overflow: hidden;
+}
+
+/** Слой обрезки — текст не выходит в соседние области */
+.areaLabelClip {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+/** Обёртка для примагничивания label к центру видимой области при скролле */
+.areaLabelWrapper {
+  position: sticky;
+  top: 50%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .colArea .areaLabel {
@@ -87,9 +106,7 @@
   white-space: nowrap;
   font-size: var(--font-11);
   color: var(--color-text-subtle);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-height: 100%;
+  overflow: visible;
 }
 
 .colTask {
