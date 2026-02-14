@@ -77,10 +77,20 @@ body {
   --glass-card-border-default-hover: rgba(255, 255, 255, 0.15);
   --glass-card-border-default-selected: rgba(255, 255, 255, 0.25);
 
-  --glass-gradient-bg: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
-  --glass-gradient-bg-hover: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
-  --glass-gradient-bg-active: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
-  --glass-gradient-bg-subtle: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  /* Opacity для градиентов glass-поверхностей (кнопки, виджет, toggle) */
+  --glass-surface-top: 0.14;
+  --glass-surface-bottom: 0.06;
+  --glass-surface-hover-top: 0.18;
+  --glass-surface-hover-bottom: 0.08;
+  --glass-surface-active-top: 0.10;
+  --glass-surface-active-bottom: 0.04;
+  --glass-surface-subtle-top: 0.06;
+  --glass-surface-subtle-bottom: 0.02;
+
+  --glass-gradient-bg: linear-gradient(180deg, rgb(var(--white) / var(--glass-surface-top)), rgb(var(--white) / var(--glass-surface-bottom)));
+  --glass-gradient-bg-hover: linear-gradient(180deg, rgb(var(--white) / var(--glass-surface-hover-top)), rgb(var(--white) / var(--glass-surface-hover-bottom)));
+  --glass-gradient-bg-active: linear-gradient(180deg, rgb(var(--white) / var(--glass-surface-active-top)), rgb(var(--white) / var(--glass-surface-active-bottom)));
+  --glass-gradient-bg-subtle: linear-gradient(180deg, rgb(var(--white) / var(--glass-surface-subtle-top)), rgb(var(--white) / var(--glass-surface-subtle-bottom)));
   
   --glass-gradient-primary: linear-gradient(180deg, rgba(0,200,255,0.20), rgba(0,200,255,0.12));
   --glass-gradient-primary-hover: linear-gradient(180deg, rgba(0,200,255,0.28), rgba(0,200,255,0.18));
@@ -372,11 +382,15 @@ body {
   --surface-subtle-border: rgba(0, 0, 0, 0.06);
   --surface-subtle-border-strong: rgba(0, 0, 0, 0.08);
 
-  /* Common glass gradients — light theme */
-  --glass-gradient-bg: linear-gradient(180deg, rgba(255,255,255,0.70), rgba(255,255,255,0.40));
-  --glass-gradient-bg-hover: linear-gradient(180deg, rgba(255,255,255,0.85), rgba(255,255,255,0.55));
-  --glass-gradient-bg-active: linear-gradient(180deg, rgba(255,255,255,0.50), rgba(255,255,255,0.30));
-  --glass-gradient-bg-subtle: linear-gradient(180deg, rgba(255,255,255,0.35), rgba(255,255,255,0.15));
+  /* Glass surface — светлая тема: тёмный оттенок вместо белого (подложка как у блока входа/регистрации) */
+  --glass-surface-top: 0.08;
+  --glass-surface-bottom: 0.04;
+  --glass-surface-hover-top: 0.12;
+  --glass-surface-hover-bottom: 0.07;
+  --glass-surface-active-top: 0.06;
+  --glass-surface-active-bottom: 0.03;
+  --glass-surface-subtle-top: 0.05;
+  --glass-surface-subtle-bottom: 0.02;
 
   --glass-gradient-primary: linear-gradient(180deg, rgba(0,140,200,0.14), rgba(0,140,200,0.06));
   --glass-gradient-primary-hover: linear-gradient(180deg, rgba(0,140,200,0.22), rgba(0,140,200,0.12));

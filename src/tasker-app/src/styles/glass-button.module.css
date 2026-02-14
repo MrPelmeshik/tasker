@@ -281,7 +281,7 @@
   padding: 0;
   border-radius: var(--radius-l);
   border: var(--border-1) solid rgb(var(--white) / 0.06);
-  background: linear-gradient(180deg, rgb(var(--white) / 0.06), rgb(var(--white) / 0.02));
+  background: var(--glass-gradient-bg-subtle);
   backdrop-filter: var(--glass-backdrop-blur-6);
   -webkit-backdrop-filter: var(--glass-backdrop-blur-6);
   box-shadow: var(--shadow-elev-0);

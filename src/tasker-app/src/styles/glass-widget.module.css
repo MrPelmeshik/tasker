@@ -5,7 +5,7 @@
   padding: var(--space-16);
   backdrop-filter: var(--glass-backdrop-blur-8);
   -webkit-backdrop-filter: var(--glass-backdrop-blur-8);
-  background: linear-gradient(180deg, rgb(var(--white) / 0.06), rgb(var(--white) / 0.02));
+  background: var(--glass-gradient-bg-subtle);
   box-shadow:
     var(--shadow-card),
     var(--shadow-inset-0);
@@ -23,7 +23,7 @@
   inset: 0;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(900px 450px at -10% -20%, rgb(var(--white) / 0.06), transparent 60%);
+  background: radial-gradient(900px 450px at -10% -20%, rgb(var(--white) / var(--glass-surface-subtle-top)), transparent 60%);
 }
 
 .glass::after {
