@@ -4,6 +4,7 @@ using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
+using TaskerApi.Constants;
 using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
@@ -64,7 +65,7 @@ public class UserService(
             var existingByName = await userRepository.GetByNameAsync(request.Username.Trim(), cancellationToken);
             if (existingByName != null)
             {
-                throw new InvalidOperationException("Пользователь с таким именем уже существует");
+                throw new InvalidOperationException(ErrorMessages.UserWithSameNameExists);
             }
 
             if (!string.IsNullOrWhiteSpace(request.Email))
@@ -72,7 +73,7 @@ public class UserService(
                 var existingByEmail = await userRepository.GetByEmailAsync(request.Email.Trim(), cancellationToken);
                 if (existingByEmail != null)
                 {
-                    throw new InvalidOperationException("Пользователь с таким email уже существует");
+                    throw new InvalidOperationException(ErrorMessages.UserWithSameEmailExists);
                 }
             }
 
@@ -90,7 +91,7 @@ public class UserService(
             var user = await userRepository.GetByIdAsync(id, cancellationToken);
             if (user == null)
             {
-                throw new InvalidOperationException("Пользователь не найден");
+                throw new InvalidOperationException(ErrorMessages.UserNotFound);
             }
 
             if (request.Username != null)
@@ -98,7 +99,7 @@ public class UserService(
                 var existingByName = await userRepository.GetByNameAsync(request.Username.Trim(), cancellationToken);
                 if (existingByName != null && existingByName.Id != id)
                 {
-                    throw new InvalidOperationException("Пользователь с таким именем уже существует");
+                    throw new InvalidOperationException(ErrorMessages.UserWithSameNameExists);
                 }
             }
 
@@ -107,7 +108,7 @@ public class UserService(
                 var existingByEmail = await userRepository.GetByEmailAsync(request.Email.Trim(), cancellationToken);
                 if (existingByEmail != null && existingByEmail.Id != id)
                 {
-                    throw new InvalidOperationException("Пользователь с таким email уже существует");
+                    throw new InvalidOperationException(ErrorMessages.UserWithSameEmailExists);
                 }
             }
 

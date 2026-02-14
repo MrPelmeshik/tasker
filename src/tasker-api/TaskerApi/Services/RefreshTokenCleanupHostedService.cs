@@ -1,6 +1,8 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.Extensions.Options;
 using TaskerApi.Interfaces.Repositories;
+using TaskerApi.Models.Common;
 
 namespace TaskerApi.Services;
 
@@ -9,35 +11,25 @@ namespace TaskerApi.Services;
 /// </summary>
 public class RefreshTokenCleanupHostedService(
     IServiceProvider serviceProvider,
+    IOptions<RefreshTokenCleanupSettings> options,
     ILogger<RefreshTokenCleanupHostedService> logger)
     : BackgroundService
 {
-    /// <summary>
-    /// Задержка перед первым проходом очистки (2 минуты)
-    /// </summary>
-    private static readonly TimeSpan InitialDelay = TimeSpan.FromMinutes(2);
-
-    /// <summary>
-    /// Интервал очистки (1 час)
-    /// </summary>
-    private static readonly TimeSpan CleanupInterval = TimeSpan.FromHours(1);
-
-    /// <summary>
-    /// Максимальный возраст отозванных токенов для удаления (7 дней)
-    /// </summary>
-    private static readonly TimeSpan RevokedMaxAge = TimeSpan.FromDays(7);
-
     /// <inheritdoc />
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await Task.Delay(InitialDelay, stoppingToken);
+        var settings = options.Value;
+        var initialDelay = TimeSpan.FromMinutes(settings.InitialDelayMinutes > 0 ? settings.InitialDelayMinutes : 2);
+        var cleanupInterval = TimeSpan.FromMinutes(settings.IntervalMinutes > 0 ? settings.IntervalMinutes : 60);
+
+        await Task.Delay(initialDelay, stoppingToken);
 
         while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
                 await CleanupAsync(stoppingToken);
-                await Task.Delay(CleanupInterval, stoppingToken);
+                await Task.Delay(cleanupInterval, stoppingToken);
             }
             catch (OperationCanceledException)
             {
@@ -52,9 +44,11 @@ public class RefreshTokenCleanupHostedService(
 
     private async Task CleanupAsync(CancellationToken cancellationToken)
     {
+        var settings = options.Value;
+        var revokedMaxAge = TimeSpan.FromDays(settings.RevokedMaxAgeDays > 0 ? settings.RevokedMaxAgeDays : 7);
         using var scope = serviceProvider.CreateScope();
         var repository = scope.ServiceProvider.GetRequiredService<IRefreshTokenRepository>();
-        var deleted = await repository.DeleteExpiredAndRevokedAsync(RevokedMaxAge, cancellationToken);
+        var deleted = await repository.DeleteExpiredAndRevokedAsync(revokedMaxAge, cancellationToken);
         if (deleted > 0)
             logger.LogInformation("Удалено refresh-токенов: {Count}", deleted);
     }

@@ -1,12 +1,13 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using TaskerApi.Models.Requests;
-using TaskerApi.Models.Responses;
-using System.Security.Claims;
+using Microsoft.Extensions.Options;
+using TaskerApi.Constants;
+using TaskerApi.Helpers;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Common;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Options;
+using TaskerApi.Models.Requests;
+using TaskerApi.Models.Responses;
 
 namespace TaskerApi.Controllers;
 
@@ -19,10 +20,12 @@ namespace TaskerApi.Controllers;
 public class AuthController(
     IAuthService authService,
     ILogger<AuthController> logger,
-    IOptions<JwtSettings> jwtOptions)
+    IOptions<JwtSettings> jwtOptions,
+    IOptions<AuthSettings> authOptions)
     : ControllerBase
 {
     private readonly JwtSettings _jwt = jwtOptions.Value;
+    private readonly AuthSettings _auth = authOptions.Value;
 
     /// <summary>
     /// Авторизация пользователя
@@ -48,22 +51,17 @@ public class AuthController(
                     .Select(e => e.ErrorMessage)
                     .ToList();
 
-                return BadRequest(ApiResponse<AuthResponse>.ErrorResult("Ошибка валидации", errors));
+                return BadRequest(ApiResponse<AuthResponse>.ErrorResult(ErrorMessages.ValidationError, errors));
             }
 
             var (result, refreshToken) = await authService.LoginAsync(request);
 
             if (result.Success && result.Data != null)
             {
-                var cookieOptions = new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase),
-                    SameSite = SameSiteMode.Lax,
-                    Path = "/api/auth",
-                    Expires = DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays)
-                };
-                Response.Cookies.Append("refreshToken", refreshToken, cookieOptions);
+                var isSecure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase);
+                var path = string.IsNullOrEmpty(_auth.CookiePath) ? "/api/auth" : _auth.CookiePath;
+                var opts = CookieAuthHelper.CreateRefreshTokenCookieOptions(path, DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays), isSecure);
+                Response.Cookies.Append(_auth.RefreshTokenCookieName, refreshToken, opts);
 
                 return Ok(result);
             }
@@ -73,7 +71,7 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Неожиданная ошибка при входе");
-            return StatusCode(500, ApiResponse<AuthResponse>.ErrorResult("Внутренняя ошибка сервера"));
+            return StatusCode(500, ApiResponse<AuthResponse>.ErrorResult(ErrorMessages.InternalError));
         }
     }
 
@@ -101,7 +99,7 @@ public class AuthController(
                     .Select(e => e.ErrorMessage)
                     .ToList();
 
-                return BadRequest(ApiResponse<RegisterResponse>.ErrorResult("Ошибка валидации", errors));
+                return BadRequest(ApiResponse<RegisterResponse>.ErrorResult(ErrorMessages.ValidationError, errors));
             }
 
             var result = await authService.RegisterAsync(request);
@@ -116,7 +114,7 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Неожиданная ошибка при регистрации");
-            return StatusCode(500, ApiResponse<RegisterResponse>.ErrorResult("Внутренняя ошибка сервера"));
+            return StatusCode(500, ApiResponse<RegisterResponse>.ErrorResult(ErrorMessages.InternalError));
         }
     }
 
@@ -137,31 +135,24 @@ public class AuthController(
     {
         try
         {
-            // Пытаемся взять refresh токен из httpOnly cookie
-            if (Request.Cookies.TryGetValue("refreshToken", out var cookieRefresh) && !string.IsNullOrWhiteSpace(cookieRefresh))
+            if (Request.Cookies.TryGetValue(_auth.RefreshTokenCookieName, out var cookieRefresh) && !string.IsNullOrWhiteSpace(cookieRefresh))
             {
                 request.RefreshToken = cookieRefresh;
             }
 
             if (string.IsNullOrWhiteSpace(request.RefreshToken))
             {
-                return BadRequest(ApiResponse<RefreshTokenResponse>.ErrorResult("Refresh токен отсутствует"));
+                return BadRequest(ApiResponse<RefreshTokenResponse>.ErrorResult(ErrorMessages.RefreshTokenMissing));
             }
 
             var (result, newRefresh) = await authService.RefreshTokenAsync(request);
 
             if (result.Success && result.Data != null)
             {
-                // Обновляем httpOnly cookie новым refresh токеном
-                var cookieOptions = new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase),
-                    SameSite = SameSiteMode.Lax,
-                    Path = "/api/auth",
-                    Expires = DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays)
-                };
-                Response.Cookies.Append("refreshToken", newRefresh, cookieOptions);
+                var isSecure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase);
+                var path = string.IsNullOrEmpty(_auth.CookiePath) ? "/api/auth" : _auth.CookiePath;
+                var opts = CookieAuthHelper.CreateRefreshTokenCookieOptions(path, DateTimeOffset.UtcNow.AddDays(_jwt.RefreshTokenLifetimeDays), isSecure);
+                Response.Cookies.Append(_auth.RefreshTokenCookieName, newRefresh, opts);
                 return Ok(result);
             }
 
@@ -170,7 +161,7 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Неожиданная ошибка при обновлении токена");
-            return StatusCode(500, ApiResponse<RefreshTokenResponse>.ErrorResult("Внутренняя ошибка сервера"));
+            return StatusCode(500, ApiResponse<RefreshTokenResponse>.ErrorResult(ErrorMessages.InternalError));
         }
     }
 
@@ -189,29 +180,24 @@ public class AuthController(
         try
         {
             string? refreshToken = null;
-            if (Request.Cookies.TryGetValue("refreshToken", out var cookieValue) && !string.IsNullOrWhiteSpace(cookieValue))
+            if (Request.Cookies.TryGetValue(_auth.RefreshTokenCookieName, out var cookieValue) && !string.IsNullOrWhiteSpace(cookieValue))
                 refreshToken = cookieValue;
 
             await authService.RevokeRefreshTokenAsync(refreshToken);
 
-            if (Request.Cookies.ContainsKey("refreshToken"))
+            if (Request.Cookies.ContainsKey(_auth.RefreshTokenCookieName))
             {
-                Response.Cookies.Append("refreshToken", string.Empty, new CookieOptions
-                {
-                    HttpOnly = true,
-                    Secure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase),
-                    SameSite = SameSiteMode.Lax,
-                    Path = "/api/auth",
-                    Expires = DateTimeOffset.UnixEpoch
-                });
+                var isSecure = string.Equals(Request.Scheme, "https", StringComparison.OrdinalIgnoreCase);
+                var path = string.IsNullOrEmpty(_auth.CookiePath) ? "/api/auth" : _auth.CookiePath;
+                Response.Cookies.Append(_auth.RefreshTokenCookieName, string.Empty, CookieAuthHelper.CreateExpiredCookieOptions(path, isSecure));
             }
 
-            return Ok(ApiResponse<object>.SuccessResult(new { }, "Выход выполнен успешно"));
+            return Ok(ApiResponse<object>.SuccessResult(new { }, SuccessMessages.LogoutSuccess));
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Неожиданная ошибка при выходе");
-            return StatusCode(500, ApiResponse<object>.ErrorResult("Внутренняя ошибка сервера"));
+            return StatusCode(500, ApiResponse<object>.ErrorResult(ErrorMessages.InternalError));
         }
     }
 
@@ -233,12 +219,12 @@ public class AuthController(
         {
             // Получаем токен из заголовка Authorization
             var authHeader = Request.Headers["Authorization"].FirstOrDefault();
-            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
+            if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith(AuthConstants.BearerSchemePrefix))
             {
-                return Unauthorized(ApiResponse<UserInfo>.ErrorResult("Токен доступа не предоставлен"));
+                return Unauthorized(ApiResponse<UserInfo>.ErrorResult(ErrorMessages.TokenNotProvided));
             }
 
-            var accessToken = authHeader.Substring("Bearer ".Length);
+            var accessToken = authHeader.Substring(AuthConstants.BearerSchemePrefix.Length);
 
             var result = await authService.GetUserInfoAsync(accessToken);
 
@@ -252,7 +238,7 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Неожиданная ошибка при получении информации о текущем пользователе");
-            return StatusCode(500, ApiResponse<UserInfo>.ErrorResult("Внутренняя ошибка сервера"));
+            return StatusCode(500, ApiResponse<UserInfo>.ErrorResult(ErrorMessages.InternalError));
         }
     }
 
@@ -268,9 +254,9 @@ public class AuthController(
     [ProducesResponseType(401)]
     public IActionResult GetAuthStatus()
     {
-        return Ok(new { 
-            authenticated = true, 
-            message = "Пользователь авторизован",
+        return Ok(new {
+            authenticated = true,
+            message = SuccessMessages.UserAuthenticated,
             timestamp = DateTime.UtcNow
         });
     }
@@ -294,10 +280,10 @@ public class AuthController(
         {
             var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (string.IsNullOrEmpty(userIdClaim) || !Guid.TryParse(userIdClaim, out var userId))
-                return Unauthorized(ApiResponse<UserInfo>.ErrorResult("Токен доступа недействителен"));
+                return Unauthorized(ApiResponse<UserInfo>.ErrorResult(ErrorMessages.TokenInvalidForProfile));
 
             if (request == null)
-                return BadRequest(ApiResponse<UserInfo>.ErrorResult("Тело запроса не должно быть пустым"));
+                return BadRequest(ApiResponse<UserInfo>.ErrorResult(ErrorMessages.RequestBodyEmpty));
 
             var result = await authService.UpdateProfileAsync(userId, request);
 
@@ -309,7 +295,7 @@ public class AuthController(
         catch (Exception ex)
         {
             logger.LogError(ex, "Неожиданная ошибка при обновлении профиля");
-            return StatusCode(500, ApiResponse<UserInfo>.ErrorResult("Внутренняя ошибка сервера"));
+            return StatusCode(500, ApiResponse<UserInfo>.ErrorResult(ErrorMessages.InternalError));
         }
     }
 }

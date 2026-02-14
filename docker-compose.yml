@@ -52,6 +52,7 @@ services:
     ports:
       - "8080:8080"
     environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=tasker_db;Username=postgres;Password=${DB_PG_PWD_POSTGRES:?DB_PG_PWD_POSTGRES is required}
       - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
       - Jwt__Issuer=${JWT_ISSUER:?JWT_ISSUER is required}
       - Jwt__Audience=${JWT_AUDIENCE:?JWT_AUDIENCE is required}

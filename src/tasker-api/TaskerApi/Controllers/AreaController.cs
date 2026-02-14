@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Attributes;
+using TaskerApi.Constants;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -10,7 +12,7 @@ namespace TaskerApi.Controllers;
 [ApiController]
 [Route("api/[controller]/[action]")]
 [Authorize]
-public class AreaController(IAreaService service, IAreaMemberService memberService) : BaseApiController
+public class AreaController(IAreaService service, IAreaMemberService memberService, ILogger<AreaController> logger, IWebHostEnvironment env) : BaseApiController(logger, env)
 {
     [HttpGet]
     [UserLog("Получение списка областей")]
@@ -24,7 +26,7 @@ public class AreaController(IAreaService service, IAreaMemberService memberServi
         {
             var result = await service.GetByIdAsync(id, cancellationToken);
             if (result == null)
-                return NotFound("Область не найдена");
+                return NotFound(ErrorMessages.AreaNotFound);
             return Ok(result);
         });
 
@@ -39,7 +41,7 @@ public class AreaController(IAreaService service, IAreaMemberService memberServi
         => ExecuteWithExceptionHandling(async () =>
         {
             await service.UpdateAsync(id, item, cancellationToken);
-            return Ok(new { success = true, message = "Область успешно обновлена" });
+            return Ok(new { success = true, message = SuccessMessages.AreaUpdated });
         });
 
     /// <summary>
@@ -51,7 +53,7 @@ public class AreaController(IAreaService service, IAreaMemberService memberServi
         => ExecuteWithExceptionHandling(async () =>
         {
             await service.DeleteAsync(id, cancellationToken);
-            return Ok(new { success = true, message = "Область успешно удалена" });
+            return Ok(new { success = true, message = SuccessMessages.AreaDeleted });
         });
 
     [HttpGet]
@@ -76,7 +78,7 @@ public class AreaController(IAreaService service, IAreaMemberService memberServi
         => ExecuteWithExceptionHandling(async () =>
         {
             await memberService.AddMemberAsync(areaId, request, cancellationToken);
-            return Ok(new { success = true, message = "Участник назначен" });
+            return Ok(new { success = true, message = SuccessMessages.MemberAdded });
         });
 
     /// <summary>
@@ -88,7 +90,7 @@ public class AreaController(IAreaService service, IAreaMemberService memberServi
         => ExecuteWithExceptionHandling(async () =>
         {
             await memberService.RemoveMemberAsync(areaId, userId, cancellationToken);
-            return Ok(new { success = true, message = "Участник удалён" });
+            return Ok(new { success = true, message = SuccessMessages.MemberRemoved });
         });
 
     /// <summary>
@@ -100,6 +102,6 @@ public class AreaController(IAreaService service, IAreaMemberService memberServi
         => ExecuteWithExceptionHandling(async () =>
         {
             await memberService.TransferOwnerAsync(areaId, request, cancellationToken);
-            return Ok(new { success = true, message = "Роль владельца передана" });
+            return Ok(new { success = true, message = SuccessMessages.OwnerTransferred });
         });
 }

@@ -7,6 +7,7 @@ using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
+using TaskerApi.Constants;
 using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services.Base;
@@ -50,12 +51,12 @@ public abstract class BaseEventEntityService(
         var areaId = await GetAreaIdForEntityAsync(item.EntityId, cancellationToken);
 
         if (!await areaRoleService.CanAddActivityAsync(areaId, cancellationToken))
-            throw new UnauthorizedAccessException("Нет прав на добавление записей по активности");
+            throw new UnauthorizedAccessException(ErrorMessages.NoPermissionAddActivity);
 
         var now = DateTimeOffset.UtcNow;
 
         if (string.IsNullOrWhiteSpace(item.EventDate))
-            throw new ArgumentException("Дата события/активности обязательна", nameof(item.EventDate));
+            throw new ArgumentException(ErrorMessages.EventDateRequired, nameof(item.EventDate));
 
         DateTimeOffset eventDate;
         if (DateTime.TryParseExact(item.EventDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
@@ -63,7 +64,7 @@ public abstract class BaseEventEntityService(
         else if (DateTimeOffset.TryParse(item.EventDate, out var parsedOffset))
             eventDate = parsedOffset;
         else
-            throw new ArgumentException("Некорректный формат даты события", nameof(item.EventDate));
+            throw new ArgumentException(ErrorMessages.EventDateFormatInvalid, nameof(item.EventDate));
 
         var messageJson = EventMessageHelper.BuildActivityMessageJson(item.Title, item.Description);
 

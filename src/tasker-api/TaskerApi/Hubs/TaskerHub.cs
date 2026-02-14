@@ -1,7 +1,9 @@
 using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.SignalR;
+using Microsoft.Extensions.Options;
 using TaskerApi.Interfaces.Services;
+using TaskerApi.Models.Common;
 
 namespace TaskerApi.Hubs;
 
@@ -12,13 +14,11 @@ namespace TaskerApi.Hubs;
 public class TaskerHub(
     IHubAreaAccessService areaAccessService,
     IConnectionAreaTracker connectionAreaTracker,
+    IOptions<SignalRSettings> signalROptions,
     ILogger<TaskerHub> logger)
     : Hub
 {
-    /// <summary>
-    /// Максимальное количество областей для подписки (защита от DoS)
-    /// </summary>
-    private const int MaxJoinAreasCount = 100;
+    private int MaxJoinAreasCount => signalROptions.Value.MaxJoinAreasCount;
 
     /// <summary>
     /// Подписаться на уведомления по списку областей. Клиент вызывает после подключения.

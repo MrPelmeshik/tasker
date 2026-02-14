@@ -1,6 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using TaskerApi.Attributes;
+using TaskerApi.Constants;
 using TaskerApi.Interfaces.Services;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
@@ -10,7 +12,7 @@ namespace TaskerApi.Controllers;
 [ApiController]
 [Route("api/[controller]/[action]")]
 [Authorize]
-public class TaskController(ITaskService service) : BaseApiController
+public class TaskController(ITaskService service, ILogger<TaskController> logger, IWebHostEnvironment env) : BaseApiController(logger, env)
 {
     [HttpGet]
     [UserLog("Получение списка задач")]
@@ -24,7 +26,7 @@ public class TaskController(ITaskService service) : BaseApiController
         {
             var result = await service.GetByIdAsync(id, cancellationToken);
             if (result == null)
-                return NotFound("Задача не найдена");
+                return NotFound(ErrorMessages.TaskNotFound);
             return Ok(result);
         });
 
@@ -39,7 +41,7 @@ public class TaskController(ITaskService service) : BaseApiController
         => ExecuteWithExceptionHandling(async () =>
         {
             await service.UpdateAsync(id, item, cancellationToken);
-            return Ok(new { success = true, message = "Задача успешно обновлена" });
+            return Ok(new { success = true, message = SuccessMessages.TaskUpdated });
         });
 
     /// <summary>
@@ -51,7 +53,7 @@ public class TaskController(ITaskService service) : BaseApiController
         => ExecuteWithExceptionHandling(async () =>
         {
             await service.DeleteAsync(id, cancellationToken);
-            return Ok(new { success = true, message = "Задача успешно удалена" });
+            return Ok(new { success = true, message = SuccessMessages.TaskDeleted });
         });
 
     [HttpGet("byFolder/{folderId}")]

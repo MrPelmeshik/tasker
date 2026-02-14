@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using TaskerApi.Constants;
 
 namespace TaskerApi.Controllers;
 
@@ -10,11 +11,10 @@ namespace TaskerApi.Controllers;
 [ApiController]
 public abstract class BaseApiController : ControllerBase
 {
-    /// <summary>
-    /// Выполняет операцию с маппингом исключений в соответствующие ActionResult.
-    /// </summary>
-    /// <param name="operation">Операция, возвращающая ActionResult</param>
-    /// <returns>Результат операции или ActionResult при исключении</returns>
+    private readonly ILogger _logger;
+    private readonly IWebHostEnvironment _env;
+
+    /// <summary>Выполняет операцию с маппингом исключений в ActionResult (404/403/400/500).</summary>
     protected async Task<IActionResult> ExecuteWithExceptionHandling(Func<Task<IActionResult>> operation)
     {
         try
@@ -23,42 +23,43 @@ public abstract class BaseApiController : ControllerBase
         }
         catch (KeyNotFoundException ex)
         {
-            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<BaseApiController>>();
-            logger.LogWarning(ex, "Ресурс не найден");
-            var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
-            return NotFound(env.IsProduction() ? "Ресурс не найден" : ex.Message);
+            _logger.LogWarning(ex, "Ресурс не найден");
+            return NotFound(_env.IsProduction() ? ErrorMessages.NotFoundGeneric : ex.Message);
         }
         catch (UnauthorizedAccessException)
         {
             return Forbid();
         }
+        catch (ArgumentException ex)
+        {
+            _logger.LogWarning(ex, "ArgumentException");
+            return BadRequest(_env.IsProduction() ? ErrorMessages.OperationUnavailable : ex.Message);
+        }
         catch (InvalidOperationException ex)
         {
-            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<BaseApiController>>();
-            logger.LogWarning(ex, "InvalidOperationException");
-            var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
-            if (env.IsProduction())
+            _logger.LogWarning(ex, "InvalidOperationException");
+            if (_env.IsProduction())
             {
-                if (ex.Message.Contains("не найден", StringComparison.OrdinalIgnoreCase) ||
-                    ex.Message.Contains("не найдена", StringComparison.OrdinalIgnoreCase))
-                    return NotFound("Ресурс не найден");
-                return BadRequest("Операция недоступна");
+                if (ErrorMessages.IsNotFound(ex.Message))
+                    return NotFound(ErrorMessages.NotFoundGeneric);
+                return BadRequest(ErrorMessages.OperationUnavailable);
             }
-            if (ex.Message.Contains("не найден", StringComparison.OrdinalIgnoreCase) ||
-                ex.Message.Contains("не найдена", StringComparison.OrdinalIgnoreCase))
+            if (ErrorMessages.IsNotFound(ex.Message))
                 return NotFound(ex.Message);
             return BadRequest(ex.Message);
         }
         catch (Exception ex)
         {
-            var logger = HttpContext.RequestServices.GetRequiredService<ILogger<BaseApiController>>();
-            logger.LogError(ex, "Необработанное исключение");
-            var env = HttpContext.RequestServices.GetRequiredService<IWebHostEnvironment>();
-            if (env.IsProduction())
-            {
-                return StatusCode(500, "Произошла внутренняя ошибка");
-            }
+            _logger.LogError(ex, "Необработанное исключение");
+            if (_env.IsProduction())
+                return StatusCode(500, ErrorMessages.InternalError);
             return BadRequest(ex.Message);
         }
+    }
+
+    protected BaseApiController(ILogger logger, IWebHostEnvironment env)
+    {
+        _logger = logger;
+        _env = env;
     }
 }

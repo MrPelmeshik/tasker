@@ -8,7 +8,7 @@ public class DatabaseSettings
     /// <summary>
     /// Строка подключения к базе данных.
     /// </summary>
-    public string ConnectionString { get; init; } = string.Empty;
+    public string ConnectionString { get; set; } = string.Empty;
 }
 
 

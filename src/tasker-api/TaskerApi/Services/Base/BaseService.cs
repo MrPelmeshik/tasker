@@ -1,3 +1,4 @@
+using TaskerApi.Constants;
 using TaskerApi.Interfaces.Services;
 
 namespace TaskerApi.Services.Base;
@@ -7,24 +8,10 @@ namespace TaskerApi.Services.Base;
 /// </summary>
 public abstract class BaseService(ILogger logger, ICurrentUserService currentUser)
 {
-    /// <summary>
-    /// Сервис текущего пользователя
-    /// </summary>
     protected readonly ICurrentUserService CurrentUser = currentUser;
-    
-    /// <summary>
-    /// Логгер для записи событий
-    /// </summary>
     protected readonly ILogger Logger = logger;
 
-    /// <summary>
-    /// Выполнить операцию с обработкой ошибок
-    /// </summary>
-    /// <typeparam name="T">Тип возвращаемого значения</typeparam>
-    /// <param name="operation">Операция для выполнения</param>
-    /// <param name="operationName">Название операции</param>
-    /// <param name="parameters">Параметры операции</param>
-    /// <returns>Результат операции</returns>
+    /// <summary>Выполнить операцию с логированием ошибок и повторным выбросом.</summary>
     protected async Task<T> ExecuteWithErrorHandling<T>(
         Func<Task<T>> operation, 
         string operationName, 
@@ -42,12 +29,7 @@ public abstract class BaseService(ILogger logger, ICurrentUserService currentUse
         }
     }
 
-    /// <summary>
-    /// Выполнить операцию с обработкой ошибок (void)
-    /// </summary>
-    /// <param name="operation">Операция для выполнения</param>
-    /// <param name="operationName">Название операции</param>
-    /// <param name="parameters">Параметры операции</param>
+    /// <summary>Выполнить операцию (void) с логированием ошибок.</summary>
     protected async Task ExecuteWithErrorHandling(
         Func<Task> operation, 
         string operationName, 
@@ -65,16 +47,12 @@ public abstract class BaseService(ILogger logger, ICurrentUserService currentUse
         }
     }
 
-    /// <summary>
-    /// Проверить доступ к области
-    /// </summary>
-    /// <param name="areaId">Идентификатор области</param>
-    /// <exception cref="UnauthorizedAccessException">Выбрасывается при отсутствии доступа</exception>
+    /// <summary>Проверить доступ к области; при отсутствии — UnauthorizedAccessException.</summary>
     protected void EnsureAccessToArea(Guid areaId)
     {
         if (!CurrentUser.HasAccessToArea(areaId))
         {
-            throw new UnauthorizedAccessException($"Доступ к области {areaId} запрещен");
+            throw new UnauthorizedAccessException(ErrorMessages.AccessAreaDenied);
         }
     }
 

@@ -7,6 +7,7 @@ using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
+using TaskerApi.Constants;
 using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
@@ -64,10 +65,10 @@ public class FolderService(
         {
             var area = await areaRepository.GetByIdAsync(request.AreaId, cancellationToken);
             if (area == null)
-                throw new InvalidOperationException("Область не найдена");
+                throw new InvalidOperationException(ErrorMessages.AreaNotFound);
 
             if (!await areaRoleService.CanCreateOrDeleteStructureAsync(area.Id, cancellationToken))
-                throw new UnauthorizedAccessException("Только владелец области может создавать папки");
+                throw new UnauthorizedAccessException(ErrorMessages.OnlyOwnerCanCreateFolders);
 
             await ValidateNoCycleAsync(null, request.ParentFolderId, request.AreaId, cancellationToken);
 
@@ -75,14 +76,14 @@ public class FolderService(
             {
                 var parent = await folderRepository.GetByIdAsync(request.ParentFolderId.Value, cancellationToken);
                 if (parent == null || parent.AreaId != request.AreaId)
-                    throw new InvalidOperationException("Родительская папка не найдена или принадлежит другой области");
+                    throw new InvalidOperationException(ErrorMessages.ParentFolderNotFound);
             }
 
             var folder = request.ToFolderEntity(CurrentUser.UserId);
             var created = await folderRepository.CreateAsync(folder, cancellationToken);
 
             await entityEventLogger.LogAsync(EntityType.FOLDER, created.Id, EventType.CREATE, created.Title, null, cancellationToken);
-            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, created.Id, created.AreaId, created.ParentFolderId, "Create", cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, created.Id, created.AreaId, created.ParentFolderId, RealtimeEventType.Create, cancellationToken);
 
             return created.ToFolderResponse();
         }, nameof(CreateAsync), request);
@@ -97,21 +98,21 @@ public class FolderService(
         {
             var folder = await folderRepository.GetByIdAsync(id, cancellationToken);
             if (folder == null)
-                throw new InvalidOperationException("Папка не найдена");
+                throw new InvalidOperationException(ErrorMessages.FolderNotFound);
 
             if (!await areaRoleService.CanEditFolderAsync(folder.AreaId, cancellationToken))
-                throw new UnauthorizedAccessException("Нет прав на редактирование папки");
+                throw new UnauthorizedAccessException(ErrorMessages.NoPermissionEditFolder);
 
             await ValidateNoCycleAsync(id, request.ParentFolderId, request.AreaId, cancellationToken);
 
             if (request.ParentFolderId.HasValue)
             {
                 if (request.ParentFolderId == id)
-                    throw new InvalidOperationException("Папка не может быть родителем самой себя");
+                    throw new InvalidOperationException(ErrorMessages.FolderCannotBeParentOfItself);
 
                 var parent = await folderRepository.GetByIdAsync(request.ParentFolderId.Value, cancellationToken);
                 if (parent == null || parent.AreaId != request.AreaId)
-                    throw new InvalidOperationException("Родительская папка не найдена или принадлежит другой области");
+                    throw new InvalidOperationException(ErrorMessages.ParentFolderNotFound);
             }
 
             var oldSnapshot = EventMessageHelper.ShallowClone(folder);
@@ -121,7 +122,7 @@ public class FolderService(
 
             var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, folder);
             await entityEventLogger.LogAsync(EntityType.FOLDER, id, EventType.UPDATE, folder.Title, messageJson, cancellationToken);
-            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, id, folder.AreaId, folder.ParentFolderId, "Update", cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, id, folder.AreaId, folder.ParentFolderId, RealtimeEventType.Update, cancellationToken);
 
             return folder.ToFolderResponse();
         }, nameof(UpdateAsync), new { id, request });
@@ -136,13 +137,13 @@ public class FolderService(
         {
             var folder = await folderRepository.GetByIdAsync(id, cancellationToken);
             if (folder == null)
-                throw new InvalidOperationException("Папка не найдена");
+                throw new InvalidOperationException(ErrorMessages.FolderNotFound);
 
             if (!await areaRoleService.CanCreateOrDeleteStructureAsync(folder.AreaId, cancellationToken))
-                throw new UnauthorizedAccessException("Только владелец области может удалять папки");
+                throw new UnauthorizedAccessException(ErrorMessages.OnlyOwnerCanDeleteFolders);
 
             await entityEventLogger.LogAsync(EntityType.FOLDER, id, EventType.DELETE, folder.Title, null, cancellationToken);
-            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, id, folder.AreaId, folder.ParentFolderId, "Delete", cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, id, folder.AreaId, folder.ParentFolderId, RealtimeEventType.Delete, cancellationToken);
             await folderRepository.DeleteAsync(id, cancellationToken);
         }, nameof(DeleteAsync), new { id });
     }
@@ -155,7 +156,7 @@ public class FolderService(
         return await ExecuteWithErrorHandling(async () =>
         {
             if (!CurrentUser.HasAccessToArea(areaId))
-                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+                throw new UnauthorizedAccessException(ErrorMessages.AccessAreaDeniedThis);
 
             var folders = await folderRepository.GetRootByAreaIdAsync(areaId, cancellationToken);
             return await ToFolderSummaryList(folders, cancellationToken);
@@ -170,7 +171,7 @@ public class FolderService(
         return await ExecuteWithErrorHandling(async () =>
         {
             if (!CurrentUser.HasAccessToArea(areaId))
-                throw new UnauthorizedAccessException("Доступ к данной области запрещен");
+                throw new UnauthorizedAccessException(ErrorMessages.AccessAreaDeniedThis);
 
             var folders = await folderRepository.GetByParentIdAsync(parentFolderId, cancellationToken);
             var inArea = folders.Where(f => f.AreaId == areaId).ToList();
@@ -192,7 +193,7 @@ public class FolderService(
         while (current.HasValue)
         {
             if (folderId.HasValue && current == folderId.Value)
-                throw new InvalidOperationException("Циклическая вложенность папок");
+                throw new InvalidOperationException(ErrorMessages.FolderCycle);
 
             ancestors.Add(current.Value);
             current = await folderRepository.GetParentFolderIdAsync(current.Value, cancellationToken);

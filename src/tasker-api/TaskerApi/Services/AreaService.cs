@@ -7,6 +7,7 @@ using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
+using TaskerApi.Constants;
 using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
@@ -28,11 +29,6 @@ public class AreaService(
     TaskerDbContext context)
     : BaseService(logger, currentUser), IAreaService
 {
-    /// <summary>
-    /// Получить все области
-    /// </summary>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Список всех доступных областей</returns>
     public async Task<IEnumerable<AreaResponse>> GetAllAsync(CancellationToken cancellationToken)
     {
         return await ExecuteWithErrorHandling(async () =>
@@ -45,12 +41,6 @@ public class AreaService(
         }, nameof(GetAllAsync));
     }
 
-    /// <summary>
-    /// Получить область по идентификатору
-    /// </summary>
-    /// <param name="id">Идентификатор области</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Область или null, если не найдена</returns>
     public async Task<AreaResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await ExecuteWithErrorHandling(async () =>
@@ -67,12 +57,6 @@ public class AreaService(
         }, nameof(GetByIdAsync), new { id });
     }
 
-    /// <summary>
-    /// Создать новую область
-    /// </summary>
-    /// <param name="request">Данные для создания области</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
-    /// <returns>Созданная область</returns>
     public async Task<AreaCreateResponse> CreateAsync(AreaCreateRequest request, CancellationToken cancellationToken)
     {
         return await ExecuteWithErrorHandling(async () =>
@@ -80,7 +64,7 @@ public class AreaService(
             var existingArea = await areaRepository.GetByNameAsync(request.Title, cancellationToken);
             if (existingArea != null)
             {
-                throw new InvalidOperationException("Область с таким названием уже существует");
+                throw new InvalidOperationException(ErrorMessages.AreaWithSameNameExists);
             }
 
             var area = request.ToAreaEntity(CurrentUser.UserId);
@@ -91,81 +75,47 @@ public class AreaService(
             await userAreaAccessRepository.CreateAsync(userAccess, cancellationToken);
 
             await entityEventLogger.LogAsync(EntityType.AREA, createdArea.Id, EventType.CREATE, createdArea.Title, null, cancellationToken);
-            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, createdArea.Id, createdArea.Id, null, "Create", cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, createdArea.Id, createdArea.Id, null, RealtimeEventType.Create, cancellationToken);
 
             return createdArea.ToAreaCreateResponse();
         }, nameof(CreateAsync), request);
     }
 
-    /// <summary>
-    /// Обновить область
-    /// </summary>
-    /// <param name="id">Идентификатор области</param>
-    /// <param name="request">Данные для обновления</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
     public async Task UpdateAsync(Guid id, AreaUpdateRequest request, CancellationToken cancellationToken)
     {
-        try
+        await ExecuteWithErrorHandling(async () =>
         {
             var existingArea = await areaRepository.GetByIdAsync(id, cancellationToken);
             if (existingArea == null)
-            {
-                throw new InvalidOperationException("Область не найдена");
-            }
+                throw new InvalidOperationException(ErrorMessages.AreaNotFound);
 
             if (!await areaRoleService.CanEditAreaAsync(existingArea.Id, cancellationToken))
-            {
-                throw new UnauthorizedAccessException("Нет прав на редактирование области");
-            }
+                throw new UnauthorizedAccessException(ErrorMessages.NoPermissionEditArea);
 
             var oldSnapshot = EventMessageHelper.ShallowClone(existingArea);
-
             request.UpdateAreaEntity(existingArea);
-
             await areaRepository.UpdateAsync(existingArea, cancellationToken);
-
             var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, existingArea);
-
             await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.UPDATE, existingArea.Title, messageJson, cancellationToken);
-            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, id, id, null, "Update", cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Ошибка обновления области {AreaId}", id);
-            throw;
-        }
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, id, id, null, RealtimeEventType.Update, cancellationToken);
+        }, nameof(UpdateAsync), new { id, request });
     }
 
-    /// <summary>
-    /// Удалить область
-    /// </summary>
-    /// <param name="id">Идентификатор области</param>
-    /// <param name="cancellationToken">Токен отмены операции</param>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        try
+        await ExecuteWithErrorHandling(async () =>
         {
             var existingArea = await areaRepository.GetByIdAsync(id, cancellationToken);
             if (existingArea == null)
-            {
-                throw new InvalidOperationException("Область не найдена");
-            }
+                throw new InvalidOperationException(ErrorMessages.AreaNotFound);
 
             if (!await areaRoleService.CanCreateOrDeleteStructureAsync(existingArea.Id, cancellationToken))
-            {
-                throw new UnauthorizedAccessException("Только владелец области может удалить область");
-            }
+                throw new UnauthorizedAccessException(ErrorMessages.OnlyOwnerCanDeleteArea);
 
             await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.DELETE, existingArea.Title, null, cancellationToken);
-            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, id, id, null, "Delete", cancellationToken);
-
+            await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, id, id, null, RealtimeEventType.Delete, cancellationToken);
             await areaRepository.DeleteAsync(id, cancellationToken);
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Ошибка удаления области {AreaId}", id);
-            throw;
-        }
+        }, nameof(DeleteAsync), new { id });
     }
 
     /// <summary>
@@ -175,12 +125,11 @@ public class AreaService(
     /// <returns>Список кратких карточек областей</returns>
     public async Task<IEnumerable<AreaShortCardResponse>> GetAreaShortCardAsync(CancellationToken cancellationToken)
     {
-        try
+        return await ExecuteWithErrorHandling(async () =>
         {
             var areas = await areaRepository.GetAllAsync(cancellationToken);
             var accessibleAreas = areas.Where(a => CurrentUser.HasAccessToArea(a.Id)).ToList();
 
-            // Пакетная загрузка имён владельцев
             var userIds = accessibleAreas.Select(a => a.OwnerUserId).Distinct().ToHashSet();
             var users = await userRepository.FindAsync(u => userIds.Contains(u.Id), cancellationToken);
             var userNames = users.ToDictionary(u => u.Id, u => u.Name);
@@ -197,13 +146,7 @@ public class AreaService(
                 var ownerName = userNames.GetValueOrDefault(area.OwnerUserId, "");
                 result.Add(area.ToAreaShortCardResponse(rootFolderCount, rootTaskCount, ownerName));
             }
-
             return result;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex, "Ошибка получения кратких карточек областей");
-            throw;
-        }
+        }, nameof(GetAreaShortCardAsync));
     }
 }

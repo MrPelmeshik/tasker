@@ -6,6 +6,7 @@ using TaskerApi.Models.Entities;
 using TaskerApi.Models.Requests;
 using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
+using TaskerApi.Constants;
 using TaskerApi.Services.Mapping;
 
 namespace TaskerApi.Services;
@@ -30,7 +31,7 @@ public class EventTaskService(
         var task = await taskRepository.GetByIdAsync(item.EntityId, cancellationToken);
         if (task != null)
         {
-            await realtimeNotifier.NotifyEntityChangedAsync(Models.Common.EntityType.EVENT, item.EntityId, task.AreaId, task.FolderId, "Create", cancellationToken);
+            await realtimeNotifier.NotifyEntityChangedAsync(Models.Common.EntityType.EVENT, item.EntityId, task.AreaId, task.FolderId, RealtimeEventType.Create, cancellationToken);
         }
         return result;
     }
@@ -48,7 +49,7 @@ public class EventTaskService(
     {
         var task = await taskRepository.GetByIdAsync(entityId, cancellationToken);
         if (task == null)
-            throw new InvalidOperationException("Задача не найдена");
+            throw new InvalidOperationException(ErrorMessages.TaskNotFound);
         return task.AreaId;
     }
 
@@ -59,9 +60,9 @@ public class EventTaskService(
     {
         var task = await taskRepository.GetByIdAsync(entityId, cancellationToken);
         if (task == null)
-            throw new InvalidOperationException("Задача не найдена");
+            throw new InvalidOperationException(ErrorMessages.TaskNotFound);
         if (!CurrentUser.HasAccessToArea(task.AreaId))
-            throw new UnauthorizedAccessException("Доступ к задаче запрещен");
+            throw new UnauthorizedAccessException(ErrorMessages.AccessTaskDenied);
     }
 
     /// <summary>

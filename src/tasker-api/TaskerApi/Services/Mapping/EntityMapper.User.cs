@@ -1,3 +1,4 @@
+using TaskerApi.Constants;
 using TaskerApi.Core;
 using TaskerApi.Models.Common;
 using TaskerApi.Models.Entities;
@@ -16,7 +17,7 @@ public static partial class EntityMapper
     /// </summary>
     public static UserResponse ToUserResponse(this UserEntity entity)
     {
-        var roles = entity.IsAdmin ? new List<string> { "admin", "user" } : new List<string> { "user" };
+        var roles = entity.IsAdmin ? new List<string> { Roles.Admin, Roles.User } : new List<string> { Roles.User };
         return new UserResponse
         {
             Id = entity.Id,
@@ -44,7 +45,7 @@ public static partial class EntityMapper
             Email = entity.Email ?? string.Empty,
             FirstName = entity.FirstName ?? string.Empty,
             LastName = entity.LastName ?? string.Empty,
-            Roles = new List<string> { "user" }
+            Roles = new List<string> { Roles.User }
         };
     }
 

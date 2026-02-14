@@ -28,6 +28,7 @@ app.UseCors("DefaultCors");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapHub<TaskerApi.Hubs.TaskerHub>("/hubs/tasker");
+var hubPath = app.Configuration["SignalR:HubPath"] ?? "/hubs/tasker";
+app.MapHub<TaskerApi.Hubs.TaskerHub>(hubPath);
 
 app.Run();

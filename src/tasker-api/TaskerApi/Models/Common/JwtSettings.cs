@@ -29,6 +29,16 @@ public class JwtSettings
     /// Время жизни refresh токена в днях.
     /// </summary>
     public int RefreshTokenLifetimeDays { get; set; }
+
+    /// <summary>
+    /// Допустимое расхождение времени при проверке срока действия токена (секунды). По умолчанию 30.
+    /// </summary>
+    public int ClockSkewSeconds { get; set; } = 30;
+
+    /// <summary>
+    /// Требовать HTTPS для метаданных. В Production рекомендуется true.
+    /// </summary>
+    public bool RequireHttpsMetadata { get; set; }
 }
 
 
