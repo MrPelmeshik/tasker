@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 import { GlassWidget, GlassButton, GlassTag, Tooltip } from '../../../../components';
+import { Loader } from '../../../../components/ui/Loader';
 import { TaskCardLink } from '../../../../components/tasks';
 import type { WidgetSizeProps } from '../../../../types';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
@@ -73,7 +74,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
             <tbody>
               {loading && (
                 <tr>
-                  <td className={css.td} colSpan={11}>Загрузка…</td>
+                  <td className={`${css.td} ${css.tdLoading}`} colSpan={11}><Loader size="xs" ariaLabel="Загрузка" /></td>
                 </tr>
               )}
               {!loading && groupedRows.flatMap(group =>

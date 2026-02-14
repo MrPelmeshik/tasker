@@ -26,6 +26,7 @@ import { LayoutGridIcon, UnfoldVerticalIcon, FoldVerticalIcon, FilterIcon, SortI
 import { Tooltip } from '../../../../components/ui/Tooltip';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { GlassSelect } from '../../../../components/ui/GlassSelect';
+import { Loader } from '../../../../components/ui/Loader';
 import { TaskStatusBadge } from '../../../../components/ui/TaskStatusBadge';
 import type { TaskStatus } from '../../../../types/task-status';
 import { getTaskStatusOptions } from '../../../../types/task-status';
@@ -518,7 +519,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
           />
         </div>
         {loading ? (
-          <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+          <div className={glassWidgetStyles.placeholder}><Loader size="m" ariaLabel="Загрузка" /></div>
         ) : areas.length === 0 ? (
           <div className={glassWidgetStyles.placeholder}>Нет доступных областей</div>
         ) : (
@@ -585,7 +586,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
   if (loading) {
     return (
       <GlassWidget title="Иерархия" colSpan={colSpan} rowSpan={rowSpan}>
-        <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+        <div className={glassWidgetStyles.placeholder}><Loader size="m" ariaLabel="Загрузка" /></div>
       </GlassWidget>
     );
   }

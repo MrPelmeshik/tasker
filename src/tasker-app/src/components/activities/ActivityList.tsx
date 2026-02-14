@@ -1,6 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { EventResponse } from '../../types/api';
 import { Tooltip } from '../ui/Tooltip';
+import { Loader } from '../ui/Loader';
 import { formatDateTime } from '../../utils/date';
 import { getEventTypeLabel, formatMessageForDisplay, EVENT_TYPES } from '../../utils/event-display';
 import activityChainCss from '../../styles/activity-chain.module.css';
@@ -78,7 +79,7 @@ export const ActivityList: React.FC<ActivityListProps> = ({
       {expanded && (
         <div className={activityChainCss.body}>
           {loading && (
-            <div className={activityChainCss.message}>Загрузка...</div>
+            <div className={activityChainCss.message}><Loader size="s" ariaLabel="Загрузка" /></div>
           )}
           {!loading && error && (
             <div className={activityChainCss.messageError}>{error}</div>

@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { AreaCardLink } from '../../../../components/areas';
 import { Tooltip } from '../../../../components/ui';
+import { Loader } from '../../../../components/ui/Loader';
 import { FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../components/icons';
 import { buildEntityUrl } from '../../../../utils/entity-links';
 import { useToast } from '../../../../context';
@@ -118,7 +119,7 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
         {hasChildren && isExpanded && (
           <div className={css.foldersSection}>
             {isLoading ? (
-              <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+              <div className={glassWidgetStyles.placeholder}><Loader size="s" ariaLabel="Загрузка" /></div>
             ) : (
               <>
                 {folders.map((f) => renderFolder(f, area.id, 1))}

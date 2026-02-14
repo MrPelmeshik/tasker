@@ -4,6 +4,7 @@ export { GlassInput } from './GlassInput';
 export { GlassTextarea } from './GlassTextarea';
 export { GlassSelect, type GlassSelectOption } from './GlassSelect';
 export { GlassTag } from './GlassTag';
+export { Loader } from './Loader';
 export { Tooltip } from './Tooltip';
 export { TaskStatusBadge } from './TaskStatusBadge';
 export * from './modal-buttons';

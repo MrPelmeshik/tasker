@@ -19,6 +19,7 @@ import {
   GlassInput,
   GlassTextarea,
   GlassSelect,
+  Loader,
   ModalCloseButton,
   ModalCancelButton,
   ModalSaveButton,
@@ -723,7 +724,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   <label className={formCss.fieldLabel}>Участники</label>
                 </div>
                 {membersLoading ? (
-                  <div className={formCss.fieldValueReadonly}>Загрузка…</div>
+                  <div className={formCss.fieldValueReadonly}><Loader size="s" ariaLabel="Загрузка" /></div>
                 ) : membersError ? (
                   <div className={`${formCss.fieldValueReadonly} ${formCss.fieldValueReadonlyError}`}>{membersError}</div>
                 ) : (

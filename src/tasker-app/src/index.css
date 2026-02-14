@@ -225,6 +225,12 @@ body {
   --icon-m: 14px;
   --icon-l: 18px;
 
+  /* Loader sizes */
+  --loader-size-xs: var(--size-18);
+  --loader-size-s: var(--size-20);
+  --loader-size-m: var(--size-28);
+  --loader-size-l: var(--size-40);
+
   --tree-row-padding-y: 2px;
   --tree-row-spacing: 4px;
   --tree-connecting-line-width: 1px;

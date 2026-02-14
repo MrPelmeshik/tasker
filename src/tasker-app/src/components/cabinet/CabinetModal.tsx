@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Modal } from '../common/Modal';
-import { GlassInput, ModalCloseButton, ModalCancelButton, ModalSaveButton, ModalEditButton } from '../ui';
+import { GlassInput, Loader, ModalCloseButton, ModalCancelButton, ModalSaveButton, ModalEditButton } from '../ui';
 import { useToast } from '../../context/ToastContext';
 import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { getCurrentUser, updateProfile } from '../../services/api/auth';
@@ -187,7 +187,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
 
         <div className={css.modalBody}>
           {loading ? (
-            <div className={cabinetCss.loading}>Загрузка…</div>
+            <div className={cabinetCss.loading}><Loader size="m" centered ariaLabel="Загрузка" /></div>
           ) : error ? (
             <div className={cabinetCss.loading} style={{ color: 'var(--color-error)' }}>{error}</div>
           ) : (

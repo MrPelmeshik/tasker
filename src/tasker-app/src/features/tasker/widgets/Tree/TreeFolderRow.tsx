@@ -3,6 +3,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { FolderCardLink } from '../../../../components/folders';
 import { Tooltip } from '../../../../components/ui';
+import { Loader } from '../../../../components/ui/Loader';
 import { FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../components/icons';
 import { buildEntityUrl } from '../../../../utils/entity-links';
 import { useToast } from '../../../../context';
@@ -131,7 +132,7 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
       {hasChildren && isExpanded && (
         <div className={css.tasksSection}>
           {isLoading ? (
-            <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+            <div className={glassWidgetStyles.placeholder}><Loader size="s" ariaLabel="Загрузка" /></div>
           ) : (
             <>
               {subfolders.map((sf) => renderFolder(sf, areaId, depth + 1))}
