@@ -16,25 +16,25 @@
   justify-items: stretch;
 }
 
-@media (min-width: var(--bp-md)) {
+@media (min-width: 768px) {
   .panelGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (min-width: var(--bp-xl)) {
+@media (min-width: 1000px) {
   .panelGrid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 
-@media (min-width: var(--bp-2xl)) {
+@media (min-width: 1280px) {
   .panelGrid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 }
 
-@media (min-width: var(--bp-3xl)) {
+@media (min-width: 1600px) {
   .panelGrid {
     grid-template-columns: repeat(5, minmax(0, 1fr));
   }
@@ -55,5 +55,3 @@
   flex: 1;
   min-height: 0;
 }
-
-
