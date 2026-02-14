@@ -37,10 +37,12 @@ function isValidEntityChangedPayload(payload: unknown): payload is EntityChanged
 
 type EntityChangedCallback = (payload: EntityChangedPayload) => void;
 type ReconnectedCallback = () => void;
+type ConnectionFailedCallback = (error: unknown) => void;
 
 let connection: signalR.HubConnection | null = null;
 let entityChangedCallbacks: Set<EntityChangedCallback> = new Set();
 let reconnectedCallbacks: Set<ReconnectedCallback> = new Set();
+let connectionFailedCallbacks: Set<ConnectionFailedCallback> = new Set();
 let currentAreaIds: string[] = [];
 let connectPromise: Promise<void> | null = null;
 let isRealtimeUnavailable = false;
@@ -104,6 +106,12 @@ export function onEntityChanged(callback: EntityChangedCallback): () => void {
 export function onReconnected(callback: ReconnectedCallback): () => void {
   reconnectedCallbacks.add(callback);
   return () => reconnectedCallbacks.delete(callback);
+}
+
+/** Подписаться на сбой первоначального подключения SignalR */
+export function onRealtimeConnectionFailed(callback: ConnectionFailedCallback): () => void {
+  connectionFailedCallbacks.add(callback);
+  return () => connectionFailedCallbacks.delete(callback);
 }
 
 /** Подписаться на изменение статуса (unavailable) */
@@ -194,6 +202,13 @@ export async function startRealtime(): Promise<void> {
     } catch (err) {
       console.warn('SignalR: не удалось подключиться', err);
       notifyStatusChange(true);
+      connectionFailedCallbacks.forEach((cb) => {
+        try {
+          cb(err);
+        } catch (e) {
+          console.error('Ошибка в callback connectionFailed:', e);
+        }
+      });
     }
   })();
 

@@ -2,7 +2,6 @@ import React, { useEffect, useState, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { GlassInput, Loader, ModalCloseButton, ModalCancelButton, ModalSaveButton, ModalEditButton } from '../ui';
 import { useToast } from '../../context/ToastContext';
-import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { getCurrentUser, updateProfile } from '../../services/api/auth';
 import { areaApi } from '../../services/api/areas';
 import css from '../../styles/modal.module.css';
@@ -19,7 +18,7 @@ export interface CabinetModalProps {
 }
 
 export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) => {
-  const { addError } = useToast();
+  const { showError } = useToast();
   const [user, setUser] = useState<UserInfo | null>(null);
   const [areasWithRoles, setAreasWithRoles] = useState<AreaWithRole[]>([]);
   const [loading, setLoading] = useState(false);
@@ -84,14 +83,14 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
         } else {
           const msg = userRes.message || 'Ошибка загрузки профиля';
           setError(msg);
-          addError(msg);
+          showError(msg);
         }
       } catch (err) {
         if (err instanceof Error && err.name === 'AbortError') return;
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
           setError(msg);
-          addError(parseApiErrorMessage(err));
+          showError(err);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -103,7 +102,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
       cancelled = true;
       ctrl.abort();
     };
-  }, [isOpen, addError]);
+  }, [isOpen, showError]);
 
   const handleStartEdit = () => {
     setSaveError(null);
@@ -161,12 +160,12 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
       } else {
         const msg = res.message || 'Ошибка сохранения';
         setSaveError(msg);
-        addError(msg);
+        showError(msg);
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Ошибка сохранения';
       setSaveError(msg);
-      addError(parseApiErrorMessage(err));
+      showError(err);
     } finally {
       isSubmittingRef.current = false;
       setSaving(false);

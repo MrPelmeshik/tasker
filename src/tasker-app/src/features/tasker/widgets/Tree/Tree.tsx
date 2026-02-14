@@ -31,7 +31,6 @@ import { TaskStatusBadge } from '../../../../components/ui/TaskStatusBadge';
 import type { TaskStatus } from '../../../../types/task-status';
 import { getTaskStatusOptions } from '../../../../types/task-status';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
-import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import type { WidgetSizeProps, FolderSummary } from '../../../../types';
 import type { FolderResponse } from '../../../../types/api';
 import { isValidEntityId, type EntityType } from '../../../../utils/entity-links';
@@ -109,10 +108,10 @@ export interface TreeProps extends WidgetSizeProps {
 export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, embedded }) => {
   const { openAreaModal, openFolderModal, openTaskModal } = useModal();
   const { notifyTaskUpdate, subscribeToTaskUpdates } = useTaskUpdate();
-  const { addError, addSuccess } = useToast();
+  const { showError, addSuccess } = useToast();
 
   const treeData = useTreeData({
-    addError,
+    showError,
     subscribeToTaskUpdates,
   });
 
@@ -153,7 +152,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
     setExpandedFolders,
     loadFolderContent,
     foldersByParent,
-    addError,
+    showError,
     addSuccess,
     notifyTaskUpdate,
     openAreaModal,
@@ -205,14 +204,14 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
     const process = async () => {
       const { entityType, entityId } = initialDeepLink;
       if (!isValidEntityId(entityId)) {
-        addError('Ресурс не найден');
+        showError('Ресурс не найден');
         return;
       }
       try {
         if (entityType === 'area') {
           const area = await fetchAreaById(entityId);
           if (!area) {
-            addError('Ресурс недоступен');
+            showError('Ресурс недоступен');
             return;
           }
           setExpandedAreas((prev) => new Set(prev).add(area.id));
@@ -223,7 +222,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
         } else if (entityType === 'folder') {
           const folder = await fetchFolderById(entityId);
           if (!folder) {
-            addError('Ресурс недоступен');
+            showError('Ресурс недоступен');
             return;
           }
           setExpandedAreas((prev) => new Set(prev).add(folder.areaId));
@@ -257,7 +256,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
         } else {
           const task = await fetchTaskById(entityId);
           if (!task) {
-            addError('Ресурс недоступен');
+            showError('Ресурс недоступен');
             return;
           }
           setExpandedAreas((prev) => new Set(prev).add(task.areaId));
@@ -287,7 +286,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
           openTaskModal(task, 'edit', handlers.handleTaskSave, handlers.handleTaskDelete, undefined, undefined, areasForTaskModal);
         }
       } catch {
-        addError('Ресурс недоступен');
+        showError('Ресурс недоступен');
       }
     };
     process();
@@ -308,7 +307,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
     openAreaModal,
     openFolderModal,
     openTaskModal,
-    addError,
+    showError,
     handlers,
   ]);
 
@@ -412,10 +411,10 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
         }
       } catch (error) {
         console.error('Ошибка перемещения:', error);
-        addError(parseApiErrorMessage(error));
+        showError(error);
       }
     },
-    [foldersByArea, foldersByParent, addError, addSuccess, notifyTaskUpdate, loadFolderContent, setAreas, setFoldersByArea, setFoldersByParent, setTasksByArea, setTasksByFolder, setExpandedFolders]
+    [foldersByArea, foldersByParent, showError, addSuccess, notifyTaskUpdate, loadFolderContent, setAreas, setFoldersByArea, setFoldersByParent, setTasksByArea, setTasksByFolder, setExpandedFolders]
   );
 
   const renderFolder = useCallback(

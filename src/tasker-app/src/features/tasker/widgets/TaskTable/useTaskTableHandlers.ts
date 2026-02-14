@@ -9,13 +9,12 @@ import {
   updateTask,
   deleteTask,
 } from '../../../../services/api';
-import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import type { TaskResponse, TaskUpdateRequest } from '../../../../types/api';
 import type { TaskRowTask } from './taskTableUtils';
 
 export interface UseTaskTableHandlersOptions {
   loadData: () => Promise<void>;
-  addError: (message: string) => void;
+  showError: (error: unknown) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
   openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>) => void;
   openActivityModal: (task: TaskResponse, date: string, onSave: (data: { title: string; description: string; date: string }) => Promise<void>, onOpenTaskDetails: () => void) => void;
@@ -25,7 +24,7 @@ export interface UseTaskTableHandlersOptions {
 
 export function useTaskTableHandlers({
   loadData,
-  addError,
+  showError,
   notifyTaskUpdate,
   openTaskModal,
   openActivityModal,
@@ -68,12 +67,12 @@ export function useTaskTableHandlers({
           openTaskModal(fullTask, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
         } catch (error) {
           console.error('Ошибка загрузки задачи:', error);
-          addError(parseApiErrorMessage(error));
+          showError(error);
         }
       };
       openActivityModal(task as TaskResponse, date, handleActivitySaveForTask(task as TaskResponse), onOpenTaskDetails);
     },
-    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, addError]
+    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, showError]
   );
 
   const handleViewTaskDetails = useCallback(async (taskId: string, event: React.MouseEvent) => {
@@ -86,9 +85,9 @@ export function useTaskTableHandlers({
       openTaskModal(task, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
     } catch (error) {
       console.error('Ошибка загрузки задачи:', error);
-      addError(parseApiErrorMessage(error));
+      showError(error);
     }
-  }, [openTaskModal, handleTaskSave, handleTaskDelete, addError]);
+  }, [openTaskModal, handleTaskSave, handleTaskDelete, showError]);
 
   return {
     handleTaskSave,

@@ -7,7 +7,6 @@ import { GlassButton } from '../components/ui/GlassButton';
 import { GlassWidget } from '../components/common/GlassWidget';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
-import { parseApiErrorMessage } from '../utils/parse-api-error';
 
 /** Разрешённые относительные пути для returnUrl (защита от Open Redirect) */
 const SAFE_RETURN_URL = /^\/tasker(\/.*)?$|^\/$/;
@@ -22,7 +21,7 @@ export const LoginPage: React.FC = () => {
   const returnUrl = searchParams.get('returnUrl') ?? undefined;
   const safeReturnUrl = isSafeReturnUrl(returnUrl) ? returnUrl : '/tasker';
   const { login, register, isAuth } = useAuth();
-  const { addError, addInfo } = useToast();
+  const { showError, addInfo } = useToast();
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
@@ -96,7 +95,7 @@ export const LoginPage: React.FC = () => {
     } catch (err) {
       setError('Серверная ошибка');
       setErrorDetails(err instanceof Error ? err.message : 'Ошибка входа');
-      addError(parseApiErrorMessage(err));
+      showError(err);
     } finally {
       isSubmittingRef.current = false;
       setLoading(false);

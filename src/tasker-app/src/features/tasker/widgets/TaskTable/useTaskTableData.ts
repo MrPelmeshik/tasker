@@ -10,7 +10,6 @@ import {
   createEventForTask,
   EventTypeActivity,
 } from '../../../../services/api';
-import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import { TaskStatus } from '../../../../types/task-status';
 import type { TaskResponse } from '../../../../types/api';
 import type { TaskRow } from './taskTableUtils';
@@ -38,14 +37,14 @@ function groupRowsByArea(rows: TaskRow[]): GroupedTaskRows {
 
 export interface UseTaskTableDataOptions {
   weekStartIso: string;
-  addError: (message: string) => void;
+  showError: (error: unknown) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
   subscribeToTaskUpdates: (callback: () => void) => () => void;
 }
 
 export function useTaskTableData({
   weekStartIso,
-  addError,
+  showError,
   notifyTaskUpdate,
   subscribeToTaskUpdates,
 }: UseTaskTableDataOptions) {
@@ -89,12 +88,12 @@ export function useTaskTableData({
       console.error('Ошибка загрузки задач:', error);
       if (alive) {
         setGroupedRows([]);
-        addError(parseApiErrorMessage(error));
+        showError(error);
       }
     } finally {
       if (alive) setLoading(false);
     }
-  }, [weekStartIso, addError]);
+  }, [weekStartIso, showError]);
 
   const handleActivitySaveForTask = useCallback(
     (task: TaskResponse) => async (data: { title: string; description: string; date: string }) => {

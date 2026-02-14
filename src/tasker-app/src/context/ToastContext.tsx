@@ -1,4 +1,5 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
+import { parseApiErrorMessage } from '../utils/parse-api-error';
 
 /** Вариант toast-уведомления (success, error, warning, info) */
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
@@ -34,6 +35,8 @@ type ToastContextValue = {
   addWarning: (message: string) => string;
   /** Добавить toast с информацией (shorthand) */
   addInfo: (message: string) => string;
+  /** Показать ошибку (parse + addError) — единая точка для API/unknown ошибок */
+  showError: (error: unknown) => string;
   /** Удалить toast по id */
   removeToast: (id: string) => void;
   /** Массив активных toasts (для ToastViewer) */
@@ -107,6 +110,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const addError = useCallback((message: string) => addToast(message, { variant: 'error' }), [addToast]);
+  const showError = useCallback((error: unknown) => addError(parseApiErrorMessage(error)), [addError]);
   const addSuccess = useCallback((message: string) => addToast(message, { variant: 'success' }), [addToast]);
   const addWarning = useCallback((message: string) => addToast(message, { variant: 'warning' }), [addToast]);
   const addInfo = useCallback((message: string) => addToast(message, { variant: 'info' }), [addToast]);
@@ -123,13 +127,14 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     () => ({
       addToast,
       addError,
+      showError,
       addSuccess,
       addWarning,
       addInfo,
       removeToast,
       toasts,
     }),
-    [addToast, addError, addSuccess, addWarning, addInfo, removeToast, toasts]
+    [addToast, addError, showError, addSuccess, addWarning, addInfo, removeToast, toasts]
   );
 
   return <ToastContext.Provider value={value}>{children}</ToastContext.Provider>;

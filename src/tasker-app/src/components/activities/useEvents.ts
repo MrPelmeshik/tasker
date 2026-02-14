@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { useToast } from '../../context/ToastContext';
 import { fetchEventsByTask, fetchEventsByArea } from '../../services/api';
 import type { EventResponse } from '../../types/api';
 import { toIsoDateString } from '../../utils/api-date';
@@ -15,6 +16,7 @@ export function useEvents(
   entityId: string | undefined,
   date?: string
 ): { events: EventResponse[]; loading: boolean; error: string | null; refetch: () => void } {
+  const { showError } = useToast();
   const [events, setEvents] = useState<EventResponse[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +48,7 @@ export function useEvents(
         if (!cancelled) {
           setError('Ошибка загрузки активностей');
           setEvents([]);
+          showError(e);
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -56,7 +59,7 @@ export function useEvents(
       cancelled = true;
       ctrl.abort();
     };
-  }, [entityType, entityId, date, trigger]);
+  }, [entityType, entityId, date, trigger, showError]);
 
   return { events, loading, error, refetch };
 }

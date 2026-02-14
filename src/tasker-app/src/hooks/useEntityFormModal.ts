@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '../context/ToastContext';
-import { parseApiErrorMessage } from '../utils/parse-api-error';
 
 /**
  * Опции хука для CRUD-модалки сущности
@@ -52,7 +51,7 @@ export function useEntityFormModal<TForm extends object>(
     onDiscard,
   } = options;
 
-  const { addError } = useToast();
+  const { showError } = useToast();
   const [formData, setFormData] = useState<TForm>(getInitialData);
   const [originalData, setOriginalData] = useState<TForm>(getInitialData);
   const [fieldChanges, setFieldChanges] = useState<Record<string, boolean>>({});
@@ -99,7 +98,7 @@ export function useEntityFormModal<TForm extends object>(
       onClose();
     } catch (error) {
       console.error('Ошибка сохранения:', error);
-      addError(parseApiErrorMessage(error));
+      showError(error);
     } finally {
       isSubmittingRef.current = false;
       setIsLoading(false);
@@ -160,7 +159,7 @@ export function useEntityFormModal<TForm extends object>(
       onClose();
     } catch (error) {
       console.error('Ошибка удаления:', error);
-      addError(parseApiErrorMessage(error));
+      showError(error);
     } finally {
       isSubmittingRef.current = false;
       setIsLoading(false);

@@ -37,7 +37,6 @@ import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
 import { useTaskUpdate } from '../../context';
 import { useToast } from '../../context/ToastContext';
-import { parseApiErrorMessage } from '../../utils/parse-api-error';
 import { areaApi } from '../../services/api/areas';
 import { getCurrentUser } from '../../services/api/auth';
 import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
@@ -347,7 +346,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   title = 'Область',
   size = 'medium',
 }) => {
-  const { addError, addSuccess } = useToast();
+  const { showError, addSuccess } = useToast();
 
   const handleCopyLink = () => {
     if (!area?.id) return;
@@ -514,14 +513,14 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : 'Ошибка загрузки участников';
           setMembersError(msg);
-          addError(parseApiErrorMessage(err));
+          showError(err);
         }
       })
       .finally(() => {
         if (!cancelled) setMembersLoading(false);
       });
     return () => { cancelled = true; };
-  }, [isOpen, area?.id, addError, membersRefreshTrigger]);
+  }, [isOpen, area?.id, showError, membersRefreshTrigger]);
 
   /** Добавить участника (отложенно, применится при сохранении) */
   const handleAddMember = (): void => {

@@ -22,7 +22,6 @@ import {
   fetchTaskSummaryByFolder,
   fetchTaskSummaryByAreaRoot,
 } from '../../../../services/api';
-import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import type {
   AreaShortCard,
   FolderSummary,
@@ -48,7 +47,7 @@ export interface UseTreeHandlersOptions
   setExpandedFolders: React.Dispatch<React.SetStateAction<Set<string>>>;
   loadFolderContent: (folderId: string, areaId: string) => Promise<FolderSummary[]>;
   foldersByParent: Map<string, FolderSummary[]>;
-  addError: (message: string) => void;
+  showError: (error: unknown) => void;
   addSuccess: (message: string) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
 }
@@ -64,7 +63,7 @@ export function useTreeHandlers({
   setExpandedFolders,
   loadFolderContent,
   foldersByParent,
-  addError,
+  showError,
   addSuccess,
   notifyTaskUpdate,
   openAreaModal,
@@ -240,10 +239,10 @@ export function useTreeHandlers({
         if (area) openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
       } catch (error) {
         console.error('Ошибка загрузки области:', error);
-        addError(parseApiErrorMessage(error));
+        showError(error);
       }
     },
-    [openAreaModal, handleAreaSave, handleAreaDelete, addError]
+    [openAreaModal, handleAreaSave, handleAreaDelete, showError]
   );
 
   const handleCreateFolderForArea = useCallback(
@@ -293,10 +292,10 @@ export function useTreeHandlers({
         }
       } catch (error) {
         console.error('Ошибка загрузки папки:', error);
-        addError(parseApiErrorMessage(error));
+        showError(error);
       }
     },
-    [areas, openFolderModal, handleFolderSave, handleFolderDelete, addError]
+    [areas, openFolderModal, handleFolderSave, handleFolderDelete, showError]
   );
 
   const handleViewTaskDetails = useCallback(
@@ -310,10 +309,10 @@ export function useTreeHandlers({
         }
       } catch (error) {
         console.error('Ошибка загрузки задачи:', error);
-        addError(parseApiErrorMessage(error));
+        showError(error);
       }
     },
-    [areas, openTaskModal, handleTaskSave, handleTaskDelete, addError]
+    [areas, openTaskModal, handleTaskSave, handleTaskDelete, showError]
   );
 
   return {

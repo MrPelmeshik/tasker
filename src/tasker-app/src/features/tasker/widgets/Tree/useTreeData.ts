@@ -10,16 +10,15 @@ import {
   fetchTaskSummaryByFolder,
   fetchTaskSummaryByAreaRoot,
 } from '../../../../services/api';
-import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import { findFolderById } from './treeUtils';
 import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
 
 export interface UseTreeDataOptions {
-  addError: (message: string) => void;
+  showError: (error: unknown) => void;
   subscribeToTaskUpdates: (callback: () => void) => () => void;
 }
 
-export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOptions) {
+export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOptions) {
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
   const [foldersByArea, setFoldersByArea] = useState<Map<string, FolderSummary[]>>(new Map());
   const [foldersByParent, setFoldersByParent] = useState<Map<string, FolderSummary[]>>(new Map());
@@ -60,9 +59,9 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
       if (error instanceof Error && error.name === 'AbortError') return;
       console.error('Ошибка загрузки областей:', error);
       setAreas([]);
-      addError(parseApiErrorMessage(error));
+      showError(error);
     }
-  }, [addError, sortByTitle]);
+  }, [showError, sortByTitle]);
 
   const loadAreaContent = useCallback(async (areaId: string): Promise<FolderSummary[]> => {
     const key = `area:${areaId}`;
@@ -86,7 +85,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
         console.error(`Ошибка загрузки содержимого области ${areaId}:`, error);
         setFoldersByArea((prev) => new Map(prev).set(areaId, []));
         setTasksByArea((prev) => new Map(prev).set(areaId, []));
-        addError(parseApiErrorMessage(error));
+        showError(error);
         return [];
       } finally {
         areaLoadPromisesRef.current.delete(key);
@@ -99,7 +98,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     })();
     areaLoadPromisesRef.current.set(key, promise);
     return promise;
-  }, [addError, sortByTitle]);
+  }, [showError, sortByTitle]);
 
   const loadFolderContent = useCallback(async (folderId: string, areaId: string): Promise<FolderSummary[]> => {
     const key = `folder:${folderId}`;
@@ -123,7 +122,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
         console.error(`Ошибка загрузки содержимого папки ${folderId}:`, error);
         setFoldersByParent((prev) => new Map(prev).set(folderId, []));
         setTasksByFolder((prev) => new Map(prev).set(folderId, []));
-        addError(parseApiErrorMessage(error));
+        showError(error);
         return [];
       } finally {
         folderLoadPromisesRef.current.delete(key);
@@ -136,7 +135,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     })();
     folderLoadPromisesRef.current.set(key, promise);
     return promise;
-  }, [addError, sortByTitle]);
+  }, [showError, sortByTitle]);
 
   const isRefreshingRef = useRef(false);
   const pendingRefreshRef = useRef(false);

@@ -16,18 +16,18 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { weekStartIso, go } = useWeek();
   const { openTaskModal, openActivityModal, closeActivityModal } = useModal();
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
-  const { addError } = useToast();
+  const { showError } = useToast();
 
   const { loading, groupedRows, loadData, handleActivitySaveForTask } = useTaskTableData({
     weekStartIso,
-    addError,
+    showError,
     notifyTaskUpdate,
     subscribeToTaskUpdates,
   });
 
   const handlers = useTaskTableHandlers({
     loadData,
-    addError,
+    showError,
     notifyTaskUpdate,
     openTaskModal,
     openActivityModal,
