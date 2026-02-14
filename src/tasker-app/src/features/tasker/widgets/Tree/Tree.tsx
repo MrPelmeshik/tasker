@@ -22,11 +22,10 @@ import {
   updateTask,
 } from '../../../../services/api';
 import { GlassWidget } from '../../../../components/common/GlassWidget';
-import { GlassButton } from '../../../../components/ui/GlassButton';
-import { Tooltip } from '../../../../components/ui';
 import { LayoutGridIcon } from '../../../../components/icons';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
 import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
+import { handleExpandKeyDown } from '../../../../utils/keyboard';
 import type { WidgetSizeProps, FolderSummary } from '../../../../types';
 import type { FolderResponse } from '../../../../types/api';
 import type { EntityType } from '../../../../utils/entity-links';
@@ -344,16 +343,19 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
 
   const innerContent = (
     <div className={css.tree}>
-      <div className={css.widgetHeader}>
-        <h3 className={css.widgetTitle}>Дерево</h3>
-        <Tooltip content="Создать область" placement="bottom">
-          <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handlers.handleCreateArea} aria-label="Создать область">
-            <LayoutGridIcon style={{ width: 14, height: 14 }} />
-          </GlassButton>
-        </Tooltip>
-      </div>
       {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
       <div className={css.widgetContent}>
+        <div
+          className={css.createAreaRow}
+          role="button"
+          tabIndex={0}
+          onClick={handlers.handleCreateArea}
+          onKeyDown={(e) => handleExpandKeyDown(e, handlers.handleCreateArea)}
+          aria-label="Создать область"
+        >
+          <LayoutGridIcon style={{ width: 14, height: 14 }} />
+          <span className={css.areaTitle}>Создать область</span>
+        </div>
         {loading ? (
           <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
         ) : areas.length === 0 ? (
