@@ -23,11 +23,31 @@
 
 .widgetContent {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+}
+
+/* Стили для скроллбара */
+.widgetContent::-webkit-scrollbar {
+  width: var(--tree-scrollbar-width);
+}
+
+.widgetContent::-webkit-scrollbar-track {
+  background: var(--glass-scrollbar-track);
+  border-radius: var(--space-3);
+}
+
+.widgetContent::-webkit-scrollbar-thumb {
+  background: var(--glass-scrollbar-thumb);
+  border-radius: var(--space-3);
+}
+
+.widgetContent::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-scrollbar-thumb-hover);
 }
 
 .areaSection {
@@ -49,8 +69,7 @@
   cursor: pointer;
   box-sizing: border-box;
   box-shadow: none;
-  overflow-x: hidden;
-  overflow-y: visible;
+  overflow: hidden;
   min-width: 0;
   display: flex;
   align-items: center;
@@ -129,6 +148,7 @@
   min-width: 0;
   gap: var(--tree-row-gap);
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 /* Область, папка и задача: одна строка при достаточном месте, перенос кнопок при нехватке */
@@ -146,7 +166,7 @@
   display: flex;
   align-items: center;
   gap: var(--tree-row-gap);
-  min-width: 0;
+  min-width: 60px;
   overflow: hidden;
   order: -1;
 }
@@ -337,25 +357,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-/* Стили для скроллбара */
-.widgetContent::-webkit-scrollbar {
-  width: var(--tree-scrollbar-width);
-}
-
-.widgetContent::-webkit-scrollbar-track {
-  background: var(--glass-scrollbar-track);
-  border-radius: var(--space-3);
-}
-
-.widgetContent::-webkit-scrollbar-thumb {
-  background: var(--glass-scrollbar-thumb);
-  border-radius: var(--space-3);
-}
-
-.widgetContent::-webkit-scrollbar-thumb:hover {
-  background: var(--glass-scrollbar-thumb-hover);
 }
 
 /* DnD: ручка-захват */

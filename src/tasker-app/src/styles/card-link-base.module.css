@@ -8,11 +8,11 @@
   font-weight: var(--font-weight-medium);
   color: var(--color-text);
   line-height: var(--line-height-tight);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
   flex: 1;
   min-width: 0;
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .typeIcon {
