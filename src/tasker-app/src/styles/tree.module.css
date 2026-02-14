@@ -46,13 +46,14 @@
   display: flex;
   align-items: center;
   gap: var(--tree-row-gap);
+  margin-bottom: var(--space-8);
 }
 
 /** Иконные кнопки в строке treeTopActions — единый размер (квадрат) */
 .treeTopActionButton {
-  min-width: var(--tree-min-height);
-  min-height: var(--tree-min-height);
-  padding: var(--space-6) !important;
+  min-width: var(--size-28);
+  min-height: var(--size-28);
+  padding: var(--space-4) !important;
 }
 
 .areaCard,
@@ -322,26 +323,13 @@
   outline: var(--border-1) dashed var(--dnd-outline-color);
 }
 
+/** Стили кнопок действий дерева: стеклянный эффект от GlassButton subtle + цвет иконок */
 .treeActionButton {
-  background: transparent !important;
-  border: var(--border-1) solid transparent !important;
-  box-shadow: none !important;
   color: var(--glass-icon-default);
-  backdrop-filter: none !important;
-  -webkit-backdrop-filter: none !important;
-  filter: none !important;
   transition: color var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-.treeActionButton::before {
-  display: none !important;
-}
-.treeActionButton::after {
-  box-shadow: none !important;
 }
 
 .treeActionButton:hover {
-  background: var(--glass-hover-bg) !important;
-  border-color: var(--glass-border-2) !important;
   color: var(--glass-icon-hover);
 }
 
