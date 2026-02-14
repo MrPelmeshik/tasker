@@ -93,14 +93,8 @@
   box-shadow: none;
 }
 
-.taskCard.expanded {
-  background: var(--glass-hover-bg);
-}
-
 .areaCard:hover,
-.areaCard.expanded,
-.folderCard:hover,
-.folderCard.expanded {
+.folderCard:hover {
   background: var(--glass-hover-bg);
 }
 
@@ -126,11 +120,8 @@
 }
 
 .areaCard[data-custom-color]:hover,
-.areaCard[data-custom-color].expanded,
 .folderCard[data-custom-color]:hover,
-.folderCard[data-custom-color].expanded,
-.taskCard[data-custom-color]:hover,
-.taskCard[data-custom-color].expanded {
+.taskCard[data-custom-color]:hover {
   background: rgba(var(--custom-color-rgb), 0.06);
 }
 
