@@ -65,17 +65,17 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
 
   return (
     <div className={css.areaSection}>
-      <div className={css.areaItem}>
-        <div
-          ref={setNodeRef}
-          className={`${css.areaCard} ${isExpanded ? css.expanded : ''} ${isOver && canDrop ? css.isOverValid : ''} ${isOver && !canDrop ? css.isOverInvalid : ''}`}
-          data-custom-color={area.customColor ? 'true' : undefined}
-          style={customColorStyle}
-          onClick={hasChildren ? onToggle : undefined}
-          role={hasChildren ? 'button' : undefined}
-          tabIndex={hasChildren ? 0 : undefined}
-          onKeyDown={hasChildren ? (e) => handleExpandKeyDown(e, onToggle) : undefined}
-        >
+      <div ref={setNodeRef} className={css.areaBlock}>
+        <div className={css.areaItem}>
+          <div
+            className={`${css.areaCard} ${isExpanded ? css.expanded : ''} ${isOver && canDrop ? css.isOverValid : ''} ${isOver && !canDrop ? css.isOverInvalid : ''}`}
+            data-custom-color={area.customColor ? 'true' : undefined}
+            style={customColorStyle}
+            onClick={hasChildren ? onToggle : undefined}
+            role={hasChildren ? 'button' : undefined}
+            tabIndex={hasChildren ? 0 : undefined}
+            onKeyDown={hasChildren ? (e) => handleExpandKeyDown(e, onToggle) : undefined}
+          >
           <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
             <Tooltip content="Просмотреть" placement="top">
               <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onViewDetails(e); }} aria-label="Просмотреть">
@@ -107,20 +107,21 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
           </div>
         </div>
       </div>
-      {hasChildren && isExpanded && (
-        <div className={css.foldersSection}>
-          {isLoading ? (
-            <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
-          ) : (
-            <>
-              {folders.map((f) => renderFolder(f, area.id, 1))}
-              {tasks.map((task) => (
-                <TreeTaskRow key={task.id} level={2} task={task} onViewDetails={(e) => onViewTaskDetails(task.id, e)} />
-              ))}
-            </>
-          )}
-        </div>
-      )}
+        {hasChildren && isExpanded && (
+          <div className={css.foldersSection}>
+            {isLoading ? (
+              <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
+            ) : (
+              <>
+                {folders.map((f) => renderFolder(f, area.id, 1))}
+                {tasks.map((task) => (
+                  <TreeTaskRow key={task.id} level={2} task={task} onViewDetails={(e) => onViewTaskDetails(task.id, e)} />
+                ))}
+              </>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 };

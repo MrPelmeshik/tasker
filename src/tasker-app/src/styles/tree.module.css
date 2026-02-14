@@ -43,6 +43,22 @@
   box-sizing: border-box;
 }
 
+/** Wrapper для droppable-зоны области: карточка + дочерние папки/задачи */
+.areaBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tree-row-spacing);
+  box-sizing: border-box;
+}
+
+/** Wrapper для droppable-зоны папки: карточка + дочерние подпапки/задачи */
+.folderBlock {
+  display: flex;
+  flex-direction: column;
+  gap: var(--tree-row-spacing);
+  box-sizing: border-box;
+}
+
 /** Строка действий над деревом (создать область, развернуть/свернуть) */
 .treeTopActions {
   display: flex;

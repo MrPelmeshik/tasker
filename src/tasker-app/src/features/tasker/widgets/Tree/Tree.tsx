@@ -245,6 +245,19 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
         return;
       }
 
+      /** Выход без действия, если отпущено на то же место */
+      if (payload.type === 'folder' && payload.folder) {
+        const folder = payload.folder;
+        if (target.areaId === folder.areaId && (target.parentFolderId ?? null) === (folder.parentFolderId ?? null)) {
+          return;
+        }
+      } else if (payload.type === 'task' && payload.task) {
+        const task = payload.task;
+        if (target.areaId === task.areaId && (target.parentFolderId ?? null) === (task.folderId ?? null)) {
+          return;
+        }
+      }
+
       try {
         if (payload.type === 'folder' && payload.folder) {
           const folder = payload.folder;

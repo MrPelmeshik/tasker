@@ -2,7 +2,7 @@
  * Утилиты для виджета дерева (DnD, поиск папок, парсинг drop-целей).
  */
 
-import { pointerWithin, closestCenter, rectIntersection } from '@dnd-kit/core';
+import { pointerWithin, rectIntersection } from '@dnd-kit/core';
 import type { FolderSummary, TaskSummary } from '../../../../types';
 
 /** Собирает все ID потомков папки из загруженных данных */
@@ -23,12 +23,10 @@ export function getDescendantFolderIds(
   return result;
 }
 
-/** Коллизия: pointerWithin для точности, closestCenter для надёжности, rectIntersection как fallback */
+/** Коллизия: pointerWithin для точности, rectIntersection как fallback (без closestCenter — он «примагничивает» к соседним элементам) */
 export function collisionDetection(args: Parameters<typeof pointerWithin>[0]) {
   const pointerCollisions = pointerWithin(args);
   if (pointerCollisions.length > 0) return pointerCollisions;
-  const closestCollisions = closestCenter(args);
-  if (closestCollisions.length > 0) return closestCollisions;
   return rectIntersection(args);
 }
 

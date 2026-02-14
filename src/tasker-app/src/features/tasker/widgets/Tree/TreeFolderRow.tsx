@@ -72,16 +72,13 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
 
   const level = depth + 1;
   return (
-    <React.Fragment>
+    <div ref={setDroppableRef} className={css.folderBlock}>
       <div
         className={`${css.folderItem} ${isDragging ? css.isDragging : ''}`}
         style={{ paddingLeft: `calc(var(--tree-indent) * ${level - 1})` }}
       >
         <div
-          ref={(node) => {
-            setDroppableRef(node);
-            setDraggableRef(node);
-          }}
+          ref={setDraggableRef}
           className={`${css.folderCard} ${isExpanded ? css.expanded : ''} ${isOver && canDrop ? css.isOverValid : ''} ${isOver && !canDrop ? css.isOverInvalid : ''}`}
           data-custom-color={folder.customColor ? 'true' : undefined}
           style={customColorStyle}
@@ -135,6 +132,6 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
           )}
         </div>
       )}
-    </React.Fragment>
+    </div>
   );
 };
