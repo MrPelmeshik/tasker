@@ -55,44 +55,10 @@
   border-bottom: none;
 }
 
-.table tbody tr:hover .td {
+/** Подсветка строки только когда курсор не на области */
+.table tbody tr:hover:not(:has(td.colArea:hover)) td:not(.colArea) {
   background-color: var(--glass-hover-bg);
 }
-
-.table:has(tbody td:nth-child(2):hover) td:nth-child(2),
-.table:has(thead th:nth-child(2):hover) td:nth-child(2),
-.table:has(tbody td:nth-child(2):hover) th:nth-child(2),
-.table:has(thead th:nth-child(2):hover) th:nth-child(2) { background-color: var(--glass-hover-bg); }
-
-.table:has(tbody td:nth-child(3):hover) td:nth-child(3),
-.table:has(thead th:nth-child(3):hover) td:nth-child(3),
-.table:has(tbody td:nth-child(3):hover) th:nth-child(3),
-.table:has(thead th:nth-child(3):hover) th:nth-child(3) { background-color: var(--glass-hover-bg); }
-
-.table:has(tbody td:nth-child(4):hover) td:nth-child(4),
-.table:has(thead th:nth-child(4):hover) td:nth-child(4),
-.table:has(tbody td:nth-child(4):hover) th:nth-child(4),
-.table:has(thead th:nth-child(4):hover) th:nth-child(4) { background-color: var(--glass-hover-bg); }
-
-.table:has(tbody td:nth-child(5):hover) td:nth-child(5),
-.table:has(thead th:nth-child(5):hover) td:nth-child(5),
-.table:has(tbody td:nth-child(5):hover) th:nth-child(5),
-.table:has(thead th:nth-child(5):hover) th:nth-child(5) { background-color: var(--glass-hover-bg); }
-
-.table:has(tbody td:nth-child(6):hover) td:nth-child(6),
-.table:has(thead th:nth-child(6):hover) td:nth-child(6),
-.table:has(tbody td:nth-child(6):hover) th:nth-child(6),
-.table:has(thead th:nth-child(6):hover) th:nth-child(6) { background-color: var(--glass-hover-bg); }
-
-.table:has(tbody td:nth-child(7):hover) td:nth-child(7),
-.table:has(thead th:nth-child(7):hover) td:nth-child(7),
-.table:has(tbody td:nth-child(7):hover) th:nth-child(7),
-.table:has(thead th:nth-child(7):hover) th:nth-child(7) { background-color: var(--glass-hover-bg); }
-
-.table:has(tbody td:nth-child(8):hover) td:nth-child(8),
-.table:has(thead th:nth-child(8):hover) td:nth-child(8),
-.table:has(tbody td:nth-child(8):hover) th:nth-child(8),
-.table:has(thead th:nth-child(8):hover) th:nth-child(8) { background-color: var(--glass-hover-bg); }
 
 .colCarry, .colFuture {
   text-align: center;
@@ -101,9 +67,38 @@
 
 .td.colCarry { font-size: var(--font-11); color: var(--color-text-subtle); }
 
+.colArea {
+  /** Ширина под один символ вертикального текста (font-11 ≈ 11–13px) */
+  width: 14px;
+  min-width: 14px;
+  vertical-align: middle;
+  position: sticky;
+  right: var(--size-col-task-min);
+  background: transparent;
+  z-index: 1;
+  border-right: var(--border-1) solid rgb(var(--white) / 0.06);
+}
+
+.colArea .areaLabel {
+  display: inline-block;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-size: var(--font-11);
+  color: var(--color-text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-height: 100%;
+}
+
 .colTask {
   min-width: var(--size-col-task-min);
   width: 100%;
+  position: sticky;
+  right: 0;
+  background: transparent;
+  z-index: 1;
 }
 
 .colDay {

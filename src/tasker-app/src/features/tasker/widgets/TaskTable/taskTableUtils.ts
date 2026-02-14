@@ -12,6 +12,8 @@ export type TaskRowTask = Pick<TaskResponse, 'id' | 'areaId' | 'folderId' | 'tit
 export type TaskRow = {
   taskId: string;
   taskName: string;
+  areaId: string;
+  areaTitle: string;
   carryWeeks: number;
   hasFutureActivities: boolean;
   days: TaskDayActivity[];

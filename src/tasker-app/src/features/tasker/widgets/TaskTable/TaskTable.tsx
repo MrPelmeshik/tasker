@@ -17,7 +17,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const { addError } = useToast();
 
-  const { loading, rows, loadData, handleActivitySaveForTask } = useTaskTableData({
+  const { loading, groupedRows, loadData, handleActivitySaveForTask } = useTaskTableData({
     weekStartIso,
     addError,
     notifyTaskUpdate,
@@ -63,6 +63,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                 </th>
               ))}
               <th className={`${css.th} ${css.colFuture}`} />
+              <th className={`${css.th} ${css.colArea}`} />
               <th className={`${css.th} ${css.colTask}`}>Задача</th>
             </tr>
           </thead>
@@ -72,50 +73,60 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
             <tbody>
               {loading && (
                 <tr>
-                  <td className={css.td} colSpan={10}>Загрузка…</td>
+                  <td className={css.td} colSpan={11}>Загрузка…</td>
                 </tr>
               )}
-              {!loading && rows.map(row => (
-                <tr key={row.taskId}>
-                  <td className={`${css.td} ${css.colCarry}`}>
-                    {row.carryWeeks > 0 ? (
-                      <Tooltip content="Есть активности в прошлых неделях" placement="bottom" size="s">
-                        <GlassTag variant="subtle" size="xs">←</GlassTag>
-                      </Tooltip>
-                    ) : null}
-                  </td>
-                  {row.days.map(day => (
-                    <td
-                      key={day.date}
-                      className={`${css.td} ${css.colDay} ${css.colDayClickable}`}
-                      onClick={(e) => handlers.handleDayCellClick(row.task, day.date, e)}
-                    >
-                      {day.count > 0 ? (
-                        <Tooltip content={String(day.count)} placement="bottom" size="s">
-                          <span className={`${css.heatCell} ${intensityClass(day.count)}`} />
+              {!loading && groupedRows.flatMap(group =>
+                group.rows.map((row, i) => (
+                  <tr key={row.taskId}>
+                    <td className={`${css.td} ${css.colCarry}`}>
+                      {row.carryWeeks > 0 ? (
+                        <Tooltip content="Есть активности в прошлых неделях" placement="bottom" size="s">
+                          <GlassTag variant="subtle" size="xs">←</GlassTag>
                         </Tooltip>
-                      ) : (
-                        <span className={css.heatCellPlaceholder} />
-                      )}
+                      ) : null}
                     </td>
-                  ))}
-                  <td className={`${css.td} ${css.colFuture}`}>
-                    {row.hasFutureActivities ? (
-                      <Tooltip content="Есть активности в будущих неделях" placement="bottom" size="s">
-                        <GlassTag variant="subtle" size="xs">→</GlassTag>
-                      </Tooltip>
+                    {row.days.map(day => (
+                      <td
+                        key={day.date}
+                        className={`${css.td} ${css.colDay} ${css.colDayClickable}`}
+                        onClick={(e) => handlers.handleDayCellClick(row.task, day.date, e)}
+                      >
+                        {day.count > 0 ? (
+                          <Tooltip content={String(day.count)} placement="bottom" size="s">
+                            <span className={`${css.heatCell} ${intensityClass(day.count)}`} />
+                          </Tooltip>
+                        ) : (
+                          <span className={css.heatCellPlaceholder} />
+                        )}
+                      </td>
+                    ))}
+                    <td className={`${css.td} ${css.colFuture}`}>
+                      {row.hasFutureActivities ? (
+                        <Tooltip content="Есть активности в будущих неделях" placement="bottom" size="s">
+                          <GlassTag variant="subtle" size="xs">→</GlassTag>
+                        </Tooltip>
+                      ) : null}
+                    </td>
+                    {i === 0 ? (
+                      <td
+                        className={`${css.td} ${css.colArea}`}
+                        rowSpan={group.rows.length}
+                      >
+                        <span className={css.areaLabel}>{group.areaTitle}</span>
+                      </td>
                     ) : null}
-                  </td>
-                  <td className={`${css.td} ${css.colTask}`}>
-                    <TaskCardLink
-                      task={row.task}
-                      onClick={(e) => handlers.handleViewTaskDetails(row.taskId, e)}
-                      className={css.taskCell}
-                      variant="text"
-                    />
-                  </td>
-                </tr>
-              ))}
+                    <td className={`${css.td} ${css.colTask}`}>
+                      <TaskCardLink
+                        task={row.task}
+                        onClick={(e) => handlers.handleViewTaskDetails(row.taskId, e)}
+                        className={css.taskCell}
+                        variant="text"
+                      />
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

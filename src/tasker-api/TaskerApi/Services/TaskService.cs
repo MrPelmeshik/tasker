@@ -443,6 +443,10 @@ public class TaskService(
             var taskIds = tasksWithAccess.Select(t => t.Id).ToHashSet();
             var taskNames = tasksWithAccess.ToDictionary(t => t.Id, t => t.Title);
 
+            var areaIds = tasksWithAccess.Select(t => t.AreaId).Distinct().ToHashSet();
+            var areas = await areaRepository.FindAsync(a => areaIds.Contains(a.Id), cancellationToken);
+            var areaTitles = areas.ToDictionary(a => a.Id, a => a.Title);
+
             var activityQuery = context.EventToTasks
                 .AsNoTracking()
                 .Where(et => taskIds.Contains(et.TaskId) && et.IsActive)
@@ -474,6 +478,7 @@ public class TaskService(
                     TaskName = taskNames.GetValueOrDefault(task.Id, ""),
                     Status = (int)task.Status,
                     AreaId = task.AreaId,
+                    AreaTitle = areaTitles.GetValueOrDefault(task.AreaId, null),
                     FolderId = task.FolderId,
                     CarryWeeks = carryWeeks > 0 ? 1 : 0,
                     HasFutureActivities = hasFutureActivities,

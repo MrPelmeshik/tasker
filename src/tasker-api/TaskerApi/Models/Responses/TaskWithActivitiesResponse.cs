@@ -26,6 +26,11 @@ public class TaskWithActivitiesResponse
     public Guid AreaId { get; set; }
 
     /// <summary>
+    /// Название области
+    /// </summary>
+    public string? AreaTitle { get; set; }
+
+    /// <summary>
     /// Идентификатор папки (null = в корне области)
     /// </summary>
     public Guid? FolderId { get; set; }

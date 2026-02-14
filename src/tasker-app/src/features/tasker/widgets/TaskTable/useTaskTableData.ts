@@ -15,6 +15,27 @@ import { TaskStatus } from '../../../../types/task-status';
 import type { TaskResponse } from '../../../../types/api';
 import type { TaskRow } from './taskTableUtils';
 
+/** Группа строк по области */
+export type GroupedTaskRows = Array<{ areaId: string; areaTitle: string; rows: TaskRow[] }>;
+
+function groupRowsByArea(rows: TaskRow[]): GroupedTaskRows {
+  const order: string[] = [];
+  const byArea = new Map<string, TaskRow[]>();
+  for (const row of rows) {
+    const id = row.areaId ?? '';
+    if (!byArea.has(id)) {
+      order.push(id);
+      byArea.set(id, []);
+    }
+    byArea.get(id)!.push(row);
+  }
+  return order.map(areaId => {
+    const rowsInGroup = byArea.get(areaId) ?? [];
+    const areaTitle = rowsInGroup[0]?.areaTitle ?? (areaId || '—');
+    return { areaId, areaTitle, rows: rowsInGroup };
+  });
+}
+
 export interface UseTaskTableDataOptions {
   weekStartIso: string;
   addError: (message: string) => void;
@@ -29,7 +50,7 @@ export function useTaskTableData({
   subscribeToTaskUpdates,
 }: UseTaskTableDataOptions) {
   const [loading, setLoading] = useState(false);
-  const [rows, setRows] = useState<TaskRow[]>([]);
+  const [groupedRows, setGroupedRows] = useState<GroupedTaskRows>([]);
 
   const loadData = useCallback(async (): Promise<void> => {
     let alive = true;
@@ -46,6 +67,8 @@ export function useTaskTableData({
       const merged: TaskRow[] = res.items.map(item => ({
         taskId: item.taskId,
         taskName: item.taskName,
+        areaId: item.areaId,
+        areaTitle: item.areaTitle ?? item.areaId ?? '—',
         carryWeeks: item.carryWeeks,
         hasFutureActivities: item.hasFutureActivities,
         days: item.days,
@@ -58,11 +81,12 @@ export function useTaskTableData({
         },
       }));
 
-      setRows(merged);
+      const grouped = groupRowsByArea(merged);
+      setGroupedRows(grouped);
     } catch (error) {
       console.error('Ошибка загрузки задач:', error);
       if (alive) {
-        setRows([]);
+        setGroupedRows([]);
         addError(parseApiErrorMessage(error));
       }
     } finally {
@@ -94,5 +118,5 @@ export function useTaskTableData({
     return unsubscribe;
   }, [subscribeToTaskUpdates, loadData]);
 
-  return { loading, rows, loadData, handleActivitySaveForTask };
+  return { loading, groupedRows, loadData, handleActivitySaveForTask };
 }

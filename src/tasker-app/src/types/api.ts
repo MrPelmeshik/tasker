@@ -176,6 +176,7 @@ export interface TaskWithActivitiesResponse {
   taskName: string;
   status: number;
   areaId: string;
+  areaTitle?: string | null;
   folderId?: string | null;
   carryWeeks: number;
   hasFutureActivities: boolean;
