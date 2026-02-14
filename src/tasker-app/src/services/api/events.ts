@@ -19,14 +19,14 @@ export async function createEventForTask(data: EventCreateRequest): Promise<Even
  * Получить список событий по идентификатору задачи
  * GET /api/event/byTask/{taskId}
  */
-export async function fetchEventsByTask(taskId: string): Promise<EventResponse[]> {
-  return apiFetch<EventResponse[]>(`/event/byTask/${taskId}`);
+export async function fetchEventsByTask(taskId: string, init?: RequestInit): Promise<EventResponse[]> {
+  return apiFetch<EventResponse[]>(`/event/byTask/${taskId}`, init);
 }
 
 /**
  * Получить список событий по идентификатору области
  * GET /api/event/byArea/{areaId}
  */
-export async function fetchEventsByArea(areaId: string): Promise<EventResponse[]> {
-  return apiFetch<EventResponse[]>(`/event/byArea/${areaId}`);
+export async function fetchEventsByArea(areaId: string, init?: RequestInit): Promise<EventResponse[]> {
+  return apiFetch<EventResponse[]>(`/event/byArea/${areaId}`, init);
 }

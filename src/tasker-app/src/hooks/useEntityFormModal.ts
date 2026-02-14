@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToast } from '../context/ToastContext';
 import { parseApiErrorMessage } from '../utils/parse-api-error';
 
@@ -61,6 +61,7 @@ export function useEntityFormModal<TForm extends object>(
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isEditMode, setIsEditMode] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -90,6 +91,8 @@ export function useEntityFormModal<TForm extends object>(
 
   const handleSave = async () => {
     if (!validate(formData)) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     try {
       await onSave(formData);
@@ -98,6 +101,7 @@ export function useEntityFormModal<TForm extends object>(
       console.error('Ошибка сохранения:', error);
       addError(parseApiErrorMessage(error));
     } finally {
+      isSubmittingRef.current = false;
       setIsLoading(false);
     }
   };
@@ -147,6 +151,8 @@ export function useEntityFormModal<TForm extends object>(
 
   const handleConfirmDelete = async () => {
     if (!entity?.id || !onDelete) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setShowDeleteConfirm(false);
     setIsLoading(true);
     try {
@@ -156,6 +162,7 @@ export function useEntityFormModal<TForm extends object>(
       console.error('Ошибка удаления:', error);
       addError(parseApiErrorMessage(error));
     } finally {
+      isSubmittingRef.current = false;
       setIsLoading(false);
     }
   };

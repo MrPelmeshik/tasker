@@ -28,13 +28,13 @@ export class AreaApiClient extends BaseApiClient<AreaResponse, AreaCreateRequest
   }
 
   // Получить краткие карточки областей для Tree виджета
-  async getAreaShortCard(): Promise<AreaShortCardResponse[]> {
-    return apiFetch<AreaShortCardResponse[]>(`/area/getAreaShortCard`);
+  async getAreaShortCard(init?: RequestInit): Promise<AreaShortCardResponse[]> {
+    return apiFetch<AreaShortCardResponse[]>(`/area/getAreaShortCard`, init);
   }
 
   /** Получить список участников области */
-  async getMembers(areaId: string): Promise<AreaMemberResponse[]> {
-    return apiFetch<AreaMemberResponse[]>(`/area/GetMembers/${areaId}`);
+  async getMembers(areaId: string, init?: RequestInit): Promise<AreaMemberResponse[]> {
+    return apiFetch<AreaMemberResponse[]>(`/area/GetMembers/${areaId}`, init);
   }
 
   /** Добавить участника в область (по email или userId) */
@@ -64,5 +64,5 @@ export const updateArea = (id: string, data: AreaUpdateRequest) => areaApi.updat
 export const deleteArea = (id: string) => areaApi.delete(id);
 export const fetchActiveAreas = () => areaApi.getActiveAreas();
 export const fetchAreasByOwner = (ownerUserId: string) => areaApi.getAreasByOwner(ownerUserId);
-export const fetchAreaShortCard = () => areaApi.getAreaShortCard();
-export const fetchAreaMembers = (areaId: string) => areaApi.getMembers(areaId);
+export const fetchAreaShortCard = (init?: RequestInit) => areaApi.getAreaShortCard(init);
+export const fetchAreaMembers = (areaId: string, init?: RequestInit) => areaApi.getMembers(areaId, init);

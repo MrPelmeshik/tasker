@@ -8,7 +8,7 @@ import type {
   UserInfo,
 } from '../../types';
 
-const API_BASE = process.env.REACT_APP_API_BASE + '/api';
+const API_BASE = (process.env.REACT_APP_API_BASE || 'http://localhost:8080') + '/api';
 
 /**
  * Запрос входа
@@ -44,8 +44,8 @@ export async function registerRequest(
 /**
  * Получить текущего пользователя
  */
-export async function getCurrentUser(): Promise<ApiResponse<UserInfo>> {
-  return apiFetch<ApiResponse<UserInfo>>('/auth/me');
+export async function getCurrentUser(init?: RequestInit): Promise<ApiResponse<UserInfo>> {
+  return apiFetch<ApiResponse<UserInfo>>('/auth/me', init);
 }
 
 /**
@@ -71,7 +71,7 @@ export async function logoutRequest(): Promise<void> {
       body: JSON.stringify({}),
       credentials: 'include',
     });
-  } catch {
-    // ignore
+  } catch (err) {
+    console.warn('logoutRequest failed:', err);
   }
 }

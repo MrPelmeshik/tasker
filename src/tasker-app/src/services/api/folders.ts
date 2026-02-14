@@ -35,14 +35,14 @@ export class FolderApiClient {
     return this.baseClient.delete(id);
   }
 
-  async getRootByArea(areaId: string): Promise<FolderSummaryResponse[]> {
-    return apiFetch<FolderSummaryResponse[]>(`/folder/getRootByArea/root/${areaId}`);
+  async getRootByArea(areaId: string, init?: RequestInit): Promise<FolderSummaryResponse[]> {
+    return apiFetch<FolderSummaryResponse[]>(`/folder/getRootByArea/root/${areaId}`, init);
   }
 
-  async getByParent(parentFolderId: string | null, areaId: string): Promise<FolderSummaryResponse[]> {
+  async getByParent(parentFolderId: string | null, areaId: string, init?: RequestInit): Promise<FolderSummaryResponse[]> {
     const params = new URLSearchParams({ areaId });
     if (parentFolderId) params.set('parentFolderId', parentFolderId);
-    return apiFetch<FolderSummaryResponse[]>(`/folder/getByParent/children?${params}`);
+    return apiFetch<FolderSummaryResponse[]>(`/folder/getByParent/children?${params}`, init);
   }
 }
 
@@ -53,6 +53,6 @@ export const fetchFolderById = (id: string) => folderApi.getById(id);
 export const createFolder = (data: FolderCreateRequest) => folderApi.create(data);
 export const updateFolder = (id: string, data: FolderUpdateRequest) => folderApi.update(id, data);
 export const deleteFolder = (id: string) => folderApi.delete(id);
-export const fetchRootFoldersByArea = (areaId: string) => folderApi.getRootByArea(areaId);
-export const fetchChildFolders = (parentFolderId: string | null, areaId: string) =>
-  folderApi.getByParent(parentFolderId, areaId);
+export const fetchRootFoldersByArea = (areaId: string, init?: RequestInit) => folderApi.getRootByArea(areaId, init);
+export const fetchChildFolders = (parentFolderId: string | null, areaId: string, init?: RequestInit) =>
+  folderApi.getByParent(parentFolderId, areaId, init);

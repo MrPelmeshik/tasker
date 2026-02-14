@@ -1,6 +1,8 @@
 /**
  * Внутренний канал для события очистки токенов.
  * Symbol не экспортируется — внешний код не может сформировать валидный detail.
+ * Защита от подделки: все подписчики на AUTH_TOKENS_CLEARED_EVENT должны вызывать
+ * isAuthTokensClearedEvent(e) и обрабатывать событие только при true.
  */
 const AUTH_TOKENS_CLEARED_KEY = Symbol('auth:tokens-cleared-internal');
 

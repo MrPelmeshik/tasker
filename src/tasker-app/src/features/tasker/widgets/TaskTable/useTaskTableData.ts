@@ -2,7 +2,7 @@
  * Состояние и загрузка данных для виджета таблицы задач.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import {
   fetchTasksWithActivities,
   buildTaskWithActivitiesFilter,
@@ -51,8 +51,9 @@ export function useTaskTableData({
 }: UseTaskTableDataOptions) {
   const [loading, setLoading] = useState(false);
   const [groupedRows, setGroupedRows] = useState<GroupedTaskRows>([]);
+  const abortControllerRef = useRef<AbortController | null>(null);
 
-  const loadData = useCallback(async (): Promise<void> => {
+  const loadData = useCallback(async (signal?: AbortSignal): Promise<void> => {
     let alive = true;
     setLoading(true);
     try {
@@ -61,7 +62,7 @@ export function useTaskTableData({
         statuses: [TaskStatus.InProgress, TaskStatus.Pending],
         includeTasksWithActivitiesInRange: true,
       });
-      const res = await fetchTasksWithActivities(filter);
+      const res = await fetchTasksWithActivities(filter, { signal });
       if (!alive) return;
 
       const merged: TaskRow[] = res.items.map(item => ({
@@ -84,6 +85,7 @@ export function useTaskTableData({
       const grouped = groupRowsByArea(merged);
       setGroupedRows(grouped);
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.error('Ошибка загрузки задач:', error);
       if (alive) {
         setGroupedRows([]);
@@ -110,11 +112,17 @@ export function useTaskTableData({
   );
 
   useEffect(() => {
-    loadData();
+    const ctrl = new AbortController();
+    abortControllerRef.current = ctrl;
+    loadData(ctrl.signal);
+    return () => {
+      ctrl.abort();
+      abortControllerRef.current = null;
+    };
   }, [loadData]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToTaskUpdates(() => loadData());
+    const unsubscribe = subscribeToTaskUpdates(() => loadData(abortControllerRef.current?.signal));
     return unsubscribe;
   }, [subscribeToTaskUpdates, loadData]);
 

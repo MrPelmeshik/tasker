@@ -41,7 +41,8 @@ async function doRefreshAccessToken(): Promise<boolean> {
 
 /**
  * Обновить access token через refresh (HttpOnly cookie).
- * Дедупликация: параллельные вызовы используют один запрос.
+ * Дедупликация: параллельные вызовы используют один и тот же Promise —
+ * при одновременном refresh от нескольких apiFetch выполняется только один запрос.
  * @returns true если токен успешно обновлён
  */
 export async function refreshAccessToken(): Promise<boolean> {
@@ -71,6 +72,10 @@ export async function ensureAccessTokenFresh(): Promise<boolean> {
 	return refreshAccessToken();
 }
 
+/**
+ * Выполняет fetch к API с автоматическим refresh при 401 (только для GET/HEAD).
+ * Поддерживает AbortSignal из init для отмены при размонтировании компонента.
+ */
 export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 	let headers = new Headers(init?.headers || {});
 	headers.set('Accept', 'application/json');
@@ -95,16 +100,20 @@ export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promi
 
 	let response = await doFetch();
 	if (response.status === 401) {
-		const refreshed = await refreshAccessToken();
-		if (refreshed) {
-			const newHeaders = new Headers(headers);
-			const newToken = getStoredTokens()?.accessToken;
-			if (newToken) newHeaders.set('Authorization', `Bearer ${newToken}`);
-			response = await fetch(typeof input === 'string' ? `${API_BASE}${input}` : input, {
-				...init,
-				headers: newHeaders,
-				credentials: init?.credentials ?? 'include',
-			});
+		const method = (init?.method || 'GET').toUpperCase();
+		const isSafeToRetry = method === 'GET' || method === 'HEAD';
+		if (isSafeToRetry) {
+			const refreshed = await refreshAccessToken();
+			if (refreshed) {
+				const newHeaders = new Headers(headers);
+				const newToken = getStoredTokens()?.accessToken;
+				if (newToken) newHeaders.set('Authorization', `Bearer ${newToken}`);
+				response = await fetch(typeof input === 'string' ? `${API_BASE}${input}` : input, {
+					...init,
+					headers: newHeaders,
+					credentials: init?.credentials ?? 'include',
+				});
+			}
 		}
 	}
 

@@ -24,6 +24,7 @@ export function useEvents(
 
   useEffect(() => {
     if (!entityId) return;
+    const ctrl = new AbortController();
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -31,8 +32,8 @@ export function useEvents(
       try {
         const data =
           entityType === 'task'
-            ? await fetchEventsByTask(entityId)
-            : await fetchEventsByArea(entityId);
+            ? await fetchEventsByTask(entityId, { signal: ctrl.signal })
+            : await fetchEventsByArea(entityId, { signal: ctrl.signal });
         if (!cancelled) {
           const raw = data ?? [];
           const filtered = date
@@ -41,6 +42,7 @@ export function useEvents(
           setEvents(filtered);
         }
       } catch (e) {
+        if (e instanceof Error && e.name === 'AbortError') return;
         if (!cancelled) {
           setError('Ошибка загрузки активностей');
           setEvents([]);
@@ -52,6 +54,7 @@ export function useEvents(
     fetch();
     return () => {
       cancelled = true;
+      ctrl.abort();
     };
   }, [entityType, entityId, date, trigger]);
 

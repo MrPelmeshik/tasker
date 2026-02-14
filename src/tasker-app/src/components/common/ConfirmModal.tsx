@@ -9,6 +9,8 @@ export interface ConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   onDiscard?: () => void;
+  /** Отключить кнопку подтверждения во время асинхронной операции */
+  confirmDisabled?: boolean;
   title?: string;
   message?: string;
   confirmText?: string;
@@ -24,6 +26,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   onConfirm,
   onCancel,
   onDiscard,
+  confirmDisabled = false,
   title = 'Подтверждение',
   message = 'Вы уверены, что хотите продолжить?',
   confirmText = 'Да',
@@ -66,6 +69,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
             variant={variant === 'danger' ? 'danger' : 'primary'}
             size="m"
             onClick={onConfirm}
+            disabled={confirmDisabled}
           >
             {confirmText}
           </GlassButton>

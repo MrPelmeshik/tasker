@@ -42,7 +42,7 @@ let connection: signalR.HubConnection | null = null;
 let entityChangedCallbacks: Set<EntityChangedCallback> = new Set();
 let reconnectedCallbacks: Set<ReconnectedCallback> = new Set();
 let currentAreaIds: string[] = [];
-let isConnecting = false;
+let connectPromise: Promise<void> | null = null;
 let isRealtimeUnavailable = false;
 type RealtimeStatusCallback = (unavailable: boolean) => void;
 const statusCallbacks = new Set<RealtimeStatusCallback>();
@@ -123,36 +123,37 @@ function handleAreaCreateOrDelete(): void {
   void updateJoinAreas();
 }
 
-/** Запустить соединение (только при isAuth) */
+/** Запустить соединение (только при isAuth). Параллельные вызовы ждут один и тот же Promise. */
 export async function startRealtime(): Promise<void> {
   if (connection?.state === signalR.HubConnectionState.Connected) return;
-  if (isConnecting) return;
+  if (connectPromise) return connectPromise;
 
-  const ready = await ensureAccessTokenFresh();
-  if (!ready) return;
+  connectPromise = (async () => {
+    const ready = await ensureAccessTokenFresh();
+    if (!ready) return;
 
-  const token = getStoredTokens()?.accessToken;
-  if (!token) return;
+    const token = getStoredTokens()?.accessToken;
+    if (!token) return;
 
-  isConnecting = true;
-  isRealtimeUnavailable = false;
+    isRealtimeUnavailable = false;
 
-  try {
-    connection = new signalR.HubConnectionBuilder()
-      .withUrl(getHubUrl(), {
-        accessTokenFactory: async () => {
-          await ensureAccessTokenFresh();
-          return getStoredTokens()?.accessToken ?? '';
-        },
-      })
-      .withAutomaticReconnect()
-      .build();
+    try {
+      connection = new signalR.HubConnectionBuilder()
+        .withUrl(getHubUrl(), {
+          accessTokenFactory: async () => {
+            await ensureAccessTokenFresh();
+            return getStoredTokens()?.accessToken ?? '';
+          },
+        })
+        .withAutomaticReconnect()
+        .build();
 
-    connection.on('EntityChanged', (payload: unknown) => {
-      if (!isValidEntityChangedPayload(payload)) {
-        console.warn('EntityChanged: некорректный payload', payload);
-        return;
-      }
+      connection.on('EntityChanged', (payload: unknown) => {
+        if (!isValidEntityChangedPayload(payload)) {
+          console.warn('EntityChanged: некорректный payload', payload);
+          return;
+        }
+      // Каждый callback в отдельном try/catch — ошибка в одном не прерывает остальные
       entityChangedCallbacks.forEach((cb) => {
         try {
           cb(payload);
@@ -160,41 +161,46 @@ export async function startRealtime(): Promise<void> {
           console.error('Ошибка в callback EntityChanged:', e);
         }
       });
-      if (
-        payload.entityType === 'AREA' &&
-        (payload.eventType === 'Create' || payload.eventType === 'Delete')
-      ) {
-        handleAreaCreateOrDelete();
-      }
-    });
-
-    connection.onreconnected = async () => {
-      notifyStatusChange(false);
-      await joinAreas();
-      reconnectedCallbacks.forEach((cb) => {
-        try {
-          cb();
-        } catch (e) {
-          console.error('Ошибка в callback reconnected:', e);
+        if (
+          payload.entityType === 'AREA' &&
+          (payload.eventType === 'Create' || payload.eventType === 'Delete')
+        ) {
+          handleAreaCreateOrDelete();
         }
       });
-    };
 
-    connection.onreconnecting = () => {
-      // При необходимости показать индикатор "Переподключение..."
-    };
+      connection.onreconnected = async () => {
+        notifyStatusChange(false);
+        await joinAreas();
+        reconnectedCallbacks.forEach((cb) => {
+          try {
+            cb();
+          } catch (e) {
+            console.error('Ошибка в callback reconnected:', e);
+          }
+        });
+      };
 
-    connection.onclose = () => {
+      connection.onreconnecting = () => {
+        // При необходимости показать индикатор "Переподключение..."
+      };
+
+      connection.onclose = () => {
+        notifyStatusChange(true);
+      };
+
+      await connection.start();
+      await updateJoinAreas();
+    } catch (err) {
+      console.warn('SignalR: не удалось подключиться', err);
       notifyStatusChange(true);
-    };
+    }
+  })();
 
-    await connection.start();
-    await updateJoinAreas();
-  } catch (err) {
-    console.warn('SignalR: не удалось подключиться', err);
-    notifyStatusChange(true);
+  try {
+    await connectPromise;
   } finally {
-    isConnecting = false;
+    connectPromise = null;
   }
 }
 

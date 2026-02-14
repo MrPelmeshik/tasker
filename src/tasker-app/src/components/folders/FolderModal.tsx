@@ -278,9 +278,9 @@ export const FolderModal: React.FC<FolderModalProps> = ({
           </div>
         </div>
       </div>
-      <ConfirmModal isOpen={showConfirmModal} onClose={handleConfirmCancel} onConfirm={handleConfirmSave} onCancel={handleConfirmCancel} onDiscard={handleConfirmDiscard} {...CONFIRM_UNSAVED_CHANGES} />
+      <ConfirmModal isOpen={showConfirmModal} onClose={handleConfirmCancel} onConfirm={handleConfirmSave} onCancel={handleConfirmCancel} onDiscard={handleConfirmDiscard} confirmDisabled={isLoading} {...CONFIRM_UNSAVED_CHANGES} />
       <ConfirmModal isOpen={showReturnToViewConfirm} onClose={dismissReturnToViewConfirm} onConfirm={handleConfirmReturnToView} onCancel={dismissReturnToViewConfirm} {...CONFIRM_RETURN_TO_VIEW} />
-      <ConfirmModal isOpen={showDeleteConfirm} onClose={dismissDeleteConfirm} onConfirm={handleConfirmDelete} onCancel={dismissDeleteConfirm} {...getConfirmDeleteConfig('папку')} />
+      <ConfirmModal isOpen={showDeleteConfirm} onClose={dismissDeleteConfirm} onConfirm={handleConfirmDelete} onCancel={dismissDeleteConfirm} confirmDisabled={isLoading} {...getConfirmDeleteConfig('папку')} />
     </Modal>
   );
 };

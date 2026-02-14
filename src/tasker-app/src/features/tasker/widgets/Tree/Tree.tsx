@@ -33,7 +33,7 @@ import { useModal, useTaskUpdate, useToast } from '../../../../context';
 import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import type { WidgetSizeProps, FolderSummary } from '../../../../types';
 import type { FolderResponse } from '../../../../types/api';
-import type { EntityType } from '../../../../utils/entity-links';
+import { isValidEntityId, type EntityType } from '../../../../utils/entity-links';
 import {
   collisionDetection,
   parseDropTarget,
@@ -56,26 +56,30 @@ import css from '../../../../styles/tree.module.css';
 const TREE_FILTERS_STORAGE_KEY = 'tasker-tree-filters';
 
 function loadTreeFilters(): { enabledStatuses: Set<TaskStatus>; sortPreset: TreeSortPreset } {
+  const validStatuses = new Set(getTaskStatusOptions().map((o) => o.value as TaskStatus));
+  const validPresets = new Set(TREE_SORT_PRESET_OPTIONS.map((o) => o.value));
   try {
     const raw = localStorage.getItem(TREE_FILTERS_STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw) as { enabledStatuses?: number[]; sortPreset?: string };
       const enabledStatuses =
         Array.isArray(parsed.enabledStatuses) && parsed.enabledStatuses.length > 0
-          ? new Set(parsed.enabledStatuses as TaskStatus[])
-          : new Set(getTaskStatusOptions().map((o) => o.value as TaskStatus));
-      const validPresets = new Set(TREE_SORT_PRESET_OPTIONS.map((o) => o.value));
+          ? new Set((parsed.enabledStatuses as TaskStatus[]).filter((v) => validStatuses.has(v)))
+          : new Set(validStatuses);
       const sortPreset =
         typeof parsed.sortPreset === 'string' && validPresets.has(parsed.sortPreset as TreeSortPreset)
           ? (parsed.sortPreset as TreeSortPreset)
           : 'statusAscAlpha';
-      return { enabledStatuses, sortPreset };
+      return {
+        enabledStatuses: enabledStatuses.size > 0 ? enabledStatuses : new Set(validStatuses),
+        sortPreset,
+      };
     }
   } catch {
     /* ignore */
   }
   return {
-    enabledStatuses: new Set(getTaskStatusOptions().map((o) => o.value as TaskStatus)),
+    enabledStatuses: new Set(validStatuses),
     sortPreset: 'statusAscAlpha',
   };
 }
@@ -199,6 +203,10 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
 
     const process = async () => {
       const { entityType, entityId } = initialDeepLink;
+      if (!isValidEntityId(entityId)) {
+        addError('Ресурс не найден');
+        return;
+      }
       try {
         if (entityType === 'area') {
           const area = await fetchAreaById(entityId);

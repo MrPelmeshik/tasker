@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import {
   GlassInput,
@@ -46,6 +46,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   const taskEvents = useEvents('task', task.id, date ?? undefined);
 
@@ -58,6 +59,8 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
 
   const handleSave = async () => {
     if (!title.trim()) return;
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setIsLoading(true);
     try {
       if (!date) throw new Error('Дата активности не указана');
@@ -67,6 +70,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       console.error('Ошибка сохранения активности:', error);
       addError(parseApiErrorMessage(error));
     } finally {
+      isSubmittingRef.current = false;
       setIsLoading(false);
     }
   };

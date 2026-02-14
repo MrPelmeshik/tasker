@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { GlassInput, ModalCloseButton, ModalCancelButton, ModalSaveButton, ModalEditButton } from '../ui';
 import { useToast } from '../../context/ToastContext';
@@ -34,10 +34,13 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
   const [confirmNewPassword, setConfirmNewPassword] = useState('');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const isSubmittingRef = useRef(false);
 
   useEffect(() => {
     if (!isOpen) return;
 
+    const ctrl = new AbortController();
+    const signal = ctrl.signal;
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -46,8 +49,8 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
     const load = async () => {
       try {
         const [userRes, areasData] = await Promise.all([
-          getCurrentUser(),
-          areaApi.getAll(),
+          getCurrentUser({ signal }),
+          areaApi.getAll({ signal }),
         ]);
 
         if (cancelled) return;
@@ -64,7 +67,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
           setConfirmNewPassword('');
 
           const areas = Array.isArray(areasData) ? areasData.filter((a: AreaResponse) => a.isActive) : [];
-          const membersPromises = areas.map((a: AreaResponse) => areaApi.getMembers(a.id));
+          const membersPromises = areas.map((a: AreaResponse) => areaApi.getMembers(a.id, { signal }));
           const membersResults = await Promise.all(membersPromises);
 
           if (cancelled) return;
@@ -84,6 +87,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
           addError(msg);
         }
       } catch (err) {
+        if (err instanceof Error && err.name === 'AbortError') return;
         if (!cancelled) {
           const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
           setError(msg);
@@ -95,7 +99,10 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
     };
 
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+    };
   }, [isOpen, addError]);
 
   const handleStartEdit = () => {
@@ -129,6 +136,8 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
       setSaveError('Пароль должен содержать минимум 8 символов');
       return;
     }
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
     setSaving(true);
     setSaveError(null);
     try {
@@ -159,6 +168,7 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
       setSaveError(msg);
       addError(parseApiErrorMessage(err));
     } finally {
+      isSubmittingRef.current = false;
       setSaving(false);
     }
   };

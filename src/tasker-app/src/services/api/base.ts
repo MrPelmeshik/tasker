@@ -6,8 +6,8 @@ export class BaseApiClient<TEntity extends BaseEntity, TCreateRequest extends Cr
   constructor(private endpoint: string) {}
 
   // Получить все записи
-  async getAll(): Promise<TEntity[]> {
-    return apiFetch<TEntity[]>(`/${this.endpoint}/getAll`);
+  async getAll(init?: RequestInit): Promise<TEntity[]> {
+    return apiFetch<TEntity[]>(`/${this.endpoint}/getAll`, init);
   }
 
   // Получить запись по ID

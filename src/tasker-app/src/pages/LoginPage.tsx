@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from '../styles/login-page.module.css';
@@ -9,12 +9,20 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { parseApiErrorMessage } from '../utils/parse-api-error';
 
+/** Разрешённые относительные пути для returnUrl (защита от Open Redirect) */
+const SAFE_RETURN_URL = /^\/tasker(\/.*)?$|^\/$/;
+
+function isSafeReturnUrl(url: string | undefined): url is string {
+  return Boolean(url && SAFE_RETURN_URL.test(url) && !url.startsWith('//') && !url.startsWith('\\'));
+}
+
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') ?? undefined;
+  const safeReturnUrl = isSafeReturnUrl(returnUrl) ? returnUrl : '/tasker';
   const { login, register, isAuth } = useAuth();
-  const { addError } = useToast();
+  const { addError, addInfo } = useToast();
   const [name, setName] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [firstName, setFirstName] = useState<string>('');
@@ -25,6 +33,7 @@ export const LoginPage: React.FC = () => {
   const [error, setError] = useState<string | undefined>();
   const [errorDetails, setErrorDetails] = useState<string | undefined>();
   const [loading, setLoading] = useState<boolean>(false);
+  const isSubmittingRef = useRef(false);
 
   const clearError = () => {
     setError(undefined);
@@ -33,9 +42,9 @@ export const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (isAuth) {
-      navigate(returnUrl && returnUrl.startsWith('/') ? returnUrl : '/tasker', { replace: true });
+      navigate(safeReturnUrl, { replace: true });
     }
-  }, [isAuth, navigate, returnUrl]);
+  }, [isAuth, navigate, safeReturnUrl]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -63,9 +72,11 @@ export const LoginPage: React.FC = () => {
       }
     }
 
+    if (isSubmittingRef.current) return;
+    isSubmittingRef.current = true;
+    setLoading(true);
+    clearError();
     try {
-      setLoading(true);
-      clearError();
       if (isRegister) {
         await register({
           username: trimmed,
@@ -78,12 +89,16 @@ export const LoginPage: React.FC = () => {
       } else {
         await login(trimmed, password);
       }
-      navigate(returnUrl && returnUrl.startsWith('/') ? returnUrl : '/tasker');
+      if (returnUrl && !isSafeReturnUrl(returnUrl)) {
+        addInfo('Некорректная ссылка возврата. Вы перенаправлены на главную.');
+      }
+      navigate(safeReturnUrl);
     } catch (err) {
       setError('Серверная ошибка');
       setErrorDetails(err instanceof Error ? err.message : 'Ошибка входа');
       addError(parseApiErrorMessage(err));
     } finally {
+      isSubmittingRef.current = false;
       setLoading(false);
     }
   };

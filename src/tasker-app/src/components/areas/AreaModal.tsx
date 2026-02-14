@@ -371,23 +371,37 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     onClose,
     onSave: async (data) => {
       if (area?.id) {
-        for (const { login, role } of pendingAdds) {
-          const effectiveRole = (pendingRoleChanges[`pending-${login}`] ?? role) as AreaRole;
-          await areaApi.addMember(area.id, { login, role: effectiveRole });
-        }
-        for (const userId of Array.from(pendingRemoves)) {
-          await areaApi.removeMember(area.id, userId);
-        }
-        for (const [userId, role] of Object.entries(pendingRoleChanges)) {
-          if (!userId.startsWith('pending-')) {
-            await areaApi.addMember(area.id, { userId, role });
+        const hadMemberChanges =
+          pendingAdds.length > 0 ||
+          pendingRemoves.size > 0 ||
+          Object.keys(pendingRoleChanges).length > 0;
+        try {
+          for (const { login, role } of pendingAdds) {
+            const effectiveRole = (pendingRoleChanges[`pending-${login}`] ?? role) as AreaRole;
+            await areaApi.addMember(area.id, { login, role: effectiveRole });
           }
+          for (const userId of Array.from(pendingRemoves)) {
+            await areaApi.removeMember(area.id, userId);
+          }
+          for (const [userId, role] of Object.entries(pendingRoleChanges)) {
+            if (!userId.startsWith('pending-')) {
+              await areaApi.addMember(area.id, { userId, role });
+            }
+          }
+          setPendingAdds([]);
+          setPendingRemoves(new Set());
+          setPendingRoleChanges({});
+          const updated = await areaApi.getMembers(area.id);
+          setOriginalMembers(updated);
+          if (hadMemberChanges) {
+            addSuccess('Участники обновлены');
+          }
+        } catch (err) {
+          console.error('AreaModal: ошибка batch-обновления участников', { step: 'members', error: err });
+          throw new Error(
+            'Не удалось обновить участников. Часть изменений могла примениться. Перезагрузите страницу и проверьте состав области.'
+          );
         }
-        setPendingAdds([]);
-        setPendingRemoves(new Set());
-        setPendingRoleChanges({});
-        const updated = await areaApi.getMembers(area.id);
-        setOriginalMembers(updated);
       }
       await onSave((area ? { ...data, id: area.id } : data) as AreaCreateRequest | AreaUpdateRequest);
     },
@@ -751,6 +765,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         onConfirm={handleConfirmSave}
         onCancel={handleConfirmCancel}
         onDiscard={handleConfirmDiscard}
+        confirmDisabled={isLoading}
         {...CONFIRM_UNSAVED_CHANGES}
       />
       <ConfirmModal
@@ -765,6 +780,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         onClose={dismissDeleteConfirm}
         onConfirm={handleConfirmDelete}
         onCancel={dismissDeleteConfirm}
+        confirmDisabled={isLoading}
         {...getConfirmDeleteConfig('область')}
       />
       <ConfirmModal

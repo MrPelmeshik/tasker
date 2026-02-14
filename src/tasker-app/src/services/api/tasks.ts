@@ -51,13 +51,13 @@ export class TaskApiClient {
   }
 
   // Получить краткие карточки задач по папке для Tree виджета
-  async getTaskSummaryByFolder(folderId: string): Promise<TaskSummaryResponse[]> {
-    return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByFolder/byFolder/${folderId}`);
+  async getTaskSummaryByFolder(folderId: string, init?: RequestInit): Promise<TaskSummaryResponse[]> {
+    return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByFolder/byFolder/${folderId}`, init);
   }
 
   // Получить краткие карточки задач в корне области
-  async getTaskSummaryByAreaRoot(areaId: string): Promise<TaskSummaryResponse[]> {
-    return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByAreaRoot/byAreaRoot/${areaId}`);
+  async getTaskSummaryByAreaRoot(areaId: string, init?: RequestInit): Promise<TaskSummaryResponse[]> {
+    return apiFetch<TaskSummaryResponse[]>(`/task/getTaskSummaryByAreaRoot/byAreaRoot/${areaId}`, init);
   }
 
   // Получить недельную активность задач
@@ -81,8 +81,9 @@ export class TaskApiClient {
   /**
    * Получить задачи с активностями по гибкому фильтру
    */
-  async getTasksWithActivities(filter: TaskWithActivitiesFilterRequest): Promise<TaskWithActivitiesPagedResponse> {
+  async getTasksWithActivities(filter: TaskWithActivitiesFilterRequest, init?: RequestInit): Promise<TaskWithActivitiesPagedResponse> {
     return apiFetch<TaskWithActivitiesPagedResponse>(`/task/getTasksWithActivities`, {
+      ...init,
       method: 'POST',
       body: JSON.stringify(filter),
     });
@@ -108,10 +109,10 @@ export const createTask = (data: TaskCreateRequest) => taskApi.create(data);
 export const updateTask = (id: string, data: TaskUpdateRequest) => taskApi.update(id, data);
 export const deleteTask = (id: string) => taskApi.delete(id);
 export const fetchActiveTasks = () => taskApi.getActiveTasks();
-export const fetchTaskSummaryByFolder = (folderId: string) => taskApi.getTaskSummaryByFolder(folderId);
-export const fetchTaskSummaryByAreaRoot = (areaId: string) => taskApi.getTaskSummaryByAreaRoot(areaId);
+export const fetchTaskSummaryByFolder = (folderId: string, init?: RequestInit) => taskApi.getTaskSummaryByFolder(folderId, init);
+export const fetchTaskSummaryByAreaRoot = (areaId: string, init?: RequestInit) => taskApi.getTaskSummaryByAreaRoot(areaId, init);
 export const fetchWeeklyTasks = (params: { weekStartIso: string }) => taskApi.getWeeklyTasks(params);
-export const fetchTasksWithActivities = (filter: TaskWithActivitiesFilterRequest) => taskApi.getTasksWithActivities(filter);
+export const fetchTasksWithActivities = (filter: TaskWithActivitiesFilterRequest, init?: RequestInit) => taskApi.getTasksWithActivities(filter, init);
 
 // Утилитарная функция для получения понедельника (в локальном времени)
 export function getMonday(date: Date): Date {

@@ -36,6 +36,10 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
   const foldersByParentRef = useRef(foldersByParent);
   /** Флаг: первичное разворачивание дерева уже выполнено */
   const hasInitialExpandedRef = useRef(false);
+  /** Дедупликация: in-flight запросы по areaId / folderId */
+  const areaLoadPromisesRef = useRef<Map<string, Promise<FolderSummary[]>>>(new Map());
+  const folderLoadPromisesRef = useRef<Map<string, Promise<FolderSummary[]>>>(new Map());
+  const abortControllerRef = useRef<AbortController | null>(null);
   expandedAreasRef.current = expandedAreas;
   expandedFoldersRef.current = expandedFolders;
   foldersByAreaRef.current = foldersByArea;
@@ -48,11 +52,12 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     );
   }, []);
 
-  const refreshAreas = useCallback(async () => {
+  const refreshAreas = useCallback(async (signal?: AbortSignal) => {
     try {
-      const data = await fetchAreaShortCard();
+      const data = await fetchAreaShortCard({ signal });
       setAreas(sortByTitle(data));
     } catch (error) {
+      if (error instanceof Error && error.name === 'AbortError') return;
       console.error('Ошибка загрузки областей:', error);
       setAreas([]);
       addError(parseApiErrorMessage(error));
@@ -60,60 +65,92 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
   }, [addError, sortByTitle]);
 
   const loadAreaContent = useCallback(async (areaId: string): Promise<FolderSummary[]> => {
-    try {
-      setLoadingContent((prev) => new Set(prev).add(`area:${areaId}`));
-      const [folders, tasks] = await Promise.all([
-        fetchRootFoldersByArea(areaId),
-        fetchTaskSummaryByAreaRoot(areaId),
-      ]);
-      const sorted = sortByTitle(folders);
-      setFoldersByArea((prev) => new Map(prev).set(areaId, sorted));
-      setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
-      return sorted;
-    } catch (error) {
-      console.error(`Ошибка загрузки содержимого области ${areaId}:`, error);
-      setFoldersByArea((prev) => new Map(prev).set(areaId, []));
-      setTasksByArea((prev) => new Map(prev).set(areaId, []));
-      addError(parseApiErrorMessage(error));
-      return [];
-    } finally {
-      setLoadingContent((prev) => {
-        const next = new Set(prev);
-        next.delete(`area:${areaId}`);
-        return next;
-      });
-    }
+    const key = `area:${areaId}`;
+    const existing = areaLoadPromisesRef.current.get(key);
+    if (existing) return existing;
+
+    const signal = abortControllerRef.current?.signal;
+    const promise = (async (): Promise<FolderSummary[]> => {
+      try {
+        setLoadingContent((prev) => new Set(prev).add(key));
+        const [folders, tasks] = await Promise.all([
+          fetchRootFoldersByArea(areaId, { signal }),
+          fetchTaskSummaryByAreaRoot(areaId, { signal }),
+        ]);
+        const sorted = sortByTitle(folders);
+        setFoldersByArea((prev) => new Map(prev).set(areaId, sorted));
+        setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
+        return sorted;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return [];
+        console.error(`Ошибка загрузки содержимого области ${areaId}:`, error);
+        setFoldersByArea((prev) => new Map(prev).set(areaId, []));
+        setTasksByArea((prev) => new Map(prev).set(areaId, []));
+        addError(parseApiErrorMessage(error));
+        return [];
+      } finally {
+        areaLoadPromisesRef.current.delete(key);
+        setLoadingContent((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    })();
+    areaLoadPromisesRef.current.set(key, promise);
+    return promise;
   }, [addError, sortByTitle]);
 
   const loadFolderContent = useCallback(async (folderId: string, areaId: string): Promise<FolderSummary[]> => {
-    try {
-      setLoadingContent((prev) => new Set(prev).add(`folder:${folderId}`));
-      const [subfolders, tasks] = await Promise.all([
-        fetchChildFolders(folderId, areaId),
-        fetchTaskSummaryByFolder(folderId),
-      ]);
-      const sorted = sortByTitle(subfolders);
-      setFoldersByParent((prev) => new Map(prev).set(folderId, sorted));
-      setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
-      return sorted;
-    } catch (error) {
-      console.error(`Ошибка загрузки содержимого папки ${folderId}:`, error);
-      setFoldersByParent((prev) => new Map(prev).set(folderId, []));
-      setTasksByFolder((prev) => new Map(prev).set(folderId, []));
-      addError(parseApiErrorMessage(error));
-      return [];
-    } finally {
-      setLoadingContent((prev) => {
-        const next = new Set(prev);
-        next.delete(`folder:${folderId}`);
-        return next;
-      });
-    }
+    const key = `folder:${folderId}`;
+    const existing = folderLoadPromisesRef.current.get(key);
+    if (existing) return existing;
+
+    const signal = abortControllerRef.current?.signal;
+    const promise = (async (): Promise<FolderSummary[]> => {
+      try {
+        setLoadingContent((prev) => new Set(prev).add(key));
+        const [subfolders, tasks] = await Promise.all([
+          fetchChildFolders(folderId, areaId, { signal }),
+          fetchTaskSummaryByFolder(folderId, { signal }),
+        ]);
+        const sorted = sortByTitle(subfolders);
+        setFoldersByParent((prev) => new Map(prev).set(folderId, sorted));
+        setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
+        return sorted;
+      } catch (error) {
+        if (error instanceof Error && error.name === 'AbortError') return [];
+        console.error(`Ошибка загрузки содержимого папки ${folderId}:`, error);
+        setFoldersByParent((prev) => new Map(prev).set(folderId, []));
+        setTasksByFolder((prev) => new Map(prev).set(folderId, []));
+        addError(parseApiErrorMessage(error));
+        return [];
+      } finally {
+        folderLoadPromisesRef.current.delete(key);
+        setLoadingContent((prev) => {
+          const next = new Set(prev);
+          next.delete(key);
+          return next;
+        });
+      }
+    })();
+    folderLoadPromisesRef.current.set(key, promise);
+    return promise;
   }, [addError, sortByTitle]);
 
+  const isRefreshingRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+
   const refreshTree = useCallback(async () => {
+    if (isRefreshingRef.current) {
+      pendingRefreshRef.current = true;
+      return;
+    }
+    isRefreshingRef.current = true;
+    pendingRefreshRef.current = false;
+    const signal = abortControllerRef.current?.signal;
     try {
-      await refreshAreas();
+      await refreshAreas(signal);
       const areasToRefresh = Array.from(expandedAreasRef.current);
       for (const areaId of areasToRefresh) {
         await loadAreaContent(areaId);
@@ -125,19 +162,31 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
       }
     } catch {
       /* ошибки уже обработаны в loadAreaContent/loadFolderContent */
+    } finally {
+      isRefreshingRef.current = false;
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        void refreshTree();
+      }
     }
   }, [refreshAreas, loadAreaContent, loadFolderContent]);
 
   useEffect(() => {
+    const ctrl = new AbortController();
+    abortControllerRef.current = ctrl;
     const loadAreas = async () => {
       try {
         setLoading(true);
-        await refreshAreas();
+        await refreshAreas(ctrl.signal);
       } finally {
         setLoading(false);
       }
     };
     loadAreas();
+    return () => {
+      ctrl.abort();
+      abortControllerRef.current = null;
+    };
   }, [refreshAreas]);
 
   useEffect(() => {
