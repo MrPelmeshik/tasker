@@ -265,8 +265,6 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
             setFoldersByParent((prev) => new Map(prev).set(target.parentFolderId!, children));
           }
           setAreas((prev) => prev.map((a) => (a.id === folder.areaId ? { ...a, foldersCount: rootFolders.length } : a)));
-          setExpandedAreas((prev) => new Set(prev).add(folder.areaId));
-          if (target.parentFolderId) setExpandedFolders((prev) => new Set(prev).add(target.parentFolderId!));
           addSuccess('Папка перемещена');
         } else if (payload.type === 'task' && payload.task) {
           const task = payload.task;
@@ -297,12 +295,9 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
           }
           if (target.parentFolderId) {
             await loadFolderContent(target.parentFolderId, target.areaId);
-            setExpandedAreas((prev) => new Set(prev).add(target.areaId));
-            setExpandedFolders((prev) => new Set(prev).add(target.parentFolderId!));
           } else {
             const tasks = await fetchTaskSummaryByAreaRoot(target.areaId);
             setTasksByArea((prev) => new Map(prev).set(target.areaId, tasks));
-            setExpandedAreas((prev) => new Set(prev).add(target.areaId));
           }
           notifyTaskUpdate(task.id, target.parentFolderId ?? undefined);
           addSuccess('Задача перемещена');
@@ -312,7 +307,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
         addError(parseApiErrorMessage(error));
       }
     },
-    [foldersByArea, foldersByParent, addError, addSuccess, notifyTaskUpdate, loadFolderContent, setAreas, setFoldersByArea, setFoldersByParent, setTasksByArea, setTasksByFolder, setExpandedAreas, setExpandedFolders]
+    [foldersByArea, foldersByParent, addError, addSuccess, notifyTaskUpdate, loadFolderContent, setAreas, setFoldersByArea, setFoldersByParent, setTasksByArea, setTasksByFolder, setExpandedFolders]
   );
 
   const renderFolder = useCallback(
