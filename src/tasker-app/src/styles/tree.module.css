@@ -312,7 +312,7 @@
   z-index: 2;
 }
 
-/* Общие стили для кнопок действий */
+/* Общие стили для кнопок действий — скрыты по умолчанию, не занимают места */
 .areaActions,
 .folderActions,
 .taskActions,
@@ -322,8 +322,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  max-width: 0;
+  overflow: hidden;
   opacity: 0;
-  transition: opacity var(--transition-fast);
+  pointer-events: none;
+  transition: max-width var(--transition-fast), opacity var(--transition-fast);
   flex-shrink: 0;
 }
 
@@ -333,7 +336,9 @@
 .areaCard:hover .treeRowActions,
 .folderCard:hover .treeRowActions,
 .taskCard:hover .treeRowActions {
+  max-width: 160px;
   opacity: 1;
+  pointer-events: auto;
 }
 
 /* Анимации */
