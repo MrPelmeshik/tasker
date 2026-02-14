@@ -185,8 +185,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             <ModalCloseButton onClick={handleClose} disabled={isLoading} />
             {task?.id && (
               <Tooltip content="Копировать ссылку" placement="bottom">
-                <GlassButton variant="subtle" size="m" onClick={handleCopyLink} disabled={isLoading} aria-label="Копировать ссылку">
-                  <LinkIcon style={{ width: 18, height: 18 }} />
+                <GlassButton variant="subtle" size="xs" onClick={handleCopyLink} disabled={isLoading} aria-label="Копировать ссылку">
+                  <LinkIcon />
                 </GlassButton>
               </Tooltip>
             )}

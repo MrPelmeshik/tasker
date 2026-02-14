@@ -399,13 +399,13 @@ body {
   --glass-gradient-info-active: linear-gradient(180deg, rgb(var(--color-info) / 0.10), rgb(var(--color-info) / 0.04));
 
   /* Radial gradients — light theme */
-  --glass-radial-default: radial-gradient(120% 80% at -10% -20%, rgba(0,0,0,0.08), transparent 60%);
+  --glass-radial-default: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-accent) / 0.06), transparent 60%);
   --glass-radial-primary: radial-gradient(120% 80% at -10% -20%, rgba(0,140,200,0.18), transparent 60%);
   --glass-radial-danger: radial-gradient(120% 80% at -10% -20%, rgba(220,38,38,0.18), transparent 60%);
   --glass-radial-success: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-success) / 0.18), transparent 60%);
   --glass-radial-warning: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-warning) / 0.18), transparent 60%);
   --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.18), transparent 60%);
-  --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(0,0,0,0.04), transparent 60%);
+  --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-accent) / 0.04), transparent 60%);
 
   /* Select dropdown list — светлая тема: белый оверлей для той же степени непрозрачности */
   --glass-select-list-overlay: linear-gradient(180deg, rgb(var(--black) / 0.92), rgb(var(--black) / 0.85));

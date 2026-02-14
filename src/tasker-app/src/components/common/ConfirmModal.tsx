@@ -48,7 +48,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
         <div className={css.modalFooter}>
           <GlassButton
             variant="subtle"
-            size="m"
+            size="s"
             onClick={onCancel}
           >
             {cancelText}

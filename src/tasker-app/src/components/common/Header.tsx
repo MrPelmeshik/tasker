@@ -20,14 +20,16 @@ export const Header: React.FC = () => {
           Tasker
         </NavLink>
         <nav className={styles.nav}>
-            <GlassButton 
-              size="l"
+            <GlassButton
+              variant="subtle"
+              size="s"
               onClick={() => navigate('/tasker')}
             >
               Задачник
             </GlassButton>
-            <GlassButton 
-              size="l"
+            <GlassButton
+              variant="subtle"
+              size="s"
               onClick={() => navigate('/management')}
             >
               Управление

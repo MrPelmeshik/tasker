@@ -95,13 +95,14 @@ export const LoginPage: React.FC = () => {
           <div className={styles.toggleWrap}>
             <GlassButton
               toggleGroup
+              variant="subtle"
               value={isRegister ? 'register' : 'login'}
               onChange={(v) => { setIsRegister(v === 'register'); clearError(); }}
               options={[
                 { key: 'login', label: 'Вход' },
                 { key: 'register', label: 'Регистрация' },
               ]}
-              size="m"
+              size="s"
               equalWidth
             />
           </div>

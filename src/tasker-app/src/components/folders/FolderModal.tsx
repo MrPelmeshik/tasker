@@ -134,8 +134,8 @@ export const FolderModal: React.FC<FolderModalProps> = ({
             <ModalCloseButton onClick={handleClose} disabled={isLoading} />
             {folder?.id && (
               <Tooltip content="Копировать ссылку" placement="bottom">
-                <GlassButton variant="subtle" size="m" onClick={handleCopyLink} disabled={isLoading} aria-label="Копировать ссылку">
-                  <LinkIcon style={{ width: 18, height: 18 }} />
+                <GlassButton variant="subtle" size="xs" onClick={handleCopyLink} disabled={isLoading} aria-label="Копировать ссылку">
+                  <LinkIcon />
                 </GlassButton>
               </Tooltip>
             )}
