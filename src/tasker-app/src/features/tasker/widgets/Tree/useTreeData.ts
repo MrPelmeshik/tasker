@@ -34,6 +34,8 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
   const expandedFoldersRef = useRef(expandedFolders);
   const foldersByAreaRef = useRef(foldersByArea);
   const foldersByParentRef = useRef(foldersByParent);
+  /** Флаг: первичное разворачивание дерева уже выполнено */
+  const hasInitialExpandedRef = useRef(false);
   expandedAreasRef.current = expandedAreas;
   expandedFoldersRef.current = expandedFolders;
   foldersByAreaRef.current = foldersByArea;
@@ -210,6 +212,13 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
 
     setExpandedFolders(allFolderIds);
   }, [areas, foldersByArea, foldersByParent, tasksByArea, tasksByFolder, loadAreaContent, loadFolderContent]);
+
+  /** При первой загрузке областей — разворачивать дерево по умолчанию */
+  useEffect(() => {
+    if (loading || areas.length === 0 || hasInitialExpandedRef.current) return;
+    hasInitialExpandedRef.current = true;
+    expandAll();
+  }, [loading, areas.length, expandAll]);
 
   /** Все области развёрнуты (упрощённо: сверху дерева всё открыто) */
   const isAllExpanded =
