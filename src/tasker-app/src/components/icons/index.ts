@@ -18,3 +18,5 @@ export { LayoutGridIcon } from './LayoutGridIcon';
 export { LinkIcon } from './LinkIcon';
 export { SunIcon } from './SunIcon';
 export { MoonIcon } from './MoonIcon';
+export { UnfoldVerticalIcon } from './UnfoldVerticalIcon';
+export { FoldVerticalIcon } from './FoldVerticalIcon';

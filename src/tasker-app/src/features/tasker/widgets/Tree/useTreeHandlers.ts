@@ -46,7 +46,7 @@ export interface UseTreeHandlersOptions
   setTasksByFolder: React.Dispatch<React.SetStateAction<Map<string, TaskSummary[]>>>;
   setExpandedAreas: React.Dispatch<React.SetStateAction<Set<string>>>;
   setExpandedFolders: React.Dispatch<React.SetStateAction<Set<string>>>;
-  loadFolderContent: (folderId: string, areaId: string) => Promise<void>;
+  loadFolderContent: (folderId: string, areaId: string) => Promise<FolderSummary[]>;
   foldersByParent: Map<string, FolderSummary[]>;
   addError: (message: string) => void;
   addSuccess: (message: string) => void;

@@ -22,10 +22,11 @@ import {
   updateTask,
 } from '../../../../services/api';
 import { GlassWidget } from '../../../../components/common/GlassWidget';
-import { LayoutGridIcon } from '../../../../components/icons';
+import { LayoutGridIcon, UnfoldVerticalIcon, FoldVerticalIcon } from '../../../../components/icons';
+import { Tooltip } from '../../../../components/ui/Tooltip';
+import { GlassButton } from '../../../../components/ui/GlassButton';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
 import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
-import { handleExpandKeyDown } from '../../../../utils/keyboard';
 import type { WidgetSizeProps, FolderSummary } from '../../../../types';
 import type { FolderResponse } from '../../../../types/api';
 import type { EntityType } from '../../../../utils/entity-links';
@@ -77,6 +78,9 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
     loadFolderContent,
     toggleArea,
     toggleFolder,
+    expandAll,
+    collapseAll,
+    isAllExpanded,
   } = treeData;
 
   const handlers = useTreeHandlers({
@@ -345,16 +349,33 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
     <div className={css.tree}>
       {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
       <div className={css.widgetContent}>
-        <div
-          className={css.createAreaRow}
-          role="button"
-          tabIndex={0}
-          onClick={handlers.handleCreateArea}
-          onKeyDown={(e) => handleExpandKeyDown(e, handlers.handleCreateArea)}
-          aria-label="Создать область"
-        >
-          <LayoutGridIcon style={{ width: 14, height: 14 }} />
-          <span className={css.areaTitle}>Создать область</span>
+        <div className={css.treeTopActions}>
+          <Tooltip content="Создать область" placement="top">
+            <GlassButton
+              variant="subtle"
+              size="xs"
+              className={`${css.treeActionButton} ${css.treeTopActionButton}`}
+              onClick={handlers.handleCreateArea}
+              aria-label="Создать область"
+            >
+              <LayoutGridIcon style={{ width: 14, height: 14 }} />
+            </GlassButton>
+          </Tooltip>
+          <Tooltip content={isAllExpanded ? 'Свернуть дерево' : 'Развернуть дерево'} placement="top">
+            <GlassButton
+              variant="subtle"
+              size="xs"
+              className={`${css.treeActionButton} ${css.treeTopActionButton}`}
+              onClick={() => (isAllExpanded ? collapseAll() : expandAll())}
+              aria-label={isAllExpanded ? 'Свернуть дерево' : 'Развернуть дерево'}
+            >
+              {isAllExpanded ? (
+                <FoldVerticalIcon style={{ width: 14, height: 14 }} />
+              ) : (
+                <UnfoldVerticalIcon style={{ width: 14, height: 14 }} />
+              )}
+            </GlassButton>
+          </Tooltip>
         </div>
         {loading ? (
           <div className={glassWidgetStyles.placeholder}>Загрузка...</div>

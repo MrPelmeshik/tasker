@@ -50,7 +50,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     }
   }, [addError]);
 
-  const loadAreaContent = useCallback(async (areaId: string) => {
+  const loadAreaContent = useCallback(async (areaId: string): Promise<FolderSummary[]> => {
     try {
       setLoadingContent((prev) => new Set(prev).add(`area:${areaId}`));
       const [folders, tasks] = await Promise.all([
@@ -59,11 +59,13 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
       ]);
       setFoldersByArea((prev) => new Map(prev).set(areaId, folders));
       setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
+      return folders;
     } catch (error) {
       console.error(`Ошибка загрузки содержимого области ${areaId}:`, error);
       setFoldersByArea((prev) => new Map(prev).set(areaId, []));
       setTasksByArea((prev) => new Map(prev).set(areaId, []));
       addError(parseApiErrorMessage(error));
+      return [];
     } finally {
       setLoadingContent((prev) => {
         const next = new Set(prev);
@@ -73,7 +75,7 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     }
   }, [addError]);
 
-  const loadFolderContent = useCallback(async (folderId: string, areaId: string) => {
+  const loadFolderContent = useCallback(async (folderId: string, areaId: string): Promise<FolderSummary[]> => {
     try {
       setLoadingContent((prev) => new Set(prev).add(`folder:${folderId}`));
       const [subfolders, tasks] = await Promise.all([
@@ -82,11 +84,13 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
       ]);
       setFoldersByParent((prev) => new Map(prev).set(folderId, subfolders));
       setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
+      return subfolders;
     } catch (error) {
       console.error(`Ошибка загрузки содержимого папки ${folderId}:`, error);
       setFoldersByParent((prev) => new Map(prev).set(folderId, []));
       setTasksByFolder((prev) => new Map(prev).set(folderId, []));
       addError(parseApiErrorMessage(error));
+      return [];
     } finally {
       setLoadingContent((prev) => {
         const next = new Set(prev);
@@ -160,6 +164,49 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     [foldersByParent, tasksByFolder, loadFolderContent]
   );
 
+  /** Полностью свернуть дерево (все области и папки) */
+  const collapseAll = useCallback(() => {
+    setExpandedAreas(new Set());
+    setExpandedFolders(new Set());
+  }, []);
+
+  /** Полностью развернуть дерево: все области и папки, с рекурсивной загрузкой контента */
+  const expandAll = useCallback(async () => {
+    const areaIds = areas.map((a) => a.id);
+    setExpandedAreas(new Set(areaIds));
+
+    const queue: { id: string; areaId: string }[] = [];
+    const allFolderIds = new Set<string>();
+
+    for (const areaId of areaIds) {
+      const folders = foldersByArea.has(areaId) && tasksByArea.has(areaId)
+        ? foldersByArea.get(areaId)!
+        : await loadAreaContent(areaId);
+      for (const f of folders) {
+        allFolderIds.add(f.id);
+        queue.push({ id: f.id, areaId });
+      }
+    }
+
+    while (queue.length > 0) {
+      const { id: folderId, areaId } = queue.shift()!;
+      const subfolders = foldersByParent.has(folderId) && tasksByFolder.has(folderId)
+        ? foldersByParent.get(folderId)!
+        : await loadFolderContent(folderId, areaId);
+      for (const f of subfolders) {
+        allFolderIds.add(f.id);
+        queue.push({ id: f.id, areaId });
+      }
+    }
+
+    setExpandedFolders(allFolderIds);
+  }, [areas, foldersByArea, foldersByParent, tasksByArea, tasksByFolder, loadAreaContent, loadFolderContent]);
+
+  /** Все области развёрнуты (упрощённо: сверху дерева всё открыто) */
+  const isAllExpanded =
+    areas.length > 0 &&
+    expandedAreas.size === areas.length;
+
   return {
     areas,
     setAreas,
@@ -183,5 +230,8 @@ export function useTreeData({ addError, subscribeToTaskUpdates }: UseTreeDataOpt
     refreshTree,
     toggleArea,
     toggleFolder,
+    expandAll,
+    collapseAll,
+    isAllExpanded,
   };
 }
