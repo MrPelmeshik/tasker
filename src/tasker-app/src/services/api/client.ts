@@ -5,16 +5,9 @@ import {
 	AUTH_TOKENS_CLEARED_EVENT,
 	createAuthTokensClearedDetail,
 } from './auth-events';
+import { getApiBase } from '../../config/api';
 
-const API_BASE =
-  (process.env.REACT_APP_API_BASE ||
-    (() => {
-      if (process.env.NODE_ENV === 'production') {
-        console.warn('REACT_APP_API_BASE не задан, используется localhost — проверьте сборку');
-      }
-      return 'http://localhost:8080';
-    })()) +
-  '/api';
+const API_BASE = getApiBase();
 
 let refreshPromise: Promise<boolean> | null = null;
 

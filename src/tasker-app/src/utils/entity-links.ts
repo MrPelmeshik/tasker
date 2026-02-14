@@ -3,18 +3,19 @@
  * Формат: прямые UUID в URL.
  */
 
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+import { ROUTES } from '../config/routes';
+import { isValidUuid } from './uuid';
+
+export const PATHS = {
+  AREA: ROUTES.AREA,
+  FOLDER: ROUTES.FOLDER,
+  TASK: ROUTES.TASK,
+} as const;
 
 /** Проверить, что строка — валидный UUID */
 export function isValidEntityId(id: string): boolean {
-  return UUID_REGEX.test(id);
+  return isValidUuid(id);
 }
-
-export const PATHS = {
-  AREA: '/tasker/area',
-  FOLDER: '/tasker/folder',
-  TASK: '/tasker/task',
-} as const;
 
 export type EntityType = 'area' | 'folder' | 'task';
 

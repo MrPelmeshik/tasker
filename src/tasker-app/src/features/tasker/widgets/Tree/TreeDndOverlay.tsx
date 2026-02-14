@@ -16,7 +16,7 @@ export const TreeDndOverlay: React.FC<TreeDndOverlayProps> = ({ type, folder, ta
   if (type === 'folder' && folder) {
     return (
       <div className={css.dragOverlayCard}>
-        <GripVerticalIcon style={{ width: 16, height: 16, flexShrink: 0 }} />
+        <GripVerticalIcon className="icon-l" />
         <GlassTag variant="subtle" size="xs">{folder.tasksCount + folder.subfoldersCount}</GlassTag>
         <span>{folder.title}</span>
       </div>
@@ -25,7 +25,7 @@ export const TreeDndOverlay: React.FC<TreeDndOverlayProps> = ({ type, folder, ta
   if (type === 'task' && task) {
     return (
       <div className={css.dragOverlayCard}>
-        <GripVerticalIcon style={{ width: 16, height: 16, flexShrink: 0 }} />
+        <GripVerticalIcon className="icon-l" />
         <TaskStatusBadge status={task.status} size="xs" variant="compact" />
         <span>{task.title}</span>
       </div>

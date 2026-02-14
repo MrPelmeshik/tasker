@@ -50,24 +50,15 @@ class FolderApiClient {
 - Сохранение переиспользования кода
 - Четкое разделение ответственности
 
-### 3. Утилиты для обработки ошибок
+### 3. Обработка ошибок API
 
 **Проблема**: Повторяющаяся логика обработки ошибок API.
 
-**Решение**: Вынесение в отдельный модуль утилит:
-
-```typescript
-export const apiUtils = {
-  isSuccessResponse,
-  extractData,
-  handleHttpError
-};
-```
+**Решение**: Используются `apiFetch` в [client.ts](src/tasker-app/src/services/api/client.ts) и `parseApiErrorMessage` в [parse-api-error.ts](src/tasker-app/src/utils/parse-api-error.ts) для парсинга и обрезки сообщений об ошибках (до 500 символов). UI компоненты вызывают `showError` из ToastContext с результатом `parseApiErrorMessage`.
 
 **Преимущества**:
-- Централизованная обработка ошибок
-- Переиспользование логики
-- Легкое тестирование
+- Централизованный парсинг ошибок
+- Защита от переполнения UI длинными сообщениями
 
 ### 4. React хуки для состояния
 

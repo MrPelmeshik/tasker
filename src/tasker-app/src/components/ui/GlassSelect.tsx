@@ -13,7 +13,7 @@ type GlassSelectProps = {
   helperText?: string;
   errorText?: string;
   fullWidth?: boolean;
-  /** Размер: влияет на padding триггера, опций и передаётся в renderOption */
+  /** Размер триггера и опций */
   size?: 's' | 'm' | 'l';
   disabled?: boolean;
   className?: string;
@@ -160,7 +160,7 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({
         {isOpen && (
           <ul
             ref={listRef}
-            className={[css.customSelectList, css[size]].filter(Boolean).join(' ')}
+            className={[css.customSelectList, css[size], 'scrollbar-compact'].filter(Boolean).join(' ')}
             role="listbox"
             aria-labelledby={label ? `${label}-label` : undefined}
           >

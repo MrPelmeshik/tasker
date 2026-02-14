@@ -1,39 +1,21 @@
 import { useState, useEffect, useRef } from 'react';
 import { useToast } from '../context/ToastContext';
 
-/**
- * Опции хука для CRUD-модалки сущности
- */
 export interface UseEntityFormModalOptions<TForm extends object> {
-  /** Модалка открыта */
   isOpen: boolean;
-  /** Сущность для редактирования (null — создание) */
   entity: { id: string } | null;
-  /** Функция получения начальных данных формы */
   getInitialData: () => TForm;
-  /** Зависимости для пересчёта getInitialData */
   deps: unknown[];
-  /** Колбэк закрытия */
   onClose: () => void;
-  /** Колбэк сохранения */
   onSave: (data: TForm) => Promise<void>;
-  /** Колбэк удаления (опционально) */
   onDelete?: (id: string) => Promise<void>;
-  /** Проверка валидности перед сохранением */
   validate?: (data: TForm) => boolean;
-  /** Дополнительные флаги несохранённых изменений (например, смена области) */
   getExtraUnsavedChanges?: (context: { originalData: TForm }) => boolean;
-  /** Колбэк при возврате к просмотру без сохранения (сброс доп. состояния) */
   onReturnToView?: () => void;
-  /** Колбэк при закрытии без сохранения (сброс доп. состояния) */
   onDiscard?: () => void;
 }
 
-/**
- * Хук для управления состоянием CRUD-модалок (область, группа, задача).
- * Обеспечивает общую логику: инициализация формы, отслеживание изменений,
- * подтверждения при закрытии с несохранёнными изменениями, удалении и колбэки для сброса доп. состояния при откате.
- */
+/** Хук для CRUD-модалок: инициализация формы, отслеживание изменений, подтверждения. */
 export function useEntityFormModal<TForm extends object>(
   options: UseEntityFormModalOptions<TForm>
 ) {

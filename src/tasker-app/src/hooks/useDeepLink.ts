@@ -4,9 +4,11 @@
  */
 import { useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
+import { ROUTES } from '../config/routes';
 import type { EntityType } from '../utils/entity-links';
 
-const DEEP_LINK_REGEX = /^\/tasker\/(area|folder|task)\/([^/]+)$/;
+const BASE = ROUTES.HOME;
+const DEEP_LINK_REGEX = new RegExp(`^${BASE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/(area|folder|task)/([^/]+)$`);
 
 export interface DeepLinkResult {
   entityType: EntityType | null;

@@ -1,33 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
-import { ConfirmModal } from '../common/ConfirmModal';
-import {
-  GlassButton,
-  GlassInput,
-  GlassTextarea,
-  GlassSelect,
-  ModalCloseButton,
-  ModalCancelButton,
-  ModalSaveButton,
-  ModalDeleteButton,
-  ModalEditButton,
-  ModalResetFieldButton,
-} from '../ui';
-import { Tooltip } from '../ui/Tooltip';
-import { LinkIcon } from '../icons/LinkIcon';
-import { buildEntityUrl } from '../../utils/entity-links';
+import { EntityConfirmModals } from '../common/EntityConfirmModals';
+import { GlassInput, GlassTextarea, GlassSelect } from '../ui';
 import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
+import { EntityMetaBlock } from '../common/EntityMetaBlock';
+import { EntityModalHeader } from '../common/EntityModalHeader';
+import { EntityFormField } from '../common/EntityFormField';
 import { useEvents } from '../activities/useEvents';
-import { useEntityFormModal } from '../../hooks';
-import { useTaskUpdate, useToast } from '../../context';
-import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
+import { useEntityFormModal, useFolderOptions, useCopyEntityLink } from '../../hooks';
+import { useTaskUpdate } from '../../context';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest } from '../../types';
 import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
-import { fetchChildFolders } from '../../services/api';
 import { formatDateTime } from '../../utils/date';
 
 export interface TaskModalProps {
@@ -55,17 +42,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   defaultAreaId,
   areas,
 }) => {
-  const [folderOptions, setFolderOptions] = useState<Array<{ value: string; label: string }>>([]);
-  const { addSuccess } = useToast();
-
-  const handleCopyLink = () => {
-    if (!task?.id) return;
-    navigator.clipboard.writeText(buildEntityUrl('task', task.id)).then(
-      () => addSuccess('Ссылка скопирована'),
-      () => {}
-    );
-  };
-  const [loadingFolders, setLoadingFolders] = useState(false);
+  const { copyLink: handleCopyLink } = useCopyEntityLink('task', task?.id);
 
   const modal = useEntityFormModal<TaskCreateRequest>({
     isOpen,
@@ -127,6 +104,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     isLoading,
   } = modal;
 
+  const { options: folderOptions, loading: loadingFolders } = useFolderOptions(formData.areaId, {
+    enabled: isOpen,
+  });
+
   const taskEvents = useEvents('task', task?.id);
   const { subscribeToTaskUpdates } = useTaskUpdate();
   const refetchRef = useRef(taskEvents.refetch);
@@ -142,224 +123,136 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     return unsub;
   }, [subscribeToTaskUpdates, task?.id]);
 
-  /** Загрузка папок при выборе области */
-  useEffect(() => {
-    if (!isOpen || !formData.areaId) {
-      setFolderOptions([{ value: '', label: 'Без папки (корень области)' }]);
-      return;
-    }
-    let cancelled = false;
-    setLoadingFolders(true);
-    const load = async () => {
-      try {
-        const opts: Array<{ value: string; label: string }> = [{ value: '', label: 'Без папки (корень области)' }];
-        const addNested = async (parentId: string | null, prefix: string) => {
-          const children = await fetchChildFolders(parentId, formData.areaId);
-          for (const f of children) {
-            opts.push({ value: f.id, label: `${prefix}${f.title}` });
-            await addNested(f.id, `${prefix}${f.title} / `);
-          }
-        };
-        await addNested(null, '');
-        if (!cancelled) setFolderOptions(opts);
-      } catch {
-        if (!cancelled) setFolderOptions([{ value: '', label: 'Без папки (корень области)' }]);
-      } finally {
-        if (!cancelled) setLoadingFolders(false);
-      }
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [isOpen, formData.areaId]);
-
   const folderValue = formData.folderId === '' || formData.folderId == null ? '' : formData.folderId;
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} hasUnsavedChanges={hasUnsavedChanges} size={size}>
       <div className={css.modalContent}>
-        <div className={css.modalHeader}>
-          <h3 className={css.modalTitle}>
-            {isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи'}
-          </h3>
-          <div className={css.modalActions}>
-            <ModalCloseButton onClick={handleClose} disabled={isLoading} />
-            {task?.id && (
-              <Tooltip content="Копировать ссылку" placement="bottom">
-                <GlassButton variant="subtle" size="xs" onClick={handleCopyLink} disabled={isLoading} aria-label="Копировать ссылку">
-                  <LinkIcon />
-                </GlassButton>
-              </Tooltip>
-            )}
-            {isViewMode ? (
-              <>
-                <ModalEditButton variant="primary" onClick={() => setIsEditMode(true)} disabled={isLoading} />
-                {task && onDelete && <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />}
-              </>
-            ) : (
-              <>
-                {task && <ModalCancelButton onClick={handleReturnToView} disabled={isLoading} />}
-                <ModalSaveButton
-                  onClick={handleSave}
-                  disabled={!hasChanges || !formData.title.trim() || !formData.areaId || isLoading}
-                />
-                {task && onDelete && <ModalDeleteButton onClick={handleDeleteRequest} disabled={isLoading} />}
-              </>
-            )}
-          </div>
-        </div>
+        <EntityModalHeader
+          title={isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи'}
+          isViewMode={isViewMode}
+          hasEntity={!!task?.id}
+          showDeleteInViewMode={!!(task && onDelete)}
+          showDeleteInEditMode={!!(task && onDelete)}
+          onCopyLink={handleCopyLink}
+          onEdit={() => setIsEditMode(true)}
+          onDelete={handleDeleteRequest}
+          onCancel={handleReturnToView}
+          onSave={handleSave}
+          onClose={handleClose}
+          isLoading={isLoading}
+          saveDisabled={!hasChanges || !formData.title.trim() || !formData.areaId}
+        />
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
             {areas && areas.length > 0 && (
-              <div className={formCss.fieldGroup}>
-                <div className={formCss.fieldHeader}>
-                  <label className={formCss.fieldLabel}>Область *</label>
-                  {!isViewMode && fieldChanges.areaId && (
-                    <ModalResetFieldButton onClick={() => handleResetField('areaId')} className={formCss.resetButton} />
-                  )}
-                </div>
-                <div className={formCss.fieldContainer}>
-                  {isViewMode ? (
-                    <div className={formCss.fieldValueReadonly}>
-                      {areas.find((a) => a.id === formData.areaId)?.title ?? '—'}
-                    </div>
-                  ) : (
-                    <GlassSelect
-                      value={formData.areaId}
-                      onChange={(value) => handleFieldChange('areaId', value)}
-                      options={[
-                        { value: '', label: 'Выберите область' },
-                        ...areas.map((a) => ({ value: a.id, label: a.title })),
-                      ]}
-                      disabled={isLoading}
-                      fullWidth
-                    />
-                  )}
-                </div>
-              </div>
+              <EntityFormField
+                label="Область *"
+                hasChange={fieldChanges.areaId}
+                onReset={() => handleResetField('areaId')}
+                isViewMode={isViewMode}
+                viewContent={<div className={formCss.fieldValueReadonly}>{areas.find((a) => a.id === formData.areaId)?.title ?? '—'}</div>}
+                editContent={
+                  <GlassSelect
+                    value={formData.areaId}
+                    onChange={(value) => handleFieldChange('areaId', value)}
+                    options={[{ value: '', label: 'Выберите область' }, ...areas.map((a) => ({ value: a.id, label: a.title }))]}
+                    disabled={isLoading}
+                    fullWidth
+                  />
+                }
+              />
             )}
 
             {areas && areas.length > 0 && (
-              <div className={formCss.fieldGroup}>
-                <div className={formCss.fieldHeader}>
-                  <label className={formCss.fieldLabel}>Папка</label>
-                  {!isViewMode && fieldChanges.folderId && (
-                    <ModalResetFieldButton onClick={() => handleResetField('folderId')} className={formCss.resetButton} />
-                  )}
-                </div>
-                <div className={formCss.fieldContainer}>
-                  {isViewMode ? (
-                    <div className={formCss.fieldValueReadonly}>
-                      {folderValue
-                        ? folderOptions.find((o) => o.value === folderValue)?.label ?? '—'
-                        : 'Без папки (корень области)'}
-                    </div>
-                  ) : (
-                    <GlassSelect
-                      value={folderValue}
-                      onChange={(value) => handleFieldChange('folderId', value)}
-                      options={folderOptions}
-                      disabled={isLoading || loadingFolders}
-                      fullWidth
-                    />
-                  )}
-                </div>
-              </div>
+              <EntityFormField
+                label="Папка"
+                hasChange={fieldChanges.folderId}
+                onReset={() => handleResetField('folderId')}
+                isViewMode={isViewMode}
+                viewContent={
+                  <div className={formCss.fieldValueReadonly}>
+                    {folderValue ? folderOptions.find((o) => o.value === folderValue)?.label ?? '—' : 'Без папки (корень области)'}
+                  </div>
+                }
+                editContent={
+                  <GlassSelect
+                    value={folderValue}
+                    onChange={(value) => handleFieldChange('folderId', value)}
+                    options={folderOptions}
+                    disabled={isLoading || loadingFolders}
+                    fullWidth
+                  />
+                }
+              />
             )}
 
-            <div className={formCss.fieldGroup}>
-              <div className={formCss.fieldHeader}>
-                <label className={formCss.fieldLabel}>Название задачи *</label>
-                {!isViewMode && fieldChanges.title && (
-                  <ModalResetFieldButton onClick={() => handleResetField('title')} className={formCss.resetButton} />
-                )}
-              </div>
-              <div className={formCss.fieldContainer}>
-                {isViewMode ? (
-                  <div className={formCss.fieldValueReadonly}>{formData.title || '—'}</div>
-                ) : (
-                  <GlassInput
-                    value={formData.title}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
-                    placeholder="Введите название задачи"
-                    disabled={isLoading}
-                    fullWidth
-                  />
-                )}
-              </div>
-            </div>
+            <EntityFormField
+              label="Название задачи *"
+              hasChange={fieldChanges.title}
+              onReset={() => handleResetField('title')}
+              isViewMode={isViewMode}
+              viewContent={<div className={formCss.fieldValueReadonly}>{formData.title || '—'}</div>}
+              editContent={
+                <GlassInput
+                  value={formData.title}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
+                  placeholder="Введите название задачи"
+                  disabled={isLoading}
+                  fullWidth
+                />
+              }
+            />
 
-            <div className={formCss.fieldGroup}>
-              <div className={formCss.fieldHeader}>
-                <label className={formCss.fieldLabel}>Статус</label>
-                {!isViewMode && fieldChanges.status && (
-                  <ModalResetFieldButton onClick={() => handleResetField('status')} className={formCss.resetButton} />
-                )}
-              </div>
-              <div className={formCss.fieldContainer}>
-                {isViewMode ? (
-                  <div className={formCss.fieldValueReadonly} style={{ display: 'flex', alignItems: 'center' }}>
-                    <TaskStatusBadge status={(formData.status ?? TaskStatus.New) as TaskStatus} size="s" />
-                  </div>
-                ) : (
-                  <GlassSelect
-                    value={formData.status?.toString() || TaskStatus.New.toString()}
-                    onChange={(value) => handleFieldChange('status', parseInt(value))}
-                    options={getTaskStatusOptions().map((opt) => ({ value: opt.value.toString(), label: opt.label }))}
-                    renderOption={(opt, { size: s }) => <TaskStatusBadge status={Number(opt.value) as TaskStatus} size={s} />}
-                    renderValue={(opt) => <TaskStatusBadge status={Number(opt.value) as TaskStatus} size="s" />}
-                    disabled={isLoading}
-                    fullWidth
-                    size="s"
-                  />
-                )}
-              </div>
-            </div>
+            <EntityFormField
+              label="Статус"
+              hasChange={fieldChanges.status}
+              onReset={() => handleResetField('status')}
+              isViewMode={isViewMode}
+              viewContent={
+                <div className={`${formCss.fieldValueReadonly} flex-row-center`}>
+                  <TaskStatusBadge status={(formData.status ?? TaskStatus.New) as TaskStatus} size="s" />
+                </div>
+              }
+              editContent={
+                <GlassSelect
+                  value={formData.status?.toString() || TaskStatus.New.toString()}
+                  onChange={(value) => handleFieldChange('status', parseInt(value))}
+                  options={getTaskStatusOptions().map((opt) => ({ value: opt.value.toString(), label: opt.label }))}
+                  renderOption={(opt, { size: s }) => <TaskStatusBadge status={Number(opt.value) as TaskStatus} size={s} />}
+                  renderValue={(opt) => <TaskStatusBadge status={Number(opt.value) as TaskStatus} size="s" />}
+                  disabled={isLoading}
+                  fullWidth
+                  size="s"
+                />
+              }
+            />
 
-            <div className={formCss.fieldGroup}>
-              <div className={formCss.fieldHeader}>
-                <label className={formCss.fieldLabel}>Описание</label>
-                {!isViewMode && fieldChanges.description && (
-                  <ModalResetFieldButton onClick={() => handleResetField('description')} className={formCss.resetButton} />
-                )}
-              </div>
-              <div className={formCss.fieldContainer}>
-                {isViewMode ? (
-                  <div className={formCss.fieldValueReadonlyMultiline}>{formData.description || '—'}</div>
-                ) : (
-                  <GlassTextarea
-                    value={formData.description}
-                    onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
-                    placeholder="Введите описание задачи"
-                    rows={4}
-                    disabled={isLoading}
-                    fullWidth
-                  />
-                )}
-              </div>
-            </div>
+            <EntityFormField
+              label="Описание"
+              hasChange={fieldChanges.description}
+              onReset={() => handleResetField('description')}
+              isViewMode={isViewMode}
+              viewContent={<div className={formCss.fieldValueReadonlyMultiline}>{formData.description || '—'}</div>}
+              editContent={
+                <GlassTextarea
+                  value={formData.description}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
+                  placeholder="Введите описание задачи"
+                  rows={4}
+                  disabled={isLoading}
+                  fullWidth
+                />
+              }
+            />
 
             {task && (
-              <div className={formCss.readonlyMeta}>
-                <div className={formCss.readonlyMetaTitle}>Информация</div>
-                {task.ownerUserName && (
-                  <div className={formCss.readonlyMetaRow}>
-                    <span className={formCss.readonlyMetaLabel}>Владелец</span>
-                    <span className={formCss.readonlyMetaValue}>{task.ownerUserName}</span>
-                  </div>
-                )}
-                {task.createdAt && (
-                  <div className={formCss.readonlyMetaRow}>
-                    <span className={formCss.readonlyMetaLabel}>Дата создания</span>
-                    <span className={formCss.readonlyMetaValue}>{formatDateTime(task.createdAt)}</span>
-                  </div>
-                )}
-                {task.updatedAt && (
-                  <div className={formCss.readonlyMetaRow}>
-                    <span className={formCss.readonlyMetaLabel}>Дата обновления</span>
-                    <span className={formCss.readonlyMetaValue}>{formatDateTime(task.updatedAt)}</span>
-                  </div>
-                )}
-              </div>
+              <EntityMetaBlock
+                ownerUserName={task.ownerUserName}
+                createdAt={task.createdAt}
+                updatedAt={task.updatedAt}
+                formatDateTime={formatDateTime}
+              />
             )}
 
             {task && (
@@ -375,9 +268,20 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           </div>
         </div>
       </div>
-      <ConfirmModal isOpen={showConfirmModal} onClose={handleConfirmCancel} onConfirm={handleConfirmSave} onCancel={handleConfirmCancel} onDiscard={handleConfirmDiscard} confirmDisabled={isLoading} {...CONFIRM_UNSAVED_CHANGES} />
-      <ConfirmModal isOpen={showReturnToViewConfirm} onClose={dismissReturnToViewConfirm} onConfirm={handleConfirmReturnToView} onCancel={dismissReturnToViewConfirm} {...CONFIRM_RETURN_TO_VIEW} />
-      <ConfirmModal isOpen={showDeleteConfirm} onClose={dismissDeleteConfirm} onConfirm={handleConfirmDelete} onCancel={dismissDeleteConfirm} confirmDisabled={isLoading} {...getConfirmDeleteConfig('задачу')} />
+      <EntityConfirmModals
+        showConfirmModal={showConfirmModal}
+        onConfirmSave={handleConfirmSave}
+        onConfirmCancel={handleConfirmCancel}
+        onConfirmDiscard={handleConfirmDiscard}
+        showReturnToViewConfirm={showReturnToViewConfirm}
+        onDismissReturnToView={dismissReturnToViewConfirm}
+        onConfirmReturnToView={handleConfirmReturnToView}
+        showDeleteConfirm={showDeleteConfirm}
+        onDismissDelete={dismissDeleteConfirm}
+        onConfirmDelete={handleConfirmDelete}
+        isLoading={isLoading}
+        entityNameForDelete="задачу"
+      />
     </Modal>
   );
 };

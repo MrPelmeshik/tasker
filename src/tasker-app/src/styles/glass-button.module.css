@@ -247,7 +247,7 @@
 }
 
 .xxs { padding: var(--space-2) var(--space-6);  border-radius: var(--radius-xs);  font-size: var(--font-11); }
-.xs  { padding: var(--space-4) var(--space-8);  border-radius: calc(var(--radius-xs) + 1px);  font-size: var(--font-12); }
+.xs  { padding: var(--space-4) var(--space-8);  border-radius: calc(var(--radius-xs) + var(--border-1));  font-size: var(--font-12); }
 .s   { padding: var(--space-6) var(--space-10); border-radius: var(--radius-s); font-size: var(--font-13); }
 .m   { padding: var(--space-8) var(--space-12); border-radius: var(--radius-m); font-size: var(--font-14); }
 .l   { padding: var(--space-10) var(--space-14); border-radius: var(--radius-m); font-size: var(--font-15); }

@@ -56,10 +56,7 @@ export const TaskCardLink: React.FC<TaskCardLinkProps> = ({
     } : undefined}
   >
     {showTypeIcon && (
-      <CheckSquareIcon
-        className={css.typeIcon}
-        style={{ width: 14, height: 14 }}
-      />
+      <CheckSquareIcon className={`${css.typeIcon} icon-m`} />
     )}
     <TaskStatusBadge
       status={(task.status ?? TaskStatus.InProgress) as TaskStatus}

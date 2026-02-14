@@ -1,5 +1,6 @@
 import React from 'react';
 import { FolderIcon } from '../icons';
+import { CountCardLink } from '../common/CountCardLink';
 import css from '../../styles/tree-item-link.module.css';
 
 /** Минимальные данные папки для карточки-ссылки в дереве */
@@ -26,8 +27,6 @@ export interface FolderCardLinkProps {
 
 /**
  * Карточка папки в дереве: счётчик + иконка + название (отображение без клика).
- * Стиль как TaskCardLink variant="text".
- * При displayCount и totalCount — показывает (displayed/total) вместо обычного счётчика.
  */
 export const FolderCardLink: React.FC<FolderCardLinkProps> = ({
   folder,
@@ -35,19 +34,14 @@ export const FolderCardLink: React.FC<FolderCardLinkProps> = ({
   dataCustomColor,
   displayCount,
   totalCount,
-}) => {
-  const defaultCount = folder.tasksCount + folder.subfoldersCount;
-  const countText =
-    displayCount != null && totalCount != null ? `${displayCount}/${totalCount}` : String(defaultCount);
-  return (
-    <div
-      className={`${css.root} ${css.plain}`}
-      style={style}
-      data-custom-color={dataCustomColor ? 'true' : undefined}
-    >
-      <FolderIcon className={css.typeIcon} style={{ width: 14, height: 14 }} />
-      <span className={css.title}>{folder.title}</span>
-      <span className={css.count}>({countText})</span>
-    </div>
-  );
-};
+}) => (
+  <CountCardLink
+    icon={<FolderIcon className={`${css.typeIcon} icon-m`} />}
+    title={folder.title}
+    defaultCount={folder.tasksCount + folder.subfoldersCount}
+    displayCount={displayCount}
+    totalCount={totalCount}
+    style={style}
+    dataCustomColor={dataCustomColor}
+  />
+);

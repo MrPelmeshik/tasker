@@ -1,5 +1,6 @@
 import React from 'react';
 import { LayoutGridIcon } from '../icons';
+import { CountCardLink } from '../common/CountCardLink';
 import css from '../../styles/tree-item-link.module.css';
 
 /** Минимальные данные области для карточки-ссылки в дереве */
@@ -26,8 +27,6 @@ export interface AreaCardLinkProps {
 
 /**
  * Карточка области в дереве: счётчик + иконка + название (отображение без клика).
- * Стиль как TaskCardLink variant="text".
- * При displayCount и totalCount — показывает (displayed/total) вместо обычного счётчика.
  */
 export const AreaCardLink: React.FC<AreaCardLinkProps> = ({
   area,
@@ -35,19 +34,14 @@ export const AreaCardLink: React.FC<AreaCardLinkProps> = ({
   dataCustomColor,
   displayCount,
   totalCount,
-}) => {
-  const defaultCount = area.foldersCount + area.rootTasksCount;
-  const countText =
-    displayCount != null && totalCount != null ? `${displayCount}/${totalCount}` : String(defaultCount);
-  return (
-    <div
-      className={`${css.root} ${css.plain}`}
-      style={style}
-      data-custom-color={dataCustomColor ? 'true' : undefined}
-    >
-      <LayoutGridIcon className={css.typeIcon} style={{ width: 14, height: 14 }} />
-      <span className={css.title}>{area.title}</span>
-      <span className={css.count}>({countText})</span>
-    </div>
-  );
-};
+}) => (
+  <CountCardLink
+    icon={<LayoutGridIcon className={`${css.typeIcon} icon-m`} />}
+    title={area.title}
+    defaultCount={area.foldersCount + area.rootTasksCount}
+    displayCount={displayCount}
+    totalCount={totalCount}
+    style={style}
+    dataCustomColor={dataCustomColor}
+  />
+);

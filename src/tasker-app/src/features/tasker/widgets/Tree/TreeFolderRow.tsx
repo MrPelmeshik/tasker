@@ -5,9 +5,7 @@ import { FolderCardLink } from '../../../../components/folders';
 import { Tooltip } from '../../../../components/ui';
 import { Loader } from '../../../../components/ui/Loader';
 import { FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../components/icons';
-import { buildEntityUrl } from '../../../../utils/entity-links';
-import { useToast } from '../../../../context';
-import { useCustomColorStyle } from '../../../../hooks';
+import { useCopyEntityLink, useCustomColorStyle } from '../../../../hooks';
 import { handleExpandKeyDown } from '../../../../utils/keyboard';
 import { isValidDrop } from './treeUtils';
 import type { FolderSummary, TaskSummary } from '../../../../types';
@@ -67,15 +65,7 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: `folder-${folder.id}`, data: { folder } });
   const canDrop = isValidDrop(activeDrag?.data, `folder-${folder.id}`, foldersByArea, foldersByParent);
   const customColorStyle = useCustomColorStyle(folder.customColor);
-  const { addSuccess } = useToast();
-
-  const handleCopyLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(buildEntityUrl('folder', folder.id)).then(
-      () => addSuccess('Ссылка скопирована'),
-      () => {}
-    );
-  };
+  const { copyLink: handleCopyLink } = useCopyEntityLink('folder', folder.id);
 
   const level = depth + 1;
   return (
@@ -99,22 +89,22 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
           <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
             <Tooltip content="Просмотреть" placement="top">
               <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onViewDetails(e); }} aria-label="Просмотреть">
-                <EyeIcon style={{ width: 14, height: 14 }} />
+                <EyeIcon className="icon-m" />
               </GlassButton>
             </Tooltip>
             <Tooltip content="Создать папку" placement="top">
               <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateFolder(e); }} aria-label="Создать папку">
-                <FolderIcon style={{ width: 14, height: 14 }} />
+                <FolderIcon className="icon-m" />
               </GlassButton>
             </Tooltip>
             <Tooltip content="Создать задачу" placement="top">
               <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateTask(e); }} aria-label="Создать задачу">
-                <CheckSquareIcon style={{ width: 14, height: 14 }} />
+                <CheckSquareIcon className="icon-m" />
               </GlassButton>
             </Tooltip>
             <Tooltip content="Копировать ссылку" placement="top">
               <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
-                <LinkIcon style={{ width: 14, height: 14 }} />
+                <LinkIcon className="icon-m" />
               </GlassButton>
             </Tooltip>
           </div>

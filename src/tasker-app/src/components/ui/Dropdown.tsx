@@ -1,52 +1,17 @@
 import React, { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styles from '../../styles/dropdown.module.css';
-
-type DropdownPlacement = 'top' | 'bottom' | 'left' | 'right';
-
-const SPACING = 8;
+import { getFloatingPosition, type Placement } from '../../utils/floating-position';
 
 type DropdownProps = {
-  /** Элемент, по клику на который открывается меню */
   trigger: React.ReactNode;
-  /** Содержимое выпадающего меню */
   children: React.ReactNode;
-  /** Положение меню относительно триггера */
-  placement?: DropdownPlacement;
-  /** Управляемый флаг открытости */
+  placement?: Placement;
   open: boolean;
-  /** Колбэк при изменении состояния открытости */
   onOpenChange: (open: boolean) => void;
-  /** Дополнительный класс для панели */
   className?: string;
 };
 
-/**
- * Вычисляет позицию панели при position: fixed
- */
-function getPanelPosition(
-  rect: DOMRect,
-  placement: DropdownPlacement
-): { left: number; top: number; transform: string } {
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-
-  switch (placement) {
-    case 'top':
-      return { left: centerX, top: rect.top - SPACING, transform: 'translate(-50%, -100%)' };
-    case 'bottom':
-      return { left: centerX, top: rect.bottom + SPACING, transform: 'translate(-50%, 0)' };
-    case 'left':
-      return { left: rect.left - SPACING, top: centerY, transform: 'translate(-100%, -50%)' };
-    case 'right':
-      return { left: rect.right + SPACING, top: centerY, transform: 'translate(0, -50%)' };
-  }
-}
-
-/**
- * Универсальный выпадающий компонент.
- * Открывается по клику на триггер, закрывается по клику вне меню или по Escape.
- */
 export const Dropdown: React.FC<DropdownProps> = ({
   trigger,
   children,
@@ -63,7 +28,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
     const el = triggerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    setPosition(getPanelPosition(rect, placement));
+    setPosition(getFloatingPosition(rect, placement));
   }, [placement]);
 
   const handleTriggerClick = useCallback(
@@ -149,7 +114,7 @@ export const Dropdown: React.FC<DropdownProps> = ({
         }}
         role="button"
         tabIndex={0}
-        style={{ display: 'inline-flex', cursor: 'pointer' }}
+        className="inline-flex-pointer"
       >
         {trigger}
       </div>

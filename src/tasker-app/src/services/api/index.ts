@@ -1,5 +1,5 @@
 // Экспорт базовых утилит
-export { BaseApiClient, apiUtils } from './base';
+export { BaseApiClient } from './base';
 export { loginRequest, registerRequest, getCurrentUser, updateProfile, logoutRequest } from './auth';
 
 // Экспорт API клиентов

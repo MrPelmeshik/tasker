@@ -8,7 +8,7 @@
 .triggerFill {
   display: block;
   width: 100%;
-  min-height: 1.5em;
+  min-height: var(--select-option-min-height);
 }
 
 .tooltip {

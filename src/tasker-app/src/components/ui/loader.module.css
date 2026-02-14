@@ -15,25 +15,25 @@
 .spinnerXs {
   width: var(--loader-size-xs);
   height: var(--loader-size-xs);
-  border-width: 2px;
+  border-width: var(--border-2);
 }
 
 .spinnerS {
   width: var(--loader-size-s);
   height: var(--loader-size-s);
-  border-width: 2px;
+  border-width: var(--border-2);
 }
 
 .spinnerM {
   width: var(--loader-size-m);
   height: var(--loader-size-m);
-  border-width: 3px;
+  border-width: var(--border-3);
 }
 
 .spinnerL {
   width: var(--loader-size-l);
   height: var(--loader-size-l);
-  border-width: 4px;
+  border-width: var(--border-4);
 }
 
 @keyframes spin {

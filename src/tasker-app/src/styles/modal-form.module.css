@@ -140,7 +140,7 @@
   color: var(--color-text);
   background: var(--surface-subtle-bg);
   border: var(--border-1) solid var(--surface-subtle-border-strong);
-  min-height: 6.5em;
+  min-height: var(--field-multiline-min-height);
   white-space: pre-wrap;
   word-break: break-word;
   box-sizing: border-box;

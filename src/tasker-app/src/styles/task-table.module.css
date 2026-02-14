@@ -51,7 +51,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 60px;
+  min-height: var(--table-row-min-height);
 }
 
 .th.colFuture, .td.colFuture {
@@ -76,8 +76,8 @@
 
 .colArea {
   /** Ширина под один символ вертикального текста (font-11 ≈ 11–13px) */
-  width: 14px;
-  min-width: 14px;
+  width: var(--icon-m);
+  min-width: var(--icon-m);
   vertical-align: middle;
   position: sticky;
   right: var(--size-col-task-min);

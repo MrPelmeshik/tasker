@@ -1,41 +1,19 @@
 import React, { useState, useCallback, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import styles from '../../styles/tooltip.module.css';
+import { getFloatingPosition, type Placement } from '../../utils/floating-position';
 
-type TooltipPlacement = 'top' | 'bottom' | 'left' | 'right';
 type TooltipSize = 's' | 'm' | 'l';
-
-const SPACING = 8;
 
 type TooltipProps = {
   content: React.ReactNode;
-  placement?: TooltipPlacement;
+  placement?: Placement;
   size?: TooltipSize;
   className?: string;
   /** Заполнить область родителя (для пустых ячеек таблицы) */
   fillTrigger?: boolean;
   children: React.ReactNode;
 };
-
-/** Вычисляет позицию tooltip при position: fixed */
-function getTooltipPosition(
-  rect: DOMRect,
-  placement: TooltipPlacement
-): { left: number; top: number; transform: string } {
-  const centerX = rect.left + rect.width / 2;
-  const centerY = rect.top + rect.height / 2;
-
-  switch (placement) {
-    case 'top':
-      return { left: centerX, top: rect.top - SPACING, transform: 'translate(-50%, -100%)' };
-    case 'bottom':
-      return { left: centerX, top: rect.bottom + SPACING, transform: 'translate(-50%, 0)' };
-    case 'left':
-      return { left: rect.left - SPACING, top: centerY, transform: 'translate(-100%, -50%)' };
-    case 'right':
-      return { left: rect.right + SPACING, top: centerY, transform: 'translate(0, -50%)' };
-  }
-}
 
 export const Tooltip: React.FC<TooltipProps> = ({
   content,
@@ -53,7 +31,7 @@ export const Tooltip: React.FC<TooltipProps> = ({
     const el = triggerRef.current;
     if (!el) return;
     const rect = el.getBoundingClientRect();
-    setPosition(getTooltipPosition(rect, placement));
+    setPosition(getFloatingPosition(rect, placement));
   }, [placement]);
 
   const handleMouseEnter = useCallback(() => {

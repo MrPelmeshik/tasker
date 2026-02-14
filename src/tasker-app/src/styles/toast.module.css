@@ -118,8 +118,8 @@
 }
 
 .closeBtn:focus-visible {
-  outline: 2px solid rgb(var(--color-accent) / 0.6);
-  outline-offset: 2px;
+  outline: var(--space-2) solid rgb(var(--color-accent) / 0.6);
+  outline-offset: var(--space-2);
 }
 
 @keyframes toastSlideIn {

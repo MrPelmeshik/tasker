@@ -1,43 +1,16 @@
-import React, { useEffect, useRef } from 'react';
-import { useState } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from '../styles/login-page.module.css';
-import { GlassInput } from '../components/ui/GlassInput';
-import { GlassButton } from '../components/ui/GlassButton';
-import { GlassWidget } from '../components/common/GlassWidget';
+import { LoginForm } from './LoginForm';
 import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
-
-/** Разрешённые относительные пути для returnUrl (защита от Open Redirect) */
-const SAFE_RETURN_URL = /^\/tasker(\/.*)?$|^\/$/;
-
-function isSafeReturnUrl(url: string | undefined): url is string {
-  return Boolean(url && SAFE_RETURN_URL.test(url) && !url.startsWith('//') && !url.startsWith('\\'));
-}
+import { isSafeReturnUrl, DEFAULT_RETURN_URL } from '../utils/safe-return-url';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnUrl = searchParams.get('returnUrl') ?? undefined;
-  const safeReturnUrl = isSafeReturnUrl(returnUrl) ? returnUrl : '/tasker';
-  const { login, register, isAuth } = useAuth();
-  const { showError, addInfo } = useToast();
-  const [name, setName] = useState<string>('');
-  const [email, setEmail] = useState<string>('');
-  const [firstName, setFirstName] = useState<string>('');
-  const [lastName, setLastName] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [confirm, setConfirm] = React.useState<string>('');
-  const [isRegister, setIsRegister] = useState<boolean>(false);
-  const [error, setError] = useState<string | undefined>();
-  const [errorDetails, setErrorDetails] = useState<string | undefined>();
-  const [loading, setLoading] = useState<boolean>(false);
-  const isSubmittingRef = useRef(false);
-
-  const clearError = () => {
-    setError(undefined);
-    setErrorDetails(undefined);
-  }
+  const safeReturnUrl = isSafeReturnUrl(returnUrl) ? returnUrl : DEFAULT_RETURN_URL;
+  const { isAuth } = useAuth();
 
   useEffect(() => {
     if (isAuth) {
@@ -45,162 +18,11 @@ export const LoginPage: React.FC = () => {
     }
   }, [isAuth, navigate, safeReturnUrl]);
 
-  const onSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    const trimmed = name.trim();
-    if (trimmed.length < 2) {
-      setError('Введите имя (минимум 2 символа)');
-      return;
-    }
-    if (isRegister) {
-      if (password.trim().length < 8) {
-        setError('Пароль слишком короткий (минимум 8 символов)');
-        return;
-      }
-      if (password !== confirm) {
-        setError('Пароли не совпадают');
-        return;
-      }
-      if (!email.trim()) {
-        setError('Введите email');
-        return;
-      }
-      if (!firstName.trim() || !lastName.trim()) {
-        setError('Введите имя и фамилию');
-        return;
-      }
-    }
-
-    if (isSubmittingRef.current) return;
-    isSubmittingRef.current = true;
-    setLoading(true);
-    clearError();
-    try {
-      if (isRegister) {
-        await register({
-          username: trimmed,
-          email: email.trim(),
-          firstName: firstName.trim(),
-          lastName: lastName.trim(),
-          password: password,
-          confirmPassword: confirm,
-        });
-      } else {
-        await login(trimmed, password);
-      }
-      if (returnUrl && !isSafeReturnUrl(returnUrl)) {
-        addInfo('Некорректная ссылка возврата. Вы перенаправлены на главную.');
-      }
-      navigate(safeReturnUrl);
-    } catch (err) {
-      setError('Серверная ошибка');
-      setErrorDetails(err instanceof Error ? err.message : 'Ошибка входа');
-      showError(err);
-    } finally {
-      isSubmittingRef.current = false;
-      setLoading(false);
-    }
-  };
-
   return (
     <div className={styles.root}>
       <div className={styles.centerWrap}>
-        <GlassWidget className={styles.card}>
-          <div className={styles.toggleWrap}>
-            <GlassButton
-              toggleGroup
-              variant="subtle"
-              value={isRegister ? 'register' : 'login'}
-              onChange={(v) => { setIsRegister(v === 'register'); clearError(); }}
-              options={[
-                { key: 'login', label: 'Вход' },
-                { key: 'register', label: 'Регистрация' },
-              ]}
-              size="s"
-              equalWidth
-            />
-          </div>
-          <form className={styles.form} onSubmit={onSubmit}>
-            <GlassInput
-              fullWidth
-              size="l"
-              label="Имя пользователя или email"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Например: alex@example.com"
-              errorText={error}
-              errorDetails={errorDetails}
-              onFocus={() => clearError()}
-              autoFocus
-              autoComplete="username"
-            />
-            {isRegister && (
-              <>
-                <GlassInput
-                  fullWidth
-                  size="m"
-                  label="Email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Введите email"
-                  autoComplete="email"
-                />
-                <GlassInput
-                  fullWidth
-                  size="m"
-                  label="Имя"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="Введите имя"
-                  autoComplete="given-name"
-                />
-                <GlassInput
-                  fullWidth
-                  size="m"
-                  label="Фамилия"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Введите фамилию"
-                  autoComplete="family-name"
-                />
-              </>
-            )}
-            <GlassInput
-              fullWidth
-              size="l"
-              type="password"
-              label="Пароль"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Введите пароль"
-              autoComplete="current-password"
-            />
-            {isRegister && (
-              <GlassInput
-                fullWidth
-                size="m"
-                type="password"
-                label="Повторите пароль"
-                value={confirm}
-                onChange={(e) => setConfirm(e.target.value)}
-                placeholder="Повторите пароль"
-                autoComplete="new-password"
-              />
-            )}
-            <GlassButton 
-                size="m" 
-                className={styles.submit}
-                fullWidth={true}
-                type="submit"
-                disabled={loading}
-            >
-                    {loading ? 'Входим…' : isRegister ? 'Зарегистрироваться' : 'Войти'}
-            </GlassButton>
-          </form>
-        </GlassWidget>
+        <LoginForm returnUrl={returnUrl} />
       </div>
     </div>
   );
 };
-
-

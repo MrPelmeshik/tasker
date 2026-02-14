@@ -49,7 +49,7 @@ const ToastItem: React.FC<{
         onClick={handleClose}
         aria-label="Закрыть уведомление"
       >
-        <XIcon style={{ width: 14, height: 14 }} />
+        <XIcon className="icon-m" />
       </button>
     </div>
   );

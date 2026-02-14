@@ -199,7 +199,7 @@
     0 2px 8px rgb(var(--black) / 0.25),
     inset 0 1px 0 rgb(var(--white) / 0.06);
   list-style: none;
-  max-height: 200px;
+  max-height: var(--select-list-max-height);
   overflow-y: auto;
   animation: dropdownFadeIn 200ms ease-out;
 }
@@ -272,7 +272,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-6);
-  min-height: 1.5em;
+  min-height: var(--select-option-min-height);
 }
 
 .customSelectOption:last-child {
@@ -292,24 +292,6 @@
 .l .customSelectOption {
   padding: var(--space-10) var(--space-14);
   font-size: var(--font-15);
-}
-
-.customSelectList::-webkit-scrollbar {
-  width: var(--tree-scrollbar-width);
-}
-
-.customSelectList::-webkit-scrollbar-track {
-  background: var(--glass-scrollbar-track);
-  border-radius: var(--radius-s);
-}
-
-.customSelectList::-webkit-scrollbar-thumb {
-  background: var(--glass-scrollbar-thumb);
-  border-radius: var(--radius-s);
-}
-
-.customSelectList::-webkit-scrollbar-thumb:hover {
-  background: var(--glass-scrollbar-thumb-hover);
 }
 
 @supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {

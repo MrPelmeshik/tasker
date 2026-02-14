@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
-import {
-  GlassInput,
-  GlassTextarea,
-  ModalCloseButton,
-  ModalSaveButton,
-} from '../ui';
+import { SimpleModalHeader } from '../common/SimpleModalHeader';
+import { EntityFormField } from '../common/EntityFormField';
+import { GlassInput, GlassTextarea, ModalSaveButton } from '../ui';
 import { ActivityList } from './ActivityList';
 import { TaskCardLink } from '../tasks';
 import { useToast } from '../../context/ToastContext';
@@ -19,7 +16,6 @@ import type { TaskResponse } from '../../types/api';
 export interface ActivityFormData {
   title: string;
   description: string;
-  /** Дата активности (обязательное, ISO YYYY-MM-DD) */
   date: string;
 }
 
@@ -28,7 +24,6 @@ export interface ActivityModalProps {
   onClose: () => void;
   onSave: (data: ActivityFormData) => Promise<void>;
   task: TaskResponse;
-  /** Дата (ISO YYYY-MM-DD) — при передаче показываются активности за этот день */
   date?: string | null;
   onOpenTaskDetails: () => void;
 }
@@ -77,16 +72,16 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="medium">
       <div className={css.modalContent}>
-        <div className={css.modalHeader}>
-          <h3 className={css.modalTitle}>Добавить активность</h3>
-          <div className={css.modalActions}>
-            <ModalCloseButton onClick={onClose} disabled={isLoading} />
-            <ModalSaveButton
-              onClick={handleSave}
-              disabled={!title.trim() || isLoading}
-            />
-          </div>
-        </div>
+        <SimpleModalHeader
+          title="Добавить активность"
+          onClose={onClose}
+          closeDisabled={isLoading}
+        >
+          <ModalSaveButton
+            onClick={handleSave}
+            disabled={!title.trim() || isLoading}
+          />
+        </SimpleModalHeader>
         <div className={css.modalBody}>
           <TaskCardLink
             task={{ id: task.id, title: task.title, status: task.status }}
@@ -94,7 +89,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             className={activityModalCss.taskCard}
           />
           {date && (
-            <div style={{ marginBottom: 'var(--space-16)' }}>
+            <div className="mb-16">
               <ActivityList
                 events={taskEvents.events}
                 loading={taskEvents.loading}
@@ -106,9 +101,11 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             </div>
           )}
           <div className={formCss.formContainer}>
-            <div className={formCss.fieldGroup}>
-              <label className={formCss.fieldLabel}>Заголовок *</label>
-              <div className={formCss.fieldContainer}>
+            <EntityFormField
+              label="Заголовок *"
+              isViewMode={false}
+              viewContent={null}
+              editContent={
                 <GlassInput
                   value={title}
                   onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
@@ -116,11 +113,13 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   disabled={isLoading}
                   fullWidth
                 />
-              </div>
-            </div>
-            <div className={formCss.fieldGroup}>
-              <label className={formCss.fieldLabel}>Описание</label>
-              <div className={formCss.fieldContainer}>
+              }
+            />
+            <EntityFormField
+              label="Описание"
+              isViewMode={false}
+              viewContent={null}
+              editContent={
                 <GlassTextarea
                   value={description}
                   onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
@@ -129,8 +128,8 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                   rows={3}
                   fullWidth
                 />
-              </div>
-            </div>
+              }
+            />
           </div>
         </div>
       </div>

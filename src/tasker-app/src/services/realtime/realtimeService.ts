@@ -6,6 +6,8 @@ import * as signalR from '@microsoft/signalr';
 import { ensureAccessTokenFresh } from '../api/client';
 import { getStoredTokens } from '../storage/token';
 import { fetchAreaShortCard } from '../api';
+import { getHubUrl } from '../../config/api';
+import { UUID_REGEX } from '../../utils/uuid';
 
 /** Payload события EntityChanged */
 export interface EntityChangedPayload {
@@ -15,8 +17,6 @@ export interface EntityChangedPayload {
   folderId?: string | null;
   eventType: string;
 }
-
-const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Проверка валидности payload EntityChanged */
 function isValidEntityChangedPayload(payload: unknown): payload is EntityChangedPayload {
@@ -48,20 +48,6 @@ let connectPromise: Promise<void> | null = null;
 let isRealtimeUnavailable = false;
 type RealtimeStatusCallback = (unavailable: boolean) => void;
 const statusCallbacks = new Set<RealtimeStatusCallback>();
-
-/** Получить URL Hub (без /api) */
-function getHubUrl(): string {
-  const base =
-    process.env.REACT_APP_API_BASE ||
-    (() => {
-      if (process.env.NODE_ENV === 'production') {
-        console.warn('REACT_APP_API_BASE не задан, используется localhost — проверьте сборку');
-      }
-      return 'http://localhost:8080';
-    })();
-  const withoutApi = base.replace(/\/api\/?$/, '');
-  return `${withoutApi}/hubs/tasker`;
-}
 
 /** Вызвать JoinAreas с текущим списком областей */
 async function joinAreas(): Promise<void> {

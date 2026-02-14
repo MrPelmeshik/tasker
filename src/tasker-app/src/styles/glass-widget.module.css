@@ -29,7 +29,7 @@
 .glass::after {
   content: '';
   position: absolute;
-  inset: 1px;
+  inset: var(--border-1);
   border-radius: inherit;
   pointer-events: none;
   background: none;
@@ -62,7 +62,7 @@
   align-items: center;
   justify-content: center;
   color: var(--color-text-secondary);
-  border: 1px dashed var(--color-dashed);
+  border: var(--border-1) dashed var(--color-dashed);
   border-radius: var(--radius-xs);
 }
 

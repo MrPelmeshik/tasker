@@ -1,6 +1,7 @@
 import React, { PropsWithChildren, useEffect, useState } from 'react';
 import css from '../../styles/glass-widget.module.css';
 import type { ColumnSpan, RowSpan } from '../../types';
+import { BREAKPOINTS } from '../../config/breakpoints';
 
 type GlassWidgetProps = PropsWithChildren<{
   title?: string;
@@ -15,10 +16,10 @@ function usePanelColumns(): number {
   useEffect(() => {
     const compute = () => {
       const width = window.innerWidth;
-      if (width >= 1600) return setColumns(8);
-      if (width >= 1280) return setColumns(6);
-      if (width >= 1000) return setColumns(4);
-      if (width >= 700) return setColumns(2);
+      if (width >= BREAKPOINTS['3xl']) return setColumns(5);
+      if (width >= BREAKPOINTS['2xl']) return setColumns(4);
+      if (width >= BREAKPOINTS.xl) return setColumns(3);
+      if (width >= BREAKPOINTS.md) return setColumns(2);
       return setColumns(1);
     };
     compute();

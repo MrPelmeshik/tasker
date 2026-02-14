@@ -16,24 +16,6 @@
   box-sizing: border-box;
 }
 
-.widgetContent::-webkit-scrollbar {
-  width: var(--tree-scrollbar-width);
-}
-
-.widgetContent::-webkit-scrollbar-track {
-  background: var(--glass-scrollbar-track);
-  border-radius: var(--space-3);
-}
-
-.widgetContent::-webkit-scrollbar-thumb {
-  background: var(--glass-scrollbar-thumb);
-  border-radius: var(--space-3);
-}
-
-.widgetContent::-webkit-scrollbar-thumb:hover {
-  background: var(--glass-scrollbar-thumb-hover);
-}
-
 .areaSection {
   position: relative;
   width: 100%;
@@ -128,38 +110,8 @@
 
 /** Селект сортировки в тулбаре — компактная ширина */
 .treeSortSelect {
-  min-width: 200px;
-  max-width: 260px;
-}
-
-/** Меню выбора пресета сортировки (устарело, используется GlassSelect) */
-.treeSortMenu {
-  display: flex;
-  flex-direction: column;
-  min-width: 220px;
-}
-
-.treeSortMenuItem {
-  display: block;
-  width: 100%;
-  padding: var(--space-6) var(--space-8);
-  border: none;
-  border-radius: var(--radius-xs);
-  background: transparent;
-  color: var(--color-text);
-  font-size: var(--font-13);
-  text-align: left;
-  cursor: pointer;
-  transition: background var(--transition-fast);
-}
-
-.treeSortMenuItem:hover {
-  background: var(--glass-hover-bg);
-}
-
-.treeSortMenuItemActive {
-  background: var(--glass-card-bg-selected);
-  color: rgb(var(--color-accent) / 1);
+  min-width: var(--tree-sort-select-min-width);
+  max-width: var(--tree-sort-select-max-width);
 }
 
 .areaCard {

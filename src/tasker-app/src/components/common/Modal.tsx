@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import css from '../../styles/modal.module.css';
 import type { ModalSize } from '../../types/modal-size';
 
@@ -27,13 +27,13 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (hasUnsavedChanges && onUnsavedChangesClose) {
       onUnsavedChangesClose();
     } else {
       onClose();
     }
-  };
+  }, [hasUnsavedChanges, onUnsavedChangesClose, onClose]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -61,7 +61,7 @@ export const Modal: React.FC<ModalProps> = ({
       document.removeEventListener('mousedown', handleOverlayClick);
       document.body.style.overflow = '';
     };
-  }, [isOpen, closeOnOverlayClick, closeOnEscape, hasUnsavedChanges, onUnsavedChangesClose]);
+  }, [isOpen, closeOnOverlayClick, closeOnEscape, handleClose]);
 
   if (!isOpen) return null;
 

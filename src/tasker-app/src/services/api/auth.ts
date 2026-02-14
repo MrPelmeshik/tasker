@@ -7,12 +7,11 @@ import type {
   RegisterResponse,
   UserInfo,
 } from '../../types';
+import { getApiBase } from '../../config/api';
 
-const API_BASE = (process.env.REACT_APP_API_BASE || 'http://localhost:8080') + '/api';
+const API_BASE = getApiBase();
 
-/**
- * Запрос входа
- */
+/** Запрос входа */
 export async function loginRequest(
   username: string,
   password: string
@@ -26,9 +25,7 @@ export async function loginRequest(
   return res.json();
 }
 
-/**
- * Запрос регистрации
- */
+/** Запрос регистрации */
 export async function registerRequest(
   payload: RegisterRequest
 ): Promise<ApiResponse<RegisterResponse>> {
@@ -41,16 +38,12 @@ export async function registerRequest(
   return res.json();
 }
 
-/**
- * Получить текущего пользователя
- */
+/** Получить текущего пользователя */
 export async function getCurrentUser(init?: RequestInit): Promise<ApiResponse<UserInfo>> {
   return apiFetch<ApiResponse<UserInfo>>('/auth/me', init);
 }
 
-/**
- * Обновить профиль пользователя
- */
+/** Обновить профиль пользователя */
 export async function updateProfile(
   data: ProfileUpdateRequest
 ): Promise<ApiResponse<UserInfo>> {
@@ -60,9 +53,7 @@ export async function updateProfile(
   });
 }
 
-/**
- * Запрос выхода
- */
+/** Запрос выхода */
 export async function logoutRequest(): Promise<void> {
   try {
     await fetch(`${API_BASE}/auth/logout`, {

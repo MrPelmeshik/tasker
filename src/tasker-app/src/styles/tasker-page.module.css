@@ -34,7 +34,7 @@
   min-height: 0;
 }
 
-@media (min-width: 900px) {
+@media (min-width: var(--bp-md)) {
   .taskerPageContainer {
     grid-template-columns: 2fr 1fr;
     grid-template-rows: auto 1fr;

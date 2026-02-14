@@ -1,36 +1,39 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../config/routes';
 import styles from '../../styles/header.module.css';
 import { GlassButton } from '../ui/GlassButton';
 import { Tooltip } from '../ui/Tooltip';
 import { UserMenu } from './UserMenu';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
+import { useModal } from '../../context/ModalContext';
 import { SunIcon, MoonIcon } from '../icons';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { userName, isAuth } = useAuth();
   const { theme, toggleTheme } = useTheme();
+  const { openCabinetModal } = useModal();
 
   return (
     <header className={styles.header}>
       <div className={styles.left}>
-        <NavLink to="/tasker" className={styles.brand}>
+        <NavLink to={ROUTES.HOME} className={styles.brand}>
           Tasker
         </NavLink>
         <nav className={styles.nav}>
             <GlassButton
               variant="subtle"
               size="s"
-              onClick={() => navigate('/tasker')}
+              onClick={() => navigate(ROUTES.HOME)}
             >
               Задачник
             </GlassButton>
             <GlassButton
               variant="subtle"
               size="s"
-              onClick={() => navigate('/management')}
+              onClick={openCabinetModal}
             >
               Управление
             </GlassButton>

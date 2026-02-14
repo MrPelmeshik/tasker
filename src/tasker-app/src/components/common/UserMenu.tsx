@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ROUTES } from '../../config/routes';
 import { Dropdown } from '../ui/Dropdown';
 import { useAuth } from '../../context/AuthContext';
 import { useModal } from '../../context/ModalContext';
@@ -25,7 +26,7 @@ export const UserMenu: React.FC<UserMenuProps> = ({ userName }) => {
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    navigate(ROUTES.LOGIN);
     setOpen(false);
   };
 

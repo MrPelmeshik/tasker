@@ -4,9 +4,7 @@ import { TaskCardLink } from '../../../../components/tasks';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { Tooltip } from '../../../../components/ui';
 import { LinkIcon } from '../../../../components/icons';
-import { useCustomColorStyle } from '../../../../hooks';
-import { buildEntityUrl } from '../../../../utils/entity-links';
-import { useToast } from '../../../../context';
+import { useCopyEntityLink, useCustomColorStyle } from '../../../../hooks';
 import type { TaskSummary } from '../../../../types';
 import css from '../../../../styles/tree.module.css';
 
@@ -24,15 +22,7 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDet
     data: { type: 'task', task },
   });
   const taskStyle = useCustomColorStyle(task.customColor);
-  const { addSuccess } = useToast();
-
-  const handleCopyLink = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    navigator.clipboard.writeText(buildEntityUrl('task', task.id)).then(
-      () => addSuccess('Ссылка скопирована'),
-      () => {}
-    );
-  };
+  const { copyLink: handleCopyLink } = useCopyEntityLink('task', task.id);
 
   return (
     <div
@@ -50,7 +40,7 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDet
         <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
           <Tooltip content="Копировать ссылку" placement="top">
             <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
-              <LinkIcon style={{ width: 14, height: 14 }} />
+              <LinkIcon className="icon-m" />
             </GlassButton>
           </Tooltip>
         </div>

@@ -192,6 +192,8 @@ body {
   --border-0: 0px;
   --border-1: 1px;
   --border-2: 2px;
+  --border-3: 3px;
+  --border-4: 4px;
 
   /* Common sizes */
   --size-18: 18px;
@@ -240,6 +242,24 @@ body {
   --tree-scrollbar-width: 6px;
   --tree-row-main-min-width: 60px;
   --tree-actions-max-width: 160px;
+  --tree-sort-select-min-width: 200px;
+  --tree-sort-select-max-width: 260px;
+
+  /* Поле multiline в формах */
+  --field-multiline-min-height: 6.5em;
+
+  /* Таблица задач */
+  --table-row-min-height: 60px;
+
+  /* Сетка виджетов */
+  --widget-panel-row-height: 120px;
+
+  /* Список опций select */
+  --select-list-max-height: 200px;
+  --select-option-min-height: 1.5em;
+
+  /* Placeholder под grip-иконку */
+  --grip-placeholder-width: 22px;
 
   /* DnD (drag-and-drop) */
   --dnd-dragging-opacity: 0.4;
@@ -455,6 +475,60 @@ body {
   --shadow-accent: 0 2px 10px rgba(0, 140, 200, 0.15);
 }
 
+/* Глобальные классы для иконок (унифицированный размер) */
+.icon-m {
+  width: var(--icon-m);
+  height: var(--icon-m);
+  flex-shrink: 0;
+}
+
+.icon-l {
+  width: var(--icon-l);
+  height: var(--icon-l);
+  flex-shrink: 0;
+}
+
+/** Иконка с цветом по умолчанию (muted) */
+.icon-muted {
+  color: var(--glass-icon-default);
+}
+
+/** Курсор при перетаскивании */
+.cursor-grabbing {
+  cursor: grabbing;
+}
+
+/** Цвет текста ошибки */
+.text-error {
+  color: var(--color-error);
+}
+
+/** Flex-утилиты */
+.flex-row {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-row-center {
+  display: flex;
+  align-items: center;
+}
+
+.inline-flex-pointer {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.gap-6 { gap: var(--space-6); }
+.gap-8 { gap: var(--space-8); }
+.gap-12 { gap: var(--space-12); }
+
+.mb-16 { margin-bottom: var(--space-16); }
+
 .glass-variant-primary {
   border-color: var(--variant-primary-border);
   background: var(--glass-gradient-primary);
@@ -503,6 +577,23 @@ body {
 
 code {
   font-family: var(--font-family-mono);
+}
+
+/** Компактный scrollbar для tree, select и подобных (6px вместо 8px) */
+.scrollbar-compact::-webkit-scrollbar {
+  width: var(--tree-scrollbar-width);
+  height: var(--tree-scrollbar-width);
+}
+.scrollbar-compact::-webkit-scrollbar-track {
+  background: var(--glass-scrollbar-track);
+  border-radius: var(--space-3);
+}
+.scrollbar-compact::-webkit-scrollbar-thumb {
+  background: var(--glass-scrollbar-thumb);
+  border-radius: var(--space-3);
+}
+.scrollbar-compact::-webkit-scrollbar-thumb:hover {
+  background: var(--glass-scrollbar-thumb-hover);
 }
 
 /* Global scrollbar style to match glass theme */

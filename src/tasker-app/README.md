@@ -2,6 +2,16 @@
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
 
+## Переменные окружения
+
+Скопируйте `.env.example` в `.env` и при необходимости измените значения:
+
+| Переменная | Описание | По умолчанию |
+|------------|----------|--------------|
+| `REACT_APP_API_BASE` | URL API (в production обязательно задать) | `http://localhost:8080` |
+| `REACT_APP_BASE_PATH` | Базовый путь приложения | `/tasker` |
+| `REACT_APP_HUB_PATH` | Путь SignalR Hub | `/hubs/tasker` |
+
 ## Available Scripts
 
 In the project directory, you can run:

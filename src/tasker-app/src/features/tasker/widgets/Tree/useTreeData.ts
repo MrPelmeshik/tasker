@@ -1,8 +1,4 @@
-/**
- * Состояние и загрузка данных для виджета дерева.
- */
-
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   fetchAreaShortCard,
   fetchRootFoldersByArea,
@@ -33,9 +29,7 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
   const expandedFoldersRef = useRef(expandedFolders);
   const foldersByAreaRef = useRef(foldersByArea);
   const foldersByParentRef = useRef(foldersByParent);
-  /** Флаг: первичное разворачивание дерева уже выполнено */
   const hasInitialExpandedRef = useRef(false);
-  /** Дедупликация: in-flight запросы по areaId / folderId */
   const areaLoadPromisesRef = useRef<Map<string, Promise<FolderSummary[]>>>(new Map());
   const folderLoadPromisesRef = useRef<Map<string, Promise<FolderSummary[]>>>(new Map());
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -44,7 +38,6 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
   foldersByAreaRef.current = foldersByArea;
   foldersByParentRef.current = foldersByParent;
 
-  /** Сортировка по title A→Z (области и папки всегда в алфавитном порядке) */
   const sortByTitle = useCallback(<T extends { title?: string }>(items: T[]): T[] => {
     return [...items].sort((a, b) =>
       (a.title ?? '').localeCompare(b.title ?? '', undefined, { sensitivity: 'base' })
@@ -63,79 +56,92 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
     }
   }, [showError, sortByTitle]);
 
-  const loadAreaContent = useCallback(async (areaId: string): Promise<FolderSummary[]> => {
-    const key = `area:${areaId}`;
-    const existing = areaLoadPromisesRef.current.get(key);
-    if (existing) return existing;
+  const createLoadContentPromise = useCallback(
+    (
+      key: string,
+      fetchFolders: () => Promise<FolderSummary[]>,
+      fetchTasks: () => Promise<TaskSummary[]>,
+      onSuccess: (folders: FolderSummary[], tasks: TaskSummary[]) => void,
+      onError: () => void,
+      cacheRef: React.MutableRefObject<Map<string, Promise<FolderSummary[]>>>,
+      errorContext: string
+    ): Promise<FolderSummary[]> => {
+      const existing = cacheRef.current.get(key);
+      if (existing) return existing;
 
-    const signal = abortControllerRef.current?.signal;
-    const promise = (async (): Promise<FolderSummary[]> => {
-      try {
-        setLoadingContent((prev) => new Set(prev).add(key));
-        const [folders, tasks] = await Promise.all([
-          fetchRootFoldersByArea(areaId, { signal }),
-          fetchTaskSummaryByAreaRoot(areaId, { signal }),
-        ]);
-        const sorted = sortByTitle(folders);
-        setFoldersByArea((prev) => new Map(prev).set(areaId, sorted));
-        setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
-        return sorted;
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return [];
-        console.error(`Ошибка загрузки содержимого области ${areaId}:`, error);
-        setFoldersByArea((prev) => new Map(prev).set(areaId, []));
-        setTasksByArea((prev) => new Map(prev).set(areaId, []));
-        showError(error);
-        return [];
-      } finally {
-        areaLoadPromisesRef.current.delete(key);
-        setLoadingContent((prev) => {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        });
-      }
-    })();
-    areaLoadPromisesRef.current.set(key, promise);
-    return promise;
-  }, [showError, sortByTitle]);
+      const promise = (async (): Promise<FolderSummary[]> => {
+        try {
+          setLoadingContent((prev) => new Set(prev).add(key));
+          const [folders, tasks] = await Promise.all([fetchFolders(), fetchTasks()]);
+          const sorted = sortByTitle(folders);
+          onSuccess(sorted, tasks);
+          return sorted;
+        } catch (error) {
+          if (error instanceof Error && error.name === 'AbortError') return [];
+          console.error(errorContext, error);
+          onError();
+          showError(error);
+          return [];
+        } finally {
+          cacheRef.current.delete(key);
+          setLoadingContent((prev) => {
+            const next = new Set(prev);
+            next.delete(key);
+            return next;
+          });
+        }
+      })();
+      cacheRef.current.set(key, promise);
+      return promise;
+    },
+    [showError, sortByTitle]
+  );
 
-  const loadFolderContent = useCallback(async (folderId: string, areaId: string): Promise<FolderSummary[]> => {
-    const key = `folder:${folderId}`;
-    const existing = folderLoadPromisesRef.current.get(key);
-    if (existing) return existing;
+  const loadAreaContent = useCallback(
+    async (areaId: string): Promise<FolderSummary[]> => {
+      const key = `area:${areaId}`;
+      const signal = abortControllerRef.current?.signal;
+      return createLoadContentPromise(
+        key,
+        () => fetchRootFoldersByArea(areaId, { signal }),
+        () => fetchTaskSummaryByAreaRoot(areaId, { signal }),
+        (sorted, tasks) => {
+          setFoldersByArea((prev) => new Map(prev).set(areaId, sorted));
+          setTasksByArea((prev) => new Map(prev).set(areaId, tasks));
+        },
+        () => {
+          setFoldersByArea((prev) => new Map(prev).set(areaId, []));
+          setTasksByArea((prev) => new Map(prev).set(areaId, []));
+        },
+        areaLoadPromisesRef,
+        `Ошибка загрузки содержимого области ${areaId}:`
+      );
+    },
+    [createLoadContentPromise]
+  );
 
-    const signal = abortControllerRef.current?.signal;
-    const promise = (async (): Promise<FolderSummary[]> => {
-      try {
-        setLoadingContent((prev) => new Set(prev).add(key));
-        const [subfolders, tasks] = await Promise.all([
-          fetchChildFolders(folderId, areaId, { signal }),
-          fetchTaskSummaryByFolder(folderId, { signal }),
-        ]);
-        const sorted = sortByTitle(subfolders);
-        setFoldersByParent((prev) => new Map(prev).set(folderId, sorted));
-        setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
-        return sorted;
-      } catch (error) {
-        if (error instanceof Error && error.name === 'AbortError') return [];
-        console.error(`Ошибка загрузки содержимого папки ${folderId}:`, error);
-        setFoldersByParent((prev) => new Map(prev).set(folderId, []));
-        setTasksByFolder((prev) => new Map(prev).set(folderId, []));
-        showError(error);
-        return [];
-      } finally {
-        folderLoadPromisesRef.current.delete(key);
-        setLoadingContent((prev) => {
-          const next = new Set(prev);
-          next.delete(key);
-          return next;
-        });
-      }
-    })();
-    folderLoadPromisesRef.current.set(key, promise);
-    return promise;
-  }, [showError, sortByTitle]);
+  const loadFolderContent = useCallback(
+    async (folderId: string, areaId: string): Promise<FolderSummary[]> => {
+      const key = `folder:${folderId}`;
+      const signal = abortControllerRef.current?.signal;
+      return createLoadContentPromise(
+        key,
+        () => fetchChildFolders(folderId, areaId, { signal }),
+        () => fetchTaskSummaryByFolder(folderId, { signal }),
+        (sorted, tasks) => {
+          setFoldersByParent((prev) => new Map(prev).set(folderId, sorted));
+          setTasksByFolder((prev) => new Map(prev).set(folderId, tasks));
+        },
+        () => {
+          setFoldersByParent((prev) => new Map(prev).set(folderId, []));
+          setTasksByFolder((prev) => new Map(prev).set(folderId, []));
+        },
+        folderLoadPromisesRef,
+        `Ошибка загрузки содержимого папки ${folderId}:`
+      );
+    },
+    [createLoadContentPromise]
+  );
 
   const isRefreshingRef = useRef(false);
   const pendingRefreshRef = useRef(false);
@@ -223,13 +229,11 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
     [foldersByParent, tasksByFolder, loadFolderContent]
   );
 
-  /** Полностью свернуть дерево (все области и папки) */
   const collapseAll = useCallback(() => {
     setExpandedAreas(new Set());
     setExpandedFolders(new Set());
   }, []);
 
-  /** Полностью развернуть дерево: все области и папки, с рекурсивной загрузкой контента */
   const expandAll = useCallback(async () => {
     const areaIds = areas.map((a) => a.id);
     setExpandedAreas(new Set(areaIds));
@@ -261,14 +265,12 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
     setExpandedFolders(allFolderIds);
   }, [areas, foldersByArea, foldersByParent, tasksByArea, tasksByFolder, loadAreaContent, loadFolderContent]);
 
-  /** При первой загрузке областей — разворачивать дерево по умолчанию */
   useEffect(() => {
     if (loading || areas.length === 0 || hasInitialExpandedRef.current) return;
     hasInitialExpandedRef.current = true;
     expandAll();
   }, [loading, areas.length, expandAll]);
 
-  /** Все области развёрнуты (упрощённо: сверху дерева всё открыто) */
   const isAllExpanded =
     areas.length > 0 &&
     expandedAreas.size === areas.length;

@@ -1,16 +1,14 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Modal } from '../common/Modal';
-import { GlassInput, Loader, ModalCloseButton, ModalCancelButton, ModalSaveButton, ModalEditButton } from '../ui';
+import { SimpleModalHeader } from '../common/SimpleModalHeader';
+import { Loader } from '../ui';
 import { useToast } from '../../context/ToastContext';
-import { getCurrentUser, updateProfile } from '../../services/api/auth';
-import { areaApi } from '../../services/api/areas';
+import { updateProfile } from '../../services/api/auth';
 import css from '../../styles/modal.module.css';
 import cabinetCss from './cabinet.module.css';
-import formCss from '../../styles/modal-form.module.css';
-import { AREA_ROLE_LABELS } from '../../utils/area-role';
-import type { UserInfo, AreaResponse, AreaRole } from '../../types';
-
-type AreaWithRole = { area: AreaResponse; role: AreaRole | null };
+import { ProfileSection } from './ProfileSection';
+import { AreasSection } from './AreasSection';
+import { useCabinetData } from './useCabinetData';
 
 export interface CabinetModalProps {
   isOpen: boolean;
@@ -19,10 +17,8 @@ export interface CabinetModalProps {
 
 export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) => {
   const { showError } = useToast();
-  const [user, setUser] = useState<UserInfo | null>(null);
-  const [areasWithRoles, setAreasWithRoles] = useState<AreaWithRole[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const { user, setUser, areasWithRoles, loading, error } = useCabinetData({ isOpen, showError });
+
   const [isEditMode, setIsEditMode] = useState(false);
   const [editUsername, setEditUsername] = useState('');
   const [editEmail, setEditEmail] = useState('');
@@ -36,86 +32,37 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
   const isSubmittingRef = useRef(false);
 
   useEffect(() => {
-    if (!isOpen) return;
+    if (isOpen) {
+      setIsEditMode(false);
+    }
+  }, [isOpen]);
 
-    const ctrl = new AbortController();
-    const signal = ctrl.signal;
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setIsEditMode(false);
+  useEffect(() => {
+    if (user && !isEditMode) {
+      setEditUsername(user.username || '');
+      setEditEmail(user.email || '');
+      setEditFirstName(user.firstName || '');
+      setEditLastName(user.lastName || '');
+    }
+  }, [user, isEditMode]);
 
-    const load = async () => {
-      try {
-        const [userRes, areasData] = await Promise.all([
-          getCurrentUser({ signal }),
-          areaApi.getAll({ signal }),
-        ]);
-
-        if (cancelled) return;
-
-        if (userRes.success && userRes.data) {
-          const userData = userRes.data;
-          setUser(userData);
-          setEditUsername(userData.username || '');
-          setEditEmail(userData.email || '');
-          setEditFirstName(userData.firstName || '');
-          setEditLastName(userData.lastName || '');
-          setCurrentPassword('');
-          setNewPassword('');
-          setConfirmNewPassword('');
-
-          const areas = Array.isArray(areasData) ? areasData.filter((a: AreaResponse) => a.isActive) : [];
-          const membersPromises = areas.map((a: AreaResponse) => areaApi.getMembers(a.id, { signal }));
-          const membersResults = await Promise.all(membersPromises);
-
-          if (cancelled) return;
-
-          const withRoles: AreaWithRole[] = areas.map((area: AreaResponse, i: number) => {
-            const members = membersResults[i] ?? [];
-            const myMember = members.find((m: { userId: string }) => m.userId === userData.id);
-            return {
-              area,
-              role: myMember?.role ?? null,
-            };
-          });
-          setAreasWithRoles(withRoles);
-        } else {
-          const msg = userRes.message || 'Ошибка загрузки профиля';
-          setError(msg);
-          showError(msg);
-        }
-      } catch (err) {
-        if (err instanceof Error && err.name === 'AbortError') return;
-        if (!cancelled) {
-          const msg = err instanceof Error ? err.message : 'Ошибка загрузки';
-          setError(msg);
-          showError(err);
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    };
-
-    load();
-    return () => {
-      cancelled = true;
-      ctrl.abort();
-    };
-  }, [isOpen, showError]);
-
-  const handleStartEdit = () => {
-    setSaveError(null);
-    setIsEditMode(true);
-  };
-
-  const handleCancelEdit = () => {
+  const syncEditFromUser = () => {
     if (user) {
       setEditUsername(user.username || '');
       setEditEmail(user.email || '');
       setEditFirstName(user.firstName || '');
       setEditLastName(user.lastName || '');
     }
+  };
+
+  const handleStartEdit = () => {
+    setSaveError(null);
+    syncEditFromUser();
+    setIsEditMode(true);
+  };
+
+  const handleCancelEdit = () => {
+    syncEditFromUser();
     setCurrentPassword('');
     setNewPassword('');
     setConfirmNewPassword('');
@@ -177,149 +124,39 @@ export const CabinetModal: React.FC<CabinetModalProps> = ({ isOpen, onClose }) =
   return (
     <Modal isOpen={isOpen} onClose={onClose} size="medium">
       <div className={css.modalContent}>
-        <div className={css.modalHeader}>
-          <h3 className={css.modalTitle}>Личный кабинет</h3>
-          <div className={css.modalActions}>
-            <ModalCloseButton onClick={onClose} />
-          </div>
-        </div>
+        <SimpleModalHeader title="Личный кабинет" onClose={onClose} />
 
         <div className={css.modalBody}>
           {loading ? (
             <div className={cabinetCss.loading}><Loader size="m" centered ariaLabel="Загрузка" /></div>
           ) : error ? (
-            <div className={cabinetCss.loading} style={{ color: 'var(--color-error)' }}>{error}</div>
+            <div className={`${cabinetCss.loading} text-error`}>{error}</div>
           ) : (
             <>
-              <section className={cabinetCss.section}>
-                <div className={cabinetCss.sectionHeader}>
-                  <h4 className={cabinetCss.sectionTitle}>Профиль</h4>
-                  <div className={cabinetCss.sectionHeaderActions}>
-                    {isEditMode ? (
-                      <>
-                        <ModalCancelButton onClick={handleCancelEdit} disabled={saving} />
-                        <ModalSaveButton onClick={handleSaveProfile} disabled={saving} />
-                      </>
-                    ) : user ? (
-                      <ModalEditButton onClick={handleStartEdit} />
-                    ) : null}
-                  </div>
-                </div>
-                <div className={cabinetCss.profileBlock}>
-                  <div className={cabinetCss.avatar} aria-hidden />
-                  <div className={cabinetCss.profileFields}>
-                    {user && (
-                      <>
-                        {isEditMode ? (
-                          <>
-                            <GlassInput
-                              fullWidth
-                              size="m"
-                              label="Логин"
-                              value={editUsername}
-                              onChange={e => setEditUsername(e.target.value)}
-                              placeholder="Логин"
-                            />
-                            <GlassInput
-                              fullWidth
-                              size="m"
-                              label="Email"
-                              value={editEmail}
-                              onChange={e => setEditEmail(e.target.value)}
-                              placeholder="Email"
-                            />
-                            <GlassInput
-                              fullWidth
-                              size="m"
-                              label="Имя"
-                              value={editFirstName}
-                              onChange={e => setEditFirstName(e.target.value)}
-                              placeholder="Имя"
-                            />
-                            <GlassInput
-                              fullWidth
-                              size="m"
-                              label="Фамилия"
-                              value={editLastName}
-                              onChange={e => setEditLastName(e.target.value)}
-                              placeholder="Фамилия"
-                            />
-                            <GlassInput
-                              fullWidth
-                              size="m"
-                              type="password"
-                              label="Текущий пароль (для смены)"
-                              value={currentPassword}
-                              onChange={e => setCurrentPassword(e.target.value)}
-                              placeholder="Текущий пароль"
-                            />
-                            <GlassInput
-                              fullWidth
-                              size="m"
-                              type="password"
-                              label="Новый пароль"
-                              value={newPassword}
-                              onChange={e => setNewPassword(e.target.value)}
-                              placeholder="Минимум 8 символов"
-                            />
-                            <GlassInput
-                              fullWidth
-                              size="m"
-                              type="password"
-                              label="Подтвердите новый пароль"
-                              value={confirmNewPassword}
-                              onChange={e => setConfirmNewPassword(e.target.value)}
-                              placeholder="Повторите пароль"
-                            />
-                            {saveError && (
-                              <div className={`${formCss.fieldValueReadonly} ${formCss.fieldValueReadonlyError}`}>
-                                {saveError}
-                              </div>
-                            )}
-                          </>
-                        ) : (
-                          <>
-                            <div className={cabinetCss.profileRow}>
-                              <span className={cabinetCss.profileLabel}>Логин</span>
-                              <span className={cabinetCss.profileValue}>{user.username || '—'}</span>
-                            </div>
-                            <div className={cabinetCss.profileRow}>
-                              <span className={cabinetCss.profileLabel}>Email</span>
-                              <span className={cabinetCss.profileValue}>{user.email || '—'}</span>
-                            </div>
-                            <div className={cabinetCss.profileRow}>
-                              <span className={cabinetCss.profileLabel}>Имя</span>
-                              <span className={cabinetCss.profileValue}>{user.firstName || '—'}</span>
-                            </div>
-                            <div className={cabinetCss.profileRow}>
-                              <span className={cabinetCss.profileLabel}>Фамилия</span>
-                              <span className={cabinetCss.profileValue}>{user.lastName || '—'}</span>
-                            </div>
-                          </>
-                        )}
-                      </>
-                    )}
-                  </div>
-                </div>
-              </section>
-
-              <section className={cabinetCss.section}>
-                <h4 className={cabinetCss.sectionTitle}>Мои области</h4>
-                {areasWithRoles.length === 0 ? (
-                  <div className={cabinetCss.areaEmpty}>Нет доступных областей</div>
-                ) : (
-                  <ul className={cabinetCss.areasList}>
-                    {areasWithRoles.map(({ area, role }) => (
-                      <li key={area.id} className={cabinetCss.areaItem}>
-                        <span className={cabinetCss.areaTitle}>{area.title}</span>
-                        {role && (
-                          <span className={cabinetCss.areaRole}>{AREA_ROLE_LABELS[role] ?? role}</span>
-                        )}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </section>
+              <ProfileSection
+                user={user}
+                isEditMode={isEditMode}
+                editUsername={editUsername}
+                editEmail={editEmail}
+                editFirstName={editFirstName}
+                editLastName={editLastName}
+                currentPassword={currentPassword}
+                newPassword={newPassword}
+                confirmNewPassword={confirmNewPassword}
+                saveError={saveError}
+                saving={saving}
+                onEditUsernameChange={setEditUsername}
+                onEditEmailChange={setEditEmail}
+                onEditFirstNameChange={setEditFirstName}
+                onEditLastNameChange={setEditLastName}
+                onCurrentPasswordChange={setCurrentPassword}
+                onNewPasswordChange={setNewPassword}
+                onConfirmNewPasswordChange={setConfirmNewPassword}
+                onStartEdit={handleStartEdit}
+                onCancelEdit={handleCancelEdit}
+                onSave={handleSaveProfile}
+              />
+              <AreasSection areasWithRoles={areasWithRoles} />
             </>
           )}
         </div>
