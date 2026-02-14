@@ -1,6 +1,10 @@
 import { getStoredTokens, isAccessTokenExpiredOrMissing, setStoredTokens, clearStoredTokens } from '../storage/token';
 import type { ApiResponse, RefreshTokenResponse } from '../../types';
 import { parseApiDates } from '../../utils/api-date';
+import {
+	AUTH_TOKENS_CLEARED_EVENT,
+	createAuthTokensClearedDetail,
+} from './auth-events';
 
 const API_BASE =
   (process.env.REACT_APP_API_BASE ||
@@ -12,11 +16,9 @@ const API_BASE =
     })()) +
   '/api';
 
-/**
- * Обновить access token через refresh (HttpOnly cookie).
- * @returns true если токен успешно обновлён
- */
-export async function refreshAccessToken(): Promise<boolean> {
+let refreshPromise: Promise<boolean> | null = null;
+
+async function doRefreshAccessToken(): Promise<boolean> {
 	try {
 		const res = await fetch(`${API_BASE}/auth/refresh`, {
 			method: 'POST',
@@ -38,18 +40,35 @@ export async function refreshAccessToken(): Promise<boolean> {
 }
 
 /**
+ * Обновить access token через refresh (HttpOnly cookie).
+ * Дедупликация: параллельные вызовы используют один запрос.
+ * @returns true если токен успешно обновлён
+ */
+export async function refreshAccessToken(): Promise<boolean> {
+	if (refreshPromise) return refreshPromise;
+	refreshPromise = doRefreshAccessToken();
+	try {
+		const ok = await refreshPromise;
+		if (!ok) {
+			clearStoredTokens();
+			window.dispatchEvent(
+				new CustomEvent(AUTH_TOKENS_CLEARED_EVENT, { detail: createAuthTokensClearedDetail() }),
+			);
+		}
+		return ok;
+	} finally {
+		refreshPromise = null;
+	}
+}
+
+/**
  * Убедиться, что access token актуален. При истечении вызывает refresh.
- * При неудаче refresh — clearStoredTokens().
+ * При неудаче refresh — clearStoredTokens() и auth:tokens-cleared (в refreshAccessToken).
  * @returns true если токен готов к использованию
  */
 export async function ensureAccessTokenFresh(): Promise<boolean> {
 	if (!isAccessTokenExpiredOrMissing()) return true;
-	const ok = await refreshAccessToken();
-	if (!ok) {
-		clearStoredTokens();
-		return false;
-	}
-	return true;
+	return refreshAccessToken();
 }
 
 export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
@@ -86,8 +105,6 @@ export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promi
 				headers: newHeaders,
 				credentials: init?.credentials ?? 'include',
 			});
-		} else {
-			clearStoredTokens();
 		}
 	}
 

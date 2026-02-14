@@ -1,7 +1,16 @@
 import React from 'react';
 import { getStoredUserName, setStoredUserName, clearStoredUser } from '../services/storage/user';
-import { clearStoredTokens, getStoredTokens, setStoredTokens, isAccessTokenExpiredOrMissing } from '../services/storage/token';
+import {
+  clearStoredTokens,
+  getStoredTokens,
+  setStoredTokens,
+  isAccessTokenExpiredOrMissing,
+  isTokenExpiringWithin,
+  getRefreshBufferMinutes,
+} from '../services/storage/token';
 import { loginRequest, logoutRequest, registerRequest } from '../services/api/auth';
+import { ensureAccessTokenFresh, refreshAccessToken } from '../services/api/client';
+import { AUTH_TOKENS_CLEARED_EVENT, isAuthTokensClearedEvent } from '../services/api/auth-events';
 
 type AuthContextValue = {
   userName: string | null;
@@ -19,6 +28,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const tokens = getStoredTokens();
     return Boolean(tokens) && !isAccessTokenExpiredOrMissing();
   });
+  const hasTokensRef = React.useRef(hasTokens);
+  hasTokensRef.current = hasTokens;
 
   const login = React.useCallback(async (username: string, password: string) => {
     const response = await loginRequest(username, password);
@@ -52,35 +63,72 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     void logoutRequest();
   }, []);
 
-  // Периодическая проверка истечения токенов
-  React.useEffect(() => {
-    const checkTokenExpiration = () => {
-      const tokens = getStoredTokens();
-      if (tokens && isAccessTokenExpiredOrMissing()) {
-        // Токен истек, выходим из системы
-        clearStoredTokens();
-        setHasTokens(false);
-        clearStoredUser();
-        setUserName(null);
-      } else if (!tokens && hasTokens) {
-        // Токены были удалены, обновляем состояние
-        setHasTokens(false);
-        clearStoredUser();
-        setUserName(null);
-      } else if (tokens && !hasTokens) {
-        // Токены появились и не истекли, обновляем состояние
+  /** Принудительная синхронизация при очистке токенов (например из apiFetch) */
+  const handleTokensCleared = React.useCallback(() => {
+    setHasTokens(false);
+    clearStoredUser();
+    setUserName(null);
+  }, []);
+
+  /** Проверка токена: refresh при истечении, proactive refresh, синхронизация состояния */
+  const checkTokenExpiration = React.useCallback(async () => {
+    const tokens = getStoredTokens();
+    const bufferMinutes = getRefreshBufferMinutes();
+
+    if (tokens && isAccessTokenExpiredOrMissing()) {
+      const ok = await ensureAccessTokenFresh();
+      if (ok) {
         setHasTokens(true);
+      } else {
+        handleTokensCleared();
+      }
+    } else if (tokens && isTokenExpiringWithin(bufferMinutes) && !isAccessTokenExpiredOrMissing()) {
+      const ok = await refreshAccessToken();
+      if (ok) setHasTokens(true);
+    } else if (!tokens && hasTokensRef.current) {
+      handleTokensCleared();
+    } else if (tokens && !hasTokensRef.current && !isAccessTokenExpiredOrMissing()) {
+      setHasTokens(true);
+    }
+  }, [handleTokensCleared]);
+
+  React.useEffect(() => {
+    const runCheck = () => checkTokenExpiration();
+
+    runCheck();
+
+    let intervalId: ReturnType<typeof setInterval> | null = null;
+
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        runCheck();
+        intervalId = setInterval(runCheck, 60000);
+      } else {
+        if (intervalId) {
+          clearInterval(intervalId);
+          intervalId = null;
+        }
       }
     };
 
-    // Проверяем сразу при монтировании
-    checkTokenExpiration();
+    if (document.visibilityState === 'visible') {
+      intervalId = setInterval(runCheck, 60000);
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
 
-    // Проверяем каждые 30 секунд
-    const interval = setInterval(checkTokenExpiration, 30000);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [checkTokenExpiration]);
 
-    return () => clearInterval(interval);
-  }, [hasTokens]);
+  React.useEffect(() => {
+    const onTokensCleared = (e: Event) => {
+      if (isAuthTokensClearedEvent(e)) handleTokensCleared();
+    };
+    window.addEventListener(AUTH_TOKENS_CLEARED_EVENT, onTokensCleared);
+    return () => window.removeEventListener(AUTH_TOKENS_CLEARED_EVENT, onTokensCleared);
+  }, [handleTokensCleared]);
 
   const value = React.useMemo<AuthContextValue>(() => ({
     userName,
