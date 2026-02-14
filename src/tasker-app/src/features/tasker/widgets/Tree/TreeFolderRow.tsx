@@ -3,7 +3,9 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { FolderCardLink } from '../../../../components/folders';
 import { Tooltip } from '../../../../components/ui';
-import { GripVerticalIcon, FolderIcon, CheckSquareIcon, EyeIcon } from '../../../../components/icons';
+import { GripVerticalIcon, FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../components/icons';
+import { buildEntityUrl } from '../../../../utils/entity-links';
+import { useToast } from '../../../../context';
 import { useCustomColorStyle } from '../../../../hooks';
 import { handleExpandKeyDown } from '../../../../utils/keyboard';
 import { isValidDrop } from './treeUtils';
@@ -58,6 +60,15 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
   const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: `folder-${folder.id}`, data: { folder } });
   const canDrop = isValidDrop(activeDrag?.data, `folder-${folder.id}`, foldersByArea, foldersByParent);
   const customColorStyle = useCustomColorStyle(folder.customColor);
+  const { addSuccess } = useToast();
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(buildEntityUrl('folder', folder.id)).then(
+      () => addSuccess('Ссылка скопирована'),
+      () => {}
+    );
+  };
 
   return (
     <React.Fragment>
@@ -90,6 +101,11 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
               <Tooltip content="Создать задачу" placement="top">
                 <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateTask(e); }} aria-label="Создать задачу">
                   <CheckSquareIcon style={{ width: 14, height: 14 }} />
+                </GlassButton>
+              </Tooltip>
+              <Tooltip content="Копировать ссылку" placement="top">
+                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
+                  <LinkIcon style={{ width: 14, height: 14 }} />
                 </GlassButton>
               </Tooltip>
             </div>

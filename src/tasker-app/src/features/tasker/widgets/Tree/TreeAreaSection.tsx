@@ -3,7 +3,9 @@ import { useDroppable } from '@dnd-kit/core';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { AreaCardLink } from '../../../../components/areas';
 import { Tooltip } from '../../../../components/ui';
-import { FolderIcon, CheckSquareIcon, EyeIcon } from '../../../../components/icons';
+import { FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../components/icons';
+import { buildEntityUrl } from '../../../../utils/entity-links';
+import { useToast } from '../../../../context';
 import { useCustomColorStyle } from '../../../../hooks';
 import { handleExpandKeyDown } from '../../../../utils/keyboard';
 import { isValidDrop } from './treeUtils';
@@ -51,6 +53,15 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
   const { setNodeRef, isOver } = useDroppable({ id: `area-root-${area.id}`, data: {} });
   const canDrop = isValidDrop(activeDrag?.data, `area-root-${area.id}`, foldersByArea, foldersByParent);
   const customColorStyle = useCustomColorStyle(area.customColor);
+  const { addSuccess } = useToast();
+
+  const handleCopyLink = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    navigator.clipboard.writeText(buildEntityUrl('area', area.id)).then(
+      () => addSuccess('Ссылка скопирована'),
+      () => {}
+    );
+  };
 
   return (
     <div className={css.areaSection}>
@@ -79,6 +90,11 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
             <Tooltip content="Создать задачу" placement="top">
               <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateTask(e); }} aria-label="Создать задачу">
                 <CheckSquareIcon style={{ width: 14, height: 14 }} />
+              </GlassButton>
+            </Tooltip>
+            <Tooltip content="Копировать ссылку" placement="top">
+              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
+                <LinkIcon style={{ width: 14, height: 14 }} />
               </GlassButton>
             </Tooltip>
           </div>

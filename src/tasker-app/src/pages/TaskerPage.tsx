@@ -6,8 +6,13 @@ import { Tree } from '../features/tasker/widgets/Tree';
 import { DeadlinesList } from '../features/tasker/widgets/DeadlinesList';
 import { WidgetPanel } from '../components/common/WidgetPanel';
 import { RealtimeBanner } from '../components/common/RealtimeBanner';
+import { useDeepLink } from '../hooks';
 
 export const TaskerPage: React.FC = () => {
+  const { entityType, entityId } = useDeepLink();
+  const initialDeepLink =
+    entityType && entityId ? { entityType, entityId } : undefined;
+
   return (
     <div className={styles.taskerPageContainer}>
       <div className={styles.bannerWrapper}>
@@ -19,7 +24,7 @@ export const TaskerPage: React.FC = () => {
       <div className={styles.sidebarArea}>
         <WidgetPanel variant="sidebar">
           <DeadlinesList colSpan={1} rowSpan={1} />
-          <Tree colSpan={1} rowSpan={1} />
+          <Tree colSpan={1} rowSpan={1} initialDeepLink={initialDeepLink} />
           <LastActionList colSpan={1} rowSpan={1} />
         </WidgetPanel>
       </div>

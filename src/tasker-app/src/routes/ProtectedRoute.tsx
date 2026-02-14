@@ -6,7 +6,8 @@ export const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ childr
   const { isAuth } = useAuth();
   const location = useLocation();
   if (!isAuth) {
-    return <Navigate to="/login" replace state={{ from: location }} />;
+    const returnUrl = location.pathname + location.search;
+    return <Navigate to={returnUrl ? `/login?returnUrl=${encodeURIComponent(returnUrl)}` : '/login'} replace />;
   }
   return <>{children}</>;
 };

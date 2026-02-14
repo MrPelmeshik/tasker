@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DndContext,
@@ -15,6 +15,9 @@ import {
   fetchChildFolders,
   fetchTaskSummaryByFolder,
   fetchTaskSummaryByAreaRoot,
+  fetchAreaById,
+  fetchFolderById,
+  fetchTaskById,
   updateFolder,
   updateTask,
 } from '../../../../services/api';
@@ -25,6 +28,8 @@ import { LayoutGridIcon } from '../../../../components/icons';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
 import { parseApiErrorMessage } from '../../../../utils/parse-api-error';
 import type { WidgetSizeProps, FolderSummary } from '../../../../types';
+import type { FolderResponse } from '../../../../types/api';
+import type { EntityType } from '../../../../utils/entity-links';
 import { collisionDetection, parseDropTarget, isValidDrop, type DragPayload } from './treeUtils';
 import { useTreeData } from './useTreeData';
 import { useTreeHandlers } from './useTreeHandlers';
@@ -35,7 +40,12 @@ import { TreeDndOverlay } from './TreeDndOverlay';
 import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
 import css from '../../../../styles/tree.module.css';
 
-export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
+export interface TreeProps extends WidgetSizeProps {
+  /** Deep link для открытия сущности при загрузке страницы */
+  initialDeepLink?: { entityType: EntityType; entityId: string };
+}
+
+export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink }) => {
   const { openAreaModal, openFolderModal, openTaskModal } = useModal();
   const { notifyTaskUpdate, subscribeToTaskUpdates } = useTaskUpdate();
   const { addError, addSuccess } = useToast();
@@ -62,6 +72,7 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     setExpandedFolders,
     loading,
     loadingContent,
+    loadAreaContent,
     loadFolderContent,
     toggleArea,
     toggleFolder,
@@ -87,6 +98,119 @@ export const Tree: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   });
 
   const [activeDrag, setActiveDrag] = useState<{ id: string; data: DragPayload } | null>(null);
+  const processedDeepLinkRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (loading || !initialDeepLink) return;
+    const key = `${initialDeepLink.entityType}:${initialDeepLink.entityId}`;
+    if (processedDeepLinkRef.current === key) return;
+    processedDeepLinkRef.current = key;
+
+    const process = async () => {
+      const { entityType, entityId } = initialDeepLink;
+      try {
+        if (entityType === 'area') {
+          const area = await fetchAreaById(entityId);
+          if (!area) {
+            addError('Ресурс недоступен');
+            return;
+          }
+          setExpandedAreas((prev) => new Set(prev).add(area.id));
+          if (!foldersByArea.has(area.id) && !tasksByArea.has(area.id)) {
+            await loadAreaContent(area.id);
+          }
+          openAreaModal(area, 'edit', handlers.handleAreaSave, handlers.handleAreaDelete);
+        } else if (entityType === 'folder') {
+          const folder = await fetchFolderById(entityId);
+          if (!folder) {
+            addError('Ресурс недоступен');
+            return;
+          }
+          setExpandedAreas((prev) => new Set(prev).add(folder.areaId));
+          const folderIdsToExpand: string[] = [];
+          let current: FolderResponse | null = folder;
+          while (current) {
+            folderIdsToExpand.unshift(current.id);
+            if (current.parentFolderId) {
+              const parent: FolderResponse | null = await fetchFolderById(current.parentFolderId);
+              current = parent;
+            } else {
+              current = null;
+            }
+          }
+          if (!foldersByArea.has(folder.areaId) && !tasksByArea.has(folder.areaId)) {
+            await loadAreaContent(folder.areaId);
+          }
+          for (let i = 0; i < folderIdsToExpand.length - 1; i++) {
+            const fid = folderIdsToExpand[i];
+            setExpandedFolders((prev) => new Set(prev).add(fid));
+            if (!foldersByParent.has(fid) && !tasksByFolder.has(fid)) {
+              await loadFolderContent(fid, folder.areaId);
+            }
+          }
+          setExpandedFolders((prev) => new Set(prev).add(folder.id));
+          if (!foldersByParent.has(folder.id) && !tasksByFolder.has(folder.id)) {
+            await loadFolderContent(folder.id, folder.areaId);
+          }
+          const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+          openFolderModal(folder, 'edit', areasForModal, handlers.handleFolderSave, handlers.handleFolderDelete);
+        } else {
+          const task = await fetchTaskById(entityId);
+          if (!task) {
+            addError('Ресурс недоступен');
+            return;
+          }
+          setExpandedAreas((prev) => new Set(prev).add(task.areaId));
+          if (task.folderId) {
+            let currentFolderId: string | null = task.folderId;
+            const folderChain: { id: string; areaId: string }[] = [];
+            while (currentFolderId) {
+              const f: FolderResponse | null = await fetchFolderById(currentFolderId);
+              if (!f) break;
+              folderChain.unshift({ id: f.id, areaId: f.areaId });
+              currentFolderId = f.parentFolderId ?? null;
+            }
+            if (!foldersByArea.has(task.areaId) && !tasksByArea.has(task.areaId)) {
+              await loadAreaContent(task.areaId);
+            }
+            for (let i = 0; i < folderChain.length; i++) {
+              const { id: fid, areaId } = folderChain[i];
+              setExpandedFolders((prev) => new Set(prev).add(fid));
+              if (!foldersByParent.has(fid) && !tasksByFolder.has(fid)) {
+                await loadFolderContent(fid, areaId);
+              }
+            }
+          } else if (!foldersByArea.has(task.areaId) && !tasksByArea.has(task.areaId)) {
+            await loadAreaContent(task.areaId);
+          }
+          const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
+          openTaskModal(task, 'edit', handlers.handleTaskSave, handlers.handleTaskDelete, undefined, undefined, areasForTaskModal);
+        }
+      } catch {
+        addError('Ресурс недоступен');
+      }
+    };
+    process();
+  }, [
+    loading,
+    initialDeepLink,
+    areas,
+    foldersByArea,
+    foldersByParent,
+    tasksByArea,
+    tasksByFolder,
+    setExpandedAreas,
+    setExpandedFolders,
+    setFoldersByArea,
+    setTasksByArea,
+    loadAreaContent,
+    loadFolderContent,
+    openAreaModal,
+    openFolderModal,
+    openTaskModal,
+    addError,
+    handlers,
+  ]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),

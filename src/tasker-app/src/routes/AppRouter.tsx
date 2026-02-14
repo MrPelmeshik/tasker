@@ -26,6 +26,21 @@ const RouterContent: React.FC = () => {
           <Routes>
             <Route path="/" element={<Navigate to="/tasker" replace />} />
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/tasker/area/:id" element={
+              <ProtectedRoute>
+                <TaskerPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/tasker/folder/:id" element={
+              <ProtectedRoute>
+                <TaskerPage />
+              </ProtectedRoute>
+            } />
+            <Route path="/tasker/task/:id" element={
+              <ProtectedRoute>
+                <TaskerPage />
+              </ProtectedRoute>
+            } />
             <Route path="/tasker" element={
               <ProtectedRoute>
                 <TaskerPage />

@@ -26,7 +26,10 @@ import {
   ModalEditButton,
   ModalResetFieldButton,
 } from '../ui';
+import { Tooltip } from '../ui/Tooltip';
 import { PlusIcon } from '../icons/PlusIcon';
+import { LinkIcon } from '../icons/LinkIcon';
+import { buildEntityUrl } from '../../utils/entity-links';
 import { GripVerticalIcon } from '../icons/GripVerticalIcon';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
@@ -343,7 +346,15 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   title = 'Область',
   size = 'medium',
 }) => {
-  const { addError } = useToast();
+  const { addError, addSuccess } = useToast();
+
+  const handleCopyLink = () => {
+    if (!area?.id) return;
+    navigator.clipboard.writeText(buildEntityUrl('area', area.id)).then(
+      () => addSuccess('Ссылка скопирована'),
+      () => {}
+    );
+  };
   const [originalMembers, setOriginalMembers] = useState<AreaMemberResponse[]>([]);
   const [pendingRoleChanges, setPendingRoleChanges] = useState<Record<string, AreaRole>>({});
   const [pendingAdds, setPendingAdds] = useState<Array<{ login: string; role: AreaRole }>>([]);
@@ -566,6 +577,13 @@ export const AreaModal: React.FC<AreaModalProps> = ({
           </h3>
           <div className={css.modalActions}>
             <ModalCloseButton onClick={handleClose} disabled={isLoading} />
+            {area?.id && (
+              <Tooltip content="Копировать ссылку" placement="bottom">
+                <GlassButton variant="subtle" size="m" onClick={handleCopyLink} disabled={isLoading} aria-label="Копировать ссылку">
+                  <LinkIcon style={{ width: 18, height: 18 }} />
+                </GlassButton>
+              </Tooltip>
+            )}
             {isViewMode ? (
               <>
                 {canEdit && (

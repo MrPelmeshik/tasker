@@ -15,5 +15,6 @@ export { SaveIcon } from './SaveIcon';
 export { ResetIcon } from './ResetIcon';
 export { GripVerticalIcon } from './GripVerticalIcon';
 export { LayoutGridIcon } from './LayoutGridIcon';
+export { LinkIcon } from './LinkIcon';
 export { SunIcon } from './SunIcon';
 export { MoonIcon } from './MoonIcon';

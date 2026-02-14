@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { ConfirmModal } from '../common/ConfirmModal';
 import {
+  GlassButton,
   GlassInput,
   GlassTextarea,
   GlassSelect,
@@ -12,11 +13,14 @@ import {
   ModalEditButton,
   ModalResetFieldButton,
 } from '../ui';
+import { Tooltip } from '../ui/Tooltip';
+import { LinkIcon } from '../icons/LinkIcon';
+import { buildEntityUrl } from '../../utils/entity-links';
 import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { useEvents } from '../activities/useEvents';
 import { useEntityFormModal } from '../../hooks';
-import { useTaskUpdate } from '../../context';
+import { useTaskUpdate, useToast } from '../../context';
 import { CONFIRM_UNSAVED_CHANGES, CONFIRM_RETURN_TO_VIEW, getConfirmDeleteConfig } from '../../constants/confirm-modals';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
@@ -52,6 +56,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   areas,
 }) => {
   const [folderOptions, setFolderOptions] = useState<Array<{ value: string; label: string }>>([]);
+  const { addSuccess } = useToast();
+
+  const handleCopyLink = () => {
+    if (!task?.id) return;
+    navigator.clipboard.writeText(buildEntityUrl('task', task.id)).then(
+      () => addSuccess('Ссылка скопирована'),
+      () => {}
+    );
+  };
   const [loadingFolders, setLoadingFolders] = useState(false);
 
   const modal = useEntityFormModal<TaskCreateRequest>({
@@ -170,6 +183,13 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           </h3>
           <div className={css.modalActions}>
             <ModalCloseButton onClick={handleClose} disabled={isLoading} />
+            {task?.id && (
+              <Tooltip content="Копировать ссылку" placement="bottom">
+                <GlassButton variant="subtle" size="m" onClick={handleCopyLink} disabled={isLoading} aria-label="Копировать ссылку">
+                  <LinkIcon style={{ width: 18, height: 18 }} />
+                </GlassButton>
+              </Tooltip>
+            )}
             {isViewMode ? (
               <>
                 <ModalEditButton variant="primary" onClick={() => setIsEditMode(true)} disabled={isLoading} />

@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import styles from '../styles/login-page.module.css';
 import { GlassInput } from '../components/ui/GlassInput';
 import { GlassButton } from '../components/ui/GlassButton';
@@ -11,6 +11,8 @@ import { parseApiErrorMessage } from '../utils/parse-api-error';
 
 export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const returnUrl = searchParams.get('returnUrl') ?? undefined;
   const { login, register, isAuth } = useAuth();
   const { addError } = useToast();
   const [name, setName] = useState<string>('');
@@ -31,9 +33,9 @@ export const LoginPage: React.FC = () => {
 
   useEffect(() => {
     if (isAuth) {
-      navigate('/tasker', { replace: true });
+      navigate(returnUrl && returnUrl.startsWith('/') ? returnUrl : '/tasker', { replace: true });
     }
-  }, [isAuth, navigate]);
+  }, [isAuth, navigate, returnUrl]);
 
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,7 +78,7 @@ export const LoginPage: React.FC = () => {
       } else {
         await login(trimmed, password);
       }
-      navigate('/tasker');
+      navigate(returnUrl && returnUrl.startsWith('/') ? returnUrl : '/tasker');
     } catch (err) {
       setError('Серверная ошибка');
       setErrorDetails(err instanceof Error ? err.message : 'Ошибка входа');
