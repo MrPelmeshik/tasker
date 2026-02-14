@@ -3,7 +3,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { FolderCardLink } from '../../../../components/folders';
 import { Tooltip } from '../../../../components/ui';
-import { GripVerticalIcon, FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../components/icons';
+import { FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../components/icons';
 import { buildEntityUrl } from '../../../../utils/entity-links';
 import { useToast } from '../../../../context';
 import { useCustomColorStyle } from '../../../../hooks';
@@ -32,7 +32,7 @@ export interface TreeFolderRowProps {
   renderTask: (task: TaskSummary, level: number) => React.ReactNode;
 }
 
-/** Строка папки с drag handle и droppable */
+/** Строка папки с droppable, drag за весь блок */
 export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
   folder,
   areaId,
@@ -85,6 +85,8 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
           className={`${css.folderCard} ${isExpanded ? css.expanded : ''} ${isOver && canDrop ? css.isOverValid : ''} ${isOver && !canDrop ? css.isOverInvalid : ''}`}
           data-custom-color={folder.customColor ? 'true' : undefined}
           style={customColorStyle}
+          {...attributes}
+          {...listeners}
           onClick={hasChildren ? onToggle : undefined}
           role={hasChildren ? 'button' : undefined}
           tabIndex={hasChildren ? 0 : undefined}
@@ -113,9 +115,6 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
             </Tooltip>
           </div>
           <div className={css.treeRowMain}>
-            <div className={css.dragHandle} {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
-              <GripVerticalIcon style={{ width: 12, height: 12 }} />
-            </div>
             <FolderCardLink
               folder={folder}
               style={customColorStyle}

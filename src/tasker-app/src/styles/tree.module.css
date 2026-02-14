@@ -58,7 +58,21 @@
   padding: var(--space-4) !important;
 }
 
-.areaCard,
+.areaCard {
+  position: relative;
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-xs);
+  padding: var(--tree-row-padding-y) var(--space-2);
+  cursor: pointer;
+  box-sizing: border-box;
+  box-shadow: none;
+  overflow: hidden;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+}
+
 .folderCard,
 .taskCard {
   position: relative;
@@ -66,7 +80,6 @@
   border: none;
   border-radius: var(--radius-xs);
   padding: var(--tree-row-padding-y) var(--space-2);
-  cursor: pointer;
   box-sizing: border-box;
   box-shadow: none;
   overflow: hidden;
@@ -107,6 +120,13 @@
   align-items: center;
   justify-content: space-between;
   transition: background var(--transition-fast);
+  cursor: grab;
+  touch-action: none;
+}
+
+.folderCard:active,
+.taskCard:active {
+  cursor: grabbing;
 }
 
 .taskCard:hover {
@@ -139,10 +159,6 @@
   min-width: var(--tree-row-main-min-width);
   overflow: hidden;
   order: -1;
-}
-
-.treeRowMain > :not(.dragHandle) {
-  gap: var(--tree-row-gap);
 }
 
 .areaCard .treeRowMain,
@@ -227,27 +243,6 @@
     opacity: 1;
     transform: translateY(0);
   }
-}
-
-.dragHandle {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: var(--space-2) var(--border-1);
-  cursor: grab;
-  touch-action: none;
-  flex-shrink: 0;
-  color: var(--glass-icon-default);
-  border-radius: var(--radius-2xs);
-  transition: color var(--transition-fast);
-}
-
-.dragHandle:hover {
-  color: var(--glass-icon-hover);
-}
-
-.dragHandle:active {
-  cursor: grabbing;
 }
 
 .areaCard.isOverValid,

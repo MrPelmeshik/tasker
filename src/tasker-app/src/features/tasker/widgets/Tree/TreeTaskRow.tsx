@@ -3,7 +3,7 @@ import { useDraggable } from '@dnd-kit/core';
 import { TaskCardLink } from '../../../../components/tasks';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { Tooltip } from '../../../../components/ui';
-import { GripVerticalIcon, LinkIcon } from '../../../../components/icons';
+import { LinkIcon } from '../../../../components/icons';
 import { useCustomColorStyle } from '../../../../hooks';
 import { buildEntityUrl } from '../../../../utils/entity-links';
 import { useToast } from '../../../../context';
@@ -17,7 +17,7 @@ export interface TreeTaskRowProps {
   onViewDetails: (e: React.MouseEvent) => void;
 }
 
-/** Строка задачи с drag handle */
+/** Строка задачи, drag за весь блок */
 export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDetails }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `task-${task.id}`,
@@ -39,7 +39,14 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDet
       className={`${css.taskItem} ${isDragging ? css.isDragging : ''}`}
       style={{ paddingLeft: `calc(var(--tree-indent) * ${level - 1})` }}
     >
-      <div ref={setNodeRef} className={css.taskCard} style={taskStyle} data-custom-color={task.customColor ? 'true' : undefined}>
+      <div
+        ref={setNodeRef}
+        className={css.taskCard}
+        style={taskStyle}
+        data-custom-color={task.customColor ? 'true' : undefined}
+        {...attributes}
+        {...listeners}
+      >
         <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
           <Tooltip content="Копировать ссылку" placement="top">
             <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
@@ -48,9 +55,6 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDet
           </Tooltip>
         </div>
         <div className={css.treeRowMain}>
-          <div className={css.dragHandle} {...attributes} {...listeners}>
-            <GripVerticalIcon style={{ width: 12, height: 12 }} />
-          </div>
           <TaskCardLink
             task={task}
             variant="text"
