@@ -1,8 +1,3 @@
-/**
- * Базовые стили для карточек-ссылок (область, папка, задача).
- * Используется в tree-item-link и task-card-link.
- */
-
 .title {
   font-size: var(--font-12);
   font-weight: var(--font-weight-medium);

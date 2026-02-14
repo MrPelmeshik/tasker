@@ -27,7 +27,7 @@
     var(--shadow-inset-0);
   box-sizing: border-box;
   outline: none;
-  transition: border-color 200ms ease, box-shadow 200ms ease, background 200ms ease, filter 200ms ease;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast), background var(--transition-fast), filter var(--transition-fast);
 }
 
 .input::placeholder { color: rgb(var(--white) / 0.55); }
@@ -97,7 +97,6 @@
 .helperText { color: var(--color-text-secondary); font-size: var(--font-12); }
 .errorText { color: var(--color-danger-text); font-size: var(--font-12); }
 
-/* Error row with optional details icon */
 .errorRow {
   display: inline-flex;
   align-items: center;
@@ -118,14 +117,13 @@
   outline: none;
 }
 
-.errorIcon svg { width: 12px; height: 12px; fill: var(--color-danger-text); }
+.errorIcon svg { width: var(--icon-s); height: var(--icon-s); fill: var(--color-danger-text); }
 
 .s { padding: var(--space-8) var(--space-10); border-radius: var(--radius-s); font-size: var(--font-14); }
 .m { padding: var(--space-10) var(--space-12); border-radius: var(--radius-m); font-size: var(--font-15); }
 .l { padding: var(--space-12) var(--space-14); border-radius: var(--radius-l); font-size: var(--font-16); }
 
 
-/* Custom Select Component Styles */
 .customSelectContainer {
   position: relative;
   display: inline-block;
@@ -172,7 +170,7 @@
   margin-left: var(--space-8);
   font-size: var(--font-12);
   color: rgb(var(--white) / 0.6);
-  transition: transform 200ms ease, color 200ms ease;
+  transition: transform var(--transition-fast), color var(--transition-fast);
   pointer-events: none;
 }
 
@@ -192,8 +190,8 @@
   background:
     var(--glass-select-list-overlay),
     var(--glass-gradient-bg-subtle);
-  backdrop-filter: blur(20px) saturate(1.3);
-  -webkit-backdrop-filter: blur(20px) saturate(1.3);
+  backdrop-filter: var(--glass-backdrop-blur-select);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-select);
   border: var(--border-1) solid var(--glass-border-2);
   border-radius: var(--radius-m);
   box-shadow:
@@ -223,11 +221,11 @@
   border-radius: var(--radius-s);
   color: var(--color-text);
   cursor: pointer;
-  transition: background 150ms ease, color 150ms ease, filter 150ms ease, box-shadow 150ms ease, backdrop-filter 150ms ease;
+  transition: background var(--transition-fast), color var(--transition-fast), filter var(--transition-fast), box-shadow var(--transition-fast), backdrop-filter var(--transition-fast);
   border: var(--border-1) solid transparent;
   background: var(--glass-radial-subtle), var(--glass-gradient-bg);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: var(--glass-backdrop-blur-option);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-option);
   position: relative;
 }
 
@@ -236,8 +234,8 @@
   background: var(--glass-radial-subtle), var(--glass-gradient-bg-hover);
   filter: saturate(1.06) brightness(1.04);
   border-color: var(--glass-border-4);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: var(--glass-backdrop-blur-option);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-option);
   box-shadow:
     0 2px 8px rgb(var(--black) / 0.2),
     inset 0 1px 0 rgb(var(--white) / 0.08);
@@ -249,8 +247,8 @@
   color: var(--color-text);
   font-weight: var(--font-weight-semibold);
   border-color: var(--glass-border-5);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: var(--glass-backdrop-blur-option);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-option);
   box-shadow:
     0 2px 6px rgb(var(--black) / 0.2),
     inset 0 1px 0 rgb(var(--white) / 0.1);
@@ -262,8 +260,8 @@
   background: var(--glass-radial-subtle), var(--glass-gradient-bg-hover);
   filter: saturate(1.06) brightness(1.03);
   border-color: var(--glass-border-6);
-  backdrop-filter: blur(12px) saturate(1.2);
-  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  backdrop-filter: var(--glass-backdrop-blur-option);
+  -webkit-backdrop-filter: var(--glass-backdrop-blur-option);
   box-shadow:
     0 2px 8px rgb(var(--black) / 0.25),
     inset 0 1px 0 rgb(var(--white) / 0.12);
@@ -277,12 +275,10 @@
   min-height: 1.5em;
 }
 
-/* Remove margin from last option */
 .customSelectOption:last-child {
   margin-bottom: 0;
 }
 
-/* Size variants for custom select */
 .s .customSelectOption {
   padding: var(--space-6) var(--space-10);
   font-size: var(--font-13);
@@ -298,9 +294,8 @@
   font-size: var(--font-15);
 }
 
-/* Scrollbar styling for dropdown */
 .customSelectList::-webkit-scrollbar {
-  width: 6px;
+  width: var(--tree-scrollbar-width);
 }
 
 .customSelectList::-webkit-scrollbar-track {
@@ -317,7 +312,6 @@
   background: var(--glass-scrollbar-thumb-hover);
 }
 
-/* Fallback for browsers that don't support backdrop-filter */
 @supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
   .customSelectList {
     background: var(--glass-select-list-overlay);

@@ -59,11 +59,8 @@
   border-color: rgb(var(--white) / 0.22);
 }
 
-.inner { position: relative; z-index: 1; }
-
 .fullWidth { display: flex; width: 100%; }
 
-/* Primary variant - яркий акцентный цвет */
 .primary { 
   border-color: var(--variant-primary-border);
   background: var(--glass-gradient-primary);
@@ -103,7 +100,6 @@
   filter: saturate(1.0) brightness(0.95);
 }
 
-/* Danger variant - яркий красный цвет */
 .danger { 
   border-color: var(--variant-danger-border);
   background: var(--glass-gradient-danger);
@@ -143,7 +139,6 @@
   filter: saturate(1.0) brightness(0.95);
 }
 
-/* Success variant - яркий зеленый цвет */
 .success { 
   border-color: var(--variant-success-border);
   background: var(--glass-gradient-success);
@@ -183,7 +178,6 @@
   filter: saturate(1.0) brightness(0.95);
 }
 
-/* Warning variant - яркий оранжевый цвет */
 .warning { 
   border-color: var(--variant-warning-border);
   background: var(--glass-gradient-warning);
@@ -223,7 +217,6 @@
   filter: saturate(1.0) brightness(0.95);
 }
 
-/* Subtle variant - less prominent by default, highlights on hover */
 .subtle {
   background: var(--glass-gradient-bg-subtle);
   border-color: rgb(var(--white) / 0.06);
@@ -262,7 +255,6 @@
 .xxl { padding: var(--space-14) var(--space-18); border-radius: var(--radius-xl); font-size: var(--font-17); }
 .xxxl{ padding: var(--space-16) var(--space-20); border-radius: var(--radius-2xl); font-size: var(--font-18); }
 
-/* Стили для SVG иконок внутри кнопок (stroke, без заливки) */
 .btn svg {
   width: 1em;
   height: 1em;
@@ -271,8 +263,9 @@
   flex-shrink: 0;
 }
 
-/* Центрирование иконок внутри кнопок */
 .inner {
+  position: relative;
+  z-index: 1;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,7 +273,6 @@
   height: 100%;
 }
 
-/* Toggle group styles */
 .toggleRoot {
   position: relative;
   display: inline-flex;
@@ -294,7 +286,7 @@
   -webkit-backdrop-filter: var(--glass-backdrop-blur-6);
   box-shadow: var(--shadow-elev-0);
   box-sizing: border-box;
-  overflow: hidden; /* clip indicator corners to container to avoid mismatched rounding */
+  overflow: hidden;
 }
 
 .toggleRoot .fullWidth { display: flex; width: 100%; justify-content: stretch; }
@@ -322,7 +314,6 @@
     height var(--transition-slow) cubic-bezier(.2,.8,.2,1);
 }
 
-/* Toggle group button styles */
 .toggleRoot .btn {
   position: relative;
   display: inline-flex;
@@ -364,7 +355,6 @@
 
 .toggleRoot .btn .inner { position: relative; z-index: 1; }
 
-/* Toggle group size variants */
 .toggleRoot.s .btn { padding: var(--space-6) var(--space-10); font-size: var(--font-13); border-radius: var(--radius-s); }
 .toggleRoot.m .btn { padding: var(--space-8) var(--space-12); font-size: var(--font-14); border-radius: var(--radius-m); }
 .toggleRoot.l .btn { padding: var(--space-10) var(--space-14); font-size: var(--font-15); border-radius: var(--radius-m); }
@@ -377,7 +367,6 @@
 .toggleRoot.m .indicator { border-radius: var(--radius-m); }
 .toggleRoot.l .indicator { border-radius: var(--radius-m); }
 
-/* Disabled state - base styles */
 .disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -399,13 +388,11 @@
   box-shadow: none;
 }
 
-/* Disabled state for default variant */
 .default.disabled {
   background: var(--glass-gradient-bg-subtle);
   border-color: var(--glass-border-1);
 }
 
-/* Disabled state for primary variant */
 .primary.disabled {
   background: var(--glass-gradient-primary-active);
   border-color: rgb(var(--color-accent) / 0.15);
@@ -417,7 +404,6 @@
   opacity: 0.3;
 }
 
-/* Disabled state for danger variant */
 .danger.disabled {
   background: var(--glass-gradient-danger-active);
   border-color: rgb(var(--color-danger) / 0.15);
@@ -429,7 +415,6 @@
   opacity: 0.3;
 }
 
-/* Disabled state for success variant */
 .success.disabled {
   background: var(--glass-gradient-success-active);
   border-color: rgb(var(--color-success) / 0.15);
@@ -441,7 +426,6 @@
   opacity: 0.3;
 }
 
-/* Disabled state for warning variant */
 .warning.disabled {
   background: var(--glass-gradient-warning-active);
   border-color: rgb(var(--color-warning) / 0.15);
@@ -453,14 +437,12 @@
   opacity: 0.3;
 }
 
-/* Disabled state for subtle variant */
 .subtle.disabled {
   background: var(--glass-gradient-bg-subtle);
   border-color: var(--glass-border-1);
   color: var(--color-text-subtle);
 }
 
-/* Disabled state for toggle group */
 .toggleRoot .disabled {
   opacity: 0.6;
   cursor: not-allowed;
@@ -477,7 +459,6 @@
   border-color: transparent;
 }
 
-/* Disabled state for toggle group variants */
 .toggleRoot .primary.disabled {
   color: rgb(var(--color-accent) / 0.5);
 }

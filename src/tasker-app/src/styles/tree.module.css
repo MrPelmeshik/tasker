@@ -5,7 +5,6 @@
   box-sizing: border-box;
 }
 
-/* Собственная шапка виджета */
 .widgetHeader {
   display: flex;
   align-items: center;
@@ -31,7 +30,6 @@
   box-sizing: border-box;
 }
 
-/* Стили для скроллбара */
 .widgetContent::-webkit-scrollbar {
   width: var(--tree-scrollbar-width);
 }
@@ -57,7 +55,7 @@
   flex-direction: column;
   box-sizing: border-box;
 }
-/* Базовые стили карточек дерева — text-вариант (как TaskCardLink) */
+
 .areaCard,
 .folderCard,
 .taskCard {
@@ -120,7 +118,6 @@
   z-index: 1;
 }
 
-/* Поддержка пользовательских цветов — лёгкий оттенок */
 .areaCard[data-custom-color],
 .folderCard[data-custom-color],
 .taskCard[data-custom-color] {
@@ -137,7 +134,6 @@
   background: rgba(var(--custom-color-rgb), 0.06);
 }
 
-/* Общие стили для контента карточек */
 .areaContent,
 .folderContent,
 .taskContent {
@@ -151,7 +147,6 @@
   overflow: hidden;
 }
 
-/* Область, папка и задача: одна строка при достаточном месте, перенос кнопок при нехватке */
 .areaContent,
 .folderContent,
 .taskContent {
@@ -161,17 +156,15 @@
   justify-content: space-between;
 }
 
-/* Блок с названием: слева, при переносе — верхняя строка */
 .treeRowMain {
   display: flex;
   align-items: center;
   gap: var(--tree-row-gap);
-  min-width: 60px;
+  min-width: var(--tree-row-main-min-width);
   overflow: hidden;
   order: -1;
 }
 
-/* Единый отступ между иконкой DnD, иконкой типа и названием во всех карточках дерева */
 .treeRowMain > :not(.dragHandle) {
   gap: var(--tree-row-gap);
 }
@@ -267,8 +260,6 @@
   z-index: 2;
 }
 
-/* Стили для задач */
-
 .tasksSection {
   position: relative;
   margin-left: calc(var(--tree-indent) * 2);
@@ -312,7 +303,6 @@
   z-index: 2;
 }
 
-/* Общие стили для кнопок действий — скрыты по умолчанию, не занимают места */
 .areaActions,
 .folderActions,
 .taskActions,
@@ -336,12 +326,11 @@
 .areaCard:hover .treeRowActions,
 .folderCard:hover .treeRowActions,
 .taskCard:hover .treeRowActions {
-  max-width: 160px;
+  max-width: var(--tree-actions-max-width);
   opacity: 1;
   pointer-events: auto;
 }
 
-/* Анимации */
 @keyframes slideDown {
   from {
     opacity: 0;
@@ -364,7 +353,6 @@
   }
 }
 
-/* DnD: ручка-захват */
 .dragHandle {
   display: flex;
   align-items: center;
@@ -386,7 +374,6 @@
   cursor: grabbing;
 }
 
-/* DnD: валидный drop (можно поместить) */
 .areaCard.isOverValid,
 .folderCard.isOverValid {
   border-color: var(--dnd-valid-border);
@@ -394,7 +381,6 @@
   box-shadow: var(--dnd-valid-shadow);
 }
 
-/* DnD: невалидный drop (запрещено) */
 .areaCard.isOverInvalid,
 .folderCard.isOverInvalid {
   border-color: var(--dnd-invalid-border);
@@ -402,7 +388,6 @@
   opacity: var(--dnd-invalid-opacity);
 }
 
-/* DnD: исходный элемент при перетаскивании */
 .folderItem.isDragging,
 .taskItem.isDragging {
   opacity: var(--dnd-dragging-opacity);
@@ -413,7 +398,6 @@
   outline: var(--border-1) dashed var(--dnd-outline-color);
 }
 
-/* Кнопки действий: легковесные иконки по умолчанию, лёгкий эффект стекла при hover */
 .treeActionButton {
   background: transparent !important;
   border: var(--border-1) solid transparent !important;
@@ -437,7 +421,6 @@
   color: var(--glass-icon-hover);
 }
 
-/* Кнопки: справа при наличии места, при переносе — на новой строке справа */
 .treeRowActions {
   display: flex;
   align-items: center;
@@ -452,7 +435,6 @@
   margin-left: auto;
 }
 
-/* DnD: DragOverlay превью */
 .dragOverlayCard {
   padding: var(--space-4) var(--space-6);
   border-radius: var(--radius-2xs);

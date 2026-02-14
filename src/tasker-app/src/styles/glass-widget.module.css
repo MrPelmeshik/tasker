@@ -71,15 +71,3 @@
   .glass:hover { transform: none; }
 }
 
-@supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
-  .glass {
-    background:
-      linear-gradient(180deg, var(--glass-bg-4), var(--glass-bg-3)) padding-box,
-      radial-gradient(120% 100% at 0% 0%, rgb(var(--color-accent) / 0.18), rgb(var(--color-accent) / 0) 60%) border-box,
-      radial-gradient(120% 100% at 100% 0%, var(--glass-accent-pink), rgba(255, 0, 160, 0) 60%) border-box,
-      radial-gradient(160% 120% at 50% 120%, rgb(var(--white) / 0.10), rgb(var(--white) / 0)) border-box;
-  }
-}
-
-
-

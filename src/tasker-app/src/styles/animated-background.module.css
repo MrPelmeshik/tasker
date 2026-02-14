@@ -5,8 +5,8 @@
   overflow: hidden;
   background:
     radial-gradient(1000px 500px at 10% 10%, rgb(var(--color-accent) / 0.12), transparent 60%),
-    radial-gradient(900px 450px at 90% 15%, rgba(255, 0, 160, 0.10), transparent 60%),
-    radial-gradient(800px 400px at 50% 100%, rgba(0, 255, 160, 0.08), transparent 65%),
+    radial-gradient(900px 450px at 90% 15%, rgb(var(--color-decor-pink) / 0.10), transparent 60%),
+    radial-gradient(800px 400px at 50% 100%, rgb(var(--color-decor-teal) / 0.08), transparent 65%),
     radial-gradient(1200px 600px at -20% -20%, var(--color-bg-dark), var(--color-bg-black) 60%);
 }
 

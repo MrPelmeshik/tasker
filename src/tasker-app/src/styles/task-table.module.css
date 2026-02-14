@@ -19,8 +19,6 @@
   color: var(--color-text);
 }
 
-/* Removed local .btn overrides; GlassButton handles button styling */
-
 .gridWrapper {
   overflow: auto;
   border: none;
@@ -34,9 +32,6 @@
   border-spacing: 0;
   table-layout: fixed;
 }
-
-/* No mask needed with split header/body tables */
-
 
 .thead th {
   position: sticky;
@@ -52,25 +47,17 @@
   border-bottom: var(--border-1) solid rgb(var(--white) / 0.06);
 }
 
-/* Removed thin separators to keep grid clean */
-
-/* Heavier separator before task column (after future) */
 .th.colFuture, .td.colFuture {
   border-right: var(--border-2) solid rgb(var(--white) / 0.16);
 }
 
-/* Remove outer bottom border on last row */
 .table tbody tr:last-child .td {
   border-bottom: none;
 }
 
-/* Row hover shading */
 .table tbody tr:hover .td {
   background-color: var(--glass-hover-bg);
 }
-
-/* Column hover shading across the whole column (requires :has support) */
-/* No highlight for column 1 (carry) */
 
 .table:has(tbody td:nth-child(2):hover) td:nth-child(2),
 .table:has(thead th:nth-child(2):hover) td:nth-child(2),
@@ -107,14 +94,11 @@
 .table:has(tbody td:nth-child(8):hover) th:nth-child(8),
 .table:has(thead th:nth-child(8):hover) th:nth-child(8) { background-color: var(--glass-hover-bg); }
 
-/* No highlight for columns 1 (carry), 9 (future), 10 (task) */
-
 .colCarry, .colFuture {
   text-align: center;
   width: var(--size-40);
 }
 
-/* Make carry weeks count smaller and dimmer */
 .td.colCarry { font-size: var(--font-11); color: var(--color-text-subtle); }
 
 .colTask {
@@ -127,16 +111,14 @@
   width: var(--size-32);
 }
 
-/* Кликабельные ячейки дней — курсор и hover */
 .colDayClickable {
   cursor: pointer;
 }
 
 .colDayClickable:hover {
-  background-color: rgb(var(--white) / 0.14) !important;
+  background-color: var(--glass-bg-4) !important;
 }
 
-/* Невидимый placeholder для пустых ячеек (сохраняет область клика) */
 .heatCellPlaceholder {
   display: inline-block;
   width: var(--size-18);
@@ -167,12 +149,12 @@
 
 
 
-.intensity0 { --heat: rgb(var(--color-accent) / 0.04); }
-.intensity1 { --heat: rgb(var(--color-accent) / 0.09); }
-.intensity2 { --heat: rgb(var(--color-accent) / 0.15); }
-.intensity3 { --heat: rgb(var(--color-accent) / 0.22); }
-.intensity4 { --heat: rgb(var(--color-accent) / 0.32); }
-.intensity5 { --heat: rgb(var(--color-accent) / 0.44); }
+.intensity0 { --heat: var(--heat-intensity-0); }
+.intensity1 { --heat: var(--heat-intensity-1); }
+.intensity2 { --heat: var(--heat-intensity-2); }
+.intensity3 { --heat: var(--heat-intensity-3); }
+.intensity4 { --heat: var(--heat-intensity-4); }
+.intensity5 { --heat: var(--heat-intensity-5); }
 
 .heatCell:hover {
   box-shadow: inset 0 1px 0 rgb(var(--white) / 0.20);
@@ -220,8 +202,3 @@
 }
 
 .muted { color: var(--color-text-subtle); }
-
-/* Task cell — компактная карточка задачи (TaskCardLink) */
-.taskCell {
-  /* Минимальные переопределения — TaskCardLink задаёт свои стили */
-}

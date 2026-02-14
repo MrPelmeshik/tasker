@@ -39,7 +39,6 @@
   gap: var(--space-4);
 }
 
-/* Размеры тегов */
 .xxs { 
   padding: var(--space-2) var(--space-4); 
   border-radius: var(--radius-xs); 
@@ -75,7 +74,6 @@
   gap: var(--space-5);
 }
 
-/* Варианты цветов - более ярковыраженные */
 .primary { 
   border-color: var(--variant-primary-border);
   background: var(--glass-gradient-primary);
@@ -146,7 +144,6 @@
   background: var(--glass-radial-info);
 }
 
-/* Subtle вариант - менее заметный */
 .subtle {
   background: var(--glass-gradient-bg-subtle);
   border-color: rgb(var(--white) / 0.08);
@@ -158,7 +155,6 @@
   background: var(--glass-radial-subtle);
 }
 
-/* Стили для иконок внутри тегов */
 .tag svg {
   width: 1em;
   height: 1em;
@@ -166,13 +162,11 @@
   flex-shrink: 0;
 }
 
-/* Убираем курсор и выделение текста для тегов */
 .tag {
   cursor: default;
   pointer-events: none;
 }
 
-/* Отключение анимаций для пользователей с prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .tag {
     transition: none;

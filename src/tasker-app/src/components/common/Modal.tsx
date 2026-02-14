@@ -82,6 +82,7 @@ export const Modal: React.FC<ModalProps> = ({
 
   const modalClass = [
     css.modal,
+    'glass-fallback-bg',
     getSizeClass(size),
     className
   ].filter(Boolean).join(' ');

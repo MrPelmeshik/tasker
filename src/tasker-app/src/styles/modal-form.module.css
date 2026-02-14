@@ -36,7 +36,6 @@
   flex-shrink: 0;
 }
 
-/* Убираем лишние фоны для соответствия общей стилистике */
 .modalBody {
   background: transparent;
 }
@@ -49,7 +48,6 @@
   background: transparent;
 }
 
-/* Блок read-only метаданных (автор, даты) */
 .readonlyMeta {
   display: flex;
   flex-direction: column;
@@ -60,7 +58,6 @@
   border: var(--border-1) solid var(--surface-subtle-border);
 }
 
-/* Вариант для режима редактирования — светлее, как у полей ввода */
 .readonlyMetaEditable {
   background: var(--glass-gradient-bg-subtle);
   border-color: rgb(var(--white) / 0.12);
@@ -88,21 +85,18 @@
   color: rgb(var(--white) / 0.45);
 }
 
-/** Вариант метки с уменьшенным размером (для групп ролей) */
 .readonlyMetaLabelSmall {
   font-size: var(--font-11);
   color: rgb(var(--white) / 0.45);
   margin-bottom: var(--space-4);
 }
 
-/** Плейсхолдер пустой группы (DnD подсказка) */
 .readonlyMetaPlaceholder {
   padding: var(--space-6) 0;
   color: rgb(var(--white) / 0.35);
   font-size: var(--font-11);
 }
 
-/** Метка/текст с ошибкой */
 .readonlyMetaLabelError {
   color: var(--color-error);
   font-size: var(--font-12);
@@ -114,10 +108,6 @@
   font-weight: var(--font-weight-medium);
 }
 
-/**
- * Read-only отображение значения поля в режиме просмотра.
- * Размеры совпадают с GlassInput (size m) для стабильного layout.
- */
 .fieldValueReadonly {
   width: 100%;
   padding: var(--space-10) var(--space-12);
@@ -136,16 +126,11 @@
   color: rgb(var(--white) / 0.4);
 }
 
-/** Вариант для отображения ошибки (уменьшенный шрифт) */
 .fieldValueReadonlyError {
   color: var(--color-error);
   font-size: var(--font-12);
 }
 
-/**
- * Многострочный вариант для описания.
- * min-height соответствует textarea rows={4}.
- */
 .fieldValueReadonlyMultiline {
   width: 100%;
   padding: var(--space-10) var(--space-12);

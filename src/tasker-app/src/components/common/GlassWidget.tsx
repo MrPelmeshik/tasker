@@ -37,7 +37,7 @@ export const GlassWidget: React.FC<GlassWidgetProps> = ({ title, colSpan = 1, ro
   const style: React.CSSProperties = { gridColumn, gridRow };
   const hasTitle = !!(typeof title === 'string' ? title.trim() : title);
 
-  const classes = [css.glass, className].filter(Boolean).join(' ');
+  const classes = [css.glass, 'glass-fallback-bg', className].filter(Boolean).join(' ');
   return (
     <section className={classes} style={style}>
       {hasTitle && <h3 className={css.title}>{title}</h3>}

@@ -9,20 +9,17 @@ body {
   color: var(--color-text);
 }
 
-/* Design tokens */
 :root {
-  /* Radius scale */
-  --radius-2xs: 6px;   /* tiny pills, nav links */
-  --radius-xs: 8px;    /* small badges, placeholders */
-  --radius-s: 10px;    /* small buttons, inputs */
-  --radius-m: 12px;    /* default buttons/inputs */
-  --radius-l: 14px;    /* large buttons/inputs */
-  --radius-xl: 16px;   /* cards, glass widgets */
-  --radius-2xl: 18px;  /* extra large buttons */
-  --radius-round: 50%; /* circle avatars */
-  --radius-none: 0px;  /* square corners */
+  --radius-2xs: 6px;
+  --radius-xs: 8px;
+  --radius-s: 10px;
+  --radius-m: 12px;
+  --radius-l: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 18px;
+  --radius-round: 50%;
+  --radius-none: 0px;
 
-  /* Colors */
   --white: 255 255 255;
   --black: 0 0 0;
   --color-bg: #0e0f12;
@@ -35,21 +32,21 @@ body {
   --color-text-secondary: #aaaaaa;
   --color-text-subtle: #9aa3ab;
   --color-dashed: #333333;
-  --color-accent: 0 200 255; /* rgb tuple */
-  --color-danger: 255 64 64; /* rgb tuple */
+  --color-accent: 0 200 255;
+  --color-danger: 255 64 64;
   --color-danger-text: #ff8080;
   --color-error: var(--color-danger-text);
-  --color-success: 34 197 94; /* rgb tuple */
-  --color-warning: 245 158 11; /* rgb tuple */
-  --color-info: 59 130 246; /* rgb tuple */
-  
-  /* Hex color variables for gradients */
+  --color-success: 34 197 94;
+  --color-warning: 245 158 11;
+  --color-info: 59 130 246;
+
   --color-gradient-purple: #6a5acd;
   --color-gradient-cyan: #00bcd4;
   --color-bg-dark: #0a0a0a;
   --color-bg-black: #000;
+  --color-decor-pink: 255 0 160;
+  --color-decor-teal: 0 255 160;
 
-  /* Glass effect colors */
   --glass-bg-1: rgba(255, 255, 255, 0.08);
   --glass-bg-2: rgba(255, 255, 255, 0.10);
   --glass-bg-3: rgba(255, 255, 255, 0.12);
@@ -66,31 +63,25 @@ body {
   --glass-accent-border: rgba(100, 200, 255, 0.4);
   --glass-accent-shadow: rgba(100, 200, 255, 0.2);
   
-  /* Additional glass colors for specific use cases */
   --glass-hover-bg: rgba(255, 255, 255, 0.03);
-  --glass-bg-hover: var(--glass-hover-bg);
   --glass-text-muted: rgba(255, 255, 255, 0.5);
   --glass-scrollbar-track: rgba(255, 255, 255, 0.05);
   --glass-scrollbar-thumb: rgba(255, 255, 255, 0.2);
   --glass-scrollbar-thumb-hover: rgba(255, 255, 255, 0.3);
   
-  /* Ultra transparent card backgrounds */
   --glass-card-bg-transparent: rgba(255, 255, 255, 0.01);
   --glass-card-bg-hover: rgba(255, 255, 255, 0.03);
   --glass-card-bg-selected: rgba(255, 255, 255, 0.05);
   
-  /* Default card colors */
   --glass-card-border-default: rgba(255, 255, 255, 0.08);
   --glass-card-border-default-hover: rgba(255, 255, 255, 0.15);
   --glass-card-border-default-selected: rgba(255, 255, 255, 0.25);
 
-  /* Common glass gradients */
   --glass-gradient-bg: linear-gradient(180deg, rgba(255,255,255,0.14), rgba(255,255,255,0.06));
   --glass-gradient-bg-hover: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.08));
   --glass-gradient-bg-active: linear-gradient(180deg, rgba(255,255,255,0.10), rgba(255,255,255,0.04));
   --glass-gradient-bg-subtle: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
   
-  /* Color-specific gradients for variants */
   --glass-gradient-primary: linear-gradient(180deg, rgba(0,200,255,0.20), rgba(0,200,255,0.12));
   --glass-gradient-primary-hover: linear-gradient(180deg, rgba(0,200,255,0.28), rgba(0,200,255,0.18));
   --glass-gradient-primary-active: linear-gradient(180deg, rgba(0,200,255,0.15), rgba(0,200,255,0.08));
@@ -111,12 +102,12 @@ body {
   --glass-gradient-info-hover: linear-gradient(180deg, rgb(var(--color-info) / 0.28), rgb(var(--color-info) / 0.18));
   --glass-gradient-info-active: linear-gradient(180deg, rgb(var(--color-info) / 0.15), rgb(var(--color-info) / 0.08));
   
-  /* Common backdrop filters */
   --glass-backdrop-blur-6: blur(var(--blur-6)) saturate(140%);
   --glass-backdrop-blur-8: blur(var(--blur-8)) saturate(140%);
   --glass-backdrop-blur-10: blur(var(--blur-10)) saturate(140%);
+  --glass-backdrop-blur-select: blur(var(--blur-20)) saturate(1.3);
+  --glass-backdrop-blur-option: blur(var(--blur-12)) saturate(1.2);
   
-  /* Common radial gradients for glass effects */
   --glass-radial-default: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.22), transparent 60%);
   --glass-radial-primary: radial-gradient(120% 80% at -10% -20%, rgba(0,200,255,0.30), transparent 60%);
   --glass-radial-danger: radial-gradient(120% 80% at -10% -20%, rgba(255,64,64,0.30), transparent 60%);
@@ -125,7 +116,6 @@ body {
   --glass-radial-info: radial-gradient(120% 80% at -10% -20%, rgb(var(--color-info) / 0.30), transparent 60%);
   --glass-radial-subtle: radial-gradient(120% 80% at -10% -20%, rgba(255,255,255,0.08), transparent 60%);
 
-  /* Варианты primary/danger/success/warning/info — border и ring для единообразия */
   --variant-primary-border: rgb(var(--color-accent) / 0.40);
   --variant-primary-ring: 0 0 0 1px rgb(var(--color-accent) / 0.20);
   --variant-danger-border: rgb(var(--color-danger) / 0.40);
@@ -137,11 +127,11 @@ body {
   --variant-info-border: rgb(var(--color-info) / 0.40);
   --variant-info-ring: 0 0 0 1px rgb(var(--color-info) / 0.20);
 
-  /* Spacing scale */
   --space-0: 0px;
   --space-2: 2px;
   --space-3: 3px;
   --space-4: 4px;
+  --space-5: 5px;
   --space-6: 6px;
   --space-8: 8px;
   --space-10: 10px;
@@ -209,7 +199,9 @@ body {
   --container-min-width-dropdown: 140px;
   --container-min-width-toast: 280px;
 
-  /* Breakpoints (для reference в медиа-запросах) */
+  --login-padding-top: 12vh;
+
+  /* Breakpoints */
   --bp-sm: 640px;
   --bp-md: 768px;
   --bp-lg: 900px;
@@ -223,13 +215,14 @@ body {
   --icon-m: 14px;
   --icon-l: 18px;
 
-  /* Tree specific sizes */
   --tree-min-height: 36px;
   --tree-connecting-line-width: 1px;
   --tree-connecting-line-height: 8px;
   --tree-indent: 16px;
   --tree-row-gap: 7px;
   --tree-scrollbar-width: 6px;
+  --tree-row-main-min-width: 60px;
+  --tree-actions-max-width: 160px;
 
   /* DnD (drag-and-drop) */
   --dnd-dragging-opacity: 0.4;
@@ -251,6 +244,8 @@ body {
   --blur-6: 6px;
   --blur-8: 8px;
   --blur-10: 10px;
+  --blur-12: 12px;
+  --blur-20: 20px;
 
   /* Scrollbar */
   --scrollbar-size: 8px;
@@ -268,7 +263,13 @@ body {
   --shadow-hover: 0 4px 15px rgba(0, 0, 0, 0.1);
   --shadow-accent: 0 2px 10px rgba(100, 200, 255, 0.2);
 
-  /* Transitions */
+  --heat-intensity-0: rgb(var(--color-accent) / 0.04);
+  --heat-intensity-1: rgb(var(--color-accent) / 0.09);
+  --heat-intensity-2: rgb(var(--color-accent) / 0.15);
+  --heat-intensity-3: rgb(var(--color-accent) / 0.22);
+  --heat-intensity-4: rgb(var(--color-accent) / 0.32);
+  --heat-intensity-5: rgb(var(--color-accent) / 0.44);
+
   --transition-fast: 0.2s ease;
   --transition-normal: 0.3s ease;
   --transition-slow: 0.4s ease;
@@ -278,37 +279,34 @@ body {
   --transition-tooltip: 160ms ease;
   --animation-toast-in: 220ms;
 
-  /* Focus ring — единый для всего приложения */
   --focus-ring: 0 0 0 2px rgb(var(--color-accent) / 0.4);
 
-  /* Tooltip/Dropdown blur */
   --glass-tooltip-blur: blur(24px) saturate(200%);
-
-  /* Tooltip max-widths */
   --tooltip-max-width-s: 240px;
   --tooltip-max-width-m: 320px;
   --tooltip-max-width-l: 420px;
 
-  /* Декоративные градиенты (для fallback glass без backdrop-filter) */
   --glass-accent-pink: rgba(255, 0, 160, 0.16);
 
-  /* Glass panel (dropdown, tooltip) */
   --glass-panel-bg: linear-gradient(180deg, rgb(var(--black) / 0.82), rgb(var(--black) / 0.92)),
     linear-gradient(180deg, rgb(var(--white) / 0.08), rgb(var(--white) / 0.02));
 
-  /* Select dropdown list — фон с одинаковой степенью непрозрачности в обеих темах */
   --glass-select-list-overlay: linear-gradient(180deg, rgb(var(--black) / 0.88), rgb(var(--black) / 0.82));
 
-  /* Surface subtle (readonly blocks, cards) */
   --surface-subtle-bg: rgb(var(--white) / 0.04);
   --surface-subtle-border: rgb(var(--white) / 0.06);
   --surface-subtle-border-strong: rgb(var(--white) / 0.08);
 
-  /* Modal — glass effect (dark theme) */
   --modal-overlay-bg: rgba(0, 0, 0, 0.5);
   --modal-bg: linear-gradient(180deg, rgb(var(--white) / 0.12), rgb(var(--white) / 0.04));
   --modal-border: var(--glass-border-2);
   --modal-highlight: var(--glass-radial-default);
+  --modal-small-max-width: 400px;
+  --modal-small-max-height: 300px;
+  --modal-medium-max-width: 600px;
+  --modal-medium-max-height: 600px;
+  --modal-confirm-max-width: 480px;
+  --modal-confirm-max-height: 300px;
 }
 
 /* ─── Light theme ─── */
@@ -356,7 +354,6 @@ body {
   --glass-accent-shadow: rgba(0, 140, 200, 0.15);
 
   --glass-hover-bg: rgba(0, 0, 0, 0.03);
-  --glass-bg-hover: var(--glass-hover-bg);
   --glass-text-muted: rgba(0, 0, 0, 0.45);
   --glass-scrollbar-track: rgba(0, 0, 0, 0.05);
   --glass-scrollbar-thumb: rgba(0, 0, 0, 0.18);
@@ -431,6 +428,52 @@ body {
   --shadow-inset-2: inset 0 1px 0 rgba(255,255,255,0.70);
   --shadow-hover: 0 4px 15px rgba(0, 0, 0, 0.06);
   --shadow-accent: 0 2px 10px rgba(0, 140, 200, 0.15);
+}
+
+.glass-variant-primary {
+  border-color: var(--variant-primary-border);
+  background: var(--glass-gradient-primary);
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), var(--variant-primary-ring);
+}
+.glass-variant-primary::before { background: var(--glass-radial-primary); }
+
+.glass-variant-danger {
+  border-color: var(--variant-danger-border);
+  background: var(--glass-gradient-danger);
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), var(--variant-danger-ring);
+}
+.glass-variant-danger::before { background: var(--glass-radial-danger); }
+
+.glass-variant-success {
+  border-color: var(--variant-success-border);
+  background: var(--glass-gradient-success);
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), var(--variant-success-ring);
+}
+.glass-variant-success::before { background: var(--glass-radial-success); }
+
+.glass-variant-warning {
+  border-color: var(--variant-warning-border);
+  background: var(--glass-gradient-warning);
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), var(--variant-warning-ring);
+}
+.glass-variant-warning::before { background: var(--glass-radial-warning); }
+
+.glass-variant-info {
+  border-color: var(--variant-info-border);
+  background: var(--glass-gradient-info);
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), var(--variant-info-ring);
+}
+.glass-variant-info::before { background: var(--glass-radial-info); }
+
+@supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
+  .glass-fallback-bg {
+    background:
+      linear-gradient(180deg, var(--glass-bg-4), var(--glass-bg-3)) padding-box,
+      radial-gradient(120% 100% at 0% 0%, rgb(var(--color-accent) / 0.18), rgb(var(--color-accent) / 0) 60%) border-box,
+      radial-gradient(120% 100% at 100% 0%, var(--glass-accent-pink), transparent 60%) border-box,
+      radial-gradient(160% 120% at 50% 120%, rgb(var(--white) / 0.10), rgb(var(--white) / 0)) border-box;
+    background-origin: border-box;
+  }
 }
 
 code {

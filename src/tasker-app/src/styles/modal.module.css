@@ -32,17 +32,16 @@
   position: relative;
 }
 
-/* Размеры модальных окон */
 .modalSmall {
-  max-width: calc(var(--space-24) * 16.67); /* 400px */
-  max-height: calc(var(--space-24) * 12.5); /* 300px */
+  max-width: var(--modal-small-max-width);
+  max-height: var(--modal-small-max-height);
   width: 90vw;
   height: auto;
 }
 
 .modalMedium {
-  max-width: calc(var(--space-24) * 25); /* 600px */
-  max-height: calc(var(--space-24) * 25); /* 600px */
+  max-width: var(--modal-medium-max-width);
+  max-height: var(--modal-medium-max-height);
   width: 90vw;
   height: auto;
 }
@@ -55,13 +54,12 @@
 }
 
 .modalConfirm {
-  max-width: calc(var(--space-24) * 20); /* 480px */
-  max-height: calc(var(--space-24) * 12.5); /* 300px */
+  max-width: var(--modal-confirm-max-width);
+  max-height: var(--modal-confirm-max-height);
   width: 90vw;
   height: auto;
 }
 
-/* Специальные стили для модального окна подтверждения */
 .modalConfirm .modalHeader {
   padding: var(--space-16) var(--space-20);
   border-bottom: var(--border-1) solid var(--glass-border-2);
@@ -165,7 +163,6 @@
   gap: var(--space-12);
 }
 
-/* Анимации */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -186,19 +183,7 @@
   }
 }
 
-/* Поддержка браузеров без backdrop-filter */
-@supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
-  .modal {
-    background:
-      linear-gradient(180deg, var(--glass-bg-4), var(--glass-bg-3)) padding-box,
-      radial-gradient(120% 100% at 0% 0%, rgb(var(--color-accent) / 0.18), rgb(var(--color-accent) / 0) 60%) border-box,
-      radial-gradient(120% 100% at 100% 0%, var(--glass-accent-pink), rgba(255, 0, 160, 0) 60%) border-box,
-      radial-gradient(160% 120% at 50% 120%, rgb(var(--white) / 0.10), rgb(var(--white) / 0)) border-box;
-  }
-}
-
-/* Адаптивность */
-@media (max-width: 768px) {
+@media (max-width: var(--bp-md)) {
   .overlay {
     padding: var(--space-8);
   }

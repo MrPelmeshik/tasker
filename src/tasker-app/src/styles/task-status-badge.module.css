@@ -1,7 +1,3 @@
-/**
- * Бейдж статуса задачи с эффектом стекла (glassmorphism).
- * Использует design tokens из index.css.
- */
 .badge {
   position: relative;
   display: inline-flex;
@@ -35,7 +31,6 @@
   transform: translateY(-1px);
 }
 
-/* Размеры */
 .xs {
   padding: var(--space-2) var(--space-4);
   font-size: var(--font-10);
@@ -60,7 +55,6 @@
   border-radius: var(--radius-l);
 }
 
-/* Компактный режим — небольшой кружок-индикатор */
 .compact {
   padding: 0;
   border-radius: var(--radius-round);
@@ -102,8 +96,6 @@
   height: var(--icon-l);
 }
 
-/* Статусы — стеклянные варианты по аналогии с GlassTag */
-/* 1 — Новая (info) */
 .badge[data-status="1"] {
   border-color: var(--variant-info-border);
   background: var(--glass-gradient-info);
@@ -117,7 +109,6 @@
   background: var(--glass-radial-info);
 }
 
-/* 2 — В ожидании (warning) */
 .badge[data-status="2"] {
   border-color: var(--variant-warning-border);
   background: var(--glass-gradient-warning);
@@ -131,7 +122,6 @@
   background: var(--glass-radial-warning);
 }
 
-/* 3 — В работе (success) */
 .badge[data-status="3"] {
   border-color: var(--variant-success-border);
   background: var(--glass-gradient-success);
@@ -145,7 +135,6 @@
   background: var(--glass-radial-success);
 }
 
-/* 4 — Закрыта (subtle) */
 .badge[data-status="4"] {
   border-color: rgb(var(--white) / 0.08);
   background: var(--glass-gradient-bg-subtle);
@@ -157,7 +146,6 @@
   background: var(--glass-radial-subtle);
 }
 
-/* 5 — Отменена (danger) */
 .badge[data-status="5"] {
   border-color: var(--variant-danger-border);
   background: var(--glass-gradient-danger);
@@ -171,7 +159,6 @@
   background: var(--glass-radial-danger);
 }
 
-/* Компактный — облегчённые тени, чтобы кружок не выглядел громоздко */
 .compact.badge {
   box-shadow: var(--shadow-elev-0), var(--shadow-inset-0);
 }
@@ -186,14 +173,12 @@
     0 0 0 1px rgb(var(--white) / 0.12);
 }
 
-/* Отключаем анимации при prefers-reduced-motion */
 @media (prefers-reduced-motion: reduce) {
   .badge:hover {
     transform: none;
   }
 }
 
-/* Fallback для браузеров без backdrop-filter */
 @supports not ((backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px))) {
   .badge {
     background: linear-gradient(180deg, var(--glass-bg-4), var(--glass-bg-3));
