@@ -90,39 +90,37 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
           tabIndex={hasChildren ? 0 : undefined}
           onKeyDown={hasChildren ? (e) => handleExpandKeyDown(e, onToggle) : undefined}
         >
-          <div className={css.folderContent}>
-            <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
-              <Tooltip content="Просмотреть" placement="top">
-                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onViewDetails(e); }} aria-label="Просмотреть">
-                  <EyeIcon style={{ width: 14, height: 14 }} />
-                </GlassButton>
-              </Tooltip>
-              <Tooltip content="Создать папку" placement="top">
-                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateFolder(e); }} aria-label="Создать папку">
-                  <FolderIcon style={{ width: 14, height: 14 }} />
-                </GlassButton>
-              </Tooltip>
-              <Tooltip content="Создать задачу" placement="top">
-                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateTask(e); }} aria-label="Создать задачу">
-                  <CheckSquareIcon style={{ width: 14, height: 14 }} />
-                </GlassButton>
-              </Tooltip>
-              <Tooltip content="Копировать ссылку" placement="top">
-                <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
-                  <LinkIcon style={{ width: 14, height: 14 }} />
-                </GlassButton>
-              </Tooltip>
+          <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
+            <Tooltip content="Просмотреть" placement="top">
+              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onViewDetails(e); }} aria-label="Просмотреть">
+                <EyeIcon style={{ width: 14, height: 14 }} />
+              </GlassButton>
+            </Tooltip>
+            <Tooltip content="Создать папку" placement="top">
+              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateFolder(e); }} aria-label="Создать папку">
+                <FolderIcon style={{ width: 14, height: 14 }} />
+              </GlassButton>
+            </Tooltip>
+            <Tooltip content="Создать задачу" placement="top">
+              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onCreateTask(e); }} aria-label="Создать задачу">
+                <CheckSquareIcon style={{ width: 14, height: 14 }} />
+              </GlassButton>
+            </Tooltip>
+            <Tooltip content="Копировать ссылку" placement="top">
+              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
+                <LinkIcon style={{ width: 14, height: 14 }} />
+              </GlassButton>
+            </Tooltip>
+          </div>
+          <div className={css.treeRowMain}>
+            <div className={css.dragHandle} {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
+              <GripVerticalIcon style={{ width: 12, height: 12 }} />
             </div>
-            <div className={css.treeRowMain}>
-              <div className={css.dragHandle} {...attributes} {...listeners} onClick={(e) => e.stopPropagation()}>
-                <GripVerticalIcon style={{ width: 12, height: 12 }} />
-              </div>
-              <FolderCardLink
-                folder={folder}
-                style={customColorStyle}
-                dataCustomColor={!!folder.customColor}
-              />
-            </div>
+            <FolderCardLink
+              folder={folder}
+              style={customColorStyle}
+              dataCustomColor={!!folder.customColor}
+            />
           </div>
         </div>
       </div>

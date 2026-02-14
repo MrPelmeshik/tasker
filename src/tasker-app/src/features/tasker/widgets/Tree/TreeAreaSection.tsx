@@ -65,17 +65,17 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
 
   return (
     <div className={css.areaSection}>
-      <div
-        ref={setNodeRef}
-        className={`${css.areaCard} ${isExpanded ? css.expanded : ''} ${isOver && canDrop ? css.isOverValid : ''} ${isOver && !canDrop ? css.isOverInvalid : ''}`}
-        data-custom-color={area.customColor ? 'true' : undefined}
-        style={customColorStyle}
-        onClick={hasChildren ? onToggle : undefined}
-        role={hasChildren ? 'button' : undefined}
-        tabIndex={hasChildren ? 0 : undefined}
-        onKeyDown={hasChildren ? (e) => handleExpandKeyDown(e, onToggle) : undefined}
-      >
-        <div className={css.areaContent}>
+      <div className={css.areaItem}>
+        <div
+          ref={setNodeRef}
+          className={`${css.areaCard} ${isExpanded ? css.expanded : ''} ${isOver && canDrop ? css.isOverValid : ''} ${isOver && !canDrop ? css.isOverInvalid : ''}`}
+          data-custom-color={area.customColor ? 'true' : undefined}
+          style={customColorStyle}
+          onClick={hasChildren ? onToggle : undefined}
+          role={hasChildren ? 'button' : undefined}
+          tabIndex={hasChildren ? 0 : undefined}
+          onKeyDown={hasChildren ? (e) => handleExpandKeyDown(e, onToggle) : undefined}
+        >
           <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
             <Tooltip content="Просмотреть" placement="top">
               <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={(e) => { e.stopPropagation(); onViewDetails(e); }} aria-label="Просмотреть">

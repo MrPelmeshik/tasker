@@ -29,7 +29,7 @@
 .textVariant {
   background: transparent;
   border: none;
-  padding: var(--space-2) var(--space-4);
+  padding: 0;
 }
 
 .textVariant:hover {

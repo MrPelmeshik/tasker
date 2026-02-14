@@ -225,7 +225,8 @@ body {
   --icon-m: 14px;
   --icon-l: 18px;
 
-  --tree-min-height: 36px;
+  --tree-row-padding-y: 2px;
+  --tree-row-spacing: 4px;
   --tree-connecting-line-width: 1px;
   --tree-connecting-line-height: 8px;
   --tree-indent: 16px;

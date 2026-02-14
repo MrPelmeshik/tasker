@@ -40,27 +40,25 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDet
       style={{ paddingLeft: `calc(var(--tree-indent) * ${level - 1})` }}
     >
       <div ref={setNodeRef} className={css.taskCard} style={taskStyle} data-custom-color={task.customColor ? 'true' : undefined}>
-        <div className={css.taskContent}>
-          <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
-            <Tooltip content="Копировать ссылку" placement="top">
-              <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
-                <LinkIcon style={{ width: 14, height: 14 }} />
-              </GlassButton>
-            </Tooltip>
+        <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
+          <Tooltip content="Копировать ссылку" placement="top">
+            <GlassButton variant="subtle" size="xs" className={css.treeActionButton} onClick={handleCopyLink} aria-label="Копировать ссылку">
+              <LinkIcon style={{ width: 14, height: 14 }} />
+            </GlassButton>
+          </Tooltip>
+        </div>
+        <div className={css.treeRowMain}>
+          <div className={css.dragHandle} {...attributes} {...listeners}>
+            <GripVerticalIcon style={{ width: 12, height: 12 }} />
           </div>
-          <div className={css.treeRowMain}>
-            <div className={css.dragHandle} {...attributes} {...listeners}>
-              <GripVerticalIcon style={{ width: 12, height: 12 }} />
-            </div>
-            <TaskCardLink
-              task={task}
-              variant="text"
-              showTypeIcon
-              onClick={onViewDetails}
-              style={taskStyle}
-              dataCustomColor={!!task.customColor}
-            />
-          </div>
+          <TaskCardLink
+            task={task}
+            variant="text"
+            showTypeIcon
+            onClick={onViewDetails}
+            style={taskStyle}
+            dataCustomColor={!!task.customColor}
+          />
         </div>
       </div>
     </div>

@@ -12,6 +12,7 @@
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
+  gap: var(--tree-row-spacing);
   box-sizing: border-box;
 }
 
@@ -38,6 +39,7 @@
   width: 100%;
   display: flex;
   flex-direction: column;
+  gap: var(--tree-row-spacing);
   box-sizing: border-box;
 }
 
@@ -63,7 +65,7 @@
   background: transparent;
   border: none;
   border-radius: var(--radius-xs);
-  padding: var(--space-2) var(--space-2);
+  padding: var(--tree-row-padding-y) var(--space-2);
   cursor: pointer;
   box-sizing: border-box;
   box-shadow: none;
@@ -73,9 +75,22 @@
   align-items: center;
 }
 
+.areaItem {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
 .areaCard {
   width: 100%;
   min-width: 0;
+  gap: var(--tree-row-gap);
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
   transition: background var(--transition-normal);
   animation: fadeInUp var(--transition-slow) ease-out;
 }
@@ -85,6 +100,12 @@
   flex: 1;
   min-width: 0;
   max-width: 100%;
+  width: 100%;
+  gap: var(--tree-row-gap);
+  flex-direction: row;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: space-between;
   transition: background var(--transition-fast);
 }
 
@@ -111,28 +132,6 @@
   background: rgba(var(--custom-color-rgb), 0.06);
 }
 
-.areaContent,
-.folderContent,
-.taskContent {
-  position: relative;
-  z-index: 1;
-  display: flex;
-  width: 100%;
-  min-width: 0;
-  gap: var(--tree-row-gap);
-  box-sizing: border-box;
-  overflow: hidden;
-}
-
-.areaContent,
-.folderContent,
-.taskContent {
-  flex-direction: row;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-}
-
 .treeRowMain {
   display: flex;
   align-items: center;
@@ -146,58 +145,17 @@
   gap: var(--tree-row-gap);
 }
 
-.areaContent .treeRowMain,
-.folderContent .treeRowMain,
-.taskContent .treeRowMain {
+.areaCard .treeRowMain,
+.folderCard .treeRowMain,
+.taskCard .treeRowMain {
   flex: 1 1 0;
-}
-
-.areaInfo,
-.folderInfo,
-.taskInfo {
-  flex: 1;
-  min-width: 0;
-  cursor: pointer;
-}
-
-.areaTitleRow,
-.folderTitleRow,
-.taskTitleRow {
-  display: flex;
-  align-items: center;
-  gap: var(--tree-row-gap);
-}
-
-.areaTitle,
-.folderTitle {
-  font-size: var(--font-12);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-  line-height: var(--line-height-tight);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-}
-
-.taskTitle {
-  font-size: var(--font-12);
-  font-weight: var(--font-weight-medium);
-  color: var(--color-text);
-  line-height: var(--line-height-tight);
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  flex: 1;
-  min-width: 0;
-}
-
-.areaTitle {
-  flex: 1;
-  min-width: 0;
 }
 
 .foldersSection {
   position: relative;
   display: flex;
   flex-direction: column;
+  gap: var(--tree-row-spacing);
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
 }
@@ -206,7 +164,6 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: var(--tree-min-height);
   width: 100%;
   box-sizing: border-box;
 }
@@ -215,6 +172,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
+  gap: var(--tree-row-spacing);
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
 }
@@ -223,14 +181,10 @@
   position: relative;
   display: flex;
   align-items: center;
-  min-height: var(--tree-min-height);
   width: 100%;
   box-sizing: border-box;
 }
 
-.areaActions,
-.folderActions,
-.taskActions,
 .areaCard .treeRowActions,
 .folderCard .treeRowActions,
 .taskCard .treeRowActions {
@@ -245,9 +199,6 @@
   flex-shrink: 0;
 }
 
-.areaCard:hover .areaActions,
-.folderCard:hover .folderActions,
-.taskCard:hover .taskActions,
 .areaCard:hover .treeRowActions,
 .folderCard:hover .treeRowActions,
 .taskCard:hover .treeRowActions {
@@ -341,9 +292,9 @@
   order: 0;
 }
 
-.areaContent .treeRowActions,
-.folderContent .treeRowActions,
-.taskContent .treeRowActions {
+.areaCard .treeRowActions,
+.folderCard .treeRowActions,
+.taskCard .treeRowActions {
   margin-left: auto;
 }
 
