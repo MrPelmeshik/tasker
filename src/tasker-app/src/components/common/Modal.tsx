@@ -59,7 +59,7 @@ export const Modal: React.FC<ModalProps> = ({
     return () => {
       document.removeEventListener('keydown', handleEscape);
       document.removeEventListener('mousedown', handleOverlayClick);
-      document.body.style.overflow = 'unset';
+      document.body.style.overflow = '';
     };
   }, [isOpen, closeOnOverlayClick, closeOnEscape, hasUnsavedChanges, onUnsavedChangesClose]);
 

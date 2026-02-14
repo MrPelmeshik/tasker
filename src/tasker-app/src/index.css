@@ -1,5 +1,7 @@
 body {
   margin: 0;
+  height: 100%;
+  overflow: hidden;
   font-family: var(--font-family-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -436,8 +438,16 @@ code {
 }
 
 /* Global scrollbar style to match glass theme */
-html, body, #root {
+html {
   height: 100%;
+  overflow: hidden;
+}
+
+#root {
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Firefox */

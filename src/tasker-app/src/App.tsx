@@ -11,11 +11,13 @@ export const App = () => {
       <TaskUpdateProvider>
         <ToastProvider>
           <ModalProvider>
-            <div className={css.main}>
-              <AnimatedBackground />
-              <AppRouter />
+            <div className={css.appLayout}>
+              <div className={css.main}>
+                <AnimatedBackground />
+                <AppRouter />
+              </div>
+              <ToastViewer />
             </div>
-            <ToastViewer />
           </ModalProvider>
         </ToastProvider>
       </TaskUpdateProvider>

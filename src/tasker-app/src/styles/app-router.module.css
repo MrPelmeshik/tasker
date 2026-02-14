@@ -1,18 +1,22 @@
-.appLayout {
-  height: 100vh;
+.layout {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.content {
+  flex: 1;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
 }
 
-.main {
-  background-color: transparent;
-  color: var(--color-text);
+.routeOutlet {
   flex: 1;
   min-height: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
-  position: relative;
 }
