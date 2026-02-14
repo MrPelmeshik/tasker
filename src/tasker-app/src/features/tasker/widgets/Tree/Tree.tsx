@@ -338,7 +338,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
           onCreateFolder={(e) => handlers.handleCreateFolderForFolder(folder.id, areaId, e)}
           onCreateTask={(e) => handlers.handleCreateTaskForFolder(folder.id, areaId, e)}
           renderFolder={renderFolder}
-          renderTask={(task) => <TreeTaskRow key={task.id} task={task} onViewDetails={(e) => handlers.handleViewTaskDetails(task.id, e)} />}
+          renderTask={(task, level) => <TreeTaskRow key={task.id} level={level} task={task} onViewDetails={(e) => handlers.handleViewTaskDetails(task.id, e)} />}
         />
       );
     },

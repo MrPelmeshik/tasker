@@ -11,12 +11,14 @@ import type { TaskSummary } from '../../../../types';
 import css from '../../../../styles/tree.module.css';
 
 export interface TreeTaskRowProps {
+  /** Уровень вложенности: n=1 область, n=2 задачи в корне и т.д. Отступ = x*(level-1) */
+  level: number;
   task: TaskSummary;
   onViewDetails: (e: React.MouseEvent) => void;
 }
 
 /** Строка задачи с drag handle */
-export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ task, onViewDetails }) => {
+export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDetails }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `task-${task.id}`,
     data: { type: 'task', task },
@@ -33,7 +35,10 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ task, onViewDetails })
   };
 
   return (
-    <div className={`${css.taskItem} ${isDragging ? css.isDragging : ''}`}>
+    <div
+      className={`${css.taskItem} ${isDragging ? css.isDragging : ''}`}
+      style={{ paddingLeft: `calc(var(--tree-indent) * ${level - 1})` }}
+    >
       <div ref={setNodeRef} className={css.taskCard} style={taskStyle} data-custom-color={task.customColor ? 'true' : undefined}>
         <div className={css.taskContent}>
           <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>

@@ -29,7 +29,7 @@ export interface TreeFolderRowProps {
   onCreateFolder: (e: React.MouseEvent) => void;
   onCreateTask: (e: React.MouseEvent) => void;
   renderFolder: (folder: FolderSummary, areaId: string, depth: number) => React.ReactNode;
-  renderTask: (task: TaskSummary) => React.ReactNode;
+  renderTask: (task: TaskSummary, level: number) => React.ReactNode;
 }
 
 /** Строка папки с drag handle и droppable */
@@ -70,9 +70,13 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
     );
   };
 
+  const level = depth + 1;
   return (
     <React.Fragment>
-      <div className={`${css.folderItem} ${isDragging ? css.isDragging : ''}`} style={{ marginLeft: `calc(var(--tree-indent) * ${depth})`, width: `calc(100% - (var(--tree-indent) * ${depth}))` }}>
+      <div
+        className={`${css.folderItem} ${isDragging ? css.isDragging : ''}`}
+        style={{ paddingLeft: `calc(var(--tree-indent) * ${level - 1})` }}
+      >
         <div
           ref={(node) => {
             setDroppableRef(node);
@@ -123,13 +127,13 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = ({
         </div>
       </div>
       {hasChildren && isExpanded && (
-        <div className={css.tasksSection} style={{ marginLeft: `calc(var(--tree-indent) * ${depth + 1})` }}>
+        <div className={css.tasksSection}>
           {isLoading ? (
             <div className={glassWidgetStyles.placeholder}>Загрузка...</div>
           ) : (
             <>
               {subfolders.map((sf) => renderFolder(sf, areaId, depth + 1))}
-              {tasks.map((task) => renderTask(task))}
+              {tasks.map((task) => renderTask(task, depth + 2))}
             </>
           )}
         </div>

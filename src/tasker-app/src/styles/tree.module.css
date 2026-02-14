@@ -46,7 +46,6 @@
   display: flex;
   align-items: center;
   gap: var(--tree-row-gap);
-  margin-bottom: var(--space-12);
 }
 
 /** Иконные кнопки в строке treeTopActions — единый размер (квадрат) */
@@ -96,20 +95,6 @@
 .areaCard:hover,
 .folderCard:hover {
   background: var(--glass-hover-bg);
-}
-
-.areaCard.expanded::after,
-.folderCard.expanded::after,
-.taskCard.expanded::after {
-  content: '';
-  position: absolute;
-  bottom: calc(-1 * var(--space-4));
-  left: var(--tree-indent);
-  width: var(--tree-connecting-line-width);
-  height: var(--space-4);
-  background: var(--glass-border-1);
-  border-radius: 0 0 var(--radius-2xs) var(--radius-2xs);
-  z-index: 1;
 }
 
 .areaCard[data-custom-color],
@@ -210,23 +195,10 @@
 
 .foldersSection {
   position: relative;
-  margin-left: var(--tree-indent);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
-}
-
-.foldersSection::before {
-  content: '';
-  position: absolute;
-  left: calc(-1 * var(--tree-indent));
-  top: 0;
-  width: var(--tree-connecting-line-width);
-  height: 100%;
-  background: var(--glass-border-1);
-  border-radius: var(--radius-2xs);
-  z-index: 1;
 }
 
 .folderItem {
@@ -238,38 +210,12 @@
   box-sizing: border-box;
 }
 
-.folderItem::before {
-  content: '';
-  position: absolute;
-  left: calc(-1 * var(--tree-indent));
-  top: 50%;
-  width: var(--tree-connecting-line-height);
-  height: var(--tree-connecting-line-width);
-  background: var(--glass-border-1);
-  border-radius: var(--radius-2xs);
-  transform: translateY(-50%);
-  z-index: 2;
-}
-
 .tasksSection {
   position: relative;
-  margin-left: calc(var(--tree-indent) * 2);
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
   animation: slideDown var(--transition-normal) ease-out;
-}
-
-.tasksSection::before {
-  content: '';
-  position: absolute;
-  left: calc(-1 * var(--tree-indent));
-  top: 0;
-  width: var(--tree-connecting-line-width);
-  height: 100%;
-  background: var(--glass-border-1);
-  border-radius: var(--radius-2xs);
-  z-index: 1;
 }
 
 .taskItem {
@@ -279,19 +225,6 @@
   min-height: var(--tree-min-height);
   width: 100%;
   box-sizing: border-box;
-}
-
-.taskItem::before {
-  content: '';
-  position: absolute;
-  left: calc(-1 * var(--tree-indent));
-  top: 50%;
-  width: var(--tree-connecting-line-height);
-  height: var(--tree-connecting-line-width);
-  background: var(--glass-border-1);
-  border-radius: var(--radius-2xs);
-  transform: translateY(-50%);
-  z-index: 2;
 }
 
 .areaActions,
@@ -443,5 +376,4 @@
 .dragHint {
   font-size: var(--font-12);
   color: var(--glass-text-muted);
-  margin-top: var(--space-4);
 }

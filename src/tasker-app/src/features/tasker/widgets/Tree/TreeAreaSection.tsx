@@ -115,7 +115,7 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = ({
             <>
               {folders.map((f) => renderFolder(f, area.id, 1))}
               {tasks.map((task) => (
-                <TreeTaskRow key={task.id} task={task} onViewDetails={(e) => onViewTaskDetails(task.id, e)} />
+                <TreeTaskRow key={task.id} level={2} task={task} onViewDetails={(e) => onViewTaskDetails(task.id, e)} />
               ))}
             </>
           )}
