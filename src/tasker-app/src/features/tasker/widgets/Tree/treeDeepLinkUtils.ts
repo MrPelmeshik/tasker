@@ -1,37 +1,13 @@
-import React from 'react';
 import {
   fetchAreaById,
   fetchFolderById,
   fetchTaskById,
 } from '../../../../services/api';
 import type { FolderResponse } from '../../../../types/api';
-import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
+import type { OpenEntityByDeepLinkParams } from './TreeDeepLink.types';
 import { isValidEntityId } from '../../../../utils/entity-links';
-import type { EntityType } from '../../../../utils/entity-links';
 
-export interface OpenEntityByDeepLinkParams {
-  entityType: EntityType;
-  entityId: string;
-  areas: AreaShortCard[];
-  foldersByArea: Map<string, FolderSummary[]>;
-  foldersByParent: Map<string, FolderSummary[]>;
-  tasksByArea: Map<string, TaskSummary[]>;
-  tasksByFolder: Map<string, TaskSummary[]>;
-  setExpandedAreas: React.Dispatch<React.SetStateAction<Set<string>>>;
-  setExpandedFolders: React.Dispatch<React.SetStateAction<Set<string>>>;
-  loadAreaContent: (areaId: string) => Promise<unknown>;
-  loadFolderContent: (folderId: string, areaId: string) => Promise<unknown>;
-  openAreaModal: (area: import('../../../../types/api').AreaResponse, mode: 'edit', onSave: (data: import('../../../../types/api').AreaCreateRequest | import('../../../../types/api').AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>) => void;
-  openFolderModal: (folder: import('../../../../types/api').FolderResponse, mode: 'edit', areas: Array<{ id: string; title: string; description?: string }>, onSave: (data: import('../../../../types/api').FolderCreateRequest | import('../../../../types/api').FolderUpdateRequest, folderId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>) => void;
-  openTaskModal: (task: import('../../../../types/api').TaskResponse, mode: 'edit', onSave: (data: import('../../../../types/api').TaskCreateRequest | import('../../../../types/api').TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>) => void;
-  showError: (error: unknown) => void;
-  handleAreaSave: (data: import('../../../../types/api').AreaCreateRequest | import('../../../../types/api').AreaUpdateRequest) => Promise<void>;
-  handleAreaDelete: (id: string) => Promise<void>;
-  handleFolderSave: (data: import('../../../../types/api').FolderCreateRequest | import('../../../../types/api').FolderUpdateRequest, folderId?: string) => Promise<void>;
-  handleFolderDelete: (id: string) => Promise<void>;
-  handleTaskSave: (data: import('../../../../types/api').TaskCreateRequest | import('../../../../types/api').TaskUpdateRequest, taskId?: string) => Promise<void>;
-  handleTaskDelete: (id: string) => Promise<void>;
-}
+export type { OpenEntityByDeepLinkParams } from './TreeDeepLink.types';
 
 export async function openEntityByDeepLink(params: OpenEntityByDeepLinkParams): Promise<void> {
   const {

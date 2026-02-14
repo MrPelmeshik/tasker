@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from '../../common/Modal';
 import { EntityConfirmModals } from '../../common/EntityConfirmModals';
-import { GlassInput, GlassTextarea, Loader } from '../../ui';
+import { GlassInput, GlassTextarea } from '../../ui';
 import { ActivityList } from '../../activities/ActivityList';
 import { EntityMetaBlock } from '../../common/EntityMetaBlock';
 import { EntityModalHeader } from '../../common/EntityModalHeader';
@@ -14,7 +14,7 @@ import formCss from '../../../styles/modal-form.module.css';
 import { formatDateTime } from '../../../utils/date';
 import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaRole } from '../../../types';
 import type { ModalSize } from '../../../types/modal-size';
-import { ParticipantsByRole } from './ParticipantsByRole';
+import { AreaModalMembersSection } from './AreaModalMembersSection';
 import { useAreaMembers } from './useAreaMembers';
 
 export interface AreaModalProps {
@@ -215,33 +215,24 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             )}
 
             {area && (
-              <div className={formCss.fieldGroup}>
-                <div className={formCss.fieldHeader}>
-                  <label className={formCss.fieldLabel}>Участники</label>
-                </div>
-                {membersLoading ? (
-                  <div className={formCss.fieldValueReadonly}><Loader size="s" ariaLabel="Загрузка" /></div>
-                ) : membersError ? (
-                  <div className={`${formCss.fieldValueReadonly} ${formCss.fieldValueReadonlyError}`}>{membersError}</div>
-                ) : (
-                  <ParticipantsByRole
-                    members={displayMembers}
-                    isViewMode={isViewMode}
-                    addMemberLoading={isLoading}
-                    addMemberLogin={addMemberLogin}
-                    addMemberRole={addMemberRole}
-                    addMemberError={addMemberError}
-                    onAddMemberLoginChange={(v) => {
-                      setAddMemberLogin(v);
-                      setAddMemberError(null);
-                    }}
-                    onAddMemberRoleChange={(v) => setAddMemberRole(v as AreaRole)}
-                    onAddMember={handleAddMember}
-                    onChangeMemberRole={handleChangeMemberRole}
-                    onRemoveMember={(m) => setRemoveConfirmMember(m)}
-                  />
-                )}
-              </div>
+              <AreaModalMembersSection
+                displayMembers={displayMembers}
+                isViewMode={isViewMode}
+                membersLoading={membersLoading}
+                membersError={membersError}
+                addMemberLoading={isLoading}
+                addMemberLogin={addMemberLogin}
+                addMemberRole={addMemberRole}
+                addMemberError={addMemberError}
+                onAddMemberLoginChange={(v) => {
+                  setAddMemberLogin(v);
+                  setAddMemberError(null);
+                }}
+                onAddMemberRoleChange={(v) => setAddMemberRole(v as AreaRole)}
+                onAddMember={handleAddMember}
+                onChangeMemberRole={handleChangeMemberRole}
+                onRemoveMember={(m) => setRemoveConfirmMember(m)}
+              />
             )}
 
             {area && (

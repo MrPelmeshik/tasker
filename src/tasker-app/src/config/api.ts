@@ -3,7 +3,11 @@
  * Fallback localhost — только для development; в production задать REACT_APP_API_BASE.
  */
 
-const DEFAULT_API_BASE = 'http://localhost:8080';
+/** Fallback для development; в production задать REACT_APP_API_BASE */
+export const DEFAULT_API_BASE = 'http://localhost:8080';
+
+/** Fallback пути Hub; в production можно задать REACT_APP_HUB_PATH */
+export const DEFAULT_HUB_PATH = '/hubs/tasker';
 
 export function getApiBase(): string {
   const raw =
@@ -22,7 +26,7 @@ export function getHubBase(): string {
   return raw.replace(/\/api\/?$/, '');
 }
 
-const HUB_PATH = process.env.REACT_APP_HUB_PATH || '/hubs/tasker';
+const HUB_PATH = process.env.REACT_APP_HUB_PATH || DEFAULT_HUB_PATH;
 
 /** Полный URL SignalR Hub */
 export function getHubUrl(): string {

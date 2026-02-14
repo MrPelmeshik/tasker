@@ -2,7 +2,10 @@
  * Маршруты приложения. BASE_PATH задаётся через REACT_APP_BASE_PATH.
  */
 
-const BASE = process.env.REACT_APP_BASE_PATH || '/tasker';
+/** Fallback базового пути приложения */
+export const DEFAULT_BASE_PATH = '/tasker';
+
+const BASE = process.env.REACT_APP_BASE_PATH || DEFAULT_BASE_PATH;
 
 export const ROUTES = {
   HOME: BASE,

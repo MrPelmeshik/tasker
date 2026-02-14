@@ -4,10 +4,7 @@ import type { EventCreateRequest, EventCreateResponse, EventResponse } from '../
 /** EventType.ACTIVITY = 5 */
 export const EventTypeActivity = 5;
 
-/**
- * Создать активность для задачи
- * POST /api/event/addByTask
- */
+/** Создать активность для задачи */
 export async function createEventForTask(data: EventCreateRequest): Promise<EventCreateResponse> {
   return apiFetch<EventCreateResponse>(`/event/addByTask`, {
     method: 'POST',
@@ -15,18 +12,12 @@ export async function createEventForTask(data: EventCreateRequest): Promise<Even
   });
 }
 
-/**
- * Получить список событий по идентификатору задачи
- * GET /api/event/byTask/{taskId}
- */
+/** Получить список событий по задаче */
 export async function fetchEventsByTask(taskId: string, init?: RequestInit): Promise<EventResponse[]> {
   return apiFetch<EventResponse[]>(`/event/byTask/${taskId}`, init);
 }
 
-/**
- * Получить список событий по идентификатору области
- * GET /api/event/byArea/{areaId}
- */
+/** Получить список событий по области */
 export async function fetchEventsByArea(areaId: string, init?: RequestInit): Promise<EventResponse[]> {
   return apiFetch<EventResponse[]>(`/event/byArea/${areaId}`, init);
 }
