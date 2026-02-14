@@ -308,7 +308,9 @@ body {
   --surface-subtle-border-strong: rgb(var(--white) / 0.08);
 
   --modal-overlay-bg: rgba(0, 0, 0, 0.5);
-  --modal-bg: linear-gradient(180deg, rgb(var(--white) / 0.12), rgb(var(--white) / 0.04));
+  --modal-surface-top: 0.10;
+  --modal-surface-bottom: 0.03;
+  --modal-bg: linear-gradient(180deg, rgb(var(--white) / var(--modal-surface-top)), rgb(var(--white) / var(--modal-surface-bottom)));
   --modal-border: var(--glass-border-2);
   --modal-highlight: var(--glass-radial-default);
   --modal-small-max-width: 400px;
@@ -426,7 +428,9 @@ body {
 
   /* Modal — glass effect (light theme) */
   --modal-overlay-bg: rgba(0, 0, 0, 0.15);
-  --modal-bg: var(--glass-gradient-bg);
+  --modal-surface-top: 0.02;
+  --modal-surface-bottom: 0.01;
+  --modal-bg: linear-gradient(180deg, rgb(var(--white) / var(--modal-surface-top)), rgb(var(--white) / var(--modal-surface-bottom)));
   --modal-border: var(--glass-border-2);
   --modal-highlight: var(--glass-radial-default);
 
