@@ -83,12 +83,10 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
       size="s"
       placeholder="Сортировка"
       className={css.treeSortSelect}
-      renderValue={(opt) => (
-        <span className="flex-row-center gap-6">
-          <SortIcon className="icon-m" />
-          {opt.label}
-        </span>
-      )}
+      renderValue={() => <SortIcon className="icon-m" />}
+      showArrow={false}
+      variant="subtle"
+      dropdownClassName={css.treeSortDropdown}
     />
   </div>
 );

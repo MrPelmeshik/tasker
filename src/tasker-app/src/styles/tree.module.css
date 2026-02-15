@@ -108,10 +108,30 @@
   opacity: 0.6;
 }
 
-/** Селект сортировки в тулбаре — компактная ширина */
+/** Селект сортировки — принудительный размер квадрата */
+.treeSortSelect button {
+  min-width: var(--size-28);
+  width: var(--size-28);
+  height: var(--size-28);
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
+.treeSortSelect button>span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .treeSortSelect {
-  min-width: var(--tree-sort-select-min-width);
-  max-width: var(--tree-sort-select-max-width);
+  width: var(--size-28);
+}
+
+.treeSortDropdown {
+  width: max-content;
+  min-width: 180px;
 }
 
 .areaCard {
