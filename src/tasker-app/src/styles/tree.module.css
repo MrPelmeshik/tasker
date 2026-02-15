@@ -49,11 +49,11 @@
   margin-bottom: var(--space-8);
 }
 
-/** Иконные кнопки в строке treeTopActions — единый размер (квадрат) */
-.treeTopActionButton {
+/* Increased specificity to override GlassButton default padding */
+.treeTopActions .treeTopActionButton {
   min-width: var(--size-28);
   min-height: var(--size-28);
-  padding: var(--space-4) !important;
+  padding: var(--space-4);
 }
 
 /** Обёртка блока фильтров: иконка + кнопки статусов (высота как у treeTopActionButton) */
@@ -109,17 +109,17 @@
 }
 
 /** Селект сортировки — принудительный размер квадрата */
-.treeSortSelect button {
+.treeTopActions .treeSortSelect button {
   min-width: var(--size-28);
   width: var(--size-28);
   height: var(--size-28);
-  padding: 0 !important;
-  display: flex !important;
+  padding: 0;
+  display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.treeSortSelect button>span {
+.treeTopActions .treeSortSelect button>span {
   display: flex;
   align-items: center;
   justify-content: center;

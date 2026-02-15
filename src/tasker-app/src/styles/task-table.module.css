@@ -145,8 +145,9 @@
   cursor: pointer;
 }
 
-.colDayClickable:hover {
-  background-color: var(--glass-bg-4) !important;
+/** Specificity increased to override row hover style */
+.table tbody tr:hover .colDayClickable:hover {
+  background-color: var(--glass-bg-4);
 }
 
 .heatCellPlaceholder {
