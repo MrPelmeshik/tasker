@@ -15,8 +15,8 @@ export interface TreeTaskRowProps {
   onViewDetails: (e: React.MouseEvent) => void;
 }
 
-/** Строка задачи, drag за весь блок */
-export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDetails }) => {
+/** Строка задачи, drag за весь блок. Memoized. */
+export const TreeTaskRow: React.FC<TreeTaskRowProps> = React.memo(({ level, task, onViewDetails }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
     id: `task-${task.id}`,
     data: { type: 'task', task },
@@ -26,7 +26,7 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDet
 
   return (
     <div
-      className={`${css.taskItem} ${isDragging ? css.isDragging : ''}`}
+      className={`${css.taskItem} ${isDragging ? css.isDragging : ''} ${css.animatedRow}`}
       style={{ paddingLeft: `calc(var(--tree-indent) * ${level - 1})` }}
     >
       <div
@@ -57,4 +57,4 @@ export const TreeTaskRow: React.FC<TreeTaskRowProps> = ({ level, task, onViewDet
       </div>
     </div>
   );
-};
+});

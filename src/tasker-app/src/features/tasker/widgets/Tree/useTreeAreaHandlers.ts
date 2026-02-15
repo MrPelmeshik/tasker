@@ -2,7 +2,7 @@
  * Обработчики для областей в виджете дерева.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import { fetchAreaShortCard, fetchAreaById, createArea, updateArea, deleteArea } from '../../../../services/api';
 import type { AreaShortCard, FolderSummary, TaskSummary, AreaCreateRequest, AreaUpdateRequest } from '../../../../types';
 import type { ModalContextType } from '../../../../context/ModalContext';
@@ -82,10 +82,10 @@ export function useTreeAreaHandlers({
     [openAreaModal, handleAreaSave, handleAreaDelete, showError]
   );
 
-  return {
+  return useMemo(() => ({
     handleAreaSave,
     handleAreaDelete,
     handleCreateArea,
     handleViewAreaDetails,
-  };
+  }), [handleAreaSave, handleAreaDelete, handleCreateArea, handleViewAreaDetails]);
 }

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { UseTreeHandlersOptions } from './useTreeHandlers.types';
 import { useTreeAreaHandlers } from './useTreeAreaHandlers';
 import { useTreeFolderHandlers } from './useTreeFolderHandlers';
@@ -39,9 +40,9 @@ export function useTreeHandlers(options: UseTreeHandlersOptions) {
     showError: options.showError,
   });
 
-  return {
+  return useMemo(() => ({
     ...areaHandlers,
     ...folderHandlers,
     ...taskHandlers,
-  };
+  }), [areaHandlers, folderHandlers, taskHandlers]);
 }

@@ -15,6 +15,7 @@ export interface NotifyTaskUpdatePayload {
   folderId?: string;
   areaId?: string;
   entityType?: string;
+  entityId?: string;
 }
 
 type SubscriberCallback = (taskId?: string, folderId?: string, payload?: NotifyTaskUpdatePayload) => void;
@@ -92,6 +93,7 @@ export const TaskUpdateProvider: React.FC<TaskUpdateProviderProps> = ({ children
         folderId: payload.folderId ?? undefined,
         areaId: payload.areaId,
         entityType: payload.entityType,
+        entityId: payload.entityId,
       };
       const taskId = payload.entityType === 'TASK' ? payload.entityId : undefined;
       const folderId = payload.folderId ?? undefined;

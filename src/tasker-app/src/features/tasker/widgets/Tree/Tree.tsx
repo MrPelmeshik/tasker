@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import {
   DndContext,
@@ -14,7 +14,7 @@ import { GlassWidget } from '../../../../components/common/GlassWidget';
 import { Z_INDEX_DND_OVERLAY } from '../../../../config/constants';
 import { Loader } from '../../../../components/ui/Loader';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
-import type { WidgetSizeProps, FolderSummary } from '../../../../types';
+import type { WidgetSizeProps } from '../../../../types';
 import { type EntityType } from '../../../../utils/entity-links';
 import {
   collisionDetection,
@@ -27,12 +27,11 @@ import { useTreeHandlers } from './useTreeHandlers';
 import { useTreeFilters } from './useTreeFilters';
 import { useTreeDeepLink } from './useTreeDeepLink';
 import { useTreeDragEnd } from './useTreeDragEnd';
-import { TreeFolderRow } from './TreeFolderRow';
-import { TreeTaskRow } from './TreeTaskRow';
 import { TreeDndOverlay } from './TreeDndOverlay';
 import { TreeToolbar } from './TreeToolbar';
 import { TreeEmpty } from './TreeEmpty';
 import { TreeContent } from './TreeContent';
+import { TreeProvider } from './TreeContext';
 import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
 import css from '../../../../styles/tree.module.css';
 
@@ -56,24 +55,25 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
   const {
     areas,
     setAreas,
-    foldersByArea,
     setFoldersByArea,
-    foldersByParent,
     setFoldersByParent,
-    tasksByArea,
     setTasksByArea,
-    tasksByFolder,
     setTasksByFolder,
-    expandedAreas,
-    expandedFolders,
     setExpandedAreas,
     setExpandedFolders,
+    loadFolderContent,
+    loadAreaContent,
+    foldersByArea,
+    foldersByParent,
+    tasksByArea,
+    tasksByFolder,
+    expandedAreas,
+    expandedFolders,
     loading,
     loadingContent,
-    loadAreaContent,
-    loadFolderContent,
     toggleArea,
     toggleFolder,
+    refreshTree,
     expandAll,
     collapseAll,
     isAllExpanded,
@@ -168,40 +168,53 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
     [handleDragEndCallback]
   );
 
-  const renderFolder = useCallback(
-    (folder: FolderSummary, areaId: string, depth: number) => {
-      const subfolders = foldersByParent.get(folder.id) ?? [];
-      const rawTasks = tasksByFolder.get(folder.id) ?? [];
-      const tasks = filterAndSortTasks(rawTasks);
-      const isLoading = loadingContent.has(`folder:${folder.id}`);
-      const displayCount = hasStatusFilter ? subfolders.length + tasks.length : undefined;
-      const totalCount = hasStatusFilter ? folder.tasksCount + folder.subfoldersCount : undefined;
-      return (
-        <TreeFolderRow
-          key={folder.id}
-          folder={folder}
-          areaId={areaId}
-          depth={depth}
-          isExpanded={expandedFolders.has(folder.id)}
-          subfolders={subfolders}
-          tasks={tasks}
-          isLoading={isLoading}
-          displayCount={displayCount}
-          totalCount={totalCount}
-          activeDrag={activeDrag}
-          foldersByArea={foldersByArea}
-          foldersByParent={foldersByParent}
-          onToggle={() => toggleFolder(folder.id, areaId)}
-          onViewDetails={(e) => handlers.handleViewFolderDetails(folder.id, e)}
-          onCreateFolder={(e) => handlers.handleCreateFolderForFolder(folder.id, areaId, e)}
-          onCreateTask={(e) => handlers.handleCreateTaskForFolder(folder.id, areaId, e)}
-          renderFolder={renderFolder}
-          renderTask={(task, level) => <TreeTaskRow key={task.id} level={level} task={task} onViewDetails={(e) => handlers.handleViewTaskDetails(task.id, e)} />}
-        />
-      );
+  // Construct Context Value
+  const contextValue = useMemo(() => ({
+    // Data
+    areas, // Actually areas only used in TreeContent loop, but simpler to include
+    foldersByArea,
+    foldersByParent,
+    tasksByArea,
+    tasksByFolder,
+    expandedAreas,
+    expandedFolders,
+    loadingContent,
+    activeDrag,
+
+    // Actions
+    actions: {
+      toggleArea,
+      toggleFolder,
+      onViewAreaDetails: handlers.handleViewAreaDetails,
+      onCreateFolderForArea: handlers.handleCreateFolderForArea,
+      onCreateTaskForArea: handlers.handleCreateTaskForArea,
+      onViewFolderDetails: handlers.handleViewFolderDetails,
+      onCreateFolderForFolder: handlers.handleCreateFolderForFolder,
+      onCreateTaskForFolder: handlers.handleCreateTaskForFolder,
+      onViewTaskDetails: handlers.handleViewTaskDetails,
     },
-    [expandedFolders, foldersByParent, tasksByFolder, loadingContent, activeDrag, foldersByArea, toggleFolder, handlers, filterAndSortTasks, hasStatusFilter]
-  );
+
+    // Helpers
+    helpers: {
+      filterAndSortTasks,
+      hasStatusFilter,
+    }
+  }), [
+    areas,
+    foldersByArea,
+    foldersByParent,
+    tasksByArea,
+    tasksByFolder,
+    expandedAreas,
+    expandedFolders,
+    loadingContent,
+    activeDrag,
+    toggleArea,
+    toggleFolder,
+    handlers,
+    filterAndSortTasks,
+    hasStatusFilter
+  ]);
 
   const innerContent = (
     <div className={css.tree}>
@@ -222,49 +235,35 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
         ) : areas.length === 0 ? (
           <TreeEmpty />
         ) : (
-          <TreeContent
-            areas={areas}
-            foldersByArea={foldersByArea}
-            foldersByParent={foldersByParent}
-            tasksByArea={tasksByArea}
-            expandedAreas={expandedAreas}
-            loadingContent={loadingContent}
-            activeDrag={activeDrag}
-            filterAndSortTasks={filterAndSortTasks}
-            hasStatusFilter={hasStatusFilter}
-            onToggleArea={toggleArea}
-            onViewAreaDetails={handlers.handleViewAreaDetails}
-            onCreateFolderForArea={handlers.handleCreateFolderForArea}
-            onCreateTaskForArea={handlers.handleCreateTaskForArea}
-            onViewTaskDetails={handlers.handleViewTaskDetails}
-            renderFolder={renderFolder}
-          />
+          <TreeContent />
         )}
       </div>
     </div>
   );
 
   const dndContent = (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={collisionDetection}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      onDragCancel={() => setActiveDrag(null)}
-    >
-      {innerContent}
-      {createPortal(
-        <DragOverlay zIndex={Z_INDEX_DND_OVERLAY} className="cursor-grabbing">
-          {activeDrag?.data.type === 'folder' && activeDrag.data.folder && (
-            <TreeDndOverlay type="folder" folder={activeDrag.data.folder} />
-          )}
-          {activeDrag?.data.type === 'task' && activeDrag.data.task && (
-            <TreeDndOverlay type="task" task={activeDrag.data.task} />
-          )}
-        </DragOverlay>,
-        document.body
-      )}
-    </DndContext>
+    <TreeProvider value={contextValue}>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={collisionDetection}
+        onDragStart={handleDragStart}
+        onDragEnd={handleDragEnd}
+        onDragCancel={() => setActiveDrag(null)}
+      >
+        {innerContent}
+        {createPortal(
+          <DragOverlay zIndex={Z_INDEX_DND_OVERLAY} className="cursor-grabbing">
+            {activeDrag?.data.type === 'folder' && activeDrag.data.folder && (
+              <TreeDndOverlay type="folder" folder={activeDrag.data.folder} />
+            )}
+            {activeDrag?.data.type === 'task' && activeDrag.data.task && (
+              <TreeDndOverlay type="task" task={activeDrag.data.task} />
+            )}
+          </DragOverlay>,
+          document.body
+        )}
+      </DndContext>
+    </TreeProvider>
   );
 
   if (embedded) {

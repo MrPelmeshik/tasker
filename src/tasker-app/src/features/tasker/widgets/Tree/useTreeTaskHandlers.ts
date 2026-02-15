@@ -2,7 +2,7 @@
  * Обработчики для задач в виджете дерева.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   fetchTaskById,
   createTask,
@@ -134,11 +134,11 @@ export function useTreeTaskHandlers({
     [areas, openTaskModal, handleTaskSave, handleTaskDelete, showError]
   );
 
-  return {
+  return useMemo(() => ({
     handleTaskSave,
     handleTaskDelete,
     handleCreateTaskForArea,
     handleCreateTaskForFolder,
     handleViewTaskDetails,
-  };
+  }), [handleTaskSave, handleTaskDelete, handleCreateTaskForArea, handleCreateTaskForFolder, handleViewTaskDetails]);
 }

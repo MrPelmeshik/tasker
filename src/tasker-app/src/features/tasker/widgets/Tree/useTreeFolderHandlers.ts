@@ -2,7 +2,7 @@
  * Обработчики для папок в виджете дерева.
  */
 
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import {
   fetchFolderById,
   createFolder,
@@ -138,11 +138,11 @@ export function useTreeFolderHandlers({
     [areas, openFolderModal, handleFolderSave, handleFolderDelete, showError]
   );
 
-  return {
+  return useMemo(() => ({
     handleFolderSave,
     handleFolderDelete,
     handleCreateFolderForArea,
     handleCreateFolderForFolder,
     handleViewFolderDetails,
-  };
+  }), [handleFolderSave, handleFolderDelete, handleCreateFolderForArea, handleCreateFolderForFolder, handleViewFolderDetails]);
 }
