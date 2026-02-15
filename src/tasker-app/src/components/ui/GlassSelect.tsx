@@ -157,10 +157,14 @@ export const GlassSelect: React.FC<GlassSelectProps> = ({
     }
   };
 
-  // Close dropdown when clicking outside
+  // Close dropdown when clicking outside (check both trigger and portal list)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      if (
+        containerRef.current && !containerRef.current.contains(target) &&
+        (!listRef.current || !listRef.current.contains(target))
+      ) {
         setIsOpen(false);
         setFocusedIndex(-1);
       }
