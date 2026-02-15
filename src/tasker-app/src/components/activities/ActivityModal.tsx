@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { SimpleModalHeader } from '../common/SimpleModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
-import { GlassInput, GlassTextarea, ModalSaveButton } from '../ui';
+import { GlassInput, GlassTextarea, ModalSaveButton, GlassSelect } from '../ui';
 import { ActivityList } from './ActivityList';
 import { TaskCardLink } from '../tasks';
 import { useToast } from '../../context/ToastContext';
@@ -17,6 +17,7 @@ export interface ActivityFormData {
   title: string;
   description: string;
   date: string;
+  eventType: string;
 }
 
 export interface ActivityModalProps {
@@ -39,6 +40,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   const { showError } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [eventType, setEventType] = useState('ACTIVITY');
   const [isLoading, setIsLoading] = useState(false);
   const isSubmittingRef = useRef(false);
 
@@ -48,6 +50,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     if (isOpen) {
       setTitle('');
       setDescription('');
+      setEventType('ACTIVITY');
     }
   }, [isOpen, task?.id]);
 
@@ -58,7 +61,12 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     setIsLoading(true);
     try {
       if (!date) throw new Error('Дата активности не указана');
-      await onSave({ title: title.trim(), description: description.trim(), date });
+      await onSave({
+        title: title.trim(),
+        description: description.trim(),
+        date,
+        eventType
+      });
       onClose();
     } catch (error) {
       console.error('Ошибка сохранения активности:', error);
@@ -101,6 +109,23 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
             </div>
           )}
           <div className={formCss.formContainer}>
+            <EntityFormField
+              label="Тип активноси"
+              isViewMode={false}
+              viewContent={null}
+              editContent={
+                <GlassSelect
+                  value={eventType}
+                  onChange={(val: string) => setEventType(val)}
+                  options={[
+                    { value: 'ACTIVITY', label: 'Активность' },
+                    { value: 'NOTE', label: 'Заметка' },
+                  ]}
+                  disabled={isLoading}
+                  fullWidth
+                />
+              }
+            />
             <EntityFormField
               label="Заголовок *"
               isViewMode={false}

@@ -3,7 +3,11 @@ using TaskerApi.Extensions;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Configuration.AddEnvironmentVariables();
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter());
+    });
 
 builder.Services.AddTaskerCors(builder.Configuration);
 builder.Services.AddTaskerAuthentication(builder.Configuration);

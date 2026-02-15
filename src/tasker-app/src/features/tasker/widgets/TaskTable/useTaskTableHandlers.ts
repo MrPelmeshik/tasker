@@ -11,15 +11,16 @@ import {
 } from '../../../../services/api';
 import type { TaskResponse, TaskUpdateRequest } from '../../../../types/api';
 import type { TaskRowTask } from './taskTableUtils';
+import type { ActivityFormData } from '../../../../components/activities/ActivityModal';
 
 export interface UseTaskTableHandlersOptions {
   loadData: () => Promise<void>;
   showError: (error: unknown) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
   openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>) => void;
-  openActivityModal: (task: TaskResponse, date: string, onSave: (data: { title: string; description: string; date: string }) => Promise<void>, onOpenTaskDetails: () => void) => void;
+  openActivityModal: (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
   closeActivityModal: () => void;
-  handleActivitySaveForTask: (task: TaskResponse) => (data: { title: string; description: string; date: string }) => Promise<void>;
+  handleActivitySaveForTask: (task: TaskResponse) => (data: ActivityFormData) => Promise<void>;
 }
 
 export function useTaskTableHandlers({

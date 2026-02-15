@@ -29,6 +29,11 @@ public class EventResponse
     /// Идентификатор пользователя-владельца.
     /// </summary>
     public Guid OwnerUserId { get; set; }
+
+    /// <summary>
+    /// Имя пользователя-владельца.
+    /// </summary>
+    public string OwnerUserName { get; set; } = string.Empty;
     
     /// <summary>
     /// Дата и время создания.

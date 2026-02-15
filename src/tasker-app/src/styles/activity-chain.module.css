@@ -130,6 +130,11 @@
   color: rgb(var(--white) / 0.5);
 }
 
+.eventOwner {
+  color: rgb(var(--white) / 0.7);
+  font-weight: var(--font-weight-medium);
+}
+
 .eventDesc {
   margin-top: var(--space-6);
   font-size: var(--font-12);

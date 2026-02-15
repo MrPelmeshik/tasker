@@ -24,6 +24,7 @@ export interface EventResponse {
   message?: EventMessage;
   eventType: string;
   ownerUserId: string;
+  ownerUserName?: string;
   createdAt: Date;
   /** Дата события/активности */
   eventDate: Date;

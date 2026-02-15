@@ -96,12 +96,12 @@ export function useTaskTableData({
   }, [weekStartIso, showError]);
 
   const handleActivitySaveForTask = useCallback(
-    (task: TaskResponse) => async (data: { title: string; description: string; date: string }) => {
+    (task: TaskResponse) => async (data: { title: string; description: string; date: string; eventType: string }) => {
       await createEventForTask({
         entityId: task.id,
         title: data.title,
         description: data.description || undefined,
-        eventType: EventTypeActivity,
+        eventType: data.eventType as any, // Приводим к типу, ожидаемому API (строка или число в зависимости от реализации)
         eventDate: data.date,
       });
       await loadData();

@@ -13,7 +13,7 @@ public static partial class EntityMapper
     /// <summary>
     /// Маппинг EventEntity в EventResponse
     /// </summary>
-    public static EventResponse ToEventResponse(this EventEntity entity)
+    public static EventResponse ToEventResponse(this EventEntity entity, string ownerUserName = "")
     {
         System.Text.Json.JsonElement? messageElement = null;
         if (!string.IsNullOrEmpty(entity.Message))
@@ -35,6 +35,7 @@ public static partial class EntityMapper
             Message = messageElement,
             EventType = entity.EventType.ToString(),
             OwnerUserId = entity.OwnerUserId,
+            OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
             EventDate = entity.EventDate,
             UpdatedAt = entity.UpdatedAt,

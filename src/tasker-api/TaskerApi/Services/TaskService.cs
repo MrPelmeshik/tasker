@@ -279,7 +279,7 @@ public class TaskService(
                 var taskIdsWithActivities = await context.EventToTasks
                     .AsNoTracking()
                     .Where(et => et.IsActive)
-                    .Join(context.Events.Where(e => e.EventType == EventType.ACTIVITY && e.IsActive && e.EventDate >= rangeStart && e.EventDate <= rangeEnd),
+                    .Join(context.Events.Where(e => (e.EventType == EventType.ACTIVITY || e.EventType == EventType.NOTE) && e.IsActive && e.EventDate >= rangeStart && e.EventDate <= rangeEnd),
                         et => et.EventId, e => e.Id, (et, _) => et.TaskId)
                     .Distinct()
                     .ToListAsync(cancellationToken);
@@ -354,7 +354,7 @@ public class TaskService(
         var query = context.EventToTasks
             .AsNoTracking()
             .Where(et => taskIds.Contains(et.TaskId) && et.IsActive)
-            .Join(context.Events.Where(e => e.EventType == EventType.ACTIVITY && e.IsActive),
+            .Join(context.Events.Where(e => (e.EventType == EventType.ACTIVITY || e.EventType == EventType.NOTE) && e.IsActive),
                 et => et.EventId, e => e.Id, (et, e) => new { et.TaskId, e.EventDate });
         var list = await query.ToListAsync(cancellationToken);
         return list.Select(x => (x.TaskId, x.EventDate)).ToList();

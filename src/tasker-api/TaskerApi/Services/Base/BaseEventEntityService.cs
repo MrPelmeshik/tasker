@@ -103,8 +103,12 @@ public abstract class BaseEventEntityService(
             .AsNoTracking()
             .Where(e => eventIds.Contains(e.Id) && e.IsActive)
             .OrderByDescending(e => e.CreatedAt)
+            .Join(context.Users, 
+                e => e.OwnerUserId, 
+                u => u.Id, 
+                (e, u) => new { Event = e, UserName = u.Name })
             .ToListAsync(cancellationToken);
 
-        return events.Select(e => e.ToEventResponse()).ToList();
+        return events.Select(x => x.Event.ToEventResponse(x.UserName ?? "")).ToList();
     }
 }

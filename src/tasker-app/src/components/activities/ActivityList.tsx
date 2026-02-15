@@ -35,7 +35,7 @@ export const ActivityList: React.FC<ActivityListProps> = ({
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(() =>
-    new Set(EVENT_TYPES.filter((t) => t !== 'ACTIVITY'))
+    new Set(EVENT_TYPES.filter((t) => t !== 'ACTIVITY' && t !== 'NOTE'))
   );
 
   const toggleTypeVisibility = (eventType: string) => {
@@ -123,6 +123,12 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                     </span>
                     <span className={activityChainCss.eventDate}>
                       {formatDateTime(ev.createdAt)}
+                      {ev.ownerUserName && (
+                        <span className={activityChainCss.eventOwner}>
+                          {' • '}
+                          {ev.ownerUserName}
+                        </span>
+                      )}
                     </span>
                   </div>
                   {ev.message && (() => {
