@@ -52,25 +52,23 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           <div className={css.spacer} />
           <span className={css.muted}>{dateRangeLabel}</span>
         </div>
-        <table className={css.table}>
-          <thead className={css.thead}>
-            <tr>
-              <th className={`${css.th} ${css.colCarry}`} />
-              {daysHeader.map((d, i) => (
-                <th key={i} className={`${css.th} ${css.colDay}`}>
-                  <Tooltip content={`${d.weekdayLong}, ${d.date}`} placement="bottom" size="s">
-                    <span>{d.label}</span>
-                  </Tooltip>
-                </th>
-              ))}
-              <th className={`${css.th} ${css.colFuture}`} />
-              <th className={`${css.th} ${css.colArea}`} />
-              <th className={`${css.th} ${css.colTask}`}>Задача</th>
-            </tr>
-          </thead>
-        </table>
         <div className={css.gridWrapper}>
           <table className={css.table}>
+            <thead className={css.thead}>
+              <tr>
+                <th className={`${css.th} ${css.colCarry}`} />
+                {daysHeader.map((d, i) => (
+                  <th key={i} className={`${css.th} ${css.colDay}`}>
+                    <Tooltip content={`${d.weekdayLong}, ${d.date}`} placement="bottom" size="s">
+                      <span>{d.label}</span>
+                    </Tooltip>
+                  </th>
+                ))}
+                <th className={`${css.th} ${css.colFuture}`} />
+                <th className={`${css.th} ${css.colArea}`} />
+                <th className={`${css.th} ${css.colTask}`}>Задача</th>
+              </tr>
+            </thead>
             <tbody>
               {loading && (
                 <tr>
