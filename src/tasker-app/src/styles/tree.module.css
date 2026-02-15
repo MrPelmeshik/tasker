@@ -3,17 +3,22 @@
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
+  overflow: hidden;
+  /* Prevent double scrollbars if any */
 }
 
 .widgetContent {
   flex: 1;
   min-height: 0;
+  /* Critical for nested flex scrolling */
   overflow-y: auto;
   overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: var(--tree-row-spacing);
   box-sizing: border-box;
+  padding-right: var(--space-2);
+  /* Spacing for scrollbar */
 }
 
 .areaSection {
@@ -46,7 +51,10 @@
   display: flex;
   align-items: center;
   gap: var(--tree-row-gap);
-  margin-bottom: var(--space-8);
+  padding-bottom: var(--space-4);
+  /* Add some spacing below toolbar */
+  flex-shrink: 0;
+  /* Prevent toolbar from shrinking */
 }
 
 /* Increased specificity to override GlassButton default padding */

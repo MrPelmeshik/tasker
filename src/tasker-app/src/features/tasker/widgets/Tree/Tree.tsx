@@ -218,18 +218,18 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
 
   const innerContent = (
     <div className={css.tree}>
+      <TreeToolbar
+        onCreateArea={handlers.handleCreateArea}
+        isAllExpanded={isAllExpanded}
+        onExpandAll={expandAll}
+        onCollapseAll={collapseAll}
+        enabledStatuses={enabledStatuses}
+        toggleStatus={toggleStatus}
+        sortPreset={sortPreset}
+        setSortPreset={setSortPreset}
+      />
       {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
       <div className={`${css.widgetContent} scrollbar-compact`}>
-        <TreeToolbar
-          onCreateArea={handlers.handleCreateArea}
-          isAllExpanded={isAllExpanded}
-          onExpandAll={expandAll}
-          onCollapseAll={collapseAll}
-          enabledStatuses={enabledStatuses}
-          toggleStatus={toggleStatus}
-          sortPreset={sortPreset}
-          setSortPreset={setSortPreset}
-        />
         {loading ? (
           <div className={glassWidgetStyles.placeholder}><Loader size="m" ariaLabel="Загрузка" /></div>
         ) : areas.length === 0 ? (
