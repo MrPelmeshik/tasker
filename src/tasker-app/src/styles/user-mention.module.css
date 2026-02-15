@@ -1,0 +1,15 @@
+/* Упоминание пользователя (триггер для карточки) */
+.mention {
+  cursor: default;
+  border-bottom: var(--border-1) dashed var(--color-text-subtle);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.mention:hover {
+  color: var(--color-text);
+  border-bottom-color: rgb(var(--color-accent) / 0.6);
+}
+
+.popoverPanel {
+  min-width: 220px;
+}

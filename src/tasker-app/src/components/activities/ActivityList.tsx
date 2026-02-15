@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { EventResponse } from '../../types/api';
 import { Tooltip } from '../ui/Tooltip';
 import { Loader } from '../ui/Loader';
+import { UserMention } from '../common/UserMention';
 import { formatDateTime } from '../../utils/date';
 import { getEventTypeLabel, formatMessageForDisplay, EVENT_TYPES } from '../../utils/event-display';
 import activityChainCss from '../../styles/activity-chain.module.css';
@@ -124,10 +125,15 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                     <span className={activityChainCss.eventDate}>
                       {formatDateTime(ev.createdAt)}
                       {ev.ownerUserName && (
-                        <span className={activityChainCss.eventOwner}>
+                        <>
                           {' • '}
-                          {ev.ownerUserName}
-                        </span>
+                          <UserMention
+                            userName={ev.ownerUserName}
+                            className={activityChainCss.eventOwner}
+                          >
+                            {ev.ownerUserName}
+                          </UserMention>
+                        </>
                       )}
                     </span>
                   </div>

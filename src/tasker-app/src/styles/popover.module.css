@@ -1,0 +1,36 @@
+/* Универсальная всплывающая панель (hover, с возможностью перехода курсора в контент) */
+.trigger {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.triggerFill {
+  display: block;
+  width: 100%;
+  min-height: var(--select-option-min-height);
+}
+
+.panel {
+  position: fixed;
+  border-radius: var(--radius-s);
+  color: var(--color-text);
+  background: var(--glass-panel-bg);
+  box-shadow: var(--shadow-elev-2), var(--shadow-inset-0);
+  backdrop-filter: var(--glass-tooltip-blur);
+  -webkit-backdrop-filter: var(--glass-tooltip-blur);
+  border: var(--border-1) solid rgb(var(--white) / 0.10);
+  font-size: var(--font-12);
+  line-height: var(--line-height-snug);
+  z-index: 9999;
+  padding: var(--space-8);
+  transition: opacity var(--transition-tooltip), visibility var(--transition-tooltip);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel {
+    transition: none;
+  }
+}

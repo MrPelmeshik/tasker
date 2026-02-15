@@ -1,5 +1,6 @@
 import React from 'react';
 import formCss from '../../styles/modal-form.module.css';
+import { UserMention } from './UserMention';
 
 export interface EntityMetaBlockProps {
   ownerUserName?: string;
@@ -19,7 +20,9 @@ export const EntityMetaBlock: React.FC<EntityMetaBlockProps> = ({
     {ownerUserName && (
       <div className={formCss.readonlyMetaRow}>
         <span className={formCss.readonlyMetaLabel}>Владелец</span>
-        <span className={formCss.readonlyMetaValue}>{ownerUserName}</span>
+        <UserMention userName={ownerUserName} className={formCss.readonlyMetaValue}>
+          {ownerUserName}
+        </UserMention>
       </div>
     )}
     {createdAt != null && (
