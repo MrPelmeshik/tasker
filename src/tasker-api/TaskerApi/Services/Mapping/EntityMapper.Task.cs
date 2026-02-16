@@ -27,7 +27,7 @@ public static partial class EntityMapper
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
             DeactivatedAt = entity.DeactivatedAt,
-            Status = entity.Status
+            Status = (int)entity.Status
         };
     }
 
@@ -49,7 +49,7 @@ public static partial class EntityMapper
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
             DeactivatedAt = entity.DeactivatedAt,
-            Status = entity.Status
+            Status = (int)entity.Status
         };
     }
 

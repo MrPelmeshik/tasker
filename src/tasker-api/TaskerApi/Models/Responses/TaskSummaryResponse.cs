@@ -1,6 +1,3 @@
-using TaskerApi.Models.Common;
-using TaskStatus = TaskerApi.Models.Common.TaskStatus;
-
 namespace TaskerApi.Models.Responses;
 
 /// <summary>
@@ -24,9 +21,9 @@ public class TaskSummaryResponse
     public string? Description { get; set; }
 
     /// <summary>
-    /// Статус задачи
+    /// Статус задачи (числовой код: 1–5)
     /// </summary>
-    public TaskStatus Status { get; set; }
+    public int Status { get; set; }
 
     /// <summary>
     /// ID области
