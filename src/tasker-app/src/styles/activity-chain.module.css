@@ -165,3 +165,21 @@
   color: rgb(var(--white) / 0.6);
   line-height: var(--line-height-normal);
 }
+
+.expandBtn {
+  display: inline-block;
+  margin-top: var(--space-4);
+  padding: 0;
+  background: none;
+  border: none;
+  color: rgb(var(--color-accent) / 0.8);
+  font-size: var(--font-11);
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.expandBtn:hover {
+  color: rgb(var(--color-accent));
+  text-decoration: underline;
+}

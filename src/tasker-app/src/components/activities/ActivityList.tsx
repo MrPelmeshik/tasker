@@ -4,6 +4,7 @@ import { Tooltip } from '../ui/Tooltip';
 import { Loader } from '../ui/Loader';
 import { UserMention } from '../common/UserMention';
 import { ConfirmModal } from '../common/ConfirmModal';
+import { MarkdownViewer } from '../ui/MarkdownViewer/MarkdownViewer';
 import { formatDateTime } from '../../utils/date';
 import { getEventTypeLabel, formatMessageForDisplay, EVENT_TYPES } from '../../utils/event-display';
 import activityChainCss from '../../styles/activity-chain.module.css';
@@ -44,6 +45,7 @@ export const ActivityList: React.FC<ActivityListProps> = ({
   const [expanded, setExpanded] = useState(defaultExpanded);
   const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<EventResponse | null>(null);
   const [deleteInProgress, setDeleteInProgress] = useState(false);
+  const [expandedDescs, setExpandedDescs] = useState<Set<string>>(() => new Set());
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(() =>
     new Set(EVENT_TYPES.filter((t) => t !== 'ACTIVITY' && t !== 'NOTE'))
   );
@@ -183,9 +185,32 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                   {ev.message && (() => {
                     const text = formatMessageForDisplay(ev.message);
                     if (!text) return null;
+                    const isExpanded = expandedDescs.has(ev.id);
+                    const isLong = text.length > 120;
                     return (
                       <div className={activityChainCss.eventDesc}>
-                        {text.length > 120 ? `${text.slice(0, 120)}…` : text}
+                        {isExpanded ? (
+                          <MarkdownViewer value={text} />
+                        ) : (
+                          <span>{isLong ? `${text.slice(0, 120)}…` : text}</span>
+                        )}
+                        {(isLong || isExpanded) && (
+                          <button
+                            type="button"
+                            className={activityChainCss.expandBtn}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setExpandedDescs((prev) => {
+                                const next = new Set(prev);
+                                if (next.has(ev.id)) next.delete(ev.id);
+                                else next.add(ev.id);
+                                return next;
+                              });
+                            }}
+                          >
+                            {isExpanded ? 'Свернуть' : 'Подробнее'}
+                          </button>
+                        )}
                       </div>
                     );
                   })()}
