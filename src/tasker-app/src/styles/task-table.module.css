@@ -6,14 +6,122 @@
 
 .toolbar {
   display: flex;
-  gap: var(--space-8);
-  margin-bottom: var(--space-12);
   align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-4);
+  /* Was tree-row-gap in Tree, likely space-2 or space-4 */
+  padding-bottom: var(--space-4);
+  margin-bottom: var(--space-8);
+  flex-shrink: 0;
 }
 
-.spacer {
-  flex: 1;
+.searchWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--size-28);
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-xs);
+  border: var(--border-1) solid rgb(var(--white) / 0.08);
+  background: var(--glass-bg-1);
+  min-width: 160px;
+  width: var(--size-220);
+  box-sizing: border-box;
 }
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  padding-left: 0 !important;
+  /* Reset padding override */
+}
+
+.searchBlockIcon {
+  color: var(--glass-icon-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.statusFiltersBlock {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: var(--size-28);
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-xs);
+  border: var(--border-1) solid rgb(var(--white) / 0.08);
+  background: var(--glass-bg-1);
+  box-sizing: border-box;
+  margin-left: 0;
+}
+
+.statusFiltersBlockIcon {
+  color: var(--glass-icon-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.statusFilters {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.statusFilterBtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  border: none;
+  border-radius: var(--radius-2xs);
+  background: transparent;
+  cursor: pointer;
+  transition: opacity var(--transition-fast);
+}
+
+.statusFilterBtn:hover {
+  background: var(--glass-hover-bg);
+}
+
+.statusFilterBtnDisabled {
+  opacity: 0.4;
+}
+
+.statusFilterBtnDisabled:hover {
+  opacity: 0.6;
+}
+
+/* Sort Select - Specific overrides to match Tree's square button */
+.sortSelect {
+  width: var(--size-28);
+}
+
+.sortSelect :global(button) {
+  min-width: var(--size-28) !important;
+  width: var(--size-28) !important;
+  height: var(--size-28) !important;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+.sortSelect :global(button)>span {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+
+.sortDropdown {
+  width: max-content;
+  min-width: 180px;
+}
+
 
 .weekLabel {
   font-size: var(--font-13);

@@ -16,25 +16,43 @@ import type { EventUpdateRequest } from '../../../../types/api';
 import { TaskStatus } from '../../../../types/task-status';
 import type { TaskResponse } from '../../../../types/api';
 import type { TaskRow } from './taskTableUtils';
+import { sortTaskRows } from './taskTableUtils';
+import { matchesSearch } from '../Tree/treeSearchUtils';
+import type { TreeSortPreset } from '../Tree/treeUtils';
 
 /** Группа строк по области (areaColor из данных области). */
 export type GroupedTaskRows = Array<{ areaId: string; areaTitle: string; areaColor?: string; rows: TaskRow[] }>;
 
-function groupRowsByArea(rows: TaskRow[]): GroupedTaskRows {
-  const order: string[] = [];
+function groupRowsByArea(rows: TaskRow[], sortPreset: TreeSortPreset): GroupedTaskRows {
   const byArea = new Map<string, TaskRow[]>();
+  const areaTitles = new Map<string, string>();
+
   for (const row of rows) {
     const id = row.areaId ?? '';
+    // Store title for sorting
+    if (!areaTitles.has(id)) {
+      areaTitles.set(id, row.areaTitle || '—');
+    }
+
     if (!byArea.has(id)) {
-      order.push(id);
       byArea.set(id, []);
     }
     byArea.get(id)!.push(row);
   }
-  return order.map(areaId => {
+
+  // Sort areas alphabetically
+  const sortedAreaIds = Array.from(byArea.keys()).sort((a, b) => {
+    const titleA = areaTitles.get(a) ?? '';
+    const titleB = areaTitles.get(b) ?? '';
+    return titleA.localeCompare(titleB, undefined, { sensitivity: 'base' });
+  });
+
+  return sortedAreaIds.map(areaId => {
     const rowsInGroup = byArea.get(areaId) ?? [];
-    const areaTitle = rowsInGroup[0]?.areaTitle ?? (areaId || '—');
-    return { areaId, areaTitle, rows: rowsInGroup };
+    // Sort tasks within area
+    const sortedRows = sortTaskRows(rowsInGroup, sortPreset);
+    const areaTitle = areaTitles.get(areaId) ?? '—';
+    return { areaId, areaTitle, rows: sortedRows };
   });
 }
 
@@ -43,6 +61,9 @@ export interface UseTaskTableDataOptions {
   showError: (error: unknown) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
   subscribeToTaskUpdates: (callback: (taskId?: string, folderId?: string, payload?: { entityType?: string; entityId?: string }) => void) => () => void;
+  enabledStatuses: Set<TaskStatus>;
+  searchQuery: string;
+  sortPreset: TreeSortPreset;
 }
 
 export function useTaskTableData({
@@ -50,6 +71,9 @@ export function useTaskTableData({
   showError,
   notifyTaskUpdate,
   subscribeToTaskUpdates,
+  enabledStatuses,
+  searchQuery,
+  sortPreset,
 }: UseTaskTableDataOptions) {
   const [loading, setLoading] = useState(false);
   const [groupedRows, setGroupedRows] = useState<GroupedTaskRows>([]);
@@ -67,7 +91,7 @@ export function useTaskTableData({
         }
         setAreaColors(map);
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => { alive = false; };
   }, []);
 
@@ -82,7 +106,7 @@ export function useTaskTableData({
     try {
       const filter = buildTaskWithActivitiesFilter({
         ...dateRangeFromWeek(weekStartIso),
-        statuses: [TaskStatus.InProgress, TaskStatus.Pending],
+        statuses: Array.from(enabledStatuses),
         includeTasksWithActivitiesInRange: true,
       });
       const res = await fetchTasksWithActivities(filter, { signal });
@@ -105,7 +129,22 @@ export function useTaskTableData({
         },
       }));
 
-      const grouped = groupRowsByArea(merged);
+
+
+      // 1. Client-side Search and Status Filter (to ensure strict status filtering for tasks with activities too)
+      let filtered = merged;
+
+      // Filter by Status (Client-side enforcement)
+      if (enabledStatuses.size > 0) {
+        filtered = filtered.filter(row => enabledStatuses.has(row.task.status));
+      }
+
+      if (searchQuery.trim()) {
+        filtered = filtered.filter(row => matchesSearch(row.taskName, searchQuery));
+      }
+
+      // Group by Area (Alphabetical) then Sort Tasks (by Preset)
+      const grouped = groupRowsByArea(filtered, sortPreset);
       setGroupedRows(grouped);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
@@ -117,7 +156,7 @@ export function useTaskTableData({
     } finally {
       if (alive) setLoading(false);
     }
-  }, [weekStartIso, showError]);
+  }, [weekStartIso, showError, enabledStatuses, searchQuery, sortPreset]);
 
   const handleActivitySaveForTask = useCallback(
     (task: TaskResponse) => async (data: { title: string; description: string; eventDateTime: string; eventType: string }) => {
@@ -173,7 +212,7 @@ export function useTaskTableData({
             }
             setAreaColors(map);
           })
-          .catch(() => {});
+          .catch(() => { });
       } else {
         loadData(abortControllerRef.current?.signal);
       }

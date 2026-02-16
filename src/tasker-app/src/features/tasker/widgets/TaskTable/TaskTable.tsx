@@ -11,6 +11,8 @@ import { buildWeekDays, getWeekEndIso } from '../../../../utils/week';
 import { intensityClass } from './taskTableUtils';
 import { useTaskTableData } from './useTaskTableData';
 import { useTaskTableHandlers } from './useTaskTableHandlers';
+import { useTaskTableFilters } from './useTaskTableFilters';
+import { TaskTableToolbar } from './TaskTableToolbar';
 import css from '../../../../styles/task-table.module.css';
 
 export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
@@ -19,11 +21,16 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const { showError } = useToast();
 
+  const { enabledStatuses, sortPreset, searchQuery, setSearchQuery, toggleStatus, setSortPreset } = useTaskTableFilters();
+
   const { loading, groupedRows, loadData, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask } = useTaskTableData({
     weekStartIso,
     showError,
     notifyTaskUpdate,
     subscribeToTaskUpdates,
+    enabledStatuses,
+    searchQuery,
+    sortPreset,
   });
 
   const handlers = useTaskTableHandlers({
@@ -52,6 +59,16 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
           <GlassButton size="s" variant="subtle" onClick={() => go('prev')}>Предыдущая</GlassButton>
           <GlassButton size="s" variant="subtle" onClick={() => go('current')}>Текущая</GlassButton>
           <GlassButton size="s" variant="subtle" onClick={() => go('next')}>Следующая</GlassButton>
+
+          <TaskTableToolbar
+            enabledStatuses={enabledStatuses}
+            toggleStatus={toggleStatus}
+            sortPreset={sortPreset}
+            setSortPreset={setSortPreset}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+          />
+
           <div className={css.spacer} />
           <span className={css.muted}>{dateRangeLabel}</span>
         </div>
