@@ -6,6 +6,7 @@ import type { WidgetSizeProps } from '../../../../types';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
 import { useWeek } from '../../../../hooks';
 import { formatDateOnly } from '../../../../utils/date';
+import { hexToRgb } from '../../../../utils/color';
 import { buildWeekDays, getWeekEndIso } from '../../../../utils/week';
 import { intensityClass } from './taskTableUtils';
 import { useTaskTableData } from './useTaskTableData';
@@ -109,8 +110,12 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                     </td>
                     {i === 0 ? (
                       <td
-                        className={`${css.td} ${css.colArea}`}
+                        className={`${css.td} ${css.colArea} ${group.areaColor ? css.colAreaWithColor : ''}`}
                         rowSpan={group.rows.length}
+                        style={group.areaColor ? {
+                          '--card-custom-color': group.areaColor,
+                          '--card-custom-color-rgb': hexToRgb(group.areaColor),
+                        } as React.CSSProperties : undefined}
                       >
                         <div className={css.areaLabelClip}>
                           <div className={css.areaLabelWrapper}>

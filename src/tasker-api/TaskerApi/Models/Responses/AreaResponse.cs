@@ -16,6 +16,11 @@ public class AreaResponse
     public string? Description { get; set; }
 
     /// <summary>
+    /// Цвет области (hex).
+    /// </summary>
+    public string? CustomColor { get; set; }
+
+    /// <summary>
     /// Идентификатор пользователя-владельца.
     /// </summary>
     public Guid OwnerUserId { get; set; }

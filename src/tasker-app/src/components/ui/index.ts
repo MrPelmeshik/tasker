@@ -1,3 +1,4 @@
+export { ColorPicker, type ColorPickerProps } from './ColorPicker';
 export { Dropdown } from './Dropdown';
 export { GlassButton } from './GlassButton';
 export { GlassInput } from './GlassInput';

@@ -19,6 +19,7 @@ public static partial class EntityMapper
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
+            CustomColor = entity.Color,
             OwnerUserId = entity.OwnerUserId,
             OwnerUserName = ownerUserName,
             CreatedAt = entity.CreatedAt,
@@ -38,6 +39,7 @@ public static partial class EntityMapper
             Id = entity.Id,
             Title = entity.Title,
             Description = entity.Description,
+            CustomColor = entity.Color,
             FoldersCount = foldersCount,
             RootTasksCount = rootTasksCount,
             OwnerUserId = entity.OwnerUserId,
@@ -76,6 +78,7 @@ public static partial class EntityMapper
             Id = Guid.NewGuid(),
             Title = request.Title,
             Description = request.Description,
+            Color = request.Color,
             OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -90,6 +93,7 @@ public static partial class EntityMapper
     {
         entity.Title = request.Title;
         entity.Description = request.Description;
+        entity.Color = request.Color;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
     }
 

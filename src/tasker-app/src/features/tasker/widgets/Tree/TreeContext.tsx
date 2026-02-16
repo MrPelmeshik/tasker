@@ -27,6 +27,7 @@ interface TreeContextValue {
         onCreateTaskForArea: (areaId: string, e: React.MouseEvent) => void;
         onCreateFolderForFolder: (folderId: string, areaId: string, e: React.MouseEvent) => void;
         onCreateTaskForFolder: (folderId: string, areaId: string, e: React.MouseEvent) => void;
+        onSetAreaColor: (areaId: string, hex: string) => void;
     };
 
     // Utilities

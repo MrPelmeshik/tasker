@@ -100,6 +100,11 @@
   overflow: hidden;
 }
 
+/** Полупрозрачный фон ячейки области (как в Tree); переменные --card-custom-color, --card-custom-color-rgb задаются на элементе */
+.colAreaWithColor {
+  background: rgba(var(--card-custom-color-rgb), 0.15);
+}
+
 /** Слой обрезки — текст не выходит в соседние области */
 .areaLabelClip {
   position: absolute;

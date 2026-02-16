@@ -28,6 +28,12 @@ public class AreaEntity :
     public string? Description { get; set; }
 
     /// <summary>
+    /// Цвет области (hex, например #ff0000).
+    /// </summary>
+    [Column("color")]
+    public string? Color { get; set; }
+
+    /// <summary>
     /// Идентификатор пользователя-владельца.
     /// </summary>
     public Guid OwnerUserId { get; set; }

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from '../../common/Modal';
 import { EntityConfirmModals } from '../../common/EntityConfirmModals';
-import { GlassInput, GlassTextarea } from '../../ui';
+import { GlassInput, GlassTextarea, ColorPicker } from '../../ui';
 import { ActivityList } from '../../activities/ActivityList';
 import { EntityMetaBlock } from '../../common/EntityMetaBlock';
 import { EntityModalHeader } from '../../common/EntityModalHeader';
@@ -16,6 +16,9 @@ import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaRole } fro
 import type { ModalSize } from '../../../types/modal-size';
 import { AreaModalMembersSection } from './AreaModalMembersSection';
 import { useAreaMembers } from './useAreaMembers';
+
+/** Данные формы области: название, описание, цвет (в форме — selectedColor, при сохранении уходит как color). */
+type AreaFormData = { title: string; description: string; selectedColor?: string; id?: string };
 
 export interface AreaModalProps {
   isOpen: boolean;
@@ -64,13 +67,13 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     resetPending,
   } = members;
 
-  const modal = useEntityFormModal<AreaCreateRequest>({
+  const modal = useEntityFormModal<AreaFormData>({
     isOpen,
     entity: area,
     getInitialData: () =>
       area
-        ? { title: area.title, description: area.description || '' }
-        : { title: '', description: '' },
+        ? { title: area.title, description: area.description || '', selectedColor: area.customColor }
+        : { title: '', description: '', selectedColor: undefined },
     deps: [area],
     onClose,
     onSave: async (data) => {
@@ -105,10 +108,10 @@ export const AreaModal: React.FC<AreaModalProps> = ({
           );
         }
       }
-      await onSave((area ? { ...data, id: area.id } : data) as AreaCreateRequest | AreaUpdateRequest);
+      await onSave((area ? { ...data, id: area.id, selectedColor: data.selectedColor } : { ...data, selectedColor: data.selectedColor }) as (AreaCreateRequest | AreaUpdateRequest) & { selectedColor?: string });
     },
     onDelete,
-    validate: (data) => Boolean(data.title?.trim()),
+    validate: (data) => Boolean(data.title?.trim()) && (Boolean(area) || Boolean((data as AreaFormData).selectedColor)),
     getExtraUnsavedChanges: () =>
       Object.keys(pendingRoleChanges).length > 0 ||
       pendingAdds.length > 0 ||
@@ -166,7 +169,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
           onSave={handleSave}
           onClose={handleClose}
           isLoading={isLoading}
-          saveDisabled={!hasUnsavedChanges || !formData.title.trim()}
+          saveDisabled={!hasUnsavedChanges || !formData.title.trim() || (!area && !(formData as AreaFormData).selectedColor)}
         />
 
         <div className={css.modalBody}>
@@ -201,6 +204,40 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   rows={4}
                   disabled={isLoading}
                   fullWidth
+                />
+              }
+            />
+
+            <EntityFormField
+              label="Цвет области"
+              hasChange={fieldChanges.selectedColor}
+              onReset={() => handleResetField('selectedColor')}
+              isViewMode={isViewMode}
+              viewContent={
+                (formData as AreaFormData).selectedColor ? (
+                  <div className={formCss.fieldValueReadonly} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span
+                      style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 4,
+                        backgroundColor: (formData as AreaFormData).selectedColor,
+                        border: '1px solid rgba(255,255,255,0.2)',
+                      }}
+                    />
+                    <span>{(formData as AreaFormData).selectedColor}</span>
+                  </div>
+                ) : (
+                  <div className={formCss.fieldValueReadonly}>—</div>
+                )
+              }
+              editContent={
+                <ColorPicker
+                  value={(formData as AreaFormData).selectedColor}
+                  onChange={(hex) => handleFieldChange('selectedColor', hex)}
+                  disabled={isLoading}
+                  required={!area}
+                  showHexInput={true}
                 />
               }
             />

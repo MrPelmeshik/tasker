@@ -43,3 +43,8 @@
 .typeIcon {
   composes: typeIcon from './card-link-base.module.css';
 }
+
+/* Окраска иконки области в цвет области при наличии --card-custom-color */
+.root[data-custom-color="true"] .typeIcon {
+  color: var(--card-custom-color, var(--glass-icon-default));
+}

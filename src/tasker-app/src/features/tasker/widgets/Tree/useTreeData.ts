@@ -413,7 +413,6 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
   const isAllExpanded = areas.length > 0 && expandedAreas.size === areas.length;
 
   return {
-    // State
     areas,
     foldersByArea,
     foldersByParent,

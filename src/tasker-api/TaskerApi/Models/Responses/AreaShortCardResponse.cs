@@ -19,6 +19,11 @@ public class AreaShortCardResponse
     /// Описание области.
     /// </summary>
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Цвет области (hex).
+    /// </summary>
+    public string? CustomColor { get; set; }
     
     /// <summary>
     /// Количество корневых папок в области.

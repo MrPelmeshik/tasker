@@ -3,11 +3,15 @@
 export interface AreaCreateRequest {
   title: string;
   description?: string;
+  /** Цвет области (hex, например #ff0000). */
+  color: string;
 }
 
 export interface AreaUpdateRequest {
   title: string;
   description?: string;
+  /** Цвет области (hex). */
+  color: string;
 }
 
 export interface AreaResponse {
@@ -20,6 +24,8 @@ export interface AreaResponse {
   updatedAt: Date;
   isActive: boolean;
   deactivatedAt?: Date;
+  /** Цвет области из БД. */
+  customColor?: string;
 }
 
 /** Роли пользователей в области (соответствует backend AreaRole) */
@@ -47,4 +53,6 @@ export interface AreaShortCardResponse {
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Цвет области из БД. */
+  customColor?: string;
 }

@@ -43,6 +43,7 @@ export const TreeContent: React.FC = () => {
             onCreateFolder={(e) => actions.onCreateFolderForArea(area.id, e)}
             onCreateTask={(e) => actions.onCreateTaskForArea(area.id, e)}
             onViewTaskDetails={actions.onViewTaskDetails}
+            onSetAreaColor={actions.onSetAreaColor}
           />
         );
       })}

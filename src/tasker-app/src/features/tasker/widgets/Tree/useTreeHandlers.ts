@@ -14,6 +14,7 @@ export function useTreeHandlers(options: UseTreeHandlersOptions) {
     setTasksByArea: options.setTasksByArea,
     openAreaModal: options.openAreaModal,
     showError: options.showError,
+    notifyTaskUpdate: options.notifyTaskUpdate,
   });
 
   const folderHandlers = useTreeFolderHandlers({

@@ -73,7 +73,6 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
     loadingContent,
     toggleArea,
     toggleFolder,
-    refreshTree,
     expandAll,
     collapseAll,
     isAllExpanded,
@@ -192,6 +191,7 @@ export const Tree: React.FC<TreeProps> = ({ colSpan, rowSpan, initialDeepLink, e
       onCreateFolderForFolder: handlers.handleCreateFolderForFolder,
       onCreateTaskForFolder: handlers.handleCreateTaskForFolder,
       onViewTaskDetails: handlers.handleViewTaskDetails,
+      onSetAreaColor: handlers.handleSetAreaColor,
     },
 
     // Helpers

@@ -19,5 +19,5 @@ export interface UseTreeHandlersOptions
   foldersByParent: Map<string, FolderSummary[]>;
   showError: (error: unknown) => void;
   addSuccess: (message: string) => void;
-  notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
+  notifyTaskUpdate: (taskId?: string, folderId?: string, payload?: { entityType?: string; entityId?: string }) => void;
 }

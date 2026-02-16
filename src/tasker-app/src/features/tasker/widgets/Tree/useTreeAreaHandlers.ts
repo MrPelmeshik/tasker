@@ -7,6 +7,16 @@ import { fetchAreaShortCard, fetchAreaById, createArea, updateArea, deleteArea }
 import type { AreaShortCard, FolderSummary, TaskSummary, AreaCreateRequest, AreaUpdateRequest } from '../../../../types';
 import type { ModalContextType } from '../../../../context/ModalContext';
 
+/** Данные формы: API-поля + selectedColor для формы (отправляется как color). */
+type AreaSaveData = (AreaCreateRequest | (AreaUpdateRequest & { id?: string })) & { selectedColor?: string };
+
+/** Сортировка областей по названию (алфавит), как в useTreeData. */
+function sortAreasByTitle(items: AreaShortCard[]): AreaShortCard[] {
+  return [...items].sort((a, b) =>
+    (a.title ?? '').localeCompare(b.title ?? '', undefined, { sensitivity: 'base' })
+  );
+}
+
 export interface UseTreeAreaHandlersOptions
   extends Pick<ModalContextType, 'openAreaModal'> {
   areas: AreaShortCard[];
@@ -14,6 +24,7 @@ export interface UseTreeAreaHandlersOptions
   setFoldersByArea: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;
   setTasksByArea: React.Dispatch<React.SetStateAction<Map<string, TaskSummary[]>>>;
   showError: (error: unknown) => void;
+  notifyTaskUpdate?: (taskId?: string, folderId?: string, payload?: { entityType?: string; entityId?: string }) => void;
 }
 
 export function useTreeAreaHandlers({
@@ -23,21 +34,59 @@ export function useTreeAreaHandlers({
   setTasksByArea,
   openAreaModal,
   showError,
+  notifyTaskUpdate,
 }: UseTreeAreaHandlersOptions) {
   const handleAreaSave = useCallback(
-    async (data: AreaCreateRequest | (AreaUpdateRequest & { id?: string })) => {
+    async (data: AreaSaveData) => {
       try {
-        const d = data as { id?: string } & AreaCreateRequest;
-        if (!d.id) await createArea(data as AreaCreateRequest);
-        else await updateArea(d.id, data as AreaUpdateRequest);
+        const color = data.selectedColor ?? (data as AreaCreateRequest).color ?? '#808080';
+        const apiData = {
+          title: data.title,
+          description: data.description,
+          color,
+        };
+        const d = data as { id?: string };
+        if (!d.id) {
+          await createArea(apiData as AreaCreateRequest);
+        } else {
+          await updateArea(d.id, apiData as AreaUpdateRequest);
+        }
         const updated = await fetchAreaShortCard();
-        setAreas(updated);
+        if (d.id) {
+          setAreas((prev) => {
+            const byId = new Map(updated.map((a) => [a.id, a]));
+            return prev.map((a) => byId.get(a.id) ?? a);
+          });
+        } else {
+          setAreas(sortAreasByTitle(updated));
+        }
       } catch (error) {
         console.error('Ошибка сохранения области:', error);
         throw error;
       }
     },
     [setAreas]
+  );
+
+  /** Установить цвет области (обновление области через API). Без перезапроса списка — только локальное обновление, чтобы не сбивать сортировку. */
+  const handleSetAreaColor = useCallback(
+    async (areaId: string, hex: string) => {
+      const area = areas.find((a) => a.id === areaId);
+      if (!area) return;
+      try {
+        await updateArea(areaId, {
+          title: area.title,
+          description: area.description ?? '',
+          color: hex,
+        });
+        setAreas((prev) => prev.map((a) => (a.id === areaId ? { ...a, customColor: hex } : a)));
+        notifyTaskUpdate?.(undefined, undefined, { entityType: 'AREA', entityId: areaId });
+      } catch (error) {
+        console.error('Ошибка обновления цвета области:', error);
+        showError(error);
+      }
+    },
+    [areas, setAreas, showError, notifyTaskUpdate]
   );
 
   const handleAreaDelete = useCallback(
@@ -87,5 +136,6 @@ export function useTreeAreaHandlers({
     handleAreaDelete,
     handleCreateArea,
     handleViewAreaDetails,
-  }), [handleAreaSave, handleAreaDelete, handleCreateArea, handleViewAreaDetails]);
+    handleSetAreaColor,
+  }), [handleAreaSave, handleAreaDelete, handleCreateArea, handleViewAreaDetails, handleSetAreaColor]);
 }

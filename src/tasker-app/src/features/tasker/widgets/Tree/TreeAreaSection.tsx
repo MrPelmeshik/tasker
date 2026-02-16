@@ -2,6 +2,7 @@ import React from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { GlassButton } from '../../../../components/ui/GlassButton';
+import { ColorPicker } from '../../../../components/ui/ColorPicker';
 import { AreaCardLink } from '../../../../components/areas';
 import { Tooltip } from '../../../../components/ui';
 import { Loader } from '../../../../components/ui/Loader';
@@ -33,6 +34,7 @@ export interface TreeAreaSectionProps {
   onCreateFolder: (e: React.MouseEvent) => void;
   onCreateTask: (e: React.MouseEvent) => void;
   onViewTaskDetails: (taskId: string, e: React.MouseEvent) => void;
+  onSetAreaColor: (areaId: string, hex: string) => void;
 }
 
 /** Область с droppable-карточкой. Memoized. */
@@ -52,6 +54,7 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = React.memo(({
   onCreateFolder,
   onCreateTask,
   onViewTaskDetails,
+  onSetAreaColor,
 }) => {
   /** Показывать контент: либо по данным из бэкенда, либо по уже загруженным папкам/задачам (актуально после создания) */
   const hasChildren = folders.length + tasks.length > 0 || area.foldersCount + area.rootTasksCount > 0;
@@ -103,6 +106,15 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = React.memo(({
                 displayCount={displayCount}
                 totalCount={totalCount}
               />
+              {!area.customColor && (
+                <div onClick={(e) => e.stopPropagation()}>
+                  <ColorPicker
+                    value={undefined}
+                    onChange={(hex) => onSetAreaColor(area.id, hex)}
+                    showHexInput={false}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>

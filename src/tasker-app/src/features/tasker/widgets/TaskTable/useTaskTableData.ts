@@ -2,20 +2,20 @@
  * Состояние и загрузка данных для виджета таблицы задач.
  */
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useMemo, useState, useEffect, useCallback, useRef } from 'react';
 import {
   fetchTasksWithActivities,
   buildTaskWithActivitiesFilter,
   dateRangeFromWeek,
   createEventForTask,
-  EventTypeActivity,
+  fetchAreaShortCard,
 } from '../../../../services/api';
 import { TaskStatus } from '../../../../types/task-status';
 import type { TaskResponse } from '../../../../types/api';
 import type { TaskRow } from './taskTableUtils';
 
-/** Группа строк по области */
-export type GroupedTaskRows = Array<{ areaId: string; areaTitle: string; rows: TaskRow[] }>;
+/** Группа строк по области (areaColor из данных области). */
+export type GroupedTaskRows = Array<{ areaId: string; areaTitle: string; areaColor?: string; rows: TaskRow[] }>;
 
 function groupRowsByArea(rows: TaskRow[]): GroupedTaskRows {
   const order: string[] = [];
@@ -39,7 +39,7 @@ export interface UseTaskTableDataOptions {
   weekStartIso: string;
   showError: (error: unknown) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
-  subscribeToTaskUpdates: (callback: () => void) => () => void;
+  subscribeToTaskUpdates: (callback: (taskId?: string, folderId?: string, payload?: { entityType?: string; entityId?: string }) => void) => () => void;
 }
 
 export function useTaskTableData({
@@ -50,7 +50,28 @@ export function useTaskTableData({
 }: UseTaskTableDataOptions) {
   const [loading, setLoading] = useState(false);
   const [groupedRows, setGroupedRows] = useState<GroupedTaskRows>([]);
+  const [areaColors, setAreaColors] = useState<Record<string, string>>({});
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    fetchAreaShortCard()
+      .then((areas) => {
+        if (!alive) return;
+        const map: Record<string, string> = {};
+        for (const a of areas) {
+          if (a.customColor) map[a.id] = a.customColor;
+        }
+        setAreaColors(map);
+      })
+      .catch(() => {});
+    return () => { alive = false; };
+  }, []);
+
+  const groupedRowsWithColors = useMemo(
+    () => groupedRows.map((g) => ({ ...g, areaColor: areaColors[g.areaId] })),
+    [groupedRows, areaColors]
+  );
 
   const loadData = useCallback(async (signal?: AbortSignal): Promise<void> => {
     let alive = true;
@@ -121,9 +142,23 @@ export function useTaskTableData({
   }, [loadData]);
 
   useEffect(() => {
-    const unsubscribe = subscribeToTaskUpdates(() => loadData(abortControllerRef.current?.signal));
+    const unsubscribe = subscribeToTaskUpdates((taskId, folderId, payload) => {
+      if (payload?.entityType === 'AREA') {
+        fetchAreaShortCard()
+          .then((areas) => {
+            const map: Record<string, string> = {};
+            for (const a of areas) {
+              if (a.customColor) map[a.id] = a.customColor;
+            }
+            setAreaColors(map);
+          })
+          .catch(() => {});
+      } else {
+        loadData(abortControllerRef.current?.signal);
+      }
+    });
     return unsubscribe;
   }, [subscribeToTaskUpdates, loadData]);
 
-  return { loading, groupedRows, loadData, handleActivitySaveForTask };
+  return { loading, groupedRows: groupedRowsWithColors, loadData, handleActivitySaveForTask };
 }

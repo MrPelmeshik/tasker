@@ -19,4 +19,11 @@ public class AreaUpdateRequest
     /// </summary>
     [StringLength(1000, ErrorMessage = "Описание области не может быть длиннее 1000 символов")]
     public string? Description { get; set; }
+
+    /// <summary>
+    /// Цвет области (hex).
+    /// </summary>
+    [Required(ErrorMessage = "Выберите цвет области")]
+    [StringLength(9, ErrorMessage = "Цвет в формате #rrggbb")]
+    public string Color { get; set; } = string.Empty;
 }
