@@ -18,9 +18,18 @@ export interface UseTaskTableHandlersOptions {
   showError: (error: unknown) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
   openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>) => void;
-  openActivityModal: (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
+  openActivityModal: (
+    task: TaskResponse,
+    date: string,
+    onSave: (data: ActivityFormData) => Promise<void>,
+    onOpenTaskDetails: () => void,
+    onSaveEdit?: (eventId: string, data: import('../../../../types/api').EventUpdateRequest) => Promise<void>,
+    onDeleteEvent?: (event: import('../../../../types/api').EventResponse) => Promise<void>
+  ) => void;
   closeActivityModal: () => void;
   handleActivitySaveForTask: (task: TaskResponse) => (data: ActivityFormData) => Promise<void>;
+  handleActivityUpdateForTask: (task: TaskResponse) => (eventId: string, data: import('../../../../types/api').EventUpdateRequest) => Promise<void>;
+  handleActivityDeleteForTask: (task: TaskResponse) => (event: { id: string }) => Promise<void>;
 }
 
 export function useTaskTableHandlers({
@@ -31,6 +40,8 @@ export function useTaskTableHandlers({
   openActivityModal,
   closeActivityModal,
   handleActivitySaveForTask,
+  handleActivityUpdateForTask,
+  handleActivityDeleteForTask,
 }: UseTaskTableHandlersOptions) {
   const handleTaskSave = useCallback(async (data: TaskUpdateRequest, taskId?: string) => {
     if (!taskId) return;
@@ -71,9 +82,16 @@ export function useTaskTableHandlers({
           showError(error);
         }
       };
-      openActivityModal(task as TaskResponse, date, handleActivitySaveForTask(task as TaskResponse), onOpenTaskDetails);
+      openActivityModal(
+        task as TaskResponse,
+        date,
+        handleActivitySaveForTask(task as TaskResponse),
+        onOpenTaskDetails,
+        handleActivityUpdateForTask(task as TaskResponse),
+        handleActivityDeleteForTask(task as TaskResponse)
+      );
     },
-    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, showError]
+    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask, showError]
   );
 
   const handleViewTaskDetails = useCallback(async (taskId: string, event: React.MouseEvent) => {

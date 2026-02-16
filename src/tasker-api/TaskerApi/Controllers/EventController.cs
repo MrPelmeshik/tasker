@@ -36,4 +36,28 @@ public class EventController(
     [UserLog("Получение событий по области")]
     public Task<IActionResult> GetEventsByArea(Guid areaId, CancellationToken cancellationToken)
         => ExecuteWithExceptionHandling(async () => Ok(await eventAreaService.GetEventsByAreaIdAsync(areaId, cancellationToken)));
+
+    /// <summary>
+    /// Обновить событие по идентификатору (частичное обновление). Автором записи становится текущий пользователь.
+    /// </summary>
+    [HttpPatch("{id:guid}")]
+    [UserLog("Обновление события")]
+    public Task<IActionResult> UpdateEvent(Guid id, [FromBody] EventUpdateEntityRequest request, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () =>
+        {
+            await eventTaskService.UpdateEventAsync(id, request, cancellationToken);
+            return NoContent();
+        });
+
+    /// <summary>
+    /// Мягко удалить событие по идентификатору.
+    /// </summary>
+    [HttpDelete("{id:guid}")]
+    [UserLog("Удаление события")]
+    public Task<IActionResult> DeleteEvent(Guid id, CancellationToken cancellationToken)
+        => ExecuteWithExceptionHandling(async () =>
+        {
+            await eventTaskService.DeleteEventAsync(id, cancellationToken);
+            return NoContent();
+        });
 }

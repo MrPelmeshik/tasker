@@ -1,18 +1,20 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Modal } from '../common/Modal';
 import { EntityConfirmModals } from '../common/EntityConfirmModals';
 import { GlassInput, GlassTextarea, GlassSelect } from '../ui';
 import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
+import { EventEditModal } from '../activities/EventEditModal';
 import { EntityMetaBlock } from '../common/EntityMetaBlock';
 import { EntityModalHeader } from '../common/EntityModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
 import { useEvents } from '../activities/useEvents';
+import { updateEvent, deleteEvent } from '../../services/api';
 import { useEntityFormModal, useFolderOptions, useCopyEntityLink } from '../../hooks';
 import { useTaskUpdate } from '../../context';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
-import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest } from '../../types';
+import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, EventResponse } from '../../types';
 import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 import { formatDateTime } from '../../utils/date';
@@ -109,6 +111,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   });
 
   const taskEvents = useEvents('task', task?.id);
+  const [editEvent, setEditEvent] = useState<EventResponse | null>(null);
   const { subscribeToTaskUpdates } = useTaskUpdate();
   const refetchRef = useRef(taskEvents.refetch);
   refetchRef.current = taskEvents.refetch;
@@ -263,6 +266,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 headerTitle="История активностей"
                 showTypeFilter={true}
                 defaultExpanded={true}
+                onEdit={(ev) => setEditEvent(ev)}
+                onDelete={async (ev) => {
+                  await deleteEvent(ev.id);
+                  await taskEvents.refetch();
+                }}
               />
             )}
           </div>
@@ -281,6 +289,18 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         onConfirmDelete={handleConfirmDelete}
         isLoading={isLoading}
         entityNameForDelete="задачу"
+      />
+      <EventEditModal
+        isOpen={editEvent != null}
+        onClose={() => setEditEvent(null)}
+        onSave={async (data) => {
+          if (editEvent) {
+            await updateEvent(editEvent.id, data);
+            await taskEvents.refetch();
+            setEditEvent(null);
+          }
+        }}
+        event={editEvent}
       />
     </Modal>
   );

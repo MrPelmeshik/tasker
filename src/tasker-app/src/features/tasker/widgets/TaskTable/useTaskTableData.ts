@@ -8,8 +8,11 @@ import {
   buildTaskWithActivitiesFilter,
   dateRangeFromWeek,
   createEventForTask,
+  updateEvent,
+  deleteEvent,
   fetchAreaShortCard,
 } from '../../../../services/api';
+import type { EventUpdateRequest } from '../../../../types/api';
 import { TaskStatus } from '../../../../types/task-status';
 import type { TaskResponse } from '../../../../types/api';
 import type { TaskRow } from './taskTableUtils';
@@ -117,14 +120,32 @@ export function useTaskTableData({
   }, [weekStartIso, showError]);
 
   const handleActivitySaveForTask = useCallback(
-    (task: TaskResponse) => async (data: { title: string; description: string; date: string; eventType: string }) => {
+    (task: TaskResponse) => async (data: { title: string; description: string; eventDateTime: string; eventType: string }) => {
       await createEventForTask({
         entityId: task.id,
         title: data.title,
         description: data.description || undefined,
-        eventType: data.eventType as any, // Приводим к типу, ожидаемому API (строка или число в зависимости от реализации)
-        eventDate: data.date,
+        eventType: data.eventType as any,
+        eventDate: data.eventDateTime,
       });
+      await loadData();
+      notifyTaskUpdate(task.id, task.folderId ?? undefined);
+    },
+    [loadData, notifyTaskUpdate]
+  );
+
+  const handleActivityUpdateForTask = useCallback(
+    (task: TaskResponse) => async (eventId: string, data: EventUpdateRequest) => {
+      await updateEvent(eventId, data);
+      await loadData();
+      notifyTaskUpdate(task.id, task.folderId ?? undefined);
+    },
+    [loadData, notifyTaskUpdate]
+  );
+
+  const handleActivityDeleteForTask = useCallback(
+    (task: TaskResponse) => async (ev: { id: string }) => {
+      await deleteEvent(ev.id);
       await loadData();
       notifyTaskUpdate(task.id, task.folderId ?? undefined);
     },
@@ -160,5 +181,12 @@ export function useTaskTableData({
     return unsubscribe;
   }, [subscribeToTaskUpdates, loadData]);
 
-  return { loading, groupedRows: groupedRowsWithColors, loadData, handleActivitySaveForTask };
+  return {
+    loading,
+    groupedRows: groupedRowsWithColors,
+    loadData,
+    handleActivitySaveForTask,
+    handleActivityUpdateForTask,
+    handleActivityDeleteForTask,
+  };
 }

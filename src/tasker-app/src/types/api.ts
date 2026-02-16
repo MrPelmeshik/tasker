@@ -44,6 +44,7 @@ export type {
   EventType,
   EventCreateRequest,
   EventCreateResponse,
+  EventUpdateRequest,
   EventMessage,
   EventResponse,
 } from './api/activity';

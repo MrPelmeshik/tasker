@@ -53,6 +53,7 @@ public static class ErrorMessages
     public const string UserNotFound = "Пользователь не найден";
     public const string UserLogNotFound = "Лог пользователя не найден";
     public const string MemberNotFound = "Участник не найден в области";
+    public const string EventNotFound = "Событие не найдено";
 
     // ——— Валидация / бизнес-правила ———
     public const string AreaWithSameNameExists = "Область с таким названием уже существует";
@@ -102,6 +103,6 @@ public static class ErrorMessages
             || message == TaskNotFound || message == SubtaskNotFound
             || message == FolderNotFound || message == ParentFolderNotFound || message == TargetFolderNotFound
             || message == PurposeNotFound || message == UserNotFound || message == UserLogNotFound
-            || message == MemberNotFound;
+            || message == MemberNotFound || message == EventNotFound;
     }
 }

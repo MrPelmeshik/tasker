@@ -15,4 +15,14 @@ public interface IEventEntityService
     /// <param name="cancellationToken">Токен отмены</param>
     /// <returns>Созданное событие</returns>
     Task<EventCreateResponse> AddEventAsync(EventCreateEntityRequest item, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Обновить событие по идентификатору (частичное обновление).
+    /// </summary>
+    Task UpdateEventAsync(Guid eventId, EventUpdateEntityRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Мягко удалить событие по идентификатору.
+    /// </summary>
+    Task DeleteEventAsync(Guid eventId, CancellationToken cancellationToken);
 }

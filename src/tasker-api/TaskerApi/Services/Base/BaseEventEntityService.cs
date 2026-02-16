@@ -44,6 +44,50 @@ public abstract class BaseEventEntityService(
     protected abstract IQueryable<Guid> GetEventIdsForEntity(Guid entityId);
 
     /// <summary>
+    /// Получить идентификатор области по идентификатору события (через связь с задачей или областью).
+    /// </summary>
+    protected async Task<Guid> GetAreaIdForEventAsync(Guid eventId, CancellationToken cancellationToken)
+    {
+        var areaIdFromTask = await context.EventToTasks
+            .Where(l => l.EventId == eventId && l.IsActive)
+            .Join(context.Tasks, l => l.TaskId, t => t.Id, (_, t) => t.AreaId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (areaIdFromTask != default)
+            return areaIdFromTask;
+
+        var areaIdFromArea = await context.EventToAreas
+            .Where(l => l.EventId == eventId && l.IsActive)
+            .Select(l => l.AreaId)
+            .FirstOrDefaultAsync(cancellationToken);
+        if (areaIdFromArea != default)
+            return areaIdFromArea;
+
+        throw new InvalidOperationException(ErrorMessages.EventNotFound);
+    }
+
+    /// <summary>
+    /// Получить контекст события для realtime-уведомления (areaId, entityId, folderId).
+    /// </summary>
+    protected async Task<(Guid AreaId, Guid EntityId, Guid? FolderId)> GetEventRealtimeContextAsync(Guid eventId, CancellationToken cancellationToken)
+    {
+        var fromTask = await context.EventToTasks
+            .Where(l => l.EventId == eventId && l.IsActive)
+            .Join(context.Tasks, l => l.TaskId, t => t.Id, (_, t) => new { t.AreaId, EntityId = t.Id, t.FolderId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (fromTask != null)
+            return (fromTask.AreaId, fromTask.EntityId, fromTask.FolderId);
+
+        var fromArea = await context.EventToAreas
+            .Where(l => l.EventId == eventId && l.IsActive)
+            .Select(l => new { l.AreaId, EntityId = l.AreaId })
+            .FirstOrDefaultAsync(cancellationToken);
+        if (fromArea != null)
+            return (fromArea.AreaId, fromArea.EntityId, (Guid?)null);
+
+        throw new InvalidOperationException(ErrorMessages.EventNotFound);
+    }
+
+    /// <summary>
     /// Добавить событие к сущности.
     /// </summary>
     protected async Task<EventCreateResponse> AddEventCoreAsync(EventCreateEntityRequest item, CancellationToken cancellationToken)
@@ -110,5 +154,61 @@ public abstract class BaseEventEntityService(
             .ToListAsync(cancellationToken);
 
         return events.Select(x => x.Event.ToEventResponse(x.UserName ?? "")).ToList();
+    }
+
+    /// <summary>
+    /// Обновить событие (частичное обновление). Автором записи становится текущий пользователь.
+    /// </summary>
+    protected async Task UpdateEventCoreAsync(Guid eventId, EventUpdateEntityRequest request, CancellationToken cancellationToken)
+    {
+        var ev = await eventRepository.GetByIdAsync(eventId, cancellationToken);
+        if (ev == null || !ev.IsActive)
+            throw new InvalidOperationException(ErrorMessages.EventNotFound);
+
+        var areaId = await GetAreaIdForEventAsync(eventId, cancellationToken);
+        if (!await areaRoleService.CanAddActivityAsync(areaId, cancellationToken))
+            throw new UnauthorizedAccessException(ErrorMessages.NoPermissionAddActivity);
+
+        var now = DateTimeOffset.UtcNow;
+
+        if (request.Title != null)
+            ev.Title = request.Title;
+
+        if (request.Description != null)
+            ev.Message = EventMessageHelper.BuildActivityMessageJson(ev.Title, request.Description);
+
+        if (request.EventType.HasValue)
+            ev.EventType = request.EventType.Value;
+
+        if (request.EventDate != null)
+        {
+            if (DateTime.TryParseExact(request.EventDate, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var parsed))
+                ev.EventDate = new DateTimeOffset(DateTime.SpecifyKind(parsed, DateTimeKind.Utc));
+            else if (DateTimeOffset.TryParse(request.EventDate, out var parsedOffset))
+                ev.EventDate = parsedOffset;
+            else
+                throw new ArgumentException(ErrorMessages.EventDateFormatInvalid, nameof(request.EventDate));
+        }
+
+        ev.UpdatedAt = now;
+        ev.OwnerUserId = CurrentUser.UserId;
+
+        await eventRepository.UpdateAsync(ev, cancellationToken);
+    }
+
+    /// <summary>
+    /// Мягкое удаление события.
+    /// </summary>
+    protected async Task DeleteEventCoreAsync(Guid eventId, CancellationToken cancellationToken)
+    {
+        var ev = await eventRepository.GetByIdAsync(eventId, cancellationToken);
+        if (ev == null || !ev.IsActive)
+            throw new InvalidOperationException(ErrorMessages.EventNotFound);
+
+        var areaId = await GetAreaIdForEventAsync(eventId, cancellationToken);
+        if (!await areaRoleService.CanAddActivityAsync(areaId, cancellationToken))
+            throw new UnauthorizedAccessException(ErrorMessages.NoPermissionAddActivity);
+
+        await eventRepository.DeleteAsync(eventId, cancellationToken, hardDelete: false);
     }
 }

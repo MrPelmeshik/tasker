@@ -1,5 +1,5 @@
 import { apiFetch } from './client';
-import type { EventCreateRequest, EventCreateResponse, EventResponse } from '../../types/api';
+import type { EventCreateRequest, EventCreateResponse, EventResponse, EventUpdateRequest } from '../../types/api';
 
 /** EventType.ACTIVITY = 5 */
 export const EventTypeActivity = 5;
@@ -20,4 +20,19 @@ export async function fetchEventsByTask(taskId: string, init?: RequestInit): Pro
 /** Получить список событий по области */
 export async function fetchEventsByArea(areaId: string, init?: RequestInit): Promise<EventResponse[]> {
   return apiFetch<EventResponse[]>(`/event/byArea/${areaId}`, init);
+}
+
+/** Обновить событие по идентификатору (частичное обновление) */
+export async function updateEvent(eventId: string, data: EventUpdateRequest): Promise<void> {
+  await apiFetch(`/event/${eventId}`, {
+    method: 'PATCH',
+    body: JSON.stringify(data),
+  });
+}
+
+/** Мягко удалить событие по идентификатору */
+export async function deleteEvent(eventId: string): Promise<void> {
+  await apiFetch(`/event/${eventId}`, {
+    method: 'DELETE',
+  });
 }

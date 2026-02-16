@@ -21,3 +21,17 @@ export function formatDateTime(value: string | Date): string {
   const min = String(d.getMinutes()).padStart(2, '0');
   return `${dd}.${mm}.${yy} ${hh}:${min}`;
 }
+
+/**
+ * Значение для input[type="datetime-local"] в локальной таймзоне (YYYY-MM-DDTHH:mm).
+ */
+export function toDateTimeLocalValue(value: string | Date): string {
+  const d = typeof value === 'string' ? new Date(value) : value;
+  if (!(d instanceof Date) || isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${y}-${m}-${day}T${hh}:${min}`;
+}

@@ -63,6 +63,8 @@ export {
   EventTypeActivity,
   fetchEventsByTask,
   fetchEventsByArea,
+  updateEvent,
+  deleteEvent,
 } from './events';
 
 // Экспорт типов

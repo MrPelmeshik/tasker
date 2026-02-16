@@ -6,13 +6,21 @@ import { FolderModal } from '../components/folders/FolderModal';
 import { TaskModal } from '../components/tasks/TaskModal';
 import type { AreaResponse, FolderResponse, TaskResponse, AreaCreateRequest, AreaUpdateRequest, FolderCreateRequest, FolderUpdateRequest, TaskCreateRequest, TaskUpdateRequest } from '../types/api';
 import type { ActivityFormData } from '../components/activities/ActivityModal';
+import type { EventResponse, EventUpdateRequest } from '../types/api';
 import type { ModalSize } from '../types/modal-size';
 
 export interface ModalContextType {
   openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>, size?: ModalSize) => void;
   openFolderModal: (folder: FolderResponse | null, mode: 'create' | 'edit', areas: Array<{ id: string; title: string; description?: string }>, onSave: (data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, areaId?: string, parentFolderId?: string | null, size?: ModalSize) => void;
   openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>, size?: ModalSize) => void;
-  openActivityModal: (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => void;
+  openActivityModal: (
+    task: TaskResponse,
+    date: string,
+    onSave: (data: ActivityFormData) => Promise<void>,
+    onOpenTaskDetails: () => void,
+    onSaveEdit?: (eventId: string, data: EventUpdateRequest) => Promise<void>,
+    onDeleteEvent?: (event: EventResponse) => Promise<void>
+  ) => void;
   openCabinetModal: () => void;
   closeAreaModal: () => void;
   closeFolderModal: () => void;
@@ -75,7 +83,9 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     date: string | null;
     onSave: ((data: ActivityFormData) => Promise<void>) | null;
     onOpenTaskDetails: (() => void) | null;
-  }>({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null });
+    onSaveEdit: ((eventId: string, data: EventUpdateRequest) => Promise<void>) | null;
+    onDeleteEvent: ((event: EventResponse) => Promise<void>) | null;
+  }>({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null, onSaveEdit: null, onDeleteEvent: null });
 
   const [cabinetModal, setCabinetModal] = useState<{ isOpen: boolean }>({ isOpen: false });
 
@@ -91,8 +101,15 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
     setTaskModal({ isOpen: true, task, mode, onSave, onDelete: onDelete ?? null, defaultFolderId, defaultAreaId, areas, size });
   };
 
-  const openActivityModal = (task: TaskResponse, date: string, onSave: (data: ActivityFormData) => Promise<void>, onOpenTaskDetails: () => void) => {
-    setActivityModal({ isOpen: true, task, date, onSave, onOpenTaskDetails });
+  const openActivityModal = (
+    task: TaskResponse,
+    date: string,
+    onSave: (data: ActivityFormData) => Promise<void>,
+    onOpenTaskDetails: () => void,
+    onSaveEdit?: (eventId: string, data: EventUpdateRequest) => Promise<void>,
+    onDeleteEvent?: (event: EventResponse) => Promise<void>
+  ) => {
+    setActivityModal({ isOpen: true, task, date, onSave, onOpenTaskDetails, onSaveEdit: onSaveEdit ?? null, onDeleteEvent: onDeleteEvent ?? null });
   };
 
   const closeAreaModal = () => {
@@ -108,7 +125,7 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
   };
 
   const closeActivityModal = () => {
-    setActivityModal({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null });
+    setActivityModal({ isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null, onSaveEdit: null, onDeleteEvent: null });
   };
 
   const openCabinetModal = () => {
@@ -168,6 +185,8 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
           task={activityModal.task}
           date={activityModal.date}
           onOpenTaskDetails={activityModal.onOpenTaskDetails || (() => {})}
+          onSaveEdit={activityModal.onSaveEdit ?? undefined}
+          onDeleteEvent={activityModal.onDeleteEvent ?? undefined}
         />
       )}
 

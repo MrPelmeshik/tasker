@@ -1,18 +1,20 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Modal } from '../../common/Modal';
 import { EntityConfirmModals } from '../../common/EntityConfirmModals';
 import { GlassInput, GlassTextarea, ColorPicker } from '../../ui';
 import { ActivityList } from '../../activities/ActivityList';
+import { EventEditModal } from '../../activities/EventEditModal';
 import { EntityMetaBlock } from '../../common/EntityMetaBlock';
 import { EntityModalHeader } from '../../common/EntityModalHeader';
 import { EntityFormField } from '../../common/EntityFormField';
+import { updateEvent, deleteEvent } from '../../../services/api';
 import { useEntityFormModal, useCopyEntityLink } from '../../../hooks';
 import { useToast } from '../../../context/ToastContext';
 import { areaApi } from '../../../services/api/areas';
 import css from '../../../styles/modal.module.css';
 import formCss from '../../../styles/modal-form.module.css';
 import { formatDateTime } from '../../../utils/date';
-import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaRole } from '../../../types';
+import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaRole, EventResponse } from '../../../types';
 import type { ModalSize } from '../../../types/modal-size';
 import { AreaModalMembersSection } from './AreaModalMembersSection';
 import { useAreaMembers } from './useAreaMembers';
@@ -42,6 +44,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   const { showError, addSuccess } = useToast();
   const { copyLink: handleCopyLink } = useCopyEntityLink('area', area?.id);
 
+  const [editEvent, setEditEvent] = useState<EventResponse | null>(null);
   const members = useAreaMembers({ isOpen, area, showError });
   const {
     setOriginalMembers,
@@ -280,6 +283,11 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 headerTitle="История активностей"
                 showTypeFilter={true}
                 defaultExpanded={true}
+                onEdit={(ev) => setEditEvent(ev)}
+                onDelete={async (ev) => {
+                  await deleteEvent(ev.id);
+                  await areaEvents.refetch();
+                }}
               />
             )}
           </div>
@@ -304,6 +312,18 @@ export const AreaModal: React.FC<AreaModalProps> = ({
           onClose: () => setRemoveConfirmMember(null),
           onConfirm: handleConfirmRemoveMember,
         }}
+      />
+      <EventEditModal
+        isOpen={editEvent != null}
+        onClose={() => setEditEvent(null)}
+        onSave={async (data) => {
+          if (editEvent) {
+            await updateEvent(editEvent.id, data);
+            await areaEvents.refetch();
+            setEditEvent(null);
+          }
+        }}
+        event={editEvent}
       />
     </Modal>
   );

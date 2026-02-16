@@ -4,19 +4,21 @@ import { SimpleModalHeader } from '../common/SimpleModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
 import { GlassInput, GlassTextarea, ModalSaveButton, GlassSelect } from '../ui';
 import { ActivityList } from './ActivityList';
+import { EventEditModal } from './EventEditModal';
 import { TaskCardLink } from '../tasks';
 import { useToast } from '../../context/ToastContext';
 import { useEvents } from './useEvents';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import activityModalCss from '../../styles/activity-modal.module.css';
-import { formatDateOnly } from '../../utils/date';
-import type { TaskResponse } from '../../types/api';
+import { formatDateOnly, toDateTimeLocalValue } from '../../utils/date';
+import type { TaskResponse, EventResponse, EventUpdateRequest } from '../../types/api';
 
 export interface ActivityFormData {
   title: string;
   description: string;
-  date: string;
+  /** Дата и время в ISO (для API eventDate) */
+  eventDateTime: string;
   eventType: string;
 }
 
@@ -27,6 +29,10 @@ export interface ActivityModalProps {
   task: TaskResponse;
   date?: string | null;
   onOpenTaskDetails: () => void;
+  /** Колбэк сохранения при редактировании записи (если передан — в списке показываются кнопки редактирования) */
+  onSaveEdit?: (eventId: string, data: EventUpdateRequest) => Promise<void>;
+  /** Колбэк удаления записи (если передан — в списке показываются кнопки удаления) */
+  onDeleteEvent?: (event: EventResponse) => Promise<void>;
 }
 
 export const ActivityModal: React.FC<ActivityModalProps> = ({
@@ -36,12 +42,16 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   task,
   date,
   onOpenTaskDetails,
+  onSaveEdit,
+  onDeleteEvent,
 }) => {
   const { showError } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [eventDateTime, setEventDateTime] = useState('');
   const [eventType, setEventType] = useState('ACTIVITY');
   const [isLoading, setIsLoading] = useState(false);
+  const [editEvent, setEditEvent] = useState<EventResponse | null>(null);
   const isSubmittingRef = useRef(false);
 
   const taskEvents = useEvents('task', task.id, date ?? undefined);
@@ -51,8 +61,9 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       setTitle('');
       setDescription('');
       setEventType('ACTIVITY');
+      setEventDateTime(date ? `${date}T12:00:00` : '');
     }
-  }, [isOpen, task?.id]);
+  }, [isOpen, task?.id, date]);
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -60,11 +71,12 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     isSubmittingRef.current = true;
     setIsLoading(true);
     try {
-      if (!date) throw new Error('Дата активности не указана');
+      if (!eventDateTime.trim()) throw new Error('Дата и время активности не указаны');
+      const eventDateIso = new Date(eventDateTime).toISOString();
       await onSave({
         title: title.trim(),
         description: description.trim(),
-        date,
+        eventDateTime: eventDateIso,
         eventType
       });
       onClose();
@@ -87,7 +99,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
         >
           <ModalSaveButton
             onClick={handleSave}
-            disabled={!title.trim() || isLoading}
+            disabled={!title.trim() || !eventDateTime.trim() || isLoading}
           />
         </SimpleModalHeader>
         <div className={css.modalBody}>
@@ -105,10 +117,31 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
                 headerTitle={date ? `Активности за ${formatDateOnly(date)}` : 'История активностей'}
                 showTypeFilter={true}
                 defaultExpanded={true}
+                onEdit={onSaveEdit ? (ev) => setEditEvent(ev) : undefined}
+                onDelete={
+                  onDeleteEvent
+                    ? (ev) => onDeleteEvent(ev).then(() => taskEvents.refetch())
+                    : undefined
+                }
               />
             </div>
           )}
           <div className={formCss.formContainer}>
+            <EntityFormField
+              label="Дата и время"
+              isViewMode={false}
+              viewContent={null}
+              editContent={
+                <GlassInput
+                  type="datetime-local"
+                  value={toDateTimeLocalValue(eventDateTime || new Date().toISOString())}
+                  onChange={(e) => setEventDateTime(e.target.value)}
+                  disabled={isLoading}
+                  fullWidth
+                  aria-label="Дата и время события"
+                />
+              }
+            />
             <EntityFormField
               label="Тип активноси"
               isViewMode={false}
@@ -158,6 +191,20 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           </div>
         </div>
       </div>
+      {onSaveEdit && (
+        <EventEditModal
+          isOpen={editEvent != null}
+          onClose={() => setEditEvent(null)}
+          onSave={async (data) => {
+            if (editEvent) {
+              await onSaveEdit(editEvent.id, data);
+              await taskEvents.refetch();
+              setEditEvent(null);
+            }
+          }}
+          event={editEvent}
+        />
+      )}
     </Modal>
   );
 };

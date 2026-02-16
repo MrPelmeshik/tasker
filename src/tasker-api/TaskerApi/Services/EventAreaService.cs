@@ -38,6 +38,22 @@ public class EventAreaService(
         return await GetEventsCoreAsync(areaId, cancellationToken);
     }
 
+    /// <inheritdoc />
+    public async Task UpdateEventAsync(Guid eventId, EventUpdateEntityRequest request, CancellationToken cancellationToken)
+    {
+        await UpdateEventCoreAsync(eventId, request, cancellationToken);
+        var (areaId, entityId, folderId) = await GetEventRealtimeContextAsync(eventId, cancellationToken);
+        await realtimeNotifier.NotifyEntityChangedAsync(Models.Common.EntityType.EVENT, entityId, areaId, folderId, RealtimeEventType.Update, cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task DeleteEventAsync(Guid eventId, CancellationToken cancellationToken)
+    {
+        var (areaId, entityId, folderId) = await GetEventRealtimeContextAsync(eventId, cancellationToken);
+        await DeleteEventCoreAsync(eventId, cancellationToken);
+        await realtimeNotifier.NotifyEntityChangedAsync(Models.Common.EntityType.EVENT, entityId, areaId, folderId, RealtimeEventType.Delete, cancellationToken);
+    }
+
     /// <summary>
     /// <inheritdoc />
     /// </summary>

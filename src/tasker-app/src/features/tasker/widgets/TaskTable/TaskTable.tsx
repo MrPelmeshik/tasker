@@ -19,7 +19,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const { showError } = useToast();
 
-  const { loading, groupedRows, loadData, handleActivitySaveForTask } = useTaskTableData({
+  const { loading, groupedRows, loadData, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask } = useTaskTableData({
     weekStartIso,
     showError,
     notifyTaskUpdate,
@@ -34,6 +34,8 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     openActivityModal,
     closeActivityModal,
     handleActivitySaveForTask,
+    handleActivityUpdateForTask,
+    handleActivityDeleteForTask,
   });
 
   const daysHeader = useMemo(() => buildWeekDays(weekStartIso), [weekStartIso]);

@@ -3,6 +3,7 @@ import type { EventResponse } from '../../types/api';
 import { Tooltip } from '../ui/Tooltip';
 import { Loader } from '../ui/Loader';
 import { UserMention } from '../common/UserMention';
+import { ConfirmModal } from '../common/ConfirmModal';
 import { formatDateTime } from '../../utils/date';
 import { getEventTypeLabel, formatMessageForDisplay, EVENT_TYPES } from '../../utils/event-display';
 import activityChainCss from '../../styles/activity-chain.module.css';
@@ -20,6 +21,10 @@ export interface ActivityListProps {
   loading?: boolean;
   /** Сообщение об ошибке загрузки */
   error?: string | null;
+  /** Колбэк редактирования записи (если передан — показываются кнопки редактирования) */
+  onEdit?: (event: EventResponse) => void;
+  /** Колбэк удаления записи (если передан — показываются кнопки удаления, перед вызовом показывается подтверждение) */
+  onDelete?: (event: EventResponse) => void;
 }
 
 /**
@@ -33,8 +38,12 @@ export const ActivityList: React.FC<ActivityListProps> = ({
   defaultExpanded = true,
   loading = false,
   error = null,
+  onEdit,
+  onDelete,
 }) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
+  const [deleteConfirmEvent, setDeleteConfirmEvent] = useState<EventResponse | null>(null);
+  const [deleteInProgress, setDeleteInProgress] = useState(false);
   const [hiddenTypes, setHiddenTypes] = useState<Set<string>>(() =>
     new Set(EVENT_TYPES.filter((t) => t !== 'ACTIVITY' && t !== 'NOTE'))
   );
@@ -123,7 +132,7 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                       {getEventTypeLabel(ev.eventType)}
                     </span>
                     <span className={activityChainCss.eventDate}>
-                      {formatDateTime(ev.createdAt)}
+                      {formatDateTime(ev.eventDate)}
                       {ev.ownerUserName && (
                         <>
                           {' • '}
@@ -136,6 +145,40 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                         </>
                       )}
                     </span>
+                    {(onEdit || onDelete) && (
+                      <span className={activityChainCss.eventActions}>
+                        {onEdit && (
+                          <Tooltip content="Изменить" placement="bottom" size="s">
+                            <button
+                              type="button"
+                              className={activityChainCss.eventActionBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onEdit(ev);
+                              }}
+                              aria-label="Изменить"
+                            >
+                              ✎
+                            </button>
+                          </Tooltip>
+                        )}
+                        {onDelete && (
+                          <Tooltip content="Удалить" placement="bottom" size="s">
+                            <button
+                              type="button"
+                              className={activityChainCss.eventActionBtn}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setDeleteConfirmEvent(ev);
+                              }}
+                              aria-label="Удалить"
+                            >
+                              ✕
+                            </button>
+                          </Tooltip>
+                        )}
+                      </span>
+                    )}
                   </div>
                   {ev.message && (() => {
                     const text = formatMessageForDisplay(ev.message);
@@ -152,6 +195,26 @@ export const ActivityList: React.FC<ActivityListProps> = ({
           )}
         </div>
       )}
+      <ConfirmModal
+        isOpen={deleteConfirmEvent != null}
+        onClose={() => !deleteInProgress && setDeleteConfirmEvent(null)}
+        onCancel={() => setDeleteConfirmEvent(null)}
+        onConfirm={async () => {
+          if (!deleteConfirmEvent || !onDelete) return;
+          setDeleteInProgress(true);
+          try {
+            await onDelete(deleteConfirmEvent);
+            setDeleteConfirmEvent(null);
+          } finally {
+            setDeleteInProgress(false);
+          }
+        }}
+        title="Удалить запись?"
+        message="Удалить запись активности? Это действие нельзя отменить."
+        confirmText="Удалить"
+        variant="danger"
+        confirmDisabled={deleteInProgress}
+      />
     </div>
   );
 };

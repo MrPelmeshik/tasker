@@ -7,8 +7,16 @@ export interface EventCreateRequest {
   title: string;
   description?: string;
   eventType: EventType;
-  /** Дата события/активности (обязательное, ISO YYYY-MM-DD) */
+  /** Дата и время события/активности (ISO YYYY-MM-DD или полный ISO с временем) */
   eventDate: string;
+}
+
+/** Запрос на частичное обновление события (все поля опциональны) */
+export interface EventUpdateRequest {
+  title?: string;
+  description?: string;
+  eventType?: EventType;
+  eventDate?: string;
 }
 
 export interface EventCreateResponse {
