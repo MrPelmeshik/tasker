@@ -18,6 +18,7 @@ import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaRole, Even
 import type { ModalSize } from '../../../types/modal-size';
 import { AreaModalMembersSection } from './AreaModalMembersSection';
 import { useAreaMembers } from './useAreaMembers';
+import { HierarchyTree } from '../../../features/tasker/widgets/Tree/HierarchyTree';
 
 /** Данные формы области: название, описание, цвет (в форме — selectedColor, при сохранении уходит как color). */
 type AreaFormData = { title: string; description: string; selectedColor?: string; id?: string };
@@ -273,6 +274,24 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 onChangeMemberRole={handleChangeMemberRole}
                 onRemoveMember={(m) => setRemoveConfirmMember(m)}
               />
+            )}
+
+            {area && (
+              <div style={{ marginTop: 24, marginBottom: 24 }}>
+                <h3 className={formCss.sectionTitle}>Структура</h3>
+                <div style={{
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 12,
+                  background: 'rgba(0,0,0,0.2)',
+                  minHeight: 200,
+                  maxHeight: 500,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <HierarchyTree root={{ type: 'area', id: area.id }} />
+                </div>
+              </div>
             )}
 
             {area && (

@@ -11,6 +11,7 @@ import formCss from '../../styles/modal-form.module.css';
 import { formatDateTime } from '../../utils/date';
 import type { FolderResponse, FolderCreateRequest, FolderUpdateRequest } from '../../types/api';
 import type { ModalSize } from '../../types/modal-size';
+import { HierarchyTree } from '../../features/tasker/widgets/Tree/HierarchyTree';
 
 export interface FolderModalProps {
   isOpen: boolean;
@@ -47,11 +48,11 @@ export const FolderModal: React.FC<FolderModalProps> = ({
       return folder
         ? { title: folder.title, description: folder.description || '', areaId: folder.areaId, parentFolderId: pid == null ? '' : pid }
         : {
-            title: '',
-            description: '',
-            areaId: defaultAreaId || (areas.length > 0 ? areas[0].id : ''),
-            parentFolderId: pid == null ? '' : pid,
-          };
+          title: '',
+          description: '',
+          areaId: defaultAreaId || (areas.length > 0 ? areas[0].id : ''),
+          parentFolderId: pid == null ? '' : pid,
+        };
     },
     deps: [folder, areas, defaultAreaId, defaultParentFolderId],
     onClose,
@@ -170,6 +171,24 @@ export const FolderModal: React.FC<FolderModalProps> = ({
                 updatedAt={folder.updatedAt}
                 formatDateTime={formatDateTime}
               />
+            )}
+
+            {folder && (
+              <div style={{ marginTop: 24, marginBottom: 24 }}>
+                <h3 className={formCss.sectionTitle}>Структура</h3>
+                <div style={{
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 12,
+                  background: 'rgba(0,0,0,0.2)',
+                  minHeight: 200,
+                  maxHeight: 500,
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column'
+                }}>
+                  <HierarchyTree root={{ type: 'folder', id: folder.id, areaId: folder.areaId }} />
+                </div>
+              </div>
             )}
           </div>
         </div>

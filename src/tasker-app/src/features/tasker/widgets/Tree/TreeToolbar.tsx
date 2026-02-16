@@ -10,7 +10,7 @@ import { TREE_SORT_PRESET_OPTIONS, type TreeSortPreset } from './treeUtils';
 import css from '../../../../styles/tree.module.css';
 
 export interface TreeToolbarProps {
-  onCreateArea: () => void;
+  onCreateArea?: () => void;
   isAllExpanded: boolean;
   onExpandAll: () => void;
   onCollapseAll: () => void;
@@ -31,17 +31,19 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
   setSortPreset,
 }) => (
   <div className={css.treeTopActions}>
-    <Tooltip content="Создать область" placement="top">
-      <GlassButton
-        variant="subtle"
-        size="xs"
-        className={`${css.treeActionButton} ${css.treeTopActionButton}`}
-        onClick={onCreateArea}
-        aria-label="Создать область"
-      >
-        <LayoutGridIcon className="icon-m" />
-      </GlassButton>
-    </Tooltip>
+    {onCreateArea && (
+      <Tooltip content="Создать область" placement="top">
+        <GlassButton
+          variant="subtle"
+          size="xs"
+          className={`${css.treeActionButton} ${css.treeTopActionButton}`}
+          onClick={onCreateArea}
+          aria-label="Создать область"
+        >
+          <LayoutGridIcon className="icon-m" />
+        </GlassButton>
+      </Tooltip>
+    )}
     <Tooltip content={isAllExpanded ? 'Свернуть дерево' : 'Развернуть дерево'} placement="top">
       <GlassButton
         variant="subtle"

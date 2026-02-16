@@ -14,6 +14,7 @@ import type { NotifyTaskUpdatePayload } from '../../../../context/TaskUpdateCont
 export interface UseTreeDataOptions {
   showError: (error: unknown) => void;
   subscribeToTaskUpdates: (callback: (taskId?: string, folderId?: string, payload?: NotifyTaskUpdatePayload) => void) => () => void;
+  root?: { type: 'area' | 'folder'; id: string; areaId?: string } | null;
 }
 
 // Простая проверка глубокого равенства для наших структур данных
@@ -42,7 +43,7 @@ function isDeepEqual(a: any, b: any): boolean {
   return true;
 }
 
-export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOptions) {
+export function useTreeData({ showError, subscribeToTaskUpdates, root }: UseTreeDataOptions) {
   const [areas, setAreas] = useState<AreaShortCard[]>([]);
   const [foldersByArea, setFoldersByArea] = useState<Map<string, FolderSummary[]>>(new Map());
   const [foldersByParent, setFoldersByParent] = useState<Map<string, FolderSummary[]>>(new Map());
@@ -234,7 +235,15 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
     [loadFolderContent]
   );
 
+  // Deconstruct root to stable primitives
+  const rootId = root?.id;
+  const rootType = root?.type;
+  const rootAreaId = root?.areaId;
+
   const refreshAreas = useCallback(async (signal?: AbortSignal) => {
+    // If root is set, we don't load all areas
+    if (rootId) return;
+
     try {
       const data = await fetchAreaShortCard({ signal });
       const sorted = sortByTitle(data);
@@ -245,7 +254,7 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
       setAreas([]);
       showError(error);
     }
-  }, [showError, sortByTitle, updateStateIfChanged]);
+  }, [showError, sortByTitle, updateStateIfChanged, rootId]);
 
   const isRefreshingRef = useRef(false);
   const pendingRefreshRef = useRef(false);
@@ -268,10 +277,22 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
         ...areasToRefresh.map(areaId => loadAreaContent(areaId).catch(() => [])),
         ...foldersToRefresh.map(folderId => {
           const folder = findFolderById(folderId, foldersByAreaRef.current, foldersByParentRef.current);
+          if (!folder && rootType === 'folder' && folderId !== rootId) {
+            return Promise.resolve([]);
+          }
+          if (!folder && rootType === 'folder' && folderId === rootId && rootAreaId) {
+            // Refresh root folder children
+            return loadFolderContent(rootId, rootAreaId).catch(() => []);
+          }
           if (!folder) return Promise.resolve([]);
           return loadFolderContent(folderId, folder.areaId).catch(() => []);
         })
       ]);
+
+      if (rootType === 'folder' && rootId && rootAreaId) {
+        await loadFolderContent(rootId, rootAreaId).catch(() => []);
+      }
+
     } catch {
       // handled
     } finally {
@@ -281,7 +302,7 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
         void refreshTree();
       }
     }
-  }, [refreshAreas, loadAreaContent, loadFolderContent]);
+  }, [refreshAreas, loadAreaContent, loadFolderContent, rootId, rootType, rootAreaId]);
 
   const collapseAll = useCallback(() => {
     setExpandedAreas(new Set());
@@ -289,26 +310,56 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
   }, []);
 
   const expandAll = useCallback(async () => {
-    const localAreas = areasRef.current;
-    const areaIds = localAreas.map((a) => a.id);
-    setExpandedAreas(new Set(areaIds));
-
     const queue: { id: string; areaId: string }[] = [];
     const allFolderIds = new Set<string>();
 
-    for (const areaId of areaIds) {
-      // Use refs to check existence without dependency
-      const hasData = foldersByAreaRef.current.has(areaId) && tasksByAreaRef.current.has(areaId);
+    if (rootType === 'area' && rootId) {
+      // Expand this area
+      setExpandedAreas(new Set([rootId]));
+      const hasData = foldersByAreaRef.current.has(rootId) && tasksByAreaRef.current.has(rootId);
       const folders = hasData
-        ? foldersByAreaRef.current.get(areaId)!
-        : await loadAreaContent(areaId);
+        ? foldersByAreaRef.current.get(rootId)!
+        : await loadAreaContent(rootId);
 
       for (const f of folders) {
         allFolderIds.add(f.id);
-        queue.push({ id: f.id, areaId });
+        queue.push({ id: f.id, areaId: rootId });
+      }
+    } else if (rootType === 'folder' && rootId && rootAreaId) {
+      // Expand root folder
+      // Actually root folder itself is not "expanded" in terms of tree state because it is the container?
+      // But its children might be folders.
+      const hasData = foldersByParentRef.current.has(rootId) && tasksByFolderRef.current.has(rootId);
+      const subfolders = hasData
+        ? foldersByParentRef.current.get(rootId)!
+        : await loadFolderContent(rootId, rootAreaId);
+
+      setExpandedFolders(new Set([rootId])); // Ensure root is expanded if applicable
+
+      for (const f of subfolders) {
+        allFolderIds.add(f.id);
+        queue.push({ id: f.id, areaId: rootAreaId });
+      }
+    } else if (!rootId) {
+      // Full tree
+      const localAreas = areasRef.current;
+      const areaIds = localAreas.map((a) => a.id);
+      setExpandedAreas(new Set(areaIds));
+
+      for (const areaId of areaIds) {
+        const hasData = foldersByAreaRef.current.has(areaId) && tasksByAreaRef.current.has(areaId);
+        const folders = hasData
+          ? foldersByAreaRef.current.get(areaId)!
+          : await loadAreaContent(areaId);
+
+        for (const f of folders) {
+          allFolderIds.add(f.id);
+          queue.push({ id: f.id, areaId });
+        }
       }
     }
 
+    // Process queue recursively
     while (queue.length > 0) {
       const { id: folderId, areaId } = queue.shift()!;
       const hasData = foldersByParentRef.current.has(folderId) && tasksByFolderRef.current.has(folderId);
@@ -322,61 +373,97 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
       }
     }
 
-    setExpandedFolders(allFolderIds);
-  }, [loadAreaContent, loadFolderContent]); // areas dependency removed, using Ref inside
+    setExpandedFolders(prev => {
+      const next = new Set(prev);
+      allFolderIds.forEach(id => next.add(id));
+      return next;
+    });
+  }, [loadAreaContent, loadFolderContent, rootId, rootType, rootAreaId]);
 
   useEffect(() => {
-    if (loading || areas.length === 0 || hasInitialExpandedRef.current) return;
+    // If loading, wait.
+    if (loading) return;
+
+    // If already expanded once, skip.
+    if (hasInitialExpandedRef.current) return;
+
+    // If full tree mode (no root), need areas to be loaded.
+    if (!rootId && areas.length === 0) return;
+
+    // If scoped mode (root), we can expand.
+    // Logic: expand all provided content.
     hasInitialExpandedRef.current = true;
     expandAll();
-  }, [loading, areas.length, expandAll]);
+  }, [loading, areas.length, expandAll, rootId]);
+
+
 
   useEffect(() => {
     const ctrl = new AbortController();
     abortControllerRef.current = ctrl;
-    const loadAreas = async () => {
+
+    const loadData = async () => {
       try {
         setLoading(true);
-        await refreshAreas(ctrl.signal);
+        if (rootId && rootType) {
+          if (rootType === 'area') {
+            await loadAreaContent(rootId);
+            setExpandedAreas(new Set([rootId]));
+          } else if (rootType === 'folder' && rootAreaId) {
+            // For folder root, we also want to expand it so we can see children immediately?
+            // Actually, the TreeFolderChildren renders the children of this folder.
+            // We need to load 'foldersByParent' for this folderId.
+            await loadFolderContent(rootId, rootAreaId);
+            setExpandedFolders(new Set([rootId]));
+          }
+        } else {
+          await refreshAreas(ctrl.signal);
+        }
       } finally {
         setLoading(false);
       }
     };
-    loadAreas();
+
+    loadData();
+
     return () => {
       ctrl.abort();
       abortControllerRef.current = null;
     };
-  }, [refreshAreas]);
+  }, [refreshAreas, loadAreaContent, loadFolderContent, rootId, rootType, rootAreaId]);
 
   const handleTaskUpdate = useCallback((taskId?: string, folderId?: string, payload?: NotifyTaskUpdatePayload) => {
     // 1. Refresh Target Container (where the entity is NOW)
     if (folderId && expandedFoldersRef.current.has(folderId)) {
-      // Find areaId for the folder to refresh it
       const folder = findFolderById(folderId, foldersByAreaRef.current, foldersByParentRef.current);
       if (folder) {
         void loadFolderContent(folderId, folder.areaId);
+      } else if (root?.type === 'folder' && root.id === folderId) {
+        // If we are rooted at this folder, we should refresh it. 
+        // We need areaId.
+        if (payload?.areaId) {
+          void loadFolderContent(folderId, payload.areaId);
+        }
       }
     } else if (payload?.areaId && expandedAreasRef.current.has(payload.areaId)) {
       void loadAreaContent(payload.areaId);
+    } else if (root?.type === 'area' && root.id === payload?.areaId) {
+      void loadAreaContent(root.id);
     }
 
-    // 2. Refresh Source Container (where the entity WAS, if it moved or deleted)
-    // We need to find the parent in our local state because the payload might not have the old parent info.
+    // 2. Refresh Source Container
     const targetEntityId = taskId || payload?.entityId;
     if (targetEntityId) {
       const isFolder = payload?.entityType === 'FOLDER';
 
-      // Helper: refresh folder if expanded
       const refreshFolderIfExpanded = (pId: string) => {
-        if (expandedFoldersRef.current.has(pId) && pId !== folderId) {
+        if ((expandedFoldersRef.current.has(pId) || (root?.type === 'folder' && root.id === pId)) && pId !== folderId) {
           const parentFolder = findFolderById(pId, foldersByAreaRef.current, foldersByParentRef.current);
           if (parentFolder) void loadFolderContent(pId, parentFolder.areaId);
         }
       };
-      // Helper: refresh area if expanded
       const refreshAreaIfExpanded = (aId: string) => {
-        if (expandedAreasRef.current.has(aId) && aId !== payload?.areaId) {
+        if ((expandedAreasRef.current.has(aId) || (root?.type === 'area' && root.id === aId)) && aId !== payload?.areaId) {
           void loadAreaContent(aId);
         }
       };
@@ -399,18 +486,30 @@ export function useTreeData({ showError, subscribeToTaskUpdates }: UseTreeDataOp
       }
     }
 
-    // 3. Fallback for structural changes (Areas added/removed)
-    if (payload?.entityType === 'AREA' && !payload.areaId) {
+    // 3. Fallback for structural changes
+    if (payload?.entityType === 'AREA' && !payload.areaId && !root) {
       void refreshAreas();
     }
-  }, [loadFolderContent, loadAreaContent, refreshAreas]);
+  }, [loadFolderContent, loadAreaContent, refreshAreas, root]);
 
   useEffect(() => {
     const unsubscribe = subscribeToTaskUpdates((taskId, folderId, payload) => handleTaskUpdate(taskId, folderId, payload));
     return unsubscribe;
   }, [subscribeToTaskUpdates, handleTaskUpdate]);
 
-  const isAllExpanded = areas.length > 0 && expandedAreas.size === areas.length;
+  const isAllExpanded = React.useMemo(() => {
+    if (rootId && rootType === 'area') {
+      const folders = foldersByArea.get(rootId) || [];
+      if (folders.length === 0) return false;
+      return folders.every((f) => expandedFolders.has(f.id));
+    }
+    if (rootId && rootType === 'folder') {
+      const subfolders = foldersByParent.get(rootId) || [];
+      if (subfolders.length === 0) return false;
+      return subfolders.every((f) => expandedFolders.has(f.id));
+    }
+    return areas.length > 0 && expandedAreas.size === areas.length;
+  }, [areas.length, expandedAreas, expandedFolders, foldersByArea, foldersByParent, rootId, rootType]);
 
   return {
     areas,

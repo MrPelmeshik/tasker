@@ -12,6 +12,7 @@ import { handleExpandKeyDown } from '../../../../utils/keyboard';
 import { isValidDrop } from './treeUtils';
 import { TreeTaskRow } from './TreeTaskRow';
 import { TreeFolder } from './TreeFolder';
+import { TreeAreaChildren } from './TreeAreaChildren';
 import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
 import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
 import css from '../../../../styles/tree.module.css';
@@ -133,14 +134,12 @@ export const TreeAreaSection: React.FC<TreeAreaSectionProps> = React.memo(({
                 <div className={glassWidgetStyles.placeholder}><Loader size="s" ariaLabel="Загрузка" /></div>
               ) : (
                 <>
-                  <AnimatePresence initial={false} mode="popLayout">
-                    {folders.map((f) => (
-                      <TreeFolder key={f.id} folder={f} areaId={area.id} depth={1} />
-                    ))}
-                    {tasks.map((task) => (
-                      <TreeTaskRow key={task.id} level={2} task={task} onViewDetails={(e) => onViewTaskDetails(task.id, e)} />
-                    ))}
-                  </AnimatePresence>
+                  <TreeAreaChildren
+                    areaId={area.id}
+                    folders={folders}
+                    tasks={tasks}
+                    onViewTaskDetails={(taskId, e) => onViewTaskDetails(taskId, e)}
+                  />
                 </>
               )}
             </motion.div>

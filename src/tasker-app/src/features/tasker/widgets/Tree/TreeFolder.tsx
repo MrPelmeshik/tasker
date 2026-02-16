@@ -3,6 +3,7 @@ import { useDroppable } from '@dnd-kit/core';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTreeContext } from './TreeContext';
 import { TreeFolderRow } from './TreeFolderRow';
+import { TreeFolderChildren } from './TreeFolderChildren';
 import { TreeTaskRow } from './TreeTaskRow';
 import type { FolderSummary } from '../../../../types';
 import css from '../../../../styles/tree.module.css';
@@ -53,6 +54,7 @@ export const TreeFolder: React.FC<TreeFolderProps> = React.memo(({ folder, areaI
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
             className={css.folderBlock}
+            style={{ paddingLeft: depth > 1 ? `20px` : undefined }}
         >
             <TreeFolderRow
                 folder={folder}
@@ -88,19 +90,13 @@ export const TreeFolder: React.FC<TreeFolderProps> = React.memo(({ folder, areaI
                                 <Loader size="s" ariaLabel="Загрузка" />
                             </div>
                         ) : (
-                            <AnimatePresence initial={false} mode="popLayout">
-                                {subfolders.map((sf) => (
-                                    <TreeFolder key={sf.id} folder={sf} areaId={areaId} depth={depth + 1} />
-                                ))}
-                                {tasks.map((task) => (
-                                    <TreeTaskRow
-                                        key={task.id}
-                                        level={depth + 2}
-                                        task={task}
-                                        onViewDetails={(e) => actions.onViewTaskDetails(task.id, e)}
-                                    />
-                                ))}
-                            </AnimatePresence>
+                            <TreeFolderChildren
+                                subfolders={subfolders}
+                                tasks={tasks}
+                                areaId={areaId}
+                                depth={depth}
+                                onViewTaskDetails={(taskId, e) => actions.onViewTaskDetails(taskId, e)}
+                            />
                         )}
                     </motion.div>
                 )}
