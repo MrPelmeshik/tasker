@@ -150,48 +150,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         />
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
-            {areas && areas.length > 0 && (
-              <EntityFormField
-                label="Область *"
-                hasChange={fieldChanges.areaId}
-                onReset={() => handleResetField('areaId')}
-                isViewMode={isViewMode}
-                viewContent={<div className={formCss.fieldValueReadonly}>{areas.find((a) => a.id === formData.areaId)?.title ?? '—'}</div>}
-                editContent={
-                  <GlassSelect
-                    value={formData.areaId}
-                    onChange={(value) => handleFieldChange('areaId', value)}
-                    options={[{ value: '', label: 'Выберите область' }, ...areas.map((a) => ({ value: a.id, label: a.title }))]}
-                    disabled={isLoading}
-                    fullWidth
-                  />
-                }
-              />
-            )}
-
-            {areas && areas.length > 0 && (
-              <EntityFormField
-                label="Папка"
-                hasChange={fieldChanges.folderId}
-                onReset={() => handleResetField('folderId')}
-                isViewMode={isViewMode}
-                viewContent={
-                  <div className={formCss.fieldValueReadonly}>
-                    {folderValue ? folderOptions.find((o) => o.value === folderValue)?.label ?? '—' : 'Без папки (корень области)'}
-                  </div>
-                }
-                editContent={
-                  <GlassSelect
-                    value={folderValue}
-                    onChange={(value) => handleFieldChange('folderId', value)}
-                    options={folderOptions}
-                    disabled={isLoading || loadingFolders}
-                    fullWidth
-                  />
-                }
-              />
-            )}
-
             <EntityFormField
               label="Название задачи *"
               hasChange={fieldChanges.title}
@@ -205,9 +163,53 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   placeholder="Введите название задачи"
                   disabled={isLoading}
                   fullWidth
+                  variant="subtle"
                 />
               }
             />
+
+            {areas && areas.length > 0 && (
+              <div className={formCss.fieldRow}>
+                <EntityFormField
+                  label="Область *"
+                  hasChange={fieldChanges.areaId}
+                  onReset={() => handleResetField('areaId')}
+                  isViewMode={isViewMode}
+                  viewContent={<div className={formCss.fieldValueReadonly}>{areas.find((a) => a.id === formData.areaId)?.title ?? '—'}</div>}
+                  editContent={
+                    <GlassSelect
+                      value={formData.areaId}
+                      onChange={(value) => handleFieldChange('areaId', value)}
+                      options={[{ value: '', label: 'Выберите область' }, ...areas.map((a) => ({ value: a.id, label: a.title }))]}
+                      disabled={isLoading}
+                      fullWidth
+                      variant="subtle"
+                    />
+                  }
+                />
+                <EntityFormField
+                  label="Папка"
+                  hasChange={fieldChanges.folderId}
+                  onReset={() => handleResetField('folderId')}
+                  isViewMode={isViewMode}
+                  viewContent={
+                    <div className={formCss.fieldValueReadonly}>
+                      {folderValue ? folderOptions.find((o) => o.value === folderValue)?.label ?? '—' : 'Корень области'}
+                    </div>
+                  }
+                  editContent={
+                    <GlassSelect
+                      value={folderValue}
+                      onChange={(value) => handleFieldChange('folderId', value)}
+                      options={folderOptions}
+                      disabled={isLoading || loadingFolders}
+                      fullWidth
+                      variant="subtle"
+                    />
+                  }
+                />
+              </div>
+            )}
 
             <EntityFormField
               label="Статус"
@@ -229,6 +231,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   disabled={isLoading}
                   fullWidth
                   size="s"
+                  variant="subtle"
                 />
               }
             />

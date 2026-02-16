@@ -2,13 +2,13 @@
 .formContainer {
   display: flex;
   flex-direction: column;
-  gap: var(--space-20);
+  gap: var(--space-12);
 }
 
 .fieldGroup {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
+  gap: var(--space-4);
 }
 
 .fieldHeader {
@@ -19,9 +19,9 @@
 }
 
 .fieldLabel {
-  font-size: var(--font-14);
+  font-size: var(--font-12);
   font-weight: var(--font-weight-medium);
-  color: var(--color-text);
+  color: rgb(var(--white) / 0.55);
   margin: 0;
   flex: 1;
 }
@@ -51,11 +51,9 @@
 .readonlyMeta {
   display: flex;
   flex-direction: column;
-  gap: var(--space-8);
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-xs);
-  background: var(--surface-subtle-bg);
-  border: var(--border-1) solid var(--surface-subtle-border);
+  gap: var(--space-4);
+  padding: var(--space-8) 0;
+  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
 }
 
 .readonlyMetaEditable {
@@ -65,9 +63,9 @@
 }
 
 .readonlyMetaTitle {
-  font-size: var(--font-12);
+  font-size: var(--font-11);
   font-weight: var(--font-weight-medium);
-  color: rgb(var(--white) / 0.5);
+  color: rgb(var(--white) / 0.4);
   margin: 0;
   text-transform: uppercase;
   letter-spacing: var(--letter-spacing-uppercase);
@@ -81,8 +79,8 @@
 }
 
 .readonlyMetaLabel {
-  font-size: var(--font-12);
-  color: rgb(var(--white) / 0.45);
+  font-size: var(--font-11);
+  color: rgb(var(--white) / 0.4);
 }
 
 .readonlyMetaLabelSmall {
@@ -103,21 +101,18 @@
 }
 
 .readonlyMetaValue {
-  font-size: var(--font-12);
+  font-size: var(--font-11);
   color: var(--color-text);
   font-weight: var(--font-weight-medium);
 }
 
 .fieldValueReadonly {
   width: 100%;
-  padding: var(--space-10) var(--space-12);
-  border-radius: var(--radius-m);
-  font-size: var(--font-15);
+  padding: var(--space-6) 0;
+  font-size: var(--font-14);
   line-height: var(--line-height-relaxed);
   color: var(--color-text);
-  background: var(--surface-subtle-bg);
-  border: var(--border-1) solid var(--surface-subtle-border-strong);
-  min-height: var(--size-40);
+  min-height: var(--size-28);
   box-sizing: border-box;
 }
 
@@ -133,14 +128,11 @@
 
 .fieldValueReadonlyMultiline {
   width: 100%;
-  padding: var(--space-10) var(--space-12);
-  border-radius: var(--radius-m);
-  font-size: var(--font-15);
+  padding: var(--space-6) 0;
+  font-size: var(--font-14);
   line-height: var(--line-height-relaxed);
   color: var(--color-text);
-  background: var(--surface-subtle-bg);
-  border: var(--border-1) solid var(--surface-subtle-border-strong);
-  min-height: var(--field-multiline-min-height);
+  min-height: auto;
   white-space: pre-wrap;
   word-break: break-word;
   box-sizing: border-box;
@@ -149,4 +141,54 @@
 .fieldValueReadonlyMultiline:empty::before {
   content: '—';
   color: rgb(var(--white) / 0.4);
+}
+
+.sectionTitle {
+  font-size: var(--font-12);
+  font-weight: var(--font-weight-medium);
+  color: rgb(var(--white) / 0.55);
+  margin: 0 0 var(--space-8) 0;
+}
+
+/* Горизонтальный ряд для 2-3 полей */
+.fieldRow {
+  display: flex;
+  gap: var(--space-12);
+}
+
+.fieldRow > * {
+  flex: 1;
+  min-width: 0;
+}
+
+.fieldFlex2 {
+  flex: 2;
+}
+
+/* Inline мета-блок (Owner · Created · Updated) */
+.inlineMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-4) var(--space-16);
+  padding: var(--space-8) 0;
+  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
+}
+
+.inlineMetaItem {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  font-size: var(--font-11);
+  color: rgb(var(--white) / 0.4);
+}
+
+.inlineMetaValue {
+  color: var(--color-text);
+  font-size: var(--font-11);
+}
+
+@media (max-width: 768px) {
+  .fieldRow {
+    flex-direction: column;
+  }
 }

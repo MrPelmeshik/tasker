@@ -1,5 +1,5 @@
 .section {
-  margin-bottom: var(--space-20);
+  margin-bottom: var(--space-12);
 }
 
 .section:last-child {
@@ -31,12 +31,8 @@
 
 .profileBlock {
   display: flex;
-  gap: var(--space-16);
+  gap: var(--space-12);
   align-items: flex-start;
-  padding: var(--space-12) var(--space-16);
-  border-radius: var(--radius-xs);
-  background: var(--surface-subtle-bg);
-  border: var(--border-1) solid var(--surface-subtle-border);
 }
 
 .avatar {
@@ -78,7 +74,7 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-12);
+  gap: var(--space-4);
 }
 
 .areaItem {
@@ -86,11 +82,9 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--space-8);
-  padding: var(--space-10) var(--space-12);
-  border-radius: var(--radius-m);
-  background: var(--surface-subtle-bg);
-  border: var(--border-1) solid var(--surface-subtle-border);
-  font-size: var(--font-14);
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-xs);
+  font-size: var(--font-13);
   color: var(--color-text);
 }
 

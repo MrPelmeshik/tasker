@@ -10,6 +10,7 @@ export interface EntityFormFieldProps {
   isLoading?: boolean;
   viewContent: React.ReactNode;
   editContent: React.ReactNode;
+  className?: string;
 }
 
 export const EntityFormField: React.FC<EntityFormFieldProps> = ({
@@ -19,8 +20,9 @@ export const EntityFormField: React.FC<EntityFormFieldProps> = ({
   isViewMode,
   viewContent,
   editContent,
+  className,
 }) => (
-  <div className={formCss.fieldGroup}>
+  <div className={`${formCss.fieldGroup}${className ? ` ${className}` : ''}`}>
     <div className={formCss.fieldHeader}>
       <label className={formCss.fieldLabel}>{label}</label>
       {!isViewMode && hasChange && onReset && (

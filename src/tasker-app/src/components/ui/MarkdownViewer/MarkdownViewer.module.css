@@ -3,11 +3,8 @@
 }
 
 .content {
-  background: var(--surface-subtle-bg);
-  border: 1px solid var(--surface-subtle-border-strong);
-  border-radius: 12px;
-  padding: 12px 14px;
-  min-height: 40px;
+  padding: var(--space-4) 0;
+  min-height: auto;
   color: var(--color-text);
   font-size: var(--font-14);
   line-height: var(--line-height-relaxed);

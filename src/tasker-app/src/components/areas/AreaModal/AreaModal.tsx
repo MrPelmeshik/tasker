@@ -180,22 +180,60 @@ export const AreaModal: React.FC<AreaModalProps> = ({
 
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
-            <EntityFormField
-              label="Название области *"
-              hasChange={fieldChanges.title}
-              onReset={() => handleResetField('title')}
-              isViewMode={isViewMode}
-              viewContent={<div className={formCss.fieldValueReadonly}>{formData.title || '—'}</div>}
-              editContent={
-                <GlassInput
-                  value={formData.title}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
-                  placeholder="Введите название области"
-                  disabled={isLoading}
-                  fullWidth
-                />
-              }
-            />
+            <div className={formCss.fieldRow}>
+              <EntityFormField
+                label="Название области *"
+                className={formCss.fieldFlex2}
+                hasChange={fieldChanges.title}
+                onReset={() => handleResetField('title')}
+                isViewMode={isViewMode}
+                viewContent={<div className={formCss.fieldValueReadonly}>{formData.title || '—'}</div>}
+                editContent={
+                  <GlassInput
+                    value={formData.title}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleFieldChange('title', e.target.value)}
+                    placeholder="Введите название области"
+                    disabled={isLoading}
+                    fullWidth
+                    variant="subtle"
+                  />
+                }
+              />
+              <EntityFormField
+                label="Цвет"
+                hasChange={fieldChanges.selectedColor}
+                onReset={() => handleResetField('selectedColor')}
+                isViewMode={isViewMode}
+                viewContent={
+                  (formData as AreaFormData).selectedColor ? (
+                    <div className={formCss.fieldValueReadonly} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span
+                        style={{
+                          width: 16,
+                          height: 16,
+                          borderRadius: 4,
+                          backgroundColor: (formData as AreaFormData).selectedColor,
+                          border: '1px solid rgba(255,255,255,0.2)',
+                        }}
+                      />
+                      <span>{(formData as AreaFormData).selectedColor}</span>
+                    </div>
+                  ) : (
+                    <div className={formCss.fieldValueReadonly}>—</div>
+                  )
+                }
+                editContent={
+                  <ColorPicker
+                    value={(formData as AreaFormData).selectedColor}
+                    onChange={(hex) => handleFieldChange('selectedColor', hex)}
+                    disabled={isLoading}
+                    required={!area}
+                    showHexInput={true}
+                  />
+                }
+              />
+            </div>
+
             <EntityFormField
               label="Описание"
               hasChange={fieldChanges.description}
@@ -210,40 +248,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                   rows={4}
                   disabled={isLoading}
                   maxLength={10000}
-                />
-              }
-            />
-
-            <EntityFormField
-              label="Цвет области"
-              hasChange={fieldChanges.selectedColor}
-              onReset={() => handleResetField('selectedColor')}
-              isViewMode={isViewMode}
-              viewContent={
-                (formData as AreaFormData).selectedColor ? (
-                  <div className={formCss.fieldValueReadonly} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span
-                      style={{
-                        width: 20,
-                        height: 20,
-                        borderRadius: 4,
-                        backgroundColor: (formData as AreaFormData).selectedColor,
-                        border: '1px solid rgba(255,255,255,0.2)',
-                      }}
-                    />
-                    <span>{(formData as AreaFormData).selectedColor}</span>
-                  </div>
-                ) : (
-                  <div className={formCss.fieldValueReadonly}>—</div>
-                )
-              }
-              editContent={
-                <ColorPicker
-                  value={(formData as AreaFormData).selectedColor}
-                  onChange={(hex) => handleFieldChange('selectedColor', hex)}
-                  disabled={isLoading}
-                  required={!area}
-                  showHexInput={true}
                 />
               }
             />
@@ -279,12 +283,11 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             )}
 
             {area && (
-              <div style={{ marginTop: 24, marginBottom: 24 }}>
+              <div>
                 <h3 className={formCss.sectionTitle}>Структура</h3>
                 <div style={{
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 12,
-                  background: 'rgba(0,0,0,0.2)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 8,
                   minHeight: 200,
                   maxHeight: 500,
                   overflow: 'hidden',

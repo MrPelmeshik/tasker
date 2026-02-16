@@ -15,26 +15,25 @@ export const EntityMetaBlock: React.FC<EntityMetaBlockProps> = ({
   updatedAt,
   formatDateTime,
 }) => (
-  <div className={formCss.readonlyMeta}>
-    <div className={formCss.readonlyMetaTitle}>Информация</div>
+  <div className={formCss.inlineMeta}>
     {ownerUserName && (
-      <div className={formCss.readonlyMetaRow}>
-        <span className={formCss.readonlyMetaLabel}>Владелец</span>
-        <UserMention userName={ownerUserName} className={formCss.readonlyMetaValue}>
+      <div className={formCss.inlineMetaItem}>
+        <span>Владелец</span>
+        <UserMention userName={ownerUserName} className={formCss.inlineMetaValue}>
           {ownerUserName}
         </UserMention>
       </div>
     )}
     {createdAt != null && (
-      <div className={formCss.readonlyMetaRow}>
-        <span className={formCss.readonlyMetaLabel}>Дата создания</span>
-        <span className={formCss.readonlyMetaValue}>{formatDateTime(createdAt)}</span>
+      <div className={formCss.inlineMetaItem}>
+        <span>Создано</span>
+        <span className={formCss.inlineMetaValue}>{formatDateTime(createdAt)}</span>
       </div>
     )}
     {updatedAt != null && (
-      <div className={formCss.readonlyMetaRow}>
-        <span className={formCss.readonlyMetaLabel}>Дата обновления</span>
-        <span className={formCss.readonlyMetaValue}>{formatDateTime(updatedAt)}</span>
+      <div className={formCss.inlineMetaItem}>
+        <span>Обновлено</span>
+        <span className={formCss.inlineMetaValue}>{formatDateTime(updatedAt)}</span>
       </div>
     )}
   </div>

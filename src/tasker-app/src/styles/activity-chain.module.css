@@ -1,8 +1,7 @@
 .chain {
-  margin-top: var(--space-20);
+  margin-top: var(--space-8);
   border-radius: var(--radius-xs);
-  background: var(--surface-subtle-bg);
-  border: var(--border-1) solid var(--surface-subtle-border);
+  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
   overflow: hidden;
 }
 
@@ -11,13 +10,13 @@
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: var(--space-12) var(--space-16);
+  padding: var(--space-8) 0;
   background: transparent;
   border: none;
   cursor: pointer;
   color: var(--color-text);
   font-family: inherit;
-  font-size: var(--font-14);
+  font-size: var(--font-12);
   font-weight: var(--font-weight-medium);
   text-align: left;
   transition: background var(--transition-fast);
@@ -43,8 +42,8 @@
 }
 
 .body {
-  padding: 0 var(--space-16) var(--space-16);
-  border-top: var(--border-1) solid var(--surface-subtle-border);
+  padding: 0 0 var(--space-8);
+  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
 }
 
 .typeFilter {

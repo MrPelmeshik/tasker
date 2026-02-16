@@ -96,44 +96,6 @@ export const FolderModal: React.FC<FolderModalProps> = ({
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
             <EntityFormField
-              label="Область *"
-              hasChange={fieldChanges.areaId}
-              onReset={() => handleResetField('areaId')}
-              isViewMode={isViewMode}
-              viewContent={<div className={formCss.fieldValueReadonly}>{areas.find((a) => a.id === formData.areaId)?.title ?? '—'}</div>}
-              editContent={
-                <GlassSelect
-                  value={formData.areaId}
-                  onChange={(value) => handleFieldChange('areaId', value)}
-                  options={[{ value: '', label: 'Выберите область' }, ...areas.map((a) => ({ value: a.id, label: a.title }))]}
-                  disabled={isLoading}
-                  fullWidth
-                />
-              }
-            />
-            <EntityFormField
-              label="Родительская папка"
-              hasChange={fieldChanges.parentFolderId}
-              onReset={() => handleResetField('parentFolderId')}
-              isViewMode={isViewMode}
-              viewContent={
-                <div className={formCss.fieldValueReadonly}>
-                  {formData.parentFolderId
-                    ? parentFolderOptions.find((o) => o.value === formData.parentFolderId)?.label ?? '—'
-                    : 'Без папки (корень области)'}
-                </div>
-              }
-              editContent={
-                <GlassSelect
-                  value={formData.parentFolderId === '' || formData.parentFolderId == null ? '' : formData.parentFolderId}
-                  onChange={(value) => handleFieldChange('parentFolderId', value)}
-                  options={parentFolderOptions}
-                  disabled={isLoading || loadingParents}
-                  fullWidth
-                />
-              }
-            />
-            <EntityFormField
               label="Название папки *"
               hasChange={fieldChanges.title}
               onReset={() => handleResetField('title')}
@@ -146,9 +108,54 @@ export const FolderModal: React.FC<FolderModalProps> = ({
                   placeholder="Введите название папки"
                   disabled={isLoading}
                   fullWidth
+                  variant="subtle"
                 />
               }
             />
+
+            <div className={formCss.fieldRow}>
+              <EntityFormField
+                label="Область *"
+                hasChange={fieldChanges.areaId}
+                onReset={() => handleResetField('areaId')}
+                isViewMode={isViewMode}
+                viewContent={<div className={formCss.fieldValueReadonly}>{areas.find((a) => a.id === formData.areaId)?.title ?? '—'}</div>}
+                editContent={
+                  <GlassSelect
+                    value={formData.areaId}
+                    onChange={(value) => handleFieldChange('areaId', value)}
+                    options={[{ value: '', label: 'Выберите область' }, ...areas.map((a) => ({ value: a.id, label: a.title }))]}
+                    disabled={isLoading}
+                    fullWidth
+                    variant="subtle"
+                  />
+                }
+              />
+              <EntityFormField
+                label="Родительская папка"
+                hasChange={fieldChanges.parentFolderId}
+                onReset={() => handleResetField('parentFolderId')}
+                isViewMode={isViewMode}
+                viewContent={
+                  <div className={formCss.fieldValueReadonly}>
+                    {formData.parentFolderId
+                      ? parentFolderOptions.find((o) => o.value === formData.parentFolderId)?.label ?? '—'
+                      : 'Корень области'}
+                  </div>
+                }
+                editContent={
+                  <GlassSelect
+                    value={formData.parentFolderId === '' || formData.parentFolderId == null ? '' : formData.parentFolderId}
+                    onChange={(value) => handleFieldChange('parentFolderId', value)}
+                    options={parentFolderOptions}
+                    disabled={isLoading || loadingParents}
+                    fullWidth
+                    variant="subtle"
+                  />
+                }
+              />
+            </div>
+
             <EntityFormField
               label="Описание"
               hasChange={fieldChanges.description}
@@ -176,12 +183,11 @@ export const FolderModal: React.FC<FolderModalProps> = ({
             )}
 
             {folder && (
-              <div style={{ marginTop: 24, marginBottom: 24 }}>
+              <div>
                 <h3 className={formCss.sectionTitle}>Структура</h3>
                 <div style={{
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 12,
-                  background: 'rgba(0,0,0,0.2)',
+                  border: '1px solid rgba(255,255,255,0.06)',
+                  borderRadius: 8,
                   minHeight: 200,
                   maxHeight: 500,
                   overflow: 'hidden',

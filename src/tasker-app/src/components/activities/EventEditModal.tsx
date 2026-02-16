@@ -102,9 +102,46 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
                   placeholder="Краткое описание"
                   disabled={isLoading}
                   fullWidth
+                  variant="subtle"
                 />
               }
             />
+            <div className={formCss.fieldRow}>
+              <EntityFormField
+                label="Дата и время"
+                isViewMode={false}
+                viewContent={null}
+                editContent={
+                  <GlassInput
+                    type="datetime-local"
+                    value={toDateTimeLocalValue(eventDateTime || new Date().toISOString())}
+                    onChange={(e) => setEventDateTime(e.target.value)}
+                    disabled={isLoading}
+                    fullWidth
+                    variant="subtle"
+                    aria-label="Дата и время события"
+                  />
+                }
+              />
+              <EntityFormField
+                label="Тип"
+                isViewMode={false}
+                viewContent={null}
+                editContent={
+                  <GlassSelect
+                    value={eventType}
+                    onChange={(val: string) => setEventType(val)}
+                    options={[
+                      { value: 'ACTIVITY', label: 'Активность' },
+                      { value: 'NOTE', label: 'Заметка' },
+                    ]}
+                    disabled={isLoading}
+                    fullWidth
+                    variant="subtle"
+                  />
+                }
+              />
+            </div>
             <EntityFormField
               label="Описание"
               isViewMode={false}
@@ -117,38 +154,6 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
                   disabled={isLoading}
                   rows={3}
                   maxLength={10000}
-                />
-              }
-            />
-            <EntityFormField
-              label="Тип"
-              isViewMode={false}
-              viewContent={null}
-              editContent={
-                <GlassSelect
-                  value={eventType}
-                  onChange={(val: string) => setEventType(val)}
-                  options={[
-                    { value: 'ACTIVITY', label: 'Активность' },
-                    { value: 'NOTE', label: 'Заметка' },
-                  ]}
-                  disabled={isLoading}
-                  fullWidth
-                />
-              }
-            />
-            <EntityFormField
-              label="Дата и время"
-              isViewMode={false}
-              viewContent={null}
-              editContent={
-                <GlassInput
-                  type="datetime-local"
-                  value={toDateTimeLocalValue(eventDateTime || new Date().toISOString())}
-                  onChange={(e) => setEventDateTime(e.target.value)}
-                  disabled={isLoading}
-                  fullWidth
-                  aria-label="Дата и время события"
                 />
               }
             />
