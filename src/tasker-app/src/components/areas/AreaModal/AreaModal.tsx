@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Modal } from '../../common/Modal';
 import { EntityConfirmModals } from '../../common/EntityConfirmModals';
-import { GlassInput, GlassTextarea, ColorPicker } from '../../ui';
+import { GlassInput, ColorPicker } from '../../ui';
+import { MarkdownEditor } from '../../ui/MarkdownEditor/MarkdownEditor';
+import { MarkdownViewer } from '../../ui/MarkdownViewer/MarkdownViewer';
 import { ActivityList } from '../../activities/ActivityList';
 import { EventEditModal } from '../../activities/EventEditModal';
 import { EntityMetaBlock } from '../../common/EntityMetaBlock';
@@ -199,15 +201,15 @@ export const AreaModal: React.FC<AreaModalProps> = ({
               hasChange={fieldChanges.description}
               onReset={() => handleResetField('description')}
               isViewMode={isViewMode}
-              viewContent={<div className={formCss.fieldValueReadonlyMultiline}>{formData.description || '—'}</div>}
+              viewContent={<MarkdownViewer value={formData.description} />}
               editContent={
-                <GlassTextarea
+                <MarkdownEditor
                   value={formData.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
+                  onChange={(val) => handleFieldChange('description', val)}
                   placeholder="Введите описание области"
                   rows={4}
                   disabled={isLoading}
-                  fullWidth
+                  maxLength={10000}
                 />
               }
             />

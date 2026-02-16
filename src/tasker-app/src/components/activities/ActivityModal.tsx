@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { SimpleModalHeader } from '../common/SimpleModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
-import { GlassInput, GlassTextarea, ModalSaveButton, GlassSelect } from '../ui';
+import { GlassInput, ModalSaveButton, GlassSelect } from '../ui';
+import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
 import { ActivityList } from './ActivityList';
 import { EventEditModal } from './EventEditModal';
 import { TaskCardLink } from '../tasks';
@@ -178,13 +179,13 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               isViewMode={false}
               viewContent={null}
               editContent={
-                <GlassTextarea
+                <MarkdownEditor
                   value={description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+                  onChange={setDescription}
                   placeholder="Детали (опционально)"
                   disabled={isLoading}
                   rows={3}
-                  fullWidth
+                  maxLength={10000}
                 />
               }
             />

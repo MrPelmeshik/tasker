@@ -19,7 +19,7 @@ public class TaskCreateRequest
     /// <summary>
     /// Описание задачи
     /// </summary>
-    [StringLength(2000, ErrorMessage = "Описание задачи не должно превышать 2000 символов")]
+    [StringLength(10000, ErrorMessage = "Описание задачи не должно превышать 10000 символов")]
     public string? Description { get; set; }
 
     /// <summary>

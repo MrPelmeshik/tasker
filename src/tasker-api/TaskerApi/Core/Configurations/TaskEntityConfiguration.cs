@@ -14,7 +14,7 @@ public class TaskEntityConfiguration : IEntityTypeConfiguration<TaskEntity>
     {
         entity.HasKey(e => e.Id);
         entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
-        entity.Property(e => e.Description).HasMaxLength(2000);
+        entity.Property(e => e.Description).HasMaxLength(10000);
         entity.HasOne(t => t.Area)
             .WithMany()
             .HasForeignKey(e => e.AreaId)

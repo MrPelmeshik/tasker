@@ -17,7 +17,7 @@ public class FolderUpdateRequest
     /// <summary>
     /// Описание папки
     /// </summary>
-    [StringLength(1000, ErrorMessage = "Описание папки не может быть длиннее 1000 символов")]
+    [StringLength(10000, ErrorMessage = "Описание папки не может быть длиннее 10000 символов")]
     public string? Description { get; set; }
 
     /// <summary>

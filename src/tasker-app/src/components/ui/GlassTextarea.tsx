@@ -10,7 +10,7 @@ type GlassTextareaProps = Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>
   disabled?: boolean;
 };
 
-export const GlassTextarea: React.FC<GlassTextareaProps> = ({
+export const GlassTextarea = React.forwardRef<HTMLTextAreaElement, GlassTextareaProps>(({
   label,
   helperText,
   errorText,
@@ -19,7 +19,7 @@ export const GlassTextarea: React.FC<GlassTextareaProps> = ({
   disabled = false,
   className,
   ...rest
-}) => {
+}, ref) => {
   const wrapperClass = [css.wrapper, fullWidth ? css.fullWidth : '', className]
     .filter(Boolean)
     .join(' ');
@@ -30,7 +30,7 @@ export const GlassTextarea: React.FC<GlassTextareaProps> = ({
   return (
     <label className={wrapperClass}>
       {label && <span className={css.label}>{label}</span>}
-      <textarea className={textareaClass} disabled={disabled} {...rest} />
+      <textarea ref={ref} className={textareaClass} disabled={disabled} {...rest} />
       {errorText ? (
         <span className={css.errorRow}>
           <span className={css.errorText}>{errorText}</span>
@@ -40,4 +40,4 @@ export const GlassTextarea: React.FC<GlassTextareaProps> = ({
       ) : null}
     </label>
   );
-};
+});

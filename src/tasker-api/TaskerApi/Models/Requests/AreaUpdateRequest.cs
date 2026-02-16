@@ -17,7 +17,7 @@ public class AreaUpdateRequest
     /// <summary>
     /// Описание области
     /// </summary>
-    [StringLength(1000, ErrorMessage = "Описание области не может быть длиннее 1000 символов")]
+    [StringLength(10000, ErrorMessage = "Описание области не может быть длиннее 10000 символов")]
     public string? Description { get; set; }
 
     /// <summary>

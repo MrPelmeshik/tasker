@@ -1,7 +1,9 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
 import { EntityConfirmModals } from '../common/EntityConfirmModals';
-import { GlassInput, GlassTextarea, GlassSelect } from '../ui';
+import { GlassInput, GlassSelect } from '../ui';
+import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
+import { MarkdownViewer } from '../ui/MarkdownViewer/MarkdownViewer';
 import { EntityMetaBlock } from '../common/EntityMetaBlock';
 import { EntityModalHeader } from '../common/EntityModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
@@ -152,15 +154,15 @@ export const FolderModal: React.FC<FolderModalProps> = ({
               hasChange={fieldChanges.description}
               onReset={() => handleResetField('description')}
               isViewMode={isViewMode}
-              viewContent={<div className={formCss.fieldValueReadonlyMultiline}>{formData.description || '—'}</div>}
+              viewContent={<MarkdownViewer value={formData.description} />}
               editContent={
-                <GlassTextarea
+                <MarkdownEditor
                   value={formData.description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => handleFieldChange('description', e.target.value)}
+                  onChange={(val) => handleFieldChange('description', val)}
                   placeholder="Введите описание папки"
                   rows={4}
                   disabled={isLoading}
-                  fullWidth
+                  maxLength={10000}
                 />
               }
             />

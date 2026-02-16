@@ -17,7 +17,7 @@ public class AreaCreateRequest
     /// <summary>
     /// Описание области
     /// </summary>
-    [StringLength(2000, ErrorMessage = "Описание не должно превышать 2000 символов")]
+    [StringLength(10000, ErrorMessage = "Описание не должно превышать 10000 символов")]
     public string? Description { get; set; }
 
     /// <summary>

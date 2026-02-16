@@ -14,7 +14,7 @@ public class AreaEntityConfiguration : IEntityTypeConfiguration<AreaEntity>
     {
         entity.HasKey(e => e.Id);
         entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
-        entity.Property(e => e.Description).HasMaxLength(1000);
+        entity.Property(e => e.Description).HasMaxLength(10000);
         entity.Property(e => e.Color).HasMaxLength(9);
     }
 }

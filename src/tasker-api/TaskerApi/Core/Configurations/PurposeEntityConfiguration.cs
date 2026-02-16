@@ -14,6 +14,6 @@ public class PurposeEntityConfiguration : IEntityTypeConfiguration<PurposeEntity
     {
         entity.HasKey(e => e.Id);
         entity.Property(e => e.Title).IsRequired().HasMaxLength(255);
-        entity.Property(e => e.Description).HasMaxLength(1000);
+        entity.Property(e => e.Description).HasMaxLength(10000);
     }
 }

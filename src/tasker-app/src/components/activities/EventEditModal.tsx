@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { Modal } from '../common/Modal';
 import { SimpleModalHeader } from '../common/SimpleModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
-import { GlassInput, GlassTextarea, ModalSaveButton, GlassSelect } from '../ui';
+import { GlassInput, ModalSaveButton, GlassSelect } from '../ui';
+import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
 import { useToast } from '../../context/ToastContext';
 import { toDateTimeLocalValue } from '../../utils/date';
 import { EventTypeActivity } from '../../services/api';
@@ -109,13 +110,13 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
               isViewMode={false}
               viewContent={null}
               editContent={
-                <GlassTextarea
+                <MarkdownEditor
                   value={description}
-                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
+                  onChange={setDescription}
                   placeholder="Детали (опционально)"
                   disabled={isLoading}
                   rows={3}
-                  fullWidth
+                  maxLength={10000}
                 />
               }
             />
