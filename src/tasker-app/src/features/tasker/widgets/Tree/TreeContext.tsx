@@ -34,6 +34,8 @@ interface TreeContextValue {
     helpers: {
         filterAndSortTasks: (tasks: TaskSummary[]) => TaskSummary[];
         hasStatusFilter: boolean;
+        /** Текущий запрос текстового поиска по задачам  */
+        searchQuery: string;
     };
 }
 

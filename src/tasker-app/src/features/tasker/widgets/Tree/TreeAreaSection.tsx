@@ -10,8 +10,6 @@ import { FolderIcon, CheckSquareIcon, EyeIcon, LinkIcon } from '../../../../comp
 import { useCopyEntityLink, useCustomColorStyle } from '../../../../hooks';
 import { handleExpandKeyDown } from '../../../../utils/keyboard';
 import { isValidDrop } from './treeUtils';
-import { TreeTaskRow } from './TreeTaskRow';
-import { TreeFolder } from './TreeFolder';
 import { TreeAreaChildren } from './TreeAreaChildren';
 import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
 import glassWidgetStyles from '../../../../styles/glass-widget.module.css';

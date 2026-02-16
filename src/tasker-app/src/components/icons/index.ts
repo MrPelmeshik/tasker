@@ -22,4 +22,5 @@ export { UnfoldVerticalIcon } from './UnfoldVerticalIcon';
 export { FoldVerticalIcon } from './FoldVerticalIcon';
 export { ArrowUpDownIcon } from './ArrowUpDownIcon';
 export { FilterIcon } from './FilterIcon';
+export { SearchIcon } from './SearchIcon';
 export { SortIcon } from './SortIcon';

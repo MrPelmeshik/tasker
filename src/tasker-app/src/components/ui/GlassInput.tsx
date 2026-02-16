@@ -10,6 +10,7 @@ type GlassInputProps = Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>
   errorDetails?: string;
   fullWidth?: boolean;
   size?: 's' | 'm' | 'l';
+  variant?: 'default' | 'subtle' | 'transparent';
   disabled?: boolean;
 };
 
@@ -20,6 +21,7 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   errorDetails,
   fullWidth,
   size = 'm',
+  variant = 'default',
   disabled = false,
   className,
   ...rest
@@ -27,7 +29,13 @@ export const GlassInput: React.FC<GlassInputProps> = ({
   const wrapperClass = [css.wrapper, fullWidth ? css.fullWidth : '', className]
     .filter(Boolean)
     .join(' ');
-  const inputClass = [css.input, css[size], errorText ? css.error : '', disabled ? css.disabled : '']
+  const inputClass = [
+    css.input,
+    css[size],
+    variant !== 'default' ? css[variant] : '',
+    errorText ? css.error : '',
+    disabled ? css.disabled : ''
+  ]
     .filter(Boolean)
     .join(' ');
 

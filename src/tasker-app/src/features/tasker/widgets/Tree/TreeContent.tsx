@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { useTreeContext } from './TreeContext';
 import { TreeAreaSection } from './TreeAreaSection';
+import { matchesSearch, folderHasMatch } from './treeSearchUtils';
+import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
 
 /** Контент дерева: список областей с AreaSection. */
 export const TreeContent: React.FC = () => {
@@ -9,6 +11,7 @@ export const TreeContent: React.FC = () => {
     foldersByArea,
     foldersByParent,
     tasksByArea,
+    tasksByFolder,
     expandedAreas,
     loadingContent,
     activeDrag,
@@ -16,12 +19,44 @@ export const TreeContent: React.FC = () => {
     helpers
   } = useTreeContext();
 
+  const query = (helpers.searchQuery ?? '').trim();
+
+  /** При активном поиске — области, корневые папки и задачи отфильтрованы по запросу */
+  const filteredAreasWithChildren = useMemo(() => {
+    if (!query) {
+      return areas.map((area) => {
+        const folders = foldersByArea.get(area.id) ?? [];
+        const rawTasks = tasksByArea.get(area.id) ?? [];
+        return { area, folders, rawTasks };
+      });
+    }
+    return areas
+      .filter((area) => {
+        if (matchesSearch(area.title, query)) return true;
+        const rootFolders = foldersByArea.get(area.id) ?? [];
+        const rootTasks = tasksByArea.get(area.id) ?? [];
+        if (rootTasks.some((t) => matchesSearch(t.title, query))) return true;
+        return rootFolders.some((f) => folderHasMatch(f, query, foldersByParent, tasksByFolder));
+      })
+      .map((area) => {
+        const rootFolders = foldersByArea.get(area.id) ?? [];
+        const rootTasks = tasksByArea.get(area.id) ?? [];
+        const folders = query ? rootFolders.filter((f) => folderHasMatch(f, query, foldersByParent, tasksByFolder)) : rootFolders;
+        const rawTasks = query ? rootTasks.filter((t) => matchesSearch(t.title, query)) : rootTasks;
+        return { area, folders, rawTasks };
+      });
+  }, [areas, foldersByArea, foldersByParent, tasksByArea, tasksByFolder, query]);
+
+  if (query && filteredAreasWithChildren.length === 0) {
+    return (
+      <div className={glassWidgetStyles.placeholder}>Ничего не найдено</div>
+    );
+  }
+
   return (
     <>
-      {areas.map((area) => {
-        const rawTasks = tasksByArea.get(area.id) ?? [];
+      {filteredAreasWithChildren.map(({ area, folders, rawTasks }) => {
         const filteredTasks = helpers.filterAndSortTasks(rawTasks);
-        const folders = foldersByArea.get(area.id) ?? [];
         const displayCount = helpers.hasStatusFilter ? folders.length + filteredTasks.length : undefined;
         const totalCount = helpers.hasStatusFilter ? area.foldersCount + area.rootTasksCount : undefined;
 

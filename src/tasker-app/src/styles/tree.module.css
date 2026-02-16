@@ -50,6 +50,7 @@
 .treeTopActions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--tree-row-gap);
   padding-bottom: var(--space-4);
   /* Add some spacing below toolbar */
@@ -60,8 +61,41 @@
 /* Increased specificity to override GlassButton default padding */
 .treeTopActions .treeTopActionButton {
   min-width: var(--size-28);
-  min-height: var(--size-28);
+  height: var(--size-28);
   padding: var(--space-4);
+  box-sizing: border-box;
+}
+
+/** Обёртка поля поиска: иконка + инпут (высота как у treeTopActionButton) */
+.treeSearchWrap {
+  display: flex;
+  align-items: center;
+  gap: var(--tree-row-gap);
+  height: var(--size-28);
+  padding: 0 var(--space-6);
+  border-radius: var(--radius-xs);
+  border: var(--border-1) solid rgb(var(--white) / 0.08);
+  background: var(--glass-bg-1);
+  min-width: 160px;
+  flex: 1;
+  max-width: 240px;
+  box-sizing: border-box;
+}
+
+.treeSearchWrap .treeSearchInput {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  /* Ensure input fills height if needed */
+}
+
+/** Иконка в блоке поиска — цвет как у treeStatusFiltersBlockIcon */
+.treeSearchBlockIcon {
+  color: var(--glass-icon-default);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 /** Обёртка блока фильтров: иконка + кнопки статусов (высота как у treeTopActionButton) */
@@ -69,11 +103,12 @@
   display: flex;
   align-items: center;
   gap: var(--tree-row-gap);
-  min-height: var(--size-28);
+  height: var(--size-28);
   padding: 0 var(--space-6);
   border-radius: var(--radius-xs);
   border: var(--border-1) solid rgb(var(--white) / 0.08);
   background: var(--glass-bg-1);
+  box-sizing: border-box;
 }
 
 /** Иконка в блоке фильтров — цвет как у treeActionButton */

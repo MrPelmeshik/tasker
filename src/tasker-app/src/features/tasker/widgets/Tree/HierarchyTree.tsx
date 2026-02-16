@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { type EntityType } from '../../../../utils/entity-links';
 import { createPortal } from 'react-dom';
 import {
@@ -20,6 +20,7 @@ import {
     sortTasks,
     type DragPayload,
 } from './treeUtils';
+import { matchesSearch, folderHasMatch } from './treeSearchUtils';
 import { useTreeData } from './useTreeData';
 import { useTreeHandlers } from './useTreeHandlers';
 import { useTreeFilters } from './useTreeFilters';
@@ -108,8 +109,16 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
     });
 
     const [activeDrag, setActiveDrag] = useState<{ id: string; data: DragPayload } | null>(null);
+    const [searchQuery, setSearchQuery] = useState('');
 
     const { enabledStatuses, sortPreset, hasStatusFilter, toggleStatus, setSortPreset } = useTreeFilters();
+
+    /** При появлении непустого поиска раскрываем дерево, чтобы совпадения были видны */
+    useEffect(() => {
+        if (searchQuery.trim()) {
+            expandAll();
+        }
+    }, [searchQuery, expandAll]);
 
     useTreeDeepLink({
         loading,
@@ -208,6 +217,7 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
         helpers: {
             filterAndSortTasks,
             hasStatusFilter,
+            searchQuery,
         }
     }), [
         areas,
@@ -223,18 +233,30 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
         toggleFolder,
         handlers,
         filterAndSortTasks,
-        hasStatusFilter
+        hasStatusFilter,
+        searchQuery,
     ]);
 
     // Render specific root content if provided
     const renderRootContent = () => {
         if (root?.type === 'area') {
             const areaId = root.id;
-            // In scoped mode we might not have 'areas' populated as expected by TreeContent/TreeAreaSection logic if we skipped fetching all areas.
-            // But TreeAreaChildren needs `folders` and `tasks`.
-            const folders = foldersByArea.get(areaId) ?? [];
-            const rawTasks = tasksByArea.get(areaId) ?? [];
+            const query = searchQuery.trim();
+            let folders = foldersByArea.get(areaId) ?? [];
+            let rawTasks = tasksByArea.get(areaId) ?? [];
+            if (query) {
+                folders = folders.filter((f) => folderHasMatch(f, query, foldersByParent, tasksByFolder));
+                rawTasks = rawTasks.filter((t) => matchesSearch(t.title, query));
+            }
             const tasks = filterAndSortTasks(rawTasks);
+
+            if (query && folders.length === 0 && tasks.length === 0) {
+                return (
+                    <div className={css.rootContainer}>
+                        <div className={glassWidgetStyles.placeholder}>Ничего не найдено</div>
+                    </div>
+                );
+            }
 
             return (
                 <div className={css.rootContainer}>
@@ -250,9 +272,22 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
 
         if (root?.type === 'folder') {
             const folderId = root.id;
-            const subfolders = foldersByParent.get(folderId) ?? [];
-            const rawTasks = tasksByFolder.get(folderId) ?? [];
+            const query = searchQuery.trim();
+            let subfolders = foldersByParent.get(folderId) ?? [];
+            let rawTasks = tasksByFolder.get(folderId) ?? [];
+            if (query) {
+                subfolders = subfolders.filter((f) => folderHasMatch(f, query, foldersByParent, tasksByFolder));
+                rawTasks = rawTasks.filter((t) => matchesSearch(t.title, query));
+            }
             const tasks = filterAndSortTasks(rawTasks);
+
+            if (query && subfolders.length === 0 && tasks.length === 0) {
+                return (
+                    <div className={css.rootContainer}>
+                        <div className={glassWidgetStyles.placeholder}>Ничего не найдено</div>
+                    </div>
+                );
+            }
 
             return (
                 <div className={css.rootContainer}>
@@ -293,6 +328,8 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
                         toggleStatus={toggleStatus}
                         sortPreset={sortPreset}
                         setSortPreset={setSortPreset}
+                        searchQuery={searchQuery}
+                        onSearchChange={setSearchQuery}
                     />
                     {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
                     <div className={`${css.widgetContent} scrollbar-compact`}>

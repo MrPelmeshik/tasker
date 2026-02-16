@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { useTreeContext } from './TreeContext';
 import { TreeFolderRow } from './TreeFolderRow';
 import { TreeFolderChildren } from './TreeFolderChildren';
-import { TreeTaskRow } from './TreeTaskRow';
+import { matchesSearch, folderHasMatch } from './treeSearchUtils';
 import type { FolderSummary } from '../../../../types';
 import css from '../../../../styles/tree.module.css';
 import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
@@ -29,9 +29,21 @@ export const TreeFolder: React.FC<TreeFolderProps> = React.memo(({ folder, areaI
         helpers
     } = useTreeContext();
 
-    const subfolders = useMemo(() => foldersByParent.get(folder.id) ?? [], [foldersByParent, folder.id]);
-    const rawTasks = useMemo(() => tasksByFolder.get(folder.id) ?? [], [tasksByFolder, folder.id]);
-    const tasks = useMemo(() => helpers.filterAndSortTasks(rawTasks), [helpers, rawTasks]);
+    const query = (helpers.searchQuery ?? '').trim();
+    const allSubfolders = useMemo(() => foldersByParent.get(folder.id) ?? [], [foldersByParent, folder.id]);
+    const allRawTasks = useMemo(() => tasksByFolder.get(folder.id) ?? [], [tasksByFolder, folder.id]);
+
+    const subfolders = useMemo(() => {
+        if (!query) return allSubfolders;
+        return allSubfolders.filter((f) => folderHasMatch(f, query, foldersByParent, tasksByFolder));
+    }, [allSubfolders, query, foldersByParent, tasksByFolder]);
+
+    const rawTasksForSort = useMemo(() => {
+        if (!query) return allRawTasks;
+        return allRawTasks.filter((t) => matchesSearch(t.title, query));
+    }, [allRawTasks, query]);
+
+    const tasks = useMemo(() => helpers.filterAndSortTasks(rawTasksForSort), [helpers, rawTasksForSort]);
     const isExpanded = expandedFolders.has(folder.id);
     const isLoading = loadingContent.has(`folder:${folder.id}`);
 

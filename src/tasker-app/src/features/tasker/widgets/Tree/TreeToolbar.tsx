@@ -1,7 +1,8 @@
 import React from 'react';
-import { LayoutGridIcon, UnfoldVerticalIcon, FoldVerticalIcon, FilterIcon, SortIcon } from '../../../../components/icons';
+import { LayoutGridIcon, UnfoldVerticalIcon, FoldVerticalIcon, FilterIcon, SearchIcon, SortIcon } from '../../../../components/icons';
 import { Tooltip } from '../../../../components/ui/Tooltip';
 import { GlassButton } from '../../../../components/ui/GlassButton';
+import { GlassInput } from '../../../../components/ui/GlassInput';
 import { GlassSelect } from '../../../../components/ui/GlassSelect';
 import { TaskStatusBadge } from '../../../../components/ui/TaskStatusBadge';
 import type { TaskStatus } from '../../../../types/task-status';
@@ -18,6 +19,8 @@ export interface TreeToolbarProps {
   toggleStatus: (status: TaskStatus) => void;
   sortPreset: TreeSortPreset;
   setSortPreset: (preset: TreeSortPreset) => void;
+  searchQuery: string;
+  onSearchChange: (value: string) => void;
 }
 
 export const TreeToolbar: React.FC<TreeToolbarProps> = ({
@@ -29,6 +32,8 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
   toggleStatus,
   sortPreset,
   setSortPreset,
+  searchQuery,
+  onSearchChange,
 }) => (
   <div className={css.treeTopActions}>
     {onCreateArea && (
@@ -59,6 +64,21 @@ export const TreeToolbar: React.FC<TreeToolbarProps> = ({
         )}
       </GlassButton>
     </Tooltip>
+    <div className={css.treeSearchWrap}>
+      <span className={css.treeSearchBlockIcon} aria-hidden>
+        <SearchIcon className="icon-m" />
+      </span>
+      <GlassInput
+        type="search"
+        size="s"
+        variant="transparent"
+        placeholder="Поиск по задачам"
+        value={searchQuery}
+        onChange={(e) => onSearchChange(e.target.value)}
+        className={css.treeSearchInput}
+        aria-label="Поиск по задачам"
+      />
+    </div>
     <div className={css.treeStatusFiltersBlock}>
       <span className={css.treeStatusFiltersBlockIcon} aria-hidden>
         <FilterIcon className="icon-m" />
