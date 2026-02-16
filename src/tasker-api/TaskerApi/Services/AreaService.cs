@@ -112,6 +112,13 @@ public class AreaService(
             if (!await areaRoleService.CanCreateOrDeleteStructureAsync(existingArea.Id, cancellationToken))
                 throw new UnauthorizedAccessException(ErrorMessages.OnlyOwnerCanDeleteArea);
 
+            // 1. Удаляем все задачи в области
+            await taskRepository.BatchSoftDeleteByAreaIdAsync(id, cancellationToken);
+
+            // 2. Удаляем все папки в области
+            await folderRepository.BatchSoftDeleteByAreaIdAsync(id, cancellationToken);
+
+            // 3. Удаляем область
             await entityEventLogger.LogAsync(EntityType.AREA, id, EventType.DELETE, existingArea.Title, null, cancellationToken);
             await realtimeNotifier.NotifyEntityChangedAsync(EntityType.AREA, id, id, null, RealtimeEventType.Delete, cancellationToken);
             await areaRepository.DeleteAsync(id, cancellationToken);

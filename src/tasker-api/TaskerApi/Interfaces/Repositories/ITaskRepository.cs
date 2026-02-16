@@ -35,4 +35,14 @@ public interface ITaskRepository : IRepository<TaskEntity, Guid>
     /// Получить количество задач по списку папок (пакетный запрос)
     /// </summary>
     Task<IReadOnlyDictionary<Guid, int>> GetTaskCountByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Массовое мягкое удаление задач по списку папок
+    /// </summary>
+    Task BatchSoftDeleteByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Массовое мягкое удаление задач по AreaId
+    /// </summary>
+    Task BatchSoftDeleteByAreaIdAsync(Guid areaId, CancellationToken cancellationToken = default);
 }

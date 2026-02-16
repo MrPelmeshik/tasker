@@ -85,6 +85,34 @@ public class TaskRepository : BaseRepository<TaskEntity, Guid>, ITaskRepository
         var result = ids.ToDictionary(id => id, _ => 0);
         foreach (var c in counts)
             result[c.FolderId] = c.Count;
+
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task BatchSoftDeleteByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default)
+    {
+        var idSet = folderIds.ToHashSet();
+        if (idSet.Count == 0) return;
+
+        await DbSet
+            .Where(t => t.FolderId.HasValue && idSet.Contains(t.FolderId.Value) && t.IsActive)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.IsActive, false)
+                .SetProperty(t => t.DeactivatedAt, DateTime.UtcNow)
+                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow),
+                cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task BatchSoftDeleteByAreaIdAsync(Guid areaId, CancellationToken cancellationToken = default)
+    {
+        await DbSet
+            .Where(t => t.AreaId == areaId && t.IsActive)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.IsActive, false)
+                .SetProperty(t => t.DeactivatedAt, DateTime.UtcNow)
+                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow),
+                cancellationToken);
     }
 }

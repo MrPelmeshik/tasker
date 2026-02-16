@@ -31,4 +31,19 @@ public interface IFolderRepository : IRepository<FolderEntity, Guid>
     /// Получить количество подпапок по списку папок (пакетный запрос)
     /// </summary>
     Task<IReadOnlyDictionary<Guid, int>> GetSubfolderCountByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Получить идентификаторы всех подпапок (рекурсивно)
+    /// </summary>
+    Task<IEnumerable<Guid>> GetSubfolderIdsRecursiveAsync(Guid folderId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Массовое мягкое удаление папок
+    /// </summary>
+    Task BatchSoftDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Массовое мягкое удаление папок по AreaId
+    /// </summary>
+    Task BatchSoftDeleteByAreaIdAsync(Guid areaId, CancellationToken cancellationToken = default);
 }

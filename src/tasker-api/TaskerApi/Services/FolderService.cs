@@ -131,6 +131,9 @@ public class FolderService(
     /// <summary>
     /// Удалить папку
     /// </summary>
+    /// <summary>
+    /// Удалить папку (иерархически)
+    /// </summary>
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
         await ExecuteWithErrorHandling(async () =>
@@ -142,9 +145,20 @@ public class FolderService(
             if (!await areaRoleService.CanCreateOrDeleteStructureAsync(folder.AreaId, cancellationToken))
                 throw new UnauthorizedAccessException(ErrorMessages.OnlyOwnerCanDeleteFolders);
 
+            // 1. Получаем ID всех подпапок
+            var subfolderIds = await folderRepository.GetSubfolderIdsRecursiveAsync(id, cancellationToken);
+            var allFolderIds = subfolderIds.Append(id).ToList();
+
+            // 2. Удаляем задачи во всех этих папках
+            await taskRepository.BatchSoftDeleteByFolderIdsAsync(allFolderIds, cancellationToken);
+
+            // 3. Удаляем сами папки (включая текущую)
+            // Важно: Сначала уведомляем о главной удаляемой папке, пока она еще есть (хотя это soft delete, так что она есть)
             await entityEventLogger.LogAsync(EntityType.FOLDER, id, EventType.DELETE, folder.Title, null, cancellationToken);
             await realtimeNotifier.NotifyEntityChangedAsync(EntityType.FOLDER, id, folder.AreaId, folder.ParentFolderId, RealtimeEventType.Delete, cancellationToken);
-            await folderRepository.DeleteAsync(id, cancellationToken);
+
+            await folderRepository.BatchSoftDeleteAsync(allFolderIds, cancellationToken);
+
         }, nameof(DeleteAsync), new { id });
     }
 

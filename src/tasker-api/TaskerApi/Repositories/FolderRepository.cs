@@ -79,6 +79,80 @@ public class FolderRepository : BaseRepository<FolderEntity, Guid>, IFolderRepos
         var result = ids.ToDictionary(id => id, _ => 0);
         foreach (var c in counts)
             result[c.FolderId] = c.Count;
+
         return result;
+    }
+
+    /// <inheritdoc />
+    public async Task<IEnumerable<Guid>> GetSubfolderIdsRecursiveAsync(Guid folderId, CancellationToken cancellationToken = default)
+    {
+        // 1. Получаем Target Folder чтобы узнать AreaId
+        var targetFolder = await DbSet
+            .AsNoTracking()
+            .Where(f => f.Id == folderId)
+            .Select(f => new { f.AreaId })
+            .FirstOrDefaultAsync(cancellationToken);
+
+        if (targetFolder == null)
+            return Enumerable.Empty<Guid>();
+
+        // 2. Загружаем все папки области (Lightweight projection)
+        var allFoldersInArea = await DbSet
+            .AsNoTracking()
+            .Where(f => f.AreaId == targetFolder.AreaId)
+            .Select(f => new { f.Id, f.ParentFolderId })
+            .ToListAsync(cancellationToken);
+
+        // 3. Строим дерево в памяти (ParentId -> [ChildId])
+        var childrenLookup = allFoldersInArea
+            .Where(f => f.ParentFolderId.HasValue)
+            .ToLookup(f => f.ParentFolderId!.Value, f => f.Id);
+
+        // 4. BFS/DFS для сбора всех потомков
+        var result = new List<Guid>();
+        var queue = new Queue<Guid>();
+        queue.Enqueue(folderId);
+
+        while (queue.Count > 0)
+        {
+            var currentId = queue.Dequeue();
+            if (childrenLookup.Contains(currentId))
+            {
+                foreach (var childId in childrenLookup[currentId])
+                {
+                    result.Add(childId);
+                    queue.Enqueue(childId);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    /// <inheritdoc />
+    public async Task BatchSoftDeleteAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
+    {
+        var idSet = ids.ToHashSet();
+        if (idSet.Count == 0) return;
+
+        await DbSet
+            .Where(f => idSet.Contains(f.Id) && f.IsActive)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(f => f.IsActive, false)
+                .SetProperty(f => f.DeactivatedAt, DateTime.UtcNow)
+                .SetProperty(f => f.UpdatedAt, DateTime.UtcNow),
+                cancellationToken);
+    }
+
+    /// <inheritdoc />
+    public async Task BatchSoftDeleteByAreaIdAsync(Guid areaId, CancellationToken cancellationToken = default)
+    {
+        await DbSet
+            .Where(f => f.AreaId == areaId && f.IsActive)
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(f => f.IsActive, false)
+                .SetProperty(f => f.DeactivatedAt, DateTime.UtcNow)
+                .SetProperty(f => f.UpdatedAt, DateTime.UtcNow),
+                cancellationToken);
     }
 }
