@@ -62,7 +62,14 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       setTitle('');
       setDescription('');
       setEventType('ACTIVITY');
-      setEventDateTime(date ? `${date}T12:00:00` : '');
+
+      const now = new Date();
+      if (date) {
+        // Устанавливаем выбранную дату, сохраняя текущее время
+        const [y, m, d] = date.split('-').map(Number);
+        now.setFullYear(y, m - 1, d);
+      }
+      setEventDateTime(now.toISOString());
     }
   }, [isOpen, task?.id, date]);
 
