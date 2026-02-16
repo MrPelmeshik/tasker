@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { GlassWidget, GlassButton, GlassTag, Tooltip } from '../../../../components';
 import { Loader } from '../../../../components/ui/Loader';
 import { TaskCardLink } from '../../../../components/tasks';
+import { EventStatusBadge } from '../../../../components/ui/EventStatusBadge';
 import type { WidgetSizeProps } from '../../../../types';
 import { useModal, useTaskUpdate, useToast } from '../../../../context';
 import { useWeek } from '../../../../hooks';
@@ -21,7 +22,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const { showError } = useToast();
 
-  const { enabledStatuses, sortPreset, searchQuery, setSearchQuery, toggleStatus, setSortPreset } = useTaskTableFilters();
+  const { enabledStatuses, sortPreset, searchQuery, setSearchQuery, toggleStatus, setSortPreset, enabledEventTypes, toggleEventType } = useTaskTableFilters();
 
   const { loading, groupedRows, loadData, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask } = useTaskTableData({
     weekStartIso,
@@ -31,6 +32,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     enabledStatuses,
     searchQuery,
     sortPreset,
+    enabledEventTypes,
   });
 
   const handlers = useTaskTableHandlers({
@@ -51,6 +53,50 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
     [weekStartIso]
   );
 
+  const renderEventTooltip = (events: { id: string; eventType: number }[]) => {
+    const counts: Record<number, number> = {};
+    let total = 0;
+    events.forEach(e => {
+      counts[e.eventType] = (counts[e.eventType] || 0) + 1;
+      total++;
+    });
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+        {Object.entries(counts).map(([typeStr, count]) => {
+          const type = Number(typeStr);
+          return (
+            <div key={type} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <EventStatusBadge eventType={type} size="s" variant="default" showName={true} />
+              <span style={{ fontSize: '12px', opacity: 0.9, fontWeight: 500 }}>× {count}</span>
+            </div>
+          );
+        })}
+        {total > 0 && (
+          <div style={{
+            borderTop: '1px solid rgba(255,255,255,0.1)',
+            marginTop: '4px',
+            paddingTop: '6px',
+            fontSize: '11px',
+            opacity: 0.7,
+            textAlign: 'right'
+          }}>
+            Всего: {total}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const hasRelevantHistory = (types: number[]) => {
+    if (!types || types.length === 0) return false;
+    // If no filters enabled, assume we want to see indicators if any event exists (or maybe default to Note/Activity?)
+    // Actually if no filter enabled, enabledEventTypes is empty? No, initial state has defaults.
+    // If enabledEventTypes is empty, maybe show nothing?
+    if (enabledEventTypes.size === 0) return false;
+    return types.some(t => enabledEventTypes.has(t));
+  };
+
   return (
     <GlassWidget colSpan={colSpan} rowSpan={rowSpan}>
       <div className={css.container}>
@@ -67,6 +113,8 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
             setSortPreset={setSortPreset}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            enabledEventTypes={enabledEventTypes}
+            toggleEventType={toggleEventType}
           />
 
           <div className={css.spacer} />
@@ -99,8 +147,8 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                 group.rows.map((row, i) => (
                   <tr key={row.taskId}>
                     <td className={`${css.td} ${css.colCarry}`}>
-                      {row.carryWeeks > 0 ? (
-                        <Tooltip content="Есть активности в прошлых неделях" placement="bottom" size="s">
+                      {hasRelevantHistory(row.pastEventTypes) ? (
+                        <Tooltip content="Есть события в прошлых неделях (выбранных типов)" placement="bottom" size="s">
                           <GlassTag variant="subtle" size="xs">←</GlassTag>
                         </Tooltip>
                       ) : null}
@@ -112,7 +160,7 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                         onClick={(e) => handlers.handleDayCellClick(row.task, day.date, e)}
                       >
                         {day.count > 0 ? (
-                          <Tooltip content={String(day.count)} placement="bottom" size="s">
+                          <Tooltip content={day.events && day.events.length > 0 ? renderEventTooltip(day.events) : String(day.count)} placement="bottom" size="s">
                             <span className={`${css.heatCell} ${intensityClass(day.count)}`} />
                           </Tooltip>
                         ) : (
@@ -121,8 +169,8 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
                       </td>
                     ))}
                     <td className={`${css.td} ${css.colFuture}`}>
-                      {row.hasFutureActivities ? (
-                        <Tooltip content="Есть активности в будущих неделях" placement="bottom" size="s">
+                      {hasRelevantHistory(row.futureEventTypes) ? (
+                        <Tooltip content="Есть события в будущих неделях (выбранных типов)" placement="bottom" size="s">
                           <GlassTag variant="subtle" size="xs">→</GlassTag>
                         </Tooltip>
                       ) : null}

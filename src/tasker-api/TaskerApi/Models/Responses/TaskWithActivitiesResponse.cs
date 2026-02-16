@@ -49,4 +49,7 @@ public class TaskWithActivitiesResponse
     /// Активности по дням в выбранном диапазоне
     /// </summary>
     public List<TaskDayActivityResponse> Days { get; set; } = new();
+
+    public List<int> PastEventTypes { get; set; } = new();
+    public List<int> FutureEventTypes { get; set; } = new();
 }

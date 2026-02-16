@@ -237,7 +237,7 @@ public class TaskService(
             foreach (var task in tasksWithAccess)
             {
                 var taskActivities = activities.Where(a => a.TaskId == task.Id).ToList();
-                var byDate = taskActivities.GroupBy(a => a.EventDate.UtcDateTime.ToString(DateFormatYmd)).ToDictionary(g => g.Key, g => g.Count());
+                var byDate = taskActivities.GroupBy(a => a.EventDate.UtcDateTime.ToString(DateFormatYmd)).ToDictionary(g => g.Key, g => g.ToList());
                 var carryWeeks = taskActivities.Count(a => a.EventDate < weekStartOffset);
                 var hasFutureActivities = taskActivities.Any(a => a.EventDate >= weekEndOffset);
                 result.Add(new TaskWeeklyActivityResponse
@@ -246,7 +246,16 @@ public class TaskService(
                     TaskName = taskNames.GetValueOrDefault(task.Id, ""),
                     CarryWeeks = carryWeeks > 0 ? 1 : 0,
                     HasFutureActivities = hasFutureActivities,
-                    Days = weekDates.Select(d => new TaskDayActivityResponse { Date = d, Count = byDate.GetValueOrDefault(d, 0) }).ToList()
+                    Days = weekDates.Select(d => 
+                    {
+                        var events = byDate.GetValueOrDefault(d, new());
+                        return new TaskDayActivityResponse 
+                        { 
+                            Date = d, 
+                            Count = events.Count,
+                            Events = events.Select(e => new EventShortInfo { Id = e.EventId, EventType = (int)e.EventType }).ToList()
+                        };
+                    }).ToList()
                 });
             }
             return result;
@@ -279,7 +288,7 @@ public class TaskService(
                 var taskIdsWithActivities = await context.EventToTasks
                     .AsNoTracking()
                     .Where(et => et.IsActive)
-                    .Join(context.Events.Where(e => (e.EventType == EventType.ACTIVITY || e.EventType == EventType.NOTE) && e.IsActive && e.EventDate >= rangeStart && e.EventDate <= rangeEnd),
+                    .Join(context.Events.Where(e => e.IsActive && e.EventDate >= rangeStart && e.EventDate <= rangeEnd),
                         et => et.EventId, e => e.Id, (et, _) => et.TaskId)
                     .Distinct()
                     .ToListAsync(cancellationToken);
@@ -310,20 +319,40 @@ public class TaskService(
             foreach (var task in tasksWithAccess)
             {
                 var taskActivities = activities.Where(a => a.TaskId == task.Id).ToList();
-                var byDate = taskActivities.GroupBy(a => a.EventDate.UtcDateTime.ToString(DateFormatYmd)).ToDictionary(g => g.Key, g => g.Count());
+                var byDate = taskActivities.GroupBy(a => a.EventDate.UtcDateTime.ToString(DateFormatYmd)).ToDictionary(g => g.Key, g => g.ToList());
                 var carryWeeks = taskActivities.Count(a => a.EventDate < rangeStart);
                 var hasFutureActivities = taskActivities.Any(a => a.EventDate > rangeEnd);
+
                 result.Add(new TaskWithActivitiesResponse
                 {
                     TaskId = task.Id,
                     TaskName = taskNames.GetValueOrDefault(task.Id, ""),
                     Status = (int)task.Status,
                     AreaId = task.AreaId,
-                    AreaTitle = areaTitles.GetValueOrDefault(task.AreaId, null),
+                    AreaTitle = areaTitles.GetValueOrDefault(task.AreaId, string.Empty),
                     FolderId = task.FolderId,
                     CarryWeeks = carryWeeks > 0 ? 1 : 0,
                     HasFutureActivities = hasFutureActivities,
-                    Days = rangeDates.Select(d => new TaskDayActivityResponse { Date = d, Count = byDate.GetValueOrDefault(d, 0) }).ToList()
+                    PastEventTypes = taskActivities
+                        .Where(e => e.EventDate < rangeStart)
+                        .Select(e => (int)e.EventType)
+                        .Distinct()
+                        .ToList(),
+                    FutureEventTypes = taskActivities
+                        .Where(e => e.EventDate > rangeEnd)
+                        .Select(e => (int)e.EventType)
+                        .Distinct()
+                        .ToList(),
+                    Days = rangeDates.Select(d => 
+                    {
+                        var events = byDate.GetValueOrDefault(d, new());
+                        return new TaskDayActivityResponse 
+                        { 
+                            Date = d, 
+                            Count = events.Count,
+                            Events = events.Select(e => new EventShortInfo { Id = e.EventId, EventType = (int)e.EventType }).ToList()
+                        };
+                    }).ToList()
                 });
             }
 
@@ -347,16 +376,16 @@ public class TaskService(
         }, nameof(GetTasksWithActivitiesAsync), request);
     }
 
-    private async Task<List<(Guid TaskId, DateTimeOffset EventDate)>> GetTaskActivityEventsAsync(HashSet<Guid> taskIds, CancellationToken cancellationToken)
+    private async Task<List<(Guid TaskId, DateTimeOffset EventDate, EventType EventType, Guid EventId)>> GetTaskActivityEventsAsync(HashSet<Guid> taskIds, CancellationToken cancellationToken)
     {
         if (taskIds.Count == 0)
-            return new List<(Guid, DateTimeOffset)>();
+            return new List<(Guid, DateTimeOffset, EventType, Guid)>();
         var query = context.EventToTasks
             .AsNoTracking()
             .Where(et => taskIds.Contains(et.TaskId) && et.IsActive)
-            .Join(context.Events.Where(e => (e.EventType == EventType.ACTIVITY || e.EventType == EventType.NOTE) && e.IsActive),
-                et => et.EventId, e => e.Id, (et, e) => new { et.TaskId, e.EventDate });
+            .Join(context.Events.Where(e => e.IsActive),
+                et => et.EventId, e => e.Id, (et, e) => new { et.TaskId, e.EventDate, e.EventType, e.Id });
         var list = await query.ToListAsync(cancellationToken);
-        return list.Select(x => (x.TaskId, x.EventDate)).ToList();
+        return list.Select(x => (x.TaskId, x.EventDate, x.EventType, x.Id)).ToList();
     }
 }

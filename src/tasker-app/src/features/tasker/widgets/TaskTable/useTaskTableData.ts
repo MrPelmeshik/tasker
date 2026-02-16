@@ -64,6 +64,7 @@ export interface UseTaskTableDataOptions {
   enabledStatuses: Set<TaskStatus>;
   searchQuery: string;
   sortPreset: TreeSortPreset;
+  enabledEventTypes: Set<number>;
 }
 
 export function useTaskTableData({
@@ -74,6 +75,7 @@ export function useTaskTableData({
   enabledStatuses,
   searchQuery,
   sortPreset,
+  enabledEventTypes,
 }: UseTaskTableDataOptions) {
   const [loading, setLoading] = useState(false);
   const [groupedRows, setGroupedRows] = useState<GroupedTaskRows>([]);
@@ -112,24 +114,43 @@ export function useTaskTableData({
       const res = await fetchTasksWithActivities(filter, { signal });
       if (!alive) return;
 
-      const merged: TaskRow[] = res.items.map(item => ({
-        taskId: item.taskId,
-        taskName: item.taskName,
-        areaId: item.areaId,
-        areaTitle: item.areaTitle ?? item.areaId ?? '—',
-        carryWeeks: item.carryWeeks,
-        hasFutureActivities: item.hasFutureActivities,
-        days: item.days,
-        task: {
-          id: item.taskId,
+      const merged: TaskRow[] = res.items.map(item => {
+        // Filter events and recalculate counts based on enabledEventTypes
+        const days = item.days.map(d => {
+          // If events are present, filter them. If not, fallback to count/logic (compatibility)
+          // But since we updated backend, we expect events.
+          const allEvents = d.events || [];
+          const filteredEvents = allEvents.filter(e => enabledEventTypes.has(e.eventType));
+          return {
+            ...d,
+            events: filteredEvents,
+            count: filteredEvents.length
+          };
+        });
+
+        const hasFutureActivities = item.hasFutureActivities; // We might want to filter this too if backend gave us details, but backend only gives boolean. 
+        // Ideally backend should filter based on request, but we only filter days client side for now.
+        // It's acceptable limitation that "carryWeeks" or "future" might include disabled event types unless we fetch full history.
+
+        return {
+          taskId: item.taskId,
+          taskName: item.taskName,
           areaId: item.areaId,
-          folderId: item.folderId,
-          title: item.taskName,
-          status: item.status,
-        },
-      }));
-
-
+          areaTitle: item.areaTitle ?? item.areaId ?? '—',
+          carryWeeks: item.carryWeeks,
+          hasFutureActivities: hasFutureActivities,
+          pastEventTypes: item.pastEventTypes || [],
+          futureEventTypes: item.futureEventTypes || [],
+          days: days,
+          task: {
+            id: item.taskId,
+            areaId: item.areaId,
+            folderId: item.folderId,
+            title: item.taskName,
+            status: item.status,
+          },
+        };
+      });
 
       // 1. Client-side Search and Status Filter (to ensure strict status filtering for tasks with activities too)
       let filtered = merged;
@@ -156,7 +177,7 @@ export function useTaskTableData({
     } finally {
       if (alive) setLoading(false);
     }
-  }, [weekStartIso, showError, enabledStatuses, searchQuery, sortPreset]);
+  }, [weekStartIso, showError, enabledStatuses, searchQuery, sortPreset, enabledEventTypes]);
 
   const handleActivitySaveForTask = useCallback(
     (task: TaskResponse) => async (data: { title: string; description: string; eventDateTime: string; eventType: string }) => {

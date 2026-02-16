@@ -14,4 +14,18 @@ public class TaskDayActivityResponse
     /// Количество активностей за день
     /// </summary>
     public int Count { get; set; }
+
+    /// <summary>
+    /// Список событий за день (для детализации)
+    /// </summary>
+    public List<EventShortInfo> Events { get; set; } = new();
+}
+
+/// <summary>
+/// Краткая информация о событии
+/// </summary>
+public class EventShortInfo
+{
+    public Guid Id { get; set; }
+    public int EventType { get; set; }
 }

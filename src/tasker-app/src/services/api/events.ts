@@ -1,8 +1,20 @@
 import { apiFetch } from './client';
 import type { EventCreateRequest, EventCreateResponse, EventResponse, EventUpdateRequest } from '../../types/api';
 
-/** EventType.ACTIVITY = 5 */
+/** EventType constants */
+export const EventTypeCreate = 1;
+export const EventTypeUpdate = 2;
+export const EventTypeDelete = 3;
+export const EventTypeNote = 4;
 export const EventTypeActivity = 5;
+
+export const AllEventTypes = [
+  EventTypeCreate,
+  EventTypeUpdate,
+  EventTypeDelete,
+  EventTypeNote,
+  EventTypeActivity,
+];
 
 /** Создать активность для задачи */
 export async function createEventForTask(data: EventCreateRequest): Promise<EventCreateResponse> {

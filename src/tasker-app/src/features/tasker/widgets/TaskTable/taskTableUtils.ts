@@ -69,6 +69,8 @@ export type TaskRow = {
   areaTitle: string;
   carryWeeks: number;
   hasFutureActivities: boolean;
+  pastEventTypes: number[];
+  futureEventTypes: number[];
   days: TaskDayActivity[];
   task: TaskRowTask;
 };

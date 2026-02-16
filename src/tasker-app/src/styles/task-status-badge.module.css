@@ -28,7 +28,7 @@
 
 .badge:hover {
   opacity: 0.95;
-  transform: translateY(-1px);
+  /* transform: translateY(-1px); -- removed per user request */
 }
 
 .xs {
@@ -199,4 +199,71 @@
   .badge[data-status="5"] {
     background: linear-gradient(180deg, rgb(var(--color-danger) / 0.25), rgb(var(--color-danger) / 0.15));
   }
+}
+
+/* Event Types - New distinct colors */
+
+/* Create (1) -> Teal */
+.badge[data-event-type="1"] {
+  border-color: rgba(0, 255, 160, 0.4);
+  background: linear-gradient(180deg, rgba(0, 255, 160, 0.20), rgba(0, 255, 160, 0.12));
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), 0 0 0 1px rgba(0, 255, 160, 0.20);
+}
+
+.badge[data-event-type="1"]::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(0, 255, 160, 0.30), transparent 60%);
+}
+
+/* Update (2) -> Cyan */
+.badge[data-event-type="2"] {
+  border-color: var(--variant-info-border);
+  /* Info is close to cyan usually, or use custom if needed */
+  background: var(--glass-gradient-cyan, linear-gradient(180deg, rgba(0, 188, 212, 0.20), rgba(0, 188, 212, 0.12)));
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), 0 0 0 1px rgba(0, 188, 212, 0.20);
+}
+
+.badge[data-event-type="2"]::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(0, 188, 212, 0.30), transparent 60%);
+}
+
+/* Delete (3) -> Pink */
+.badge[data-event-type="3"] {
+  border-color: rgba(255, 0, 160, 0.4);
+  background: linear-gradient(180deg, rgba(255, 0, 160, 0.20), rgba(255, 0, 160, 0.12));
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), 0 0 0 1px rgba(255, 0, 160, 0.20);
+}
+
+.badge[data-event-type="3"]::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(255, 0, 160, 0.30), transparent 60%);
+}
+
+/* Note (4) -> Warning/Yellow (Keep as is, distinct enough usually) */
+.badge[data-event-type="4"] {
+  border-color: var(--variant-warning-border);
+  background: var(--glass-gradient-warning);
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), var(--variant-warning-ring);
+}
+
+.badge[data-event-type="4"]::before {
+  background: var(--glass-radial-warning);
+}
+
+/* Activity (5) -> Purple */
+.badge[data-event-type="5"] {
+  border-color: rgba(106, 90, 205, 0.4);
+  background: linear-gradient(180deg, rgba(106, 90, 205, 0.20), rgba(106, 90, 205, 0.12));
+  box-shadow: var(--shadow-elev-1), var(--shadow-inset-1), 0 0 0 1px rgba(106, 90, 205, 0.20);
+}
+
+.badge[data-event-type="5"]::before {
+  background: radial-gradient(120% 80% at -10% -20%, rgba(106, 90, 205, 0.30), transparent 60%);
+}
+
+/* Compact overrides for events */
+.compact.badge[data-event-type="1"],
+.compact.badge[data-event-type="2"],
+.compact.badge[data-event-type="3"],
+.compact.badge[data-event-type="4"],
+.compact.badge[data-event-type="5"] {
+  box-shadow: var(--shadow-elev-0), var(--shadow-inset-0), 0 0 0 1px rgb(var(--white) / 0.12);
 }

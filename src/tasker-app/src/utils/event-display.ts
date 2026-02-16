@@ -14,6 +14,19 @@ export function getEventTypeLabel(eventType: string): string {
   return labels[eventType] ?? eventType;
 }
 
+/** Преобразует строковый тип события в числовой ID */
+export function getEventTypeId(eventType: string): number {
+  const map: Record<string, number> = {
+    UNKNOWN: 0,
+    CREATE: 1,
+    UPDATE: 2,
+    DELETE: 3,
+    NOTE: 4,
+    ACTIVITY: 5,
+  };
+  return map[eventType] ?? 0;
+}
+
 /** Названия полей для отображения диффа */
 const FIELD_LABELS: Record<string, string> = {
   Title: 'Заголовок',

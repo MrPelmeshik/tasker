@@ -59,6 +59,7 @@ export interface TaskWeeklyActivity {
 export interface TaskDayActivity {
   date: string;
   count: number;
+  events?: { id: string; eventType: number }[];
 }
 
 /** Запрос на получение задач с активностями (отражение backend) */
@@ -82,6 +83,8 @@ export interface TaskWithActivitiesResponse {
   carryWeeks: number;
   hasFutureActivities: boolean;
   days: TaskDayActivity[];
+  pastEventTypes: number[];
+  futureEventTypes: number[];
 }
 
 /** Ответ со списком задач и метаданными пагинации */

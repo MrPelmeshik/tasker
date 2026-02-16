@@ -6,7 +6,10 @@ import { UserMention } from '../common/UserMention';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { MarkdownViewer } from '../ui/MarkdownViewer/MarkdownViewer';
 import { formatDateTime } from '../../utils/date';
-import { getEventTypeLabel, formatMessageForDisplay, EVENT_TYPES } from '../../utils/event-display';
+import { getEventTypeLabel, formatMessageForDisplay, EVENT_TYPES, getEventTypeId } from '../../utils/event-display';
+import { EventStatusBadge } from '../ui/EventStatusBadge';
+import { EyeIcon, EditIcon, DeleteIcon } from '../icons';
+import { GlassButton } from '../ui/GlassButton';
 import activityChainCss from '../../styles/activity-chain.module.css';
 
 export interface ActivityListProps {
@@ -75,6 +78,8 @@ export const ActivityList: React.FC<ActivityListProps> = ({
     return EVENT_TYPES.filter((t) => set.has(t));
   }, [events]);
 
+  const displayHeaderTitle = headerTitle === 'История активностей' ? 'События' : headerTitle;
+
   return (
     <div className={activityChainCss.chain}>
       <button
@@ -83,7 +88,7 @@ export const ActivityList: React.FC<ActivityListProps> = ({
         onClick={toggleExpanded}
         aria-expanded={expanded}
       >
-        <span className={activityChainCss.headerTitle}>{headerTitle}</span>
+        <span className={activityChainCss.headerTitle}>{displayHeaderTitle}</span>
         <span className={activityChainCss.chevron} data-expanded={expanded}>
           ▼
         </span>
@@ -97,22 +102,25 @@ export const ActivityList: React.FC<ActivityListProps> = ({
             <div className={activityChainCss.messageError}>{error}</div>
           )}
           {!loading && !error && showTypeFilter && typesPresentInData.length > 0 && (
-            <div className={activityChainCss.typeFilter}>
+            <div className={activityChainCss.typeFilterPanel}>
+              <span className={activityChainCss.filterIcon} aria-hidden>
+                <EyeIcon className="icon-m" />
+              </span>
               {typesPresentInData.map((eventType) => {
                 const isHidden = hiddenTypes.has(eventType);
+                const typeId = getEventTypeId(eventType);
                 return (
-                  <Tooltip key={eventType} content={isHidden ? 'Показать' : 'Скрыть'} placement="bottom" size="s">
-                    <button
-                      type="button"
-                      className={`${activityChainCss.typeChip} ${isHidden ? activityChainCss.typeChipHidden : ''}`}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleTypeVisibility(eventType);
-                      }}
-                    >
-                      {getEventTypeLabel(eventType)}
-                    </button>
-                  </Tooltip>
+                  <button
+                    key={eventType}
+                    type="button"
+                    className={`${activityChainCss.typeFilterBtn} ${isHidden ? activityChainCss.typeFilterBtnDisabled : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      toggleTypeVisibility(eventType);
+                    }}
+                  >
+                    <EventStatusBadge eventType={typeId} size="xs" variant="compact" />
+                  </button>
                 );
               })}
             </div>
@@ -130,9 +138,7 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                     <span className={activityChainCss.eventTitle}>
                       {ev.title || '—'}
                     </span>
-                    <span className={activityChainCss.eventType}>
-                      {getEventTypeLabel(ev.eventType)}
-                    </span>
+                    <EventStatusBadge eventType={getEventTypeId(ev.eventType)} size="xs" variant="default" showName={true} />
                     <span className={activityChainCss.eventDate}>
                       {formatDateTime(ev.eventDate)}
                       {ev.ownerUserName && (
@@ -151,8 +157,9 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                       <span className={activityChainCss.eventActions}>
                         {onEdit && (
                           <Tooltip content="Изменить" placement="bottom" size="s">
-                            <button
-                              type="button"
+                            <GlassButton
+                              variant="subtle"
+                              size="xs"
                               className={activityChainCss.eventActionBtn}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -160,14 +167,15 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                               }}
                               aria-label="Изменить"
                             >
-                              ✎
-                            </button>
+                              <EditIcon className="icon-s" />
+                            </GlassButton>
                           </Tooltip>
                         )}
                         {onDelete && (
                           <Tooltip content="Удалить" placement="bottom" size="s">
-                            <button
-                              type="button"
+                            <GlassButton
+                              variant="subtle"
+                              size="xs"
                               className={activityChainCss.eventActionBtn}
                               onClick={(e) => {
                                 e.stopPropagation();
@@ -175,8 +183,8 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                               }}
                               aria-label="Удалить"
                             >
-                              ✕
-                            </button>
+                              <DeleteIcon className="icon-s" />
+                            </GlassButton>
                           </Tooltip>
                         )}
                       </span>
@@ -219,7 +227,8 @@ export const ActivityList: React.FC<ActivityListProps> = ({
             </ul>
           )}
         </div>
-      )}
+      )
+      }
       <ConfirmModal
         isOpen={deleteConfirmEvent != null}
         onClose={() => !deleteInProgress && setDeleteConfirmEvent(null)}
@@ -240,6 +249,6 @@ export const ActivityList: React.FC<ActivityListProps> = ({
         variant="danger"
         confirmDisabled={deleteInProgress}
       />
-    </div>
+    </div >
   );
 };

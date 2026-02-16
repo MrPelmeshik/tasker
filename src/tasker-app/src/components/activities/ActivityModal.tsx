@@ -101,7 +101,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     <Modal isOpen={isOpen} onClose={onClose} size="medium">
       <div className={css.modalContent}>
         <SimpleModalHeader
-          title="Добавить активность"
+          title="Создание события"
           onClose={onClose}
           closeDisabled={isLoading}
         >

@@ -29,4 +29,14 @@ public class TaskWeeklyActivityResponse
     /// Активности по дням недели
     /// </summary>
     public List<TaskDayActivityResponse> Days { get; set; } = new();
+
+    /// <summary>
+    /// Типы событий в прошлых неделях (для индикаторов)
+    /// </summary>
+    public List<int> PastEventTypes { get; set; } = new();
+
+    /// <summary>
+    /// Типы событий в будущих неделях (для индикаторов)
+    /// </summary>
+    public List<int> FutureEventTypes { get; set; } = new();
 }

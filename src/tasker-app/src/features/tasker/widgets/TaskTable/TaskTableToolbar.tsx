@@ -1,9 +1,12 @@
 import React from 'react';
-import { FilterIcon, SearchIcon, SortIcon } from '../../../../components/icons';
+import { FilterIcon, SearchIcon, SortIcon, EyeIcon } from '../../../../components/icons';
 import { GlassInput } from '../../../../components/ui/GlassInput';
 import { GlassSelect } from '../../../../components/ui/GlassSelect';
 import { TaskStatusBadge } from '../../../../components/ui/TaskStatusBadge';
+import { EventStatusBadge, getEventTypeText } from '../../../../components/ui/EventStatusBadge';
+import { Tooltip } from '../../../../components/ui/Tooltip';
 import { getTaskStatusOptions, type TaskStatus } from '../../../../types/task-status';
+import { AllEventTypes } from '../../../../services/api/events';
 import { TREE_SORT_PRESET_OPTIONS, type TreeSortPreset } from '../Tree/treeUtils';
 import css from '../../../../styles/task-table.module.css';
 
@@ -14,6 +17,8 @@ export interface TaskTableToolbarProps {
     setSortPreset: (preset: TreeSortPreset) => void;
     searchQuery: string;
     onSearchChange: (value: string) => void;
+    enabledEventTypes: Set<number>;
+    toggleEventType: (type: number) => void;
 }
 
 export const TaskTableToolbar: React.FC<TaskTableToolbarProps> = ({
@@ -23,6 +28,8 @@ export const TaskTableToolbar: React.FC<TaskTableToolbarProps> = ({
     setSortPreset,
     searchQuery,
     onSearchChange,
+    enabledEventTypes,
+    toggleEventType,
 }) => (
     <>
         <div className={css.searchWrap}>
@@ -55,6 +62,25 @@ export const TaskTableToolbar: React.FC<TaskTableToolbarProps> = ({
                         aria-pressed={enabledStatuses.has(opt.value as TaskStatus)}
                     >
                         <TaskStatusBadge status={opt.value as TaskStatus} size="xs" variant="compact" />
+                    </button>
+                ))}
+            </div>
+        </div>
+        <div className={css.statusFiltersBlock} style={{ marginLeft: 0 }}>
+            <span className={css.statusFiltersBlockIcon} aria-hidden>
+                <EyeIcon className="icon-m" />
+            </span>
+            <div className={css.statusFilters}>
+                {AllEventTypes.map((type) => (
+                    <button
+                        key={type}
+                        type="button"
+                        className={`${css.statusFilterBtn} ${enabledEventTypes.has(type) ? '' : css.statusFilterBtnDisabled}`}
+                        onClick={() => toggleEventType(type)}
+                        aria-label={getEventTypeText(type)}
+                        aria-pressed={enabledEventTypes.has(type)}
+                    >
+                        <EventStatusBadge eventType={type} size="xs" variant="compact" />
                     </button>
                 ))}
             </div>
