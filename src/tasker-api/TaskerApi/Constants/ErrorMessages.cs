@@ -76,6 +76,7 @@ public static class ErrorMessages
     // ——— События/активности ———
     public const string EventDateRequired = "Дата события/активности обязательна";
     public const string EventDateFormatInvalid = "Некорректный формат даты события";
+    public const string CannotModifySystemEvent = "Нельзя изменять или удалять системные события";
 
     // ——— Аутентификация ———
     public const string InvalidLoginOrPassword = "Неверный логин или пароль";

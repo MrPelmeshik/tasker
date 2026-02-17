@@ -10,6 +10,8 @@ using TaskerApi.Models.Responses;
 using TaskerApi.Constants;
 using TaskerApi.Services.Mapping;
 
+using TaskerApi.Models.Common;
+
 namespace TaskerApi.Services.Base;
 
 /// <summary>
@@ -169,6 +171,9 @@ public abstract class BaseEventEntityService(
         if (!await areaRoleService.CanAddActivityAsync(areaId, cancellationToken))
             throw new UnauthorizedAccessException(ErrorMessages.NoPermissionAddActivity);
 
+        if (ev.EventType != EventType.NOTE && ev.EventType != EventType.ACTIVITY)
+            throw new InvalidOperationException(ErrorMessages.CannotModifySystemEvent);
+
         var now = DateTimeOffset.UtcNow;
 
         if (request.Title != null)
@@ -208,6 +213,9 @@ public abstract class BaseEventEntityService(
         var areaId = await GetAreaIdForEventAsync(eventId, cancellationToken);
         if (!await areaRoleService.CanAddActivityAsync(areaId, cancellationToken))
             throw new UnauthorizedAccessException(ErrorMessages.NoPermissionAddActivity);
+
+        if (ev.EventType != EventType.NOTE && ev.EventType != EventType.ACTIVITY)
+            throw new InvalidOperationException(ErrorMessages.CannotModifySystemEvent);
 
         await eventRepository.DeleteAsync(eventId, cancellationToken, hardDelete: false);
     }

@@ -153,7 +153,8 @@ export const ActivityList: React.FC<ActivityListProps> = ({
                         </>
                       )}
                     </span>
-                    {(onEdit || onDelete) && (
+                    {/* Разрешаем редактирование/удаление только для пользовательских типов событий */}
+                    {(ev.eventType === 'ACTIVITY' || ev.eventType === 'NOTE') && (onEdit || onDelete) && (
                       <span className={activityChainCss.eventActions}>
                         {onEdit && (
                           <Tooltip content="Изменить" placement="bottom" size="s">
