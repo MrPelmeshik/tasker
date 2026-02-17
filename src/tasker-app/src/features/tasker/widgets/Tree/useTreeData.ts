@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import {
   fetchAreaShortCard,
   fetchRootFoldersByArea,
@@ -10,6 +10,7 @@ import { findFolderById } from './treeUtils';
 import { findParentForEntity } from './treeUpdateUtils';
 import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
 import type { NotifyTaskUpdatePayload } from '../../../../context/TaskUpdateContext';
+import { useWidgetState } from '../../../../hooks/useWidgetState';
 
 export interface UseTreeDataOptions {
   showError: (error: unknown) => void;
@@ -49,8 +50,32 @@ export function useTreeData({ showError, subscribeToTaskUpdates, root }: UseTree
   const [foldersByParent, setFoldersByParent] = useState<Map<string, FolderSummary[]>>(new Map());
   const [tasksByArea, setTasksByArea] = useState<Map<string, TaskSummary[]>>(new Map());
   const [tasksByFolder, setTasksByFolder] = useState<Map<string, TaskSummary[]>>(new Map());
-  const [expandedAreas, setExpandedAreas] = useState<Set<string>>(new Set());
-  const [expandedFolders, setExpandedFolders] = useState<Set<string>>(new Set());
+
+  // Persistence for expanded state
+  const [expandedAreasList, setExpandedAreasList] = useWidgetState<string[]>('tree', 'expanded-areas', []);
+  const [expandedFoldersList, setExpandedFoldersList] = useWidgetState<string[]>('tree', 'expanded-folders', []);
+
+  // Sync state to classic Set structure for usage
+  const expandedAreas = useMemo(() => new Set(expandedAreasList), [expandedAreasList]);
+  const expandedFolders = useMemo(() => new Set(expandedFoldersList), [expandedFoldersList]);
+
+  // Compatibility setters
+  const setExpandedAreas = useCallback((value: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+    setExpandedAreasList(prevList => {
+      const prevSet = new Set(prevList);
+      const nextSet = value instanceof Function ? value(prevSet) : value;
+      return Array.from(nextSet);
+    });
+  }, [setExpandedAreasList]);
+
+  const setExpandedFolders = useCallback((value: Set<string> | ((prev: Set<string>) => Set<string>)) => {
+    setExpandedFoldersList(prevList => {
+      const prevSet = new Set(prevList);
+      const nextSet = value instanceof Function ? value(prevSet) : value;
+      return Array.from(nextSet);
+    });
+  }, [setExpandedFoldersList]);
+
   const [loading, setLoading] = useState(true);
   const [loadingContent, setLoadingContent] = useState<Set<string>>(new Set());
 

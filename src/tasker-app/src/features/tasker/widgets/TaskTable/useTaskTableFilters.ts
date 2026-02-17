@@ -1,112 +1,69 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { getTaskStatusOptions } from '../../../../types/task-status';
 import { TREE_SORT_PRESET_OPTIONS, type TreeSortPreset } from '../Tree/treeUtils';
 import type { TaskStatus } from '../../../../types/task-status';
 import { AllEventTypes } from '../../../../services/api/events';
+import { useWidgetState } from '../../../../hooks/useWidgetState';
 
-const TASK_TABLE_FILTERS_STORAGE_KEY = 'tasker-task-table-filters';
-
-interface FilterState {
-    enabledStatuses: Set<TaskStatus>;
+interface StoredTaskTableFilterState {
+    enabledStatuses: TaskStatus[];
     sortPreset: TreeSortPreset;
-    enabledEventTypes: Set<number>;
+    enabledEventTypes: number[];
 }
 
-function loadTaskTableFilters(): FilterState {
-    const validStatuses = new Set(getTaskStatusOptions().map((o) => o.value as TaskStatus));
-    const validPresets = new Set(TREE_SORT_PRESET_OPTIONS.map((o) => o.value));
-    const validEventTypes = new Set(AllEventTypes);
-
-    try {
-        const raw = localStorage.getItem(TASK_TABLE_FILTERS_STORAGE_KEY);
-        if (raw) {
-            const parsed = JSON.parse(raw) as { enabledStatuses?: number[]; sortPreset?: string; enabledEventTypes?: number[] };
-
-            const enabledStatuses =
-                Array.isArray(parsed.enabledStatuses) && parsed.enabledStatuses.length > 0
-                    ? new Set((parsed.enabledStatuses as TaskStatus[]).filter((v) => validStatuses.has(v)))
-                    : new Set(validStatuses);
-
-            const sortPreset =
-                typeof parsed.sortPreset === 'string' && validPresets.has(parsed.sortPreset as TreeSortPreset)
-                    ? (parsed.sortPreset as TreeSortPreset)
-                    : 'statusAscAlpha';
-
-            const enabledEventTypes =
-                Array.isArray(parsed.enabledEventTypes) && parsed.enabledEventTypes.length > 0
-                    ? new Set(parsed.enabledEventTypes.filter((v) => validEventTypes.has(v)))
-                    : new Set([4, 5]); // Default to Note & Activity if not set
-
-            return {
-                enabledStatuses: enabledStatuses.size > 0 ? enabledStatuses : new Set(validStatuses),
-                sortPreset,
-                enabledEventTypes: enabledEventTypes.size > 0 ? enabledEventTypes : new Set([4, 5]),
-            };
-        }
-    } catch {
-        /* ignore */
-    }
-    return {
-        enabledStatuses: new Set(validStatuses),
-        sortPreset: 'statusAscAlpha',
-        enabledEventTypes: new Set([4, 5]), // Default: Note, Activity
-    };
-}
-
-function saveTaskTableFilters(state: FilterState): void {
-    try {
-        localStorage.setItem(
-            TASK_TABLE_FILTERS_STORAGE_KEY,
-            JSON.stringify({
-                enabledStatuses: Array.from(state.enabledStatuses),
-                sortPreset: state.sortPreset,
-                enabledEventTypes: Array.from(state.enabledEventTypes),
-            })
-        );
-    } catch {
-        /* ignore */
-    }
-}
+const DEFAULT_STATUSES = getTaskStatusOptions().map((o) => o.value as TaskStatus);
+const DEFAULT_PRESET: TreeSortPreset = 'statusAscAlpha';
+const DEFAULT_EVENT_TYPES = [4, 5]; // Activity, Note
 
 /**
  * Хук для управления фильтрами и сортировкой таблицы задач (состояние + persistence в localStorage).
  */
 export function useTaskTableFilters() {
-    const [filterState, setFilterState] = useState<FilterState>(loadTaskTableFilters);
-    const [searchQuery, setSearchQuery] = useState('');
-    const { enabledStatuses, sortPreset, enabledEventTypes } = filterState;
+    const [storedState, setStoredState] = useWidgetState<StoredTaskTableFilterState>('task-table', 'filters', {
+        enabledStatuses: DEFAULT_STATUSES,
+        sortPreset: DEFAULT_PRESET,
+        enabledEventTypes: DEFAULT_EVENT_TYPES,
+    });
 
-    useEffect(() => {
-        saveTaskTableFilters(filterState);
-    }, [filterState]);
+    const [searchQuery, setSearchQuery] = useState('');
+
+    const enabledStatuses = useMemo(() => new Set(storedState.enabledStatuses), [storedState.enabledStatuses]);
+    const sortPreset = storedState.sortPreset;
+    const enabledEventTypes = useMemo(() => new Set(storedState.enabledEventTypes), [storedState.enabledEventTypes]);
 
     const toggleStatus = useCallback((status: TaskStatus) => {
-        setFilterState((prev) => {
-            const next = new Set(prev.enabledStatuses);
-            if (next.has(status)) {
-                next.delete(status);
+        setStoredState((prev) => {
+            const currentSet = new Set(prev.enabledStatuses);
+            if (currentSet.has(status)) {
+                currentSet.delete(status);
             } else {
-                next.add(status);
+                currentSet.add(status);
             }
-            return { ...prev, enabledStatuses: next };
+            return {
+                ...prev,
+                enabledStatuses: Array.from(currentSet),
+            };
         });
-    }, []);
+    }, [setStoredState]);
 
     const toggleEventType = useCallback((type: number) => {
-        setFilterState((prev) => {
-            const next = new Set(prev.enabledEventTypes);
-            if (next.has(type)) {
-                next.delete(type);
+        setStoredState((prev) => {
+            const currentSet = new Set(prev.enabledEventTypes);
+            if (currentSet.has(type)) {
+                currentSet.delete(type);
             } else {
-                next.add(type);
+                currentSet.add(type);
             }
-            return { ...prev, enabledEventTypes: next };
+            return {
+                ...prev,
+                enabledEventTypes: Array.from(currentSet),
+            };
         });
-    }, []);
+    }, [setStoredState]);
 
     const setSortPreset = useCallback((preset: TreeSortPreset) => {
-        setFilterState((prev) => ({ ...prev, sortPreset: preset }));
-    }, []);
+        setStoredState((prev) => ({ ...prev, sortPreset: preset }));
+    }, [setStoredState]);
 
     return {
         enabledStatuses,
@@ -119,3 +76,4 @@ export function useTaskTableFilters() {
         setSortPreset,
     };
 }
+
