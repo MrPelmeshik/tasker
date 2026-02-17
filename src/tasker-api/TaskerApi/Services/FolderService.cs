@@ -116,9 +116,37 @@ public class FolderService(
             }
 
             var oldSnapshot = EventMessageHelper.ShallowClone(folder);
+            var areaChanged = folder.AreaId != request.AreaId;
+            List<Guid> subfolderIds = new();
+            
+            if (areaChanged)
+            {
+                if (!await areaRoleService.CanCreateOrDeleteStructureAsync(request.AreaId, cancellationToken))
+                    throw new UnauthorizedAccessException(ErrorMessages.NoPermissionCreateFolders);
+                
+                // Сначала получаем ID всех подпапок, пока родитель еще в старой области
+                // (иначе поиск будет искать детей в новой области, где их еще нет)
+                var ids = await folderRepository.GetSubfolderIdsRecursiveAsync(id, cancellationToken);
+                subfolderIds = ids.ToList();
+            }
+
             request.UpdateFolderEntity(folder);
 
             await folderRepository.UpdateAsync(folder, cancellationToken);
+            
+            // Если область изменилась, рекурсивно обновляем AreaId у всех подпапок и задач
+            if (areaChanged)
+            {
+                // 1. Обновляем AreaId у подпапок
+                if (subfolderIds.Any())
+                {
+                    await folderRepository.BatchUpdateAreaIdAsync(subfolderIds, request.AreaId, cancellationToken);
+                }
+                
+                // 2. Обновляем AreaId у задач во всех этих папках (включая текущую)
+                var allFolderIds = subfolderIds.Append(id).ToList();
+                await taskRepository.BatchUpdateAreaIdByFolderIdsAsync(allFolderIds, request.AreaId, cancellationToken);
+            }
 
             var messageJson = EventMessageHelper.BuildUpdateMessageJson(oldSnapshot, folder);
             await entityEventLogger.LogAsync(EntityType.FOLDER, id, EventType.UPDATE, folder.Title, messageJson, cancellationToken);

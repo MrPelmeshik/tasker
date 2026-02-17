@@ -86,7 +86,7 @@ export function useTreeDragEnd(params: UseTreeDragEndParams) {
           await updateFolder(folder.id, {
             title: folder.title,
             description: folder.description ?? '',
-            areaId: folder.areaId,
+            areaId: target.areaId,
             parentFolderId: target.parentFolderId,
           });
           const rootFolders = await fetchRootFoldersByArea(folder.areaId);
@@ -100,6 +100,12 @@ export function useTreeDragEnd(params: UseTreeDragEndParams) {
             setFoldersByParent((prev) => new Map(prev).set(target.parentFolderId!, children));
           }
           setAreas((prev) => prev.map((a) => (a.id === folder.areaId ? { ...a, foldersCount: rootFolders.length } : a)));
+
+          if (folder.areaId !== target.areaId && !target.parentFolderId) {
+            const targetRootFolders = await fetchRootFoldersByArea(target.areaId);
+            setFoldersByArea((prev) => new Map(prev).set(target.areaId, targetRootFolders));
+            setAreas((prev) => prev.map((a) => (a.id === target.areaId ? { ...a, foldersCount: targetRootFolders.length } : a)));
+          }
           addSuccess('Папка перемещена');
         } else if (payload.type === 'task' && payload.task) {
           const task = payload.task;

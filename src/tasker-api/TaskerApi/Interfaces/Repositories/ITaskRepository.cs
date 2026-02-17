@@ -42,6 +42,11 @@ public interface ITaskRepository : IRepository<TaskEntity, Guid>
     Task BatchSoftDeleteByFolderIdsAsync(IEnumerable<Guid> folderIds, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Массовое обновление AreaId задач по списку папок
+    /// </summary>
+    Task BatchUpdateAreaIdByFolderIdsAsync(IEnumerable<Guid> folderIds, Guid newAreaId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Массовое мягкое удаление задач по AreaId
     /// </summary>
     Task BatchSoftDeleteByAreaIdAsync(Guid areaId, CancellationToken cancellationToken = default);

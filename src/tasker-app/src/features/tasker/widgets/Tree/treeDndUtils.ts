@@ -39,8 +39,7 @@ export function isValidDrop(
 
   if (type === 'folder' && folder) {
     if (overId.startsWith('area-root-') || overId.startsWith('area-empty-')) {
-      const areaId = overId.replace('area-root-', '').replace('area-empty-', '');
-      return folder.areaId === areaId;
+      return true;
     }
     if (overId.startsWith('folder-') || overId.startsWith('folder-empty-')) {
       const targetFolderId = overId.replace('folder-empty-', '').replace('folder-', '');
@@ -48,7 +47,7 @@ export function isValidDrop(
       const descendants = getDescendantFolderIds(folder.id, foldersByParent);
       if (descendants.has(targetFolderId)) return false;
       const targetFolder = findFolderById(targetFolderId, foldersByArea, foldersByParent);
-      return targetFolder ? folder.areaId === targetFolder.areaId : false;
+      return !!targetFolder;
     }
   }
   return false;

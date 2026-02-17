@@ -33,6 +33,8 @@ public static class ErrorMessages
     public const string NoPermissionAddMembers = "Нет прав на назначение участников";
     public const string NoPermissionRemoveMembers = "Нет прав на удаление участников";
 
+    public const string NoPermissionCreateFolders = "Нет прав на создание папок";
+
     public const string OnlyOwnerCanCreateFolders = "Только владелец области может создавать папки";
     public const string OnlyOwnerCanDeleteFolders = "Только владелец области может удалять папки";
     public const string OnlyOwnerCanDeleteTasks = "Только владелец области может удалять задачи";

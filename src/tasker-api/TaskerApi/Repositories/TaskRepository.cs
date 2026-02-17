@@ -105,6 +105,20 @@ public class TaskRepository : BaseRepository<TaskEntity, Guid>, ITaskRepository
     }
 
     /// <inheritdoc />
+    public async Task BatchUpdateAreaIdByFolderIdsAsync(IEnumerable<Guid> folderIds, Guid newAreaId, CancellationToken cancellationToken = default)
+    {
+        var idSet = folderIds.ToHashSet();
+        if (idSet.Count == 0) return;
+
+        await DbSet
+            .Where(t => t.FolderId.HasValue && idSet.Contains(t.FolderId.Value))
+            .ExecuteUpdateAsync(s => s
+                .SetProperty(t => t.AreaId, newAreaId)
+                .SetProperty(t => t.UpdatedAt, DateTime.UtcNow),
+                cancellationToken);
+    }
+
+    /// <inheritdoc />
     public async Task BatchSoftDeleteByAreaIdAsync(Guid areaId, CancellationToken cancellationToken = default)
     {
         await DbSet
