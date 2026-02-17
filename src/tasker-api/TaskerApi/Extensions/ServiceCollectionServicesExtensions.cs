@@ -82,6 +82,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IAreaMemberService, AreaMemberService>();
         services.AddScoped<IHubAreaAccessService, HubAreaAccessService>();
         services.AddSingleton<IConnectionAreaTracker, ConnectionAreaTracker>();
+        services.AddScoped<IAttachmentService, AttachmentService>();
         services.AddScoped<IRealtimeNotifier, RealtimeNotifier>();
         services.AddHostedService<RefreshTokenCleanupHostedService>();
 

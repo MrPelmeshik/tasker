@@ -21,6 +21,8 @@ import type { ModalSize } from '../../../types/modal-size';
 import { AreaModalMembersSection } from './AreaModalMembersSection';
 import { useAreaMembers } from './useAreaMembers';
 import { HierarchyTree } from '../../../features/tasker/widgets/Tree/HierarchyTree';
+import { AttachmentList } from '../../attachments/AttachmentList';
+import { EntityType, attachmentApi } from '../../../services/api/attachment.api';
 
 /** Данные формы области: название, описание, цвет (в форме — selectedColor, при сохранении уходит как color). */
 type AreaFormData = { title: string; description: string; selectedColor?: string; id?: string };
@@ -151,12 +153,50 @@ export const AreaModal: React.FC<AreaModalProps> = ({
     isLoading,
   } = modal;
 
+  // Transactional attachments
+  const [uploadedAttachmentIds, setUploadedAttachmentIds] = useState<Set<string>>(new Set());
+
+  const handleUploadSuccess = (id: string) => {
+    setUploadedAttachmentIds(prev => new Set(prev).add(id));
+  };
+
+  const cleanupAttachments = async () => {
+    if (uploadedAttachmentIds.size > 0) {
+      for (const id of Array.from(uploadedAttachmentIds)) {
+        try {
+          await attachmentApi.delete(id);
+        } catch (e) {
+          console.error('Error cleaning up attachment', id, e);
+        }
+      }
+      setUploadedAttachmentIds(new Set());
+    }
+  };
+
+  // Overwrite handleClose to include cleanup
+  const safeHandleClose = async () => {
+    if (hasUnsavedChanges || uploadedAttachmentIds.size > 0) {
+      if (window.confirm('Есть несохраненные изменения. Закрыть без сохранения?')) {
+        await cleanupAttachments();
+        handleClose();
+      }
+    } else {
+      handleClose();
+    }
+  };
+
+  // Overwrite handleSave to clear tracking
+  const safeHandleSave = async () => {
+    await handleSave();
+    setUploadedAttachmentIds(new Set());
+  };
+
   const isViewMode = Boolean(area && !isEditMode);
 
   return (
     <Modal
       isOpen={isOpen}
-      onClose={handleClose}
+      onClose={safeHandleClose}
       hasUnsavedChanges={hasUnsavedChanges}
       size={size}
     >
@@ -172,10 +212,10 @@ export const AreaModal: React.FC<AreaModalProps> = ({
           onEdit={() => setIsEditMode(true)}
           onDelete={handleDeleteRequest}
           onCancel={handleReturnToView}
-          onSave={handleSave}
-          onClose={handleClose}
+          onSave={safeHandleSave}
+          onClose={safeHandleClose}
           isLoading={isLoading}
-          saveDisabled={!hasUnsavedChanges || !formData.title.trim() || (!area && !(formData as AreaFormData).selectedColor)}
+          saveDisabled={(!hasUnsavedChanges && uploadedAttachmentIds.size === 0) || !formData.title.trim() || (!area && !(formData as AreaFormData).selectedColor)}
         />
 
         <div className={css.modalBody}>
@@ -296,6 +336,17 @@ export const AreaModal: React.FC<AreaModalProps> = ({
                 }}>
                   <HierarchyTree root={{ type: 'area', id: area.id }} />
                 </div>
+              </div>
+            )}
+
+            {area && (
+              <div style={{ marginBottom: 16 }}>
+                <AttachmentList
+                  entityId={area.id}
+                  entityType={EntityType.AREA}
+                  isEditMode={isEditMode}
+                  onUploadSuccess={handleUploadSuccess}
+                />
               </div>
             )}
 

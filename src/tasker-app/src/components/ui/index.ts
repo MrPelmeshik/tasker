@@ -2,6 +2,7 @@ export { ColorPicker, type ColorPickerProps } from './ColorPicker';
 export { Dropdown } from './Dropdown';
 export { GlassButton } from './GlassButton';
 export { GlassInput } from './GlassInput';
+export { GlassIconButton } from './GlassIconButton';
 export { GlassTextarea } from './GlassTextarea';
 export { GlassSelect, type GlassSelectOption } from './GlassSelect';
 export { GlassTag } from './GlassTag';

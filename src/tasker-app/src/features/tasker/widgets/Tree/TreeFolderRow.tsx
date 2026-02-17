@@ -71,10 +71,10 @@ export const TreeFolderRow: React.FC<TreeFolderRowProps> = React.memo(({
           style={customColorStyle}
           {...attributes}
           {...listeners}
-          onClick={hasChildren ? onToggle : undefined}
-          role={hasChildren ? 'button' : undefined}
-          tabIndex={hasChildren ? 0 : undefined}
-          onKeyDown={hasChildren ? (e) => handleExpandKeyDown(e, onToggle) : undefined}
+          onClick={onToggle}
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => handleExpandKeyDown(e, onToggle)}
         >
           <div className={css.treeRowActions} onClick={(e) => e.stopPropagation()}>
             <Tooltip content="Просмотреть" placement="top">

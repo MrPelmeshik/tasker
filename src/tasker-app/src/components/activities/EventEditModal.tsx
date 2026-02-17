@@ -8,6 +8,8 @@ import { useToast } from '../../context/ToastContext';
 import { toDateTimeLocalValue } from '../../utils/date';
 import { EventTypeActivity } from '../../services/api';
 import type { EventResponse, EventUpdateRequest } from '../../types/api';
+import { AttachmentList } from '../attachments/AttachmentList';
+import { EntityType, attachmentApi } from '../../services/api/attachment.api';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 
@@ -44,13 +46,47 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
       setEventDateTime(
         event.eventDate
           ? (typeof event.eventDate === 'string'
-              ? new Date(event.eventDate)
-              : event.eventDate
-            ).toISOString()
+            ? new Date(event.eventDate)
+            : event.eventDate
+          ).toISOString()
           : ''
       );
     }
   }, [isOpen, event]);
+
+  // Transactional attachments
+  const [uploadedAttachmentIds, setUploadedAttachmentIds] = useState<Set<string>>(new Set());
+
+  const handleUploadSuccess = (id: string) => {
+    setUploadedAttachmentIds(prev => new Set(prev).add(id));
+  };
+
+  const cleanupAttachments = async () => {
+    if (uploadedAttachmentIds.size > 0) {
+      for (const id of Array.from(uploadedAttachmentIds)) {
+        try {
+          await attachmentApi.delete(id);
+        } catch (e) {
+          console.error('Error cleaning up attachment', id, e);
+        }
+      }
+      setUploadedAttachmentIds(new Set());
+    }
+  };
+
+  const safeOnClose = async () => {
+    // Check if we have uploaded attachments but not saved
+    if (uploadedAttachmentIds.size > 0) {
+      if (window.confirm('Сохранить изменения?')) {
+        await handleSave();
+      } else {
+        await cleanupAttachments();
+        onClose(); // Just close
+      }
+    } else {
+      onClose();
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim()) return;
@@ -65,6 +101,7 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
         eventType: eventTypeNum,
         eventDate: eventDateIso,
       });
+      setUploadedAttachmentIds(new Set());
       onClose();
     } catch (error) {
       console.error('Ошибка сохранения:', error);
@@ -77,16 +114,16 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
   if (!event) return null;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="medium">
+    <Modal isOpen={isOpen} onClose={safeOnClose} size="medium">
       <div className={css.modalContent}>
         <SimpleModalHeader
           title="Редактировать активность"
-          onClose={onClose}
+          onClose={safeOnClose}
           closeDisabled={isLoading}
         >
           <ModalSaveButton
             onClick={handleSave}
-            disabled={!title.trim() || isLoading}
+            disabled={!title.trim() || isLoading || (uploadedAttachmentIds.size === 0 && !title /* Assuming needs title */)}
           />
         </SimpleModalHeader>
         <div className={css.modalBody}>
@@ -157,6 +194,16 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
                 />
               }
             />
+            {event && (
+              <div style={{ marginTop: 16 }}>
+                <AttachmentList
+                  entityId={event.id}
+                  entityType={EntityType.EVENT}
+                  isEditMode={true}
+                  onUploadSuccess={handleUploadSuccess}
+                />
+              </div>
+            )}
           </div>
         </div>
       </div>

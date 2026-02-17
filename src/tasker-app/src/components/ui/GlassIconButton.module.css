@@ -1,0 +1,99 @@
+.button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--glass-border-1);
+    border-radius: var(--radius-s);
+    /* Rounded rectangle */
+    background: var(--glass-bg-subtle-1);
+    /* Subtle glass background */
+    backdrop-filter: var(--glass-backdrop-blur-6);
+    -webkit-backdrop-filter: var(--glass-backdrop-blur-6);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    padding: 0;
+    color: var(--glass-icon-default);
+    /* Standard icon color */
+    box-shadow: var(--shadow-elev-0);
+}
+
+.button:hover:not(:disabled) {
+    background: var(--glass-bg-subtle-2);
+    /* Slightly lighter background on hover */
+    border-color: var(--glass-border-2);
+    /* color: var(--glass-icon-hover); REMOVED: User requested no icon color change on hover */
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-elev-1);
+}
+
+.button:active:not(:disabled) {
+    transform: translateY(0);
+    background: var(--glass-bg-active);
+    box-shadow: var(--shadow-elev-0);
+}
+
+.button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    filter: grayscale(1);
+}
+
+/* Sizes */
+.s {
+    width: 28px;
+    /* Slightly larger for touch/click target */
+    height: 28px;
+    border-radius: var(--radius-s);
+}
+
+.m {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-s);
+}
+
+.l {
+    width: 40px;
+    height: 40px;
+    border-radius: var(--radius-m);
+}
+
+/* Variants */
+.subtle {
+    /* Default styles */
+}
+
+/* Primary and Danger variants - keeping background/border but ensuring icon color is consistent if requested, 
+   though usually danger/primary imply distinct colors. 
+   User said "same color as other icons". 
+   If "other icons" are white/gray, then colored icons might be what they dislike.
+   I will make variants stick to the glass theme but maybe less aggressive on the icon color itself if that's the issue.
+   However, typically 'delete' is red. I will keep variants but ensure they don't shift icon color aggressively on hover.
+*/
+
+.primary {
+    background: var(--glass-gradient-primary);
+    border-color: var(--variant-primary-border);
+    color: var(--glass-icon-default);
+    /* Reset to standard color if user wants uniformity, or keep white/accent? User said "same color as other icons". Let's try standard color for consistency within the glass block. */
+}
+
+.primary:hover:not(:disabled) {
+    background: var(--glass-gradient-primary-hover);
+    border-color: rgba(59, 130, 246, 0.5);
+    /* color: white; REMOVED */
+}
+
+.danger {
+    background: var(--glass-gradient-danger);
+    border-color: var(--variant-danger-border);
+    color: var(--glass-icon-default);
+    /* Reset to standard color */
+}
+
+.danger:hover:not(:disabled) {
+    background: var(--glass-gradient-danger-hover);
+    border-color: rgba(239, 68, 68, 0.5);
+    /* color: white; REMOVED */
+    box-shadow: var(--glass-accent-shadow);
+}

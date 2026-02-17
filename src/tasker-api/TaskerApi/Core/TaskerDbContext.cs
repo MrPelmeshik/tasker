@@ -29,6 +29,7 @@ public class TaskerDbContext : DbContext
     public DbSet<EventToPurposeEntity> EventToPurposes { get; set; }
     public DbSet<EventToSubtaskEntity> EventToSubtasks { get; set; }
     public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
+    public DbSet<AttachmentEntity> Attachments { get; set; }
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)

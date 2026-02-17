@@ -20,6 +20,8 @@ import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, EventResponse 
 import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 import { formatDateTime } from '../../utils/date';
+import { AttachmentList } from '../attachments/AttachmentList';
+import { EntityType, attachmentApi } from '../../services/api/attachment.api';
 
 export interface TaskModalProps {
   isOpen: boolean;
@@ -54,19 +56,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     getInitialData: () =>
       task
         ? {
-            title: task.title,
-            description: task.description || '',
-            areaId: task.areaId,
-            folderId: task.folderId ?? null,
-            status: task.status || TaskStatus.New,
-          }
+          title: task.title,
+          description: task.description || '',
+          areaId: task.areaId,
+          folderId: task.folderId ?? null,
+          status: task.status || TaskStatus.New,
+        }
         : {
-            title: '',
-            description: '',
-            areaId: defaultAreaId || (areas?.[0]?.id ?? ''),
-            folderId: defaultFolderId ?? null,
-            status: TaskStatus.New,
-          },
+          title: '',
+          description: '',
+          areaId: defaultAreaId || (areas?.[0]?.id ?? ''),
+          folderId: defaultFolderId ?? null,
+          status: TaskStatus.New,
+        },
     deps: [task, defaultFolderId, defaultAreaId, areas],
     onClose,
     onSave: async (data) => {
@@ -108,6 +110,44 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     isLoading,
   } = modal;
 
+  // Transactional attachments
+  const [uploadedAttachmentIds, setUploadedAttachmentIds] = useState<Set<string>>(new Set());
+
+  const handleUploadSuccess = (id: string) => {
+    setUploadedAttachmentIds(prev => new Set(prev).add(id));
+  };
+
+  const cleanupAttachments = async () => {
+    if (uploadedAttachmentIds.size > 0) {
+      for (const id of Array.from(uploadedAttachmentIds)) {
+        try {
+          await attachmentApi.delete(id);
+        } catch (e) {
+          console.error('Error cleaning up attachment', id, e);
+        }
+      }
+      setUploadedAttachmentIds(new Set());
+    }
+  };
+
+  // Overwrite handleClose to include cleanup
+  const safeHandleClose = async () => {
+    if (hasUnsavedChanges || uploadedAttachmentIds.size > 0) { // Check uploaded attachments too
+      if (window.confirm('Есть несохраненные изменения. Закрыть без сохранения?')) {
+        await cleanupAttachments();
+        handleClose(); // This calls modal.onClose which is passed from props
+      }
+    } else {
+      handleClose();
+    }
+  };
+
+  // Overwrite handleSave to clear tracking
+  const safeHandleSave = async () => {
+    await handleSave();
+    setUploadedAttachmentIds(new Set());
+  };
+
   const { options: folderOptions, loading: loadingFolders } = useFolderOptions(formData.areaId, {
     enabled: isOpen,
   });
@@ -131,7 +171,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const folderValue = formData.folderId === '' || formData.folderId == null ? '' : formData.folderId;
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} hasUnsavedChanges={hasUnsavedChanges} size={size}>
+    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size}>
       <div className={css.modalContent}>
         <EntityModalHeader
           title={isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи'}
@@ -143,10 +183,10 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           onEdit={() => setIsEditMode(true)}
           onDelete={handleDeleteRequest}
           onCancel={handleReturnToView}
-          onSave={handleSave}
-          onClose={handleClose}
+          onSave={safeHandleSave}
+          onClose={safeHandleClose}
           isLoading={isLoading}
-          saveDisabled={!hasChanges || !formData.title.trim() || !formData.areaId}
+          saveDisabled={(!hasChanges && uploadedAttachmentIds.size === 0) || !formData.title.trim() || !formData.areaId}
         />
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
@@ -261,6 +301,17 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                 updatedAt={task.updatedAt}
                 formatDateTime={formatDateTime}
               />
+            )}
+
+            {task && (
+              <div style={{ marginBottom: 16 }}>
+                <AttachmentList
+                  entityId={task.id}
+                  entityType={EntityType.TASK}
+                  isEditMode={isEditMode}
+                  onUploadSuccess={handleUploadSuccess}
+                />
+              </div>
             )}
 
             {task && (

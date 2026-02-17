@@ -72,7 +72,7 @@ export async function ensureAccessTokenFresh(): Promise<boolean> {
 export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promise<T> {
 	let headers = new Headers(init?.headers || {});
 	headers.set('Accept', 'application/json');
-	if (!headers.has('Content-Type') && init?.body) {
+	if (!headers.has('Content-Type') && init?.body && !(init.body instanceof FormData)) {
 		headers.set('Content-Type', 'application/json');
 	}
 	let token = getStoredTokens()?.accessToken || null;

@@ -24,3 +24,5 @@ export { ArrowUpDownIcon } from './ArrowUpDownIcon';
 export { FilterIcon } from './FilterIcon';
 export { SearchIcon } from './SearchIcon';
 export { SortIcon } from './SortIcon';
+export { AttachmentIcon } from './AttachmentIcon';
+export { DownloadIcon } from './DownloadIcon';

@@ -14,6 +14,8 @@ import { formatDateTime } from '../../utils/date';
 import type { FolderResponse, FolderCreateRequest, FolderUpdateRequest } from '../../types/api';
 import type { ModalSize } from '../../types/modal-size';
 import { HierarchyTree } from '../../features/tasker/widgets/Tree/HierarchyTree';
+import { AttachmentList } from '../attachments/AttachmentList';
+import { EntityType, attachmentApi } from '../../services/api/attachment.api';
 
 export interface FolderModalProps {
   isOpen: boolean;
@@ -68,6 +70,44 @@ export const FolderModal: React.FC<FolderModalProps> = ({
 
   const { formData, fieldChanges, handleFieldChange, handleResetField, hasChanges, hasUnsavedChanges, showConfirmModal, showReturnToViewConfirm, showDeleteConfirm, handleClose, handleConfirmSave, handleConfirmDiscard, handleConfirmCancel, handleReturnToView, handleConfirmReturnToView, handleDeleteRequest, handleConfirmDelete, dismissReturnToViewConfirm, dismissDeleteConfirm, handleSave, isEditMode, setIsEditMode, isLoading } = modal;
 
+  // Transactional attachments
+  const [uploadedAttachmentIds, setUploadedAttachmentIds] = React.useState<Set<string>>(new Set());
+
+  const handleUploadSuccess = (id: string) => {
+    setUploadedAttachmentIds(prev => new Set(prev).add(id));
+  };
+
+  const cleanupAttachments = async () => {
+    if (uploadedAttachmentIds.size > 0) {
+      for (const id of Array.from(uploadedAttachmentIds)) {
+        try {
+          await attachmentApi.delete(id);
+        } catch (e) {
+          console.error('Error cleaning up attachment', id, e);
+        }
+      }
+      setUploadedAttachmentIds(new Set());
+    }
+  };
+
+  // Overwrite handleClose to include cleanup
+  const safeHandleClose = async () => {
+    if (hasUnsavedChanges || uploadedAttachmentIds.size > 0) {
+      if (window.confirm('Есть несохраненные изменения. Закрыть без сохранения?')) {
+        await cleanupAttachments();
+        handleClose();
+      }
+    } else {
+      handleClose();
+    }
+  };
+
+  // Overwrite handleSave to clear tracking
+  const safeHandleSave = async () => {
+    await handleSave();
+    setUploadedAttachmentIds(new Set());
+  };
+
   const { options: parentFolderOptions, loading: loadingParents } = useFolderOptions(formData.areaId, {
     enabled: isOpen,
     excludeFolderId: folder?.id,
@@ -76,7 +116,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
   const isViewMode = Boolean(folder && !isEditMode);
 
   return (
-    <Modal isOpen={isOpen} onClose={handleClose} hasUnsavedChanges={hasUnsavedChanges} size={size}>
+    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size}>
       <div className={css.modalContent}>
         <EntityModalHeader
           title={isViewMode ? 'Папка' : folder ? 'Редактирование папки' : 'Создание папки'}
@@ -88,10 +128,10 @@ export const FolderModal: React.FC<FolderModalProps> = ({
           onEdit={() => setIsEditMode(true)}
           onDelete={handleDeleteRequest}
           onCancel={handleReturnToView}
-          onSave={handleSave}
-          onClose={handleClose}
+          onSave={safeHandleSave}
+          onClose={safeHandleClose}
           isLoading={isLoading}
-          saveDisabled={!hasChanges || !formData.title.trim() || !formData.areaId}
+          saveDisabled={(!hasChanges && uploadedAttachmentIds.size === 0) || !formData.title.trim() || !formData.areaId}
         />
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
@@ -173,6 +213,16 @@ export const FolderModal: React.FC<FolderModalProps> = ({
                 />
               }
             />
+            {folder && (
+              <div style={{ marginBottom: 16 }}>
+                <AttachmentList
+                  entityId={folder.id}
+                  entityType={EntityType.FOLDER}
+                  isEditMode={isEditMode}
+                  onUploadSuccess={handleUploadSuccess}
+                />
+              </div>
+            )}
             {folder && (
               <EntityMetaBlock
                 ownerUserName={folder.ownerUserName}

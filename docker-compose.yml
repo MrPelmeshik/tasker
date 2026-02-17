@@ -15,9 +15,9 @@ services:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${DB_PG_PWD_POSTGRES:?DB_PG_PWD_POSTGRES is required}
       - POSTGRES_DB=default
-    command: ['postgres', '-c', 'wal_level=logical']
+    command: [ 'postgres', '-c', 'wal_level=logical' ]
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
       timeout: 5s
       interval: 5s
       retries: 3
@@ -30,7 +30,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["--host", "postgres", "--port", "5432", "--user", "postgres", "--password-env", "DB_PG_PWD_POSTGRES", "--scripts", "/app/scripts"]
+    command: [ "--host", "postgres", "--port", "5432", "--user", "postgres", "--password-env", "DB_PG_PWD_POSTGRES", "--scripts", "/app/scripts" ]
     environment:
       - DB_PG_PWD_POSTGRES=${DB_PG_PWD_POSTGRES:?DB_PG_PWD_POSTGRES is required}
     volumes:
@@ -51,6 +51,8 @@ services:
         condition: service_healthy
     ports:
       - "8080:8080"
+    volumes:
+      - tasker_attachments:/app/Attachments
     environment:
       - ConnectionStrings__DefaultConnection=Host=postgres;Port=5432;Database=tasker_db;Username=postgres;Password=${DB_PG_PWD_POSTGRES:?DB_PG_PWD_POSTGRES is required}
       - Jwt__SecretKey=${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
@@ -63,11 +65,11 @@ services:
       - ASPNETCORE_URLS=${ASPNETCORE_URLS:?ASPNETCORE_URLS is required}
       - Cors__AllowedOriginsCsv=${CORS_ALLOWED_ORIGINS:?CORS_ALLOWED_ORIGINS is required}
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8080/api/health"]
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/api/health" ]
       timeout: 5s
       interval: 5s
       retries: 3
-    
+
   tasker-app:
     container_name: tasker-app
     hostname: tasker-app
@@ -81,7 +83,7 @@ services:
         condition: service_healthy
     ports:
       - "3001:3000"
-      
 
 volumes:
-    db-pg-data:
+  db-pg-data:
+  tasker_attachments:
