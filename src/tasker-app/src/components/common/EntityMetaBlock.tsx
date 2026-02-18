@@ -1,6 +1,7 @@
 import React from 'react';
 import formCss from '../../styles/modal-form.module.css';
 import { UserMention } from './UserMention';
+import { MetaInfoItem } from './MetaInfoItem';
 
 export interface EntityMetaBlockProps {
   ownerUserName?: string;
@@ -17,24 +18,26 @@ export const EntityMetaBlock: React.FC<EntityMetaBlockProps> = ({
 }) => (
   <div className={formCss.inlineMeta}>
     {ownerUserName && (
-      <div className={formCss.inlineMetaItem}>
-        <span>Владелец</span>
-        <UserMention userName={ownerUserName} className={formCss.inlineMetaValue}>
-          {ownerUserName}
-        </UserMention>
-      </div>
+      <MetaInfoItem
+        label="Владелец"
+        value={
+          <UserMention userName={ownerUserName}>
+            {ownerUserName}
+          </UserMention>
+        }
+      />
     )}
     {createdAt != null && (
-      <div className={formCss.inlineMetaItem}>
-        <span>Создано</span>
-        <span className={formCss.inlineMetaValue}>{formatDateTime(createdAt)}</span>
-      </div>
+      <MetaInfoItem
+        label="Создано"
+        value={formatDateTime(createdAt)}
+      />
     )}
     {updatedAt != null && (
-      <div className={formCss.inlineMetaItem}>
-        <span>Обновлено</span>
-        <span className={formCss.inlineMetaValue}>{formatDateTime(updatedAt)}</span>
-      </div>
+      <MetaInfoItem
+        label="Обновлено"
+        value={formatDateTime(updatedAt)}
+      />
     )}
   </div>
 );

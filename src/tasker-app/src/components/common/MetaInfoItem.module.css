@@ -1,0 +1,24 @@
+.container {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    font-size: var(--font-11);
+    color: rgb(var(--white) / 0.4);
+    line-height: var(--line-height-normal);
+}
+
+.label {
+    color: rgb(var(--white) / 0.4);
+    white-space: nowrap;
+}
+
+.value {
+    color: var(--color-text);
+    font-weight: var(--font-weight-medium);
+    /* Matching inlineMetaValue if desired, or keep normal */
+}
+
+/* Variant for purely secondary info (like in attachments) where value should also be dim */
+.variantSecondary .value {
+    color: rgb(var(--white) / 0.4);
+}

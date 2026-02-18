@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
 import { SimpleModalHeader } from '../common/SimpleModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
@@ -8,8 +8,8 @@ import { useToast } from '../../context/ToastContext';
 import { toDateTimeLocalValue } from '../../utils/date';
 import { EventTypeActivity } from '../../services/api';
 import type { EventResponse, EventUpdateRequest } from '../../types/api';
-import { AttachmentList } from '../attachments/AttachmentList';
-import { EntityType, attachmentApi } from '../../services/api/attachment.api';
+import { AttachmentList, AttachmentListHandle } from '../attachments/AttachmentList';
+import { EntityType } from '../../services/api/attachment.api';
 import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 
@@ -36,6 +36,7 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
   const [eventType, setEventType] = useState('ACTIVITY');
   const [eventDateTime, setEventDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const attachmentRef = useRef<AttachmentListHandle>(null);
 
   useEffect(() => {
     if (isOpen && event) {
@@ -54,34 +55,13 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
     }
   }, [isOpen, event]);
 
-  // Transactional attachments
-  const [uploadedAttachmentIds, setUploadedAttachmentIds] = useState<Set<string>>(new Set());
-
-  const handleUploadSuccess = (id: string) => {
-    setUploadedAttachmentIds(prev => new Set(prev).add(id));
-  };
-
-  const cleanupAttachments = async () => {
-    if (uploadedAttachmentIds.size > 0) {
-      for (const id of Array.from(uploadedAttachmentIds)) {
-        try {
-          await attachmentApi.delete(id);
-        } catch (e) {
-          console.error('Error cleaning up attachment', id, e);
-        }
-      }
-      setUploadedAttachmentIds(new Set());
-    }
-  };
-
   const safeOnClose = async () => {
     // Check if we have uploaded attachments but not saved
-    if (uploadedAttachmentIds.size > 0) {
+    if (attachmentRef.current?.hasPendingChanges) {
       if (window.confirm('Сохранить изменения?')) {
         await handleSave();
       } else {
-        await cleanupAttachments();
-        onClose(); // Just close
+        onClose();
       }
     } else {
       onClose();
@@ -95,13 +75,19 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
     try {
       const eventDateIso = eventDateTime.trim() ? new Date(eventDateTime).toISOString() : undefined;
       const eventTypeNum = eventType === 'NOTE' ? 4 : EventTypeActivity; // NOTE=4, ACTIVITY=5
+
       await onSave({
         title: title.trim(),
         description: description.trim() || undefined,
         eventType: eventTypeNum,
         eventDate: eventDateIso,
       });
-      setUploadedAttachmentIds(new Set());
+
+      // Save attachments
+      if (attachmentRef.current) {
+        await attachmentRef.current.saveChanges();
+      }
+
       onClose();
     } catch (error) {
       console.error('Ошибка сохранения:', error);
@@ -123,7 +109,7 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
         >
           <ModalSaveButton
             onClick={handleSave}
-            disabled={!title.trim() || isLoading || (uploadedAttachmentIds.size === 0 && !title /* Assuming needs title */)}
+            disabled={!title.trim() || isLoading}
           />
         </SimpleModalHeader>
         <div className={css.modalBody}>
@@ -197,10 +183,10 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
             {event && (
               <div style={{ marginTop: 16 }}>
                 <AttachmentList
+                  ref={attachmentRef}
                   entityId={event.id}
                   entityType={EntityType.EVENT}
                   isEditMode={true}
-                  onUploadSuccess={handleUploadSuccess}
                 />
               </div>
             )}

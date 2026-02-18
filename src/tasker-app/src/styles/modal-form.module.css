@@ -156,7 +156,7 @@
   gap: var(--space-12);
 }
 
-.fieldRow > * {
+.fieldRow>* {
   flex: 1;
   min-width: 0;
 }
@@ -171,21 +171,10 @@
   flex-wrap: wrap;
   gap: var(--space-4) var(--space-16);
   padding: var(--space-8) 0;
-  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
+  border-top: var(--border-1) solid var(--surface-subtle-border);
 }
 
-.inlineMetaItem {
-  display: flex;
-  align-items: center;
-  gap: var(--space-4);
-  font-size: var(--font-11);
-  color: rgb(var(--white) / 0.4);
-}
-
-.inlineMetaValue {
-  color: var(--color-text);
-  font-size: var(--font-11);
-}
+/* Removed unused inlineMetaItem and inlineMetaValue as they are replaced by MetaInfoItem */
 
 @media (max-width: 768px) {
   .fieldRow {

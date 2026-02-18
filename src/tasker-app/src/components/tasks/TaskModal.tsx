@@ -20,8 +20,8 @@ import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, EventResponse 
 import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 import { formatDateTime } from '../../utils/date';
-import { AttachmentList } from '../attachments/AttachmentList';
-import { EntityType, attachmentApi } from '../../services/api/attachment.api';
+import { AttachmentList, AttachmentListHandle } from '../attachments/AttachmentList';
+import { EntityType } from '../../services/api/attachment.api';
 
 export interface TaskModalProps {
   isOpen: boolean;
@@ -49,6 +49,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   areas,
 }) => {
   const { copyLink: handleCopyLink } = useCopyEntityLink('task', task?.id);
+  const attachmentRef = useRef<AttachmentListHandle>(null);
+  const [hasAttachmentChanges, setHasAttachmentChanges] = useState(false);
 
   const modal = useEntityFormModal<TaskCreateRequest>({
     isOpen,
@@ -77,11 +79,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         folderId: (data.folderId === '' || data.folderId == null) ? null : data.folderId,
       };
       await onSave(payload, task?.id);
+
+      // Save attachments after successful task save
+      if (attachmentRef.current) {
+        await attachmentRef.current.saveChanges();
+      }
+      setHasAttachmentChanges(false);
     },
     onDelete,
     validate: (data) => Boolean(data.title?.trim() && data.areaId),
-    getExtraUnsavedChanges: ({ originalData: orig }) =>
-      Boolean(areas?.length && orig.areaId && defaultAreaId && orig.areaId !== defaultAreaId),
+    getExtraUnsavedChanges: ({ originalData: orig }) => {
+      const hasAreaChange = Boolean(areas?.length && orig.areaId && defaultAreaId && orig.areaId !== defaultAreaId);
+      return hasAreaChange || hasAttachmentChanges;
+    }
   });
 
   const {
@@ -110,42 +120,14 @@ export const TaskModal: React.FC<TaskModalProps> = ({
     isLoading,
   } = modal;
 
-  // Transactional attachments
-  const [uploadedAttachmentIds, setUploadedAttachmentIds] = useState<Set<string>>(new Set());
-
-  const handleUploadSuccess = (id: string) => {
-    setUploadedAttachmentIds(prev => new Set(prev).add(id));
+  // Overwrite handleClose to include cleanup if needed (though new strategy handles it via unsaved check)
+  const safeHandleClose = () => {
+    handleClose();
   };
 
-  const cleanupAttachments = async () => {
-    if (uploadedAttachmentIds.size > 0) {
-      for (const id of Array.from(uploadedAttachmentIds)) {
-        try {
-          await attachmentApi.delete(id);
-        } catch (e) {
-          console.error('Error cleaning up attachment', id, e);
-        }
-      }
-      setUploadedAttachmentIds(new Set());
-    }
-  };
-
-  // Overwrite handleClose to include cleanup
-  const safeHandleClose = async () => {
-    if (hasUnsavedChanges || uploadedAttachmentIds.size > 0) { // Check uploaded attachments too
-      if (window.confirm('Есть несохраненные изменения. Закрыть без сохранения?')) {
-        await cleanupAttachments();
-        handleClose(); // This calls modal.onClose which is passed from props
-      }
-    } else {
-      handleClose();
-    }
-  };
-
-  // Overwrite handleSave to clear tracking
+  // Safe handle save simply calls the modal save, which now includes attachment saving
   const safeHandleSave = async () => {
     await handleSave();
-    setUploadedAttachmentIds(new Set());
   };
 
   const { options: folderOptions, loading: loadingFolders } = useFolderOptions(formData.areaId, {
@@ -186,7 +168,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           onSave={safeHandleSave}
           onClose={safeHandleClose}
           isLoading={isLoading}
-          saveDisabled={(!hasChanges && uploadedAttachmentIds.size === 0) || !formData.title.trim() || !formData.areaId}
+          saveDisabled={(!hasChanges && !hasAttachmentChanges) || !formData.title.trim() || !formData.areaId}
         />
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
@@ -306,10 +288,11 @@ export const TaskModal: React.FC<TaskModalProps> = ({
             {task && (
               <div style={{ marginBottom: 16 }}>
                 <AttachmentList
+                  ref={attachmentRef}
                   entityId={task.id}
                   entityType={EntityType.TASK}
                   isEditMode={isEditMode}
-                  onUploadSuccess={handleUploadSuccess}
+                  onPendingChange={setHasAttachmentChanges}
                 />
               </div>
             )}

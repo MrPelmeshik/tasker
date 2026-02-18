@@ -1,13 +1,16 @@
-import React, { useRef, useState } from 'react';
+import React, { useRef, useState, useImperativeHandle, forwardRef } from 'react';
 import { useAttachments } from '../../hooks/useAttachments';
 import { EntityType } from '../../services/api/attachment.api';
 import { AttachmentIcon } from '../icons/AttachmentIcon';
-import { DeleteIcon } from '../icons/DeleteIcon';
-import { DownloadIcon } from '../icons/DownloadIcon';
-import { GlassIconButton } from '../ui/GlassIconButton';
 import { Loader } from '../ui/Loader';
+import { AttachmentItem } from './AttachmentItem';
 import css from './AttachmentList.module.css';
 import { useToast } from '../../context/ToastContext';
+
+export interface AttachmentListHandle {
+    saveChanges: () => Promise<void>;
+    hasPendingChanges: boolean;
+}
 
 interface AttachmentListProps {
     entityId: string;
@@ -15,19 +18,26 @@ interface AttachmentListProps {
     isEditMode?: boolean;
     onUploadSuccess?: (attachmentId: string) => void;
     onDeleteSuccess?: (attachmentId: string) => void;
+    onPendingChange?: (hasPending: boolean) => void; // New callback
 }
 
-export const AttachmentList: React.FC<AttachmentListProps> = ({
+export const AttachmentList = forwardRef<AttachmentListHandle, AttachmentListProps>(({
     entityId,
     entityType,
     isEditMode = true,
     onUploadSuccess,
-    onDeleteSuccess
-}) => {
-    const { attachments, loading, error, upload, deleteAttachment, download } = useAttachments(entityId, entityType);
+    onDeleteSuccess,
+    onPendingChange
+}, ref) => {
+    const { attachments, loading, error, upload, deleteAttachment, undoDelete, download, saveChanges, hasPendingChanges } = useAttachments(entityId, entityType, onPendingChange);
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { showError } = useToast();
     const [isUploading, setIsUploading] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+        saveChanges,
+        hasPendingChanges
+    }));
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         if (e.target.files && e.target.files.length > 0) {
@@ -39,10 +49,8 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
                     showError('Файл слишком большой. Максимальный размер 20МБ.');
                     return;
                 }
-                const newAttachment = await upload(file);
-                if (newAttachment && onUploadSuccess) {
-                    onUploadSuccess(newAttachment.id);
-                }
+                await upload(file);
+                // No immediate callback call because it's pending
             } catch (e) {
                 // Error handled in hook
             } finally {
@@ -55,12 +63,7 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
     };
 
     const handleDelete = async (id: string) => {
-        if (window.confirm('Удалить файл?')) {
-            await deleteAttachment(id);
-            if (onDeleteSuccess) {
-                onDeleteSuccess(id);
-            }
-        }
+        await deleteAttachment(id);
     };
 
     // Show loader only on initial fetch (when no attachments and loading, but not uploading)
@@ -80,7 +83,10 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
     return (
         <div className={css.container}>
             <div className={css.header}>
-                <div className={css.title}>Вложения</div>
+                <div className={css.title}>
+                    Вложения
+                    {hasPendingChanges && <span className={css.unsavedIndicator} title="Есть несохраненные изменения">*</span>}
+                </div>
                 {isEditMode && (
                     <button
                         className={css.uploadButton}
@@ -102,34 +108,17 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
             {error && <div className={css.error}>{error}</div>}
 
             <div className={css.list}>
-                {attachments.map((attachment) => (
-                    <div key={attachment.id} className={css.item}>
-                        <div className={css.fileInfo}>
-                            <div className={css.fileName} title={attachment.originalFileName}>
-                                {attachment.originalFileName}
-                            </div>
-                            <div className={css.fileSize}>
-                                {(attachment.size / 1024).toFixed(1)} KB
-                            </div>
-                        </div>
-                        <div className={css.actions}>
-                            <GlassIconButton
-                                icon={<DownloadIcon size={16} />}
-                                onClick={() => download(attachment.id, attachment.originalFileName)}
-                                title="Скачать"
-                                size="s"
-                            />
-                            {isEditMode && (
-                                <GlassIconButton
-                                    icon={<DeleteIcon size={16} />}
-                                    onClick={() => handleDelete(attachment.id)}
-                                    title="Удалить"
-                                    size="s"
-                                    variant="danger"
-                                />
-                            )}
-                        </div>
-                    </div>
+                {attachments.map((attachment: any) => (
+                    <AttachmentItem
+                        key={attachment.id}
+                        attachment={attachment}
+                        isEditMode={!!isEditMode}
+                        isPending={attachment.isPending}
+                        isPendingDelete={attachment.isPendingDelete}
+                        onDelete={handleDelete}
+                        onUndoDelete={undoDelete}
+                        onDownload={download}
+                    />
                 ))}
                 {!loading && attachments.length === 0 && (
                     <div className={css.empty}>Нет вложений</div>
@@ -137,4 +126,4 @@ export const AttachmentList: React.FC<AttachmentListProps> = ({
             </div>
         </div>
     );
-};
+});

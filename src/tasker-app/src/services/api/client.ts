@@ -111,10 +111,42 @@ export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promi
 	}
 
 	if (!response.ok) {
-		const text = await response.text().catch(() => '');
-		throw new Error(text || `HTTP ${response.status}`);
+		let errorMessage = `HTTP ${response.status}`;
+		try {
+			const errorData = await response.json();
+			if (errorData) {
+				// Try to find a human-readable message
+				errorMessage = errorData.message || errorData.title || errorData.error || JSON.stringify(errorData);
+				// Handle localized messages or validation errors if any
+				if (errorData.errors && typeof errorData.errors === 'object') {
+					const validationErrors = Object.values(errorData.errors).flat().join(', ');
+					if (validationErrors) {
+						errorMessage += `: ${validationErrors}`;
+					}
+				}
+			}
+		} catch {
+			// If JSON parsing fails, try text
+			const textError = await response.text().catch(() => '');
+			if (textError) {
+				errorMessage = textError;
+			}
+		}
+		throw new Error(errorMessage);
 	}
 
-	const raw = await response.json();
-	return parseApiDates(raw) as T;
+	// Handle 204 No Content or empty body
+	if (response.status === 204 || response.headers.get('content-length') === '0') {
+		return null as unknown as T;
+	}
+
+	try {
+		const text = await response.text();
+		if (!text) return null as unknown as T;
+		const raw = JSON.parse(text);
+		return parseApiDates(raw) as T;
+	} catch (e) {
+		console.error('Error parsing JSON response', e);
+		throw new Error('Invalid JSON response from server');
+	}
 }

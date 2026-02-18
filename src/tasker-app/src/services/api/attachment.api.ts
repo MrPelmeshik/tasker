@@ -1,4 +1,6 @@
-import { apiFetch } from "./client";
+import { apiFetch, ensureAccessTokenFresh, refreshAccessToken } from "./client";
+import { getApiBase } from "../../config/api";
+import { getStoredTokens } from "../storage/token";
 
 export enum EntityType {
     AREA = 0,
@@ -40,29 +42,61 @@ export const attachmentApi = {
 
     download: async (id: string, fileName: string) => {
         try {
-            const token = localStorage.getItem('accessToken');
-            const headers: HeadersInit = {};
-            if (token) {
-                headers['Authorization'] = `Bearer ${token}`;
-            }
+            await ensureAccessTokenFresh();
 
-            const response = await fetch(`${process.env.REACT_APP_API_URL || ''}/api/attachments/${id}/download`, {
+            const apiBase = getApiBase();
+            const url = `${apiBase}/attachments/${id}/download`;
+
+            const buildHeaders = (): HeadersInit => {
+                const h: HeadersInit = {};
+                const token = getStoredTokens()?.accessToken;
+                if (token) {
+                    h['Authorization'] = `Bearer ${token}`;
+                }
+                return h;
+            };
+
+            let response = await fetch(url, {
                 method: 'GET',
-                headers,
+                headers: buildHeaders(),
+                credentials: 'include',
             });
 
+            // Retry once on 401 after refreshing the token
+            if (response.status === 401) {
+                const refreshed = await refreshAccessToken();
+                if (refreshed) {
+                    response = await fetch(url, {
+                        method: 'GET',
+                        headers: buildHeaders(),
+                        credentials: 'include',
+                    });
+                }
+            }
+
             if (!response.ok) {
-                throw new Error(`Error downloading file: ${response.statusText}`);
+                const ct = response.headers.get('content-type');
+                if (ct && ct.includes('application/json')) {
+                    const errorJson = await response.json();
+                    throw new Error(errorJson.message || `Error downloading file: ${response.statusText}`);
+                }
+                const errorText = await response.text();
+                throw new Error(errorText || `Error downloading file: ${response.statusText}`);
+            }
+
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('text/html')) {
+                throw new Error('Server returned HTML instead of file. Check API configuration.');
             }
 
             const blob = await response.blob();
-            const url = window.URL.createObjectURL(blob);
+            const blobUrl = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
-            a.href = url;
-            a.download = fileName; // backend might not send content-disposition correct for CORS, so we rely on fileName arg
+            a.href = blobUrl;
+            a.download = fileName;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(url);
+            window.URL.revokeObjectURL(blobUrl);
             document.body.removeChild(a);
         } catch (err: any) {
             console.error('Download error:', err);

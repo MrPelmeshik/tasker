@@ -10,12 +10,17 @@ namespace TaskerApi.Services;
 public class AttachmentService : IAttachmentService
 {
     private readonly TaskerDbContext _context;
+    private readonly IAreaRoleService _areaRoleService;
     private readonly string _storagePath;
     private const long MaxFileSize = 20 * 1024 * 1024; // 20 MB
 
-    public AttachmentService(TaskerDbContext context, IConfiguration configuration)
+    public AttachmentService(
+        TaskerDbContext context, 
+        IConfiguration configuration,
+        IAreaRoleService areaRoleService)
     {
         _context = context;
+        _areaRoleService = areaRoleService;
         _storagePath = Path.Combine(Directory.GetCurrentDirectory(), "Attachments");
         
         if (!Directory.Exists(_storagePath))
@@ -31,7 +36,7 @@ public class AttachmentService : IAttachmentService
             throw new Exception($"Файл превышает допустимый размер {MaxFileSize / 1024 / 1024}МБ");
         }
 
-        await CheckAccessAsync(entityId, entityType, userId);
+        await CheckWriteAccessAsync(entityId, entityType, userId);
 
         var attachmentId = Guid.NewGuid();
         var storageFileName = $"{attachmentId}{Path.GetExtension(file.FileName)}";
@@ -65,7 +70,7 @@ public class AttachmentService : IAttachmentService
 
     public async Task<List<AttachmentEntity>> GetListAsync(Guid entityId, EntityType entityType, Guid userId)
     {
-        await CheckAccessAsync(entityId, entityType, userId);
+        await CheckReadAccessAsync(entityId, entityType, userId);
 
         return await _context.Attachments
             .Where(a => a.EntityId == entityId && a.EntityType == entityType && a.IsActive)
@@ -83,7 +88,7 @@ public class AttachmentService : IAttachmentService
             throw new Exception("Вложение не найдено");
         }
 
-        await CheckAccessAsync(attachment.EntityId, attachment.EntityType, userId);
+        await CheckReadAccessAsync(attachment.EntityId, attachment.EntityType, userId);
 
         var filePath = Path.Combine(_storagePath, attachment.StorageFileName);
         if (!File.Exists(filePath))
@@ -104,16 +109,9 @@ public class AttachmentService : IAttachmentService
         {
             throw new Exception("Вложение не найдено");
         }
-
-        // Проверка прав на удаление (только владелец или админ, или владелец сущности?)
-        // Для простоты - проверяем доступ к сущности, но можно ужесточить: удалять может только тот кто загрузил 
-        // или владелец сущности.
-        // Пока оставим проверку доступа к сущности, как достаточное условие (если есть доступ к задаче, можно удалять файлы?)
-        // Или только свои файлы?
-        // "Сделай так, чтобы нельзя было просто запросить файл с сервера. Все файлы для скачивания запрашивались с указанием сущности в котороую она вложена."
-        // Про удаление требований не было, но логично разрешить удалять свои файлы или владельцу сущности.
         
-        await CheckAccessAsync(attachment.EntityId, attachment.EntityType, userId);
+        // Для удаления требуем права на редактирование сущности
+        await CheckWriteAccessAsync(attachment.EntityId, attachment.EntityType, userId);
 
         // Soft delete
         attachment.IsActive = false;
@@ -122,52 +120,149 @@ public class AttachmentService : IAttachmentService
         await _context.SaveChangesAsync();
     }
 
-    private async Task CheckAccessAsync(Guid entityId, EntityType entityType, Guid userId)
+    private async Task CheckReadAccessAsync(Guid entityId, EntityType entityType, Guid userId)
     {
-        // TODO: Реализовать полноценную проверку прав через существующие сервисы или логику
-        // Пока реализуем базовую проверку существования и принадлежности (где применимо)
-        
+        var (areaId, isOwner) = await GetEntityAreaIdAndOwnershipAsync(entityId, entityType, userId);
+
         bool hasAccess = false;
-        
+        if (areaId.HasValue)
+        {
+            hasAccess = await _areaRoleService.HasViewAccessAsync(areaId.Value);
+        }
+        else
+        {
+            // Если нет области (личная сущность), доступ только у владельца
+            hasAccess = isOwner;
+        }
+
+        if (!hasAccess)
+        {
+            throw new UnauthorizedAccessException("Нет доступа к просмотру сущности");
+        }
+    }
+
+    private async Task CheckWriteAccessAsync(Guid entityId, EntityType entityType, Guid userId)
+    {
+        var (areaId, isOwner) = await GetEntityAreaIdAndOwnershipAsync(entityId, entityType, userId);
+
+        bool hasAccess = false;
+        if (areaId.HasValue)
+        {
+            // Проверяем права на редактирование в зависимости от типа (обобщенно - CanAddActivity для вложений)
+            // Но лучше проверить специфичные права, если это Task/Folder
+            if (entityType == EntityType.TASK)
+            {
+                hasAccess = await _areaRoleService.CanEditTaskAsync(areaId.Value);
+            }
+            else if (entityType == EntityType.FOLDER)
+            {
+                hasAccess = await _areaRoleService.CanEditFolderAsync(areaId.Value);
+            }
+            else if (entityType == EntityType.AREA)
+            {
+                hasAccess = await _areaRoleService.CanEditAreaAsync(areaId.Value);
+            }
+            else
+            {
+                // Для Event и других - используем CanAddActivity как базовое право на изменение содержимого
+                hasAccess = await _areaRoleService.CanAddActivityAsync(areaId.Value);
+            }
+        }
+        else
+        {
+            // Личная сущность - только владелец
+            hasAccess = isOwner;
+        }
+
+        if (!hasAccess)
+        {
+            throw new UnauthorizedAccessException("Нет доступа к изменению сущности");
+        }
+    }
+
+    private async Task<(Guid? AreaId, bool IsOwner)> GetEntityAreaIdAndOwnershipAsync(Guid entityId, EntityType entityType, Guid userId)
+    {
+        Guid? areaId = null;
+        bool isOwner = false;
+
         switch (entityType)
         {
             case EntityType.TASK:
                 var task = await _context.Tasks.AsNoTracking().FirstOrDefaultAsync(t => t.Id == entityId);
-                // Простая проверка: если задача существует. 
-                // В реальном приложении нужно проверять доступ пользователя к Area этой задачи.
-                // Предполагаем, что доступ к задаче есть, если пользователь имеет доступ к Area.
-                // Для MVP проверим, что задача существует. 
-                // В будущем: внедрить IAreaService или ITaskService для проверки прав.
-                hasAccess = task != null; 
-                // Нужно проверить доступ к Area. 
                 if (task != null)
                 {
-                   // Проверка через UserAreaAccesses
-                   hasAccess = await HasAreaAccess(task.AreaId, userId);
+                    areaId = task.AreaId;
+                    isOwner = task.OwnerUserId == userId;
                 }
                 break;
                 
             case EntityType.EVENT:
                 var evt = await _context.Events.AsNoTracking().FirstOrDefaultAsync(e => e.Id == entityId);
-                hasAccess = evt != null;
-                // События могут быть глобальными или привязаны к чему-то. 
-                // Если событие личное (OwnerUserId), то доступ только у владельца?
-                // Если событие в календаре...
                 if (evt != null)
                 {
-                     hasAccess = evt.OwnerUserId == userId;
+                    isOwner = evt.OwnerUserId == userId;
+                    
+                    // 1. Direct Area Link
+                    var eventArea = await _context.EventToAreas.AsNoTracking()
+                        .FirstOrDefaultAsync(ea => ea.EventId == entityId && ea.IsActive);
+                    if (eventArea != null)
+                    {
+                        areaId = eventArea.AreaId;
+                    }
+                    else
+                    {
+                        // 2. Task Link (Explicit Query without Join for safety)
+                        var eventTask = await _context.EventToTasks.AsNoTracking()
+                            .FirstOrDefaultAsync(et => et.EventId == entityId && et.IsActive);
+                        
+                        if (eventTask != null)
+                        {
+                            var taskForEvent = await _context.Tasks.AsNoTracking()
+                                .FirstOrDefaultAsync(t => t.Id == eventTask.TaskId);
+                            if (taskForEvent != null)
+                            {
+                                areaId = taskForEvent.AreaId;
+                            }
+                        }
+                        else
+                        {
+                            // 3. Subtask Link
+                            var eventSubtask = await _context.EventToSubtasks.AsNoTracking()
+                                .FirstOrDefaultAsync(est => est.EventId == entityId && est.IsActive);
+                                
+                            if (eventSubtask != null)
+                            {
+                                var subtask = await _context.Subtasks.AsNoTracking()
+                                    .FirstOrDefaultAsync(s => s.Id == eventSubtask.SubtaskId);
+                                    
+                                if (subtask != null)
+                                {
+                                    var taskForSubtask = await _context.Tasks.AsNoTracking()
+                                        .FirstOrDefaultAsync(t => t.Id == subtask.TaskId);
+                                    if (taskForSubtask != null)
+                                    {
+                                        areaId = taskForSubtask.AreaId;
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
                 break;
                 
             case EntityType.AREA:
-                hasAccess = await HasAreaAccess(entityId, userId);
+                areaId = entityId;
+                // Check if user is owner of area directly
+                var area = await _context.Areas.AsNoTracking().FirstOrDefaultAsync(a => a.Id == entityId);
+                if (area != null) isOwner = area.OwnerUserId == userId;
                 break;
                 
             case EntityType.FOLDER:
                 var folder = await _context.Folders.AsNoTracking().FirstOrDefaultAsync(f => f.Id == entityId);
                 if (folder != null)
                 {
-                    hasAccess = await HasAreaAccess(folder.AreaId, userId);
+                    areaId = folder.AreaId;
+                    isOwner = folder.OwnerUserId == userId;
                 }
                 break;
                 
@@ -175,19 +270,6 @@ public class AttachmentService : IAttachmentService
                 throw new Exception("Неизвестный тип сущности");
         }
 
-        if (!hasAccess)
-        {
-            throw new UnauthorizedAccessException("Нет доступа к указанной сущности");
-        }
-    }
-
-    private async Task<bool> HasAreaAccess(Guid areaId, Guid userId)
-    {
-        // Проверяем, является ли пользователь владельцем области или участником
-        var area = await _context.Areas.AsNoTracking().FirstOrDefaultAsync(a => a.Id == areaId);
-        if (area == null) return false;
-        if (area.OwnerUserId == userId) return true;
-        
-        return await _context.UserAreaAccesses.AnyAsync(ua => ua.AreaId == areaId && ua.UserId == userId && ua.IsActive);
+        return (areaId, isOwner);
     }
 }
