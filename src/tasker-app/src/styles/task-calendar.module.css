@@ -243,6 +243,28 @@
   color: var(--color-text);
 }
 
+/* Current time indicator */
+.currentTimeLine {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 0;
+  border-top: var(--border-2) solid rgb(var(--color-danger));
+  z-index: 10;
+  pointer-events: none;
+}
+
+.currentTimeLine::before {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -1px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgb(var(--color-danger));
+}
+
 /* Ghost indicator for cross-day drag */
 .dragGhost {
   position: absolute;

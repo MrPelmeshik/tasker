@@ -33,6 +33,15 @@ const TimeSlotCell: React.FC<{ dateIso: string; hour: number }> = ({ dateIso, ho
   );
 };
 
+function getCurrentTimeTop(hourHeight: number): number | null {
+  const now = new Date();
+  const totalMinutes = now.getHours() * 60 + now.getMinutes();
+  const startMinutes = DAY_START_HOUR * 60;
+  const endMinutes = DAY_END_HOUR * 60;
+  if (totalMinutes < startMinutes || totalMinutes > endMinutes) return null;
+  return ((totalMinutes - startMinutes) / 60) * hourHeight;
+}
+
 export const CalendarGrid: React.FC<CalendarGridProps> = ({
   daySchedules,
   weekDays,
@@ -47,6 +56,13 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
   const [dragTargetDay, setDragTargetDay] = useState<number | null>(null);
   const [dragState, setDragState] = useState<{ id: string; start: Date; end: Date } | null>(null);
   const [hoveredTaskId, setHoveredTaskId] = useState<string | null>(null);
+  const [currentTimeTop, setCurrentTimeTop] = useState<number | null>(() => getCurrentTimeTop(hourHeight));
+
+  useEffect(() => {
+    setCurrentTimeTop(getCurrentTimeTop(hourHeight));
+    const timer = setInterval(() => setCurrentTimeTop(getCurrentTimeTop(hourHeight)), 60_000);
+    return () => clearInterval(timer);
+  }, [hourHeight]);
 
   useEffect(() => {
     if (!headerRef.current) return;
@@ -123,6 +139,16 @@ export const CalendarGrid: React.FC<CalendarGridProps> = ({
                   onHover={setHoveredTaskId}
                 />
               ))}
+              {/* Current time indicator */}
+              {currentTimeTop !== null && (() => {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const colDay = new Date(ds.date);
+                colDay.setHours(0, 0, 0, 0);
+                return colDay.getTime() === today.getTime() ? (
+                  <div className={css.currentTimeLine} style={{ top: currentTimeTop }} />
+                ) : null;
+              })()}
               {/* Ghost rendering */}
               {dragState && (
                 <GhostEntry
