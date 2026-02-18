@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import css from '../../styles/modal.module.css';
 import type { ModalSize } from '../../types/modal-size';
 
@@ -87,11 +88,17 @@ export const Modal: React.FC<ModalProps> = ({
     className
   ].filter(Boolean).join(' ');
 
-  return (
-    <div className={css.overlay} ref={modalRef}>
+  return createPortal(
+    <div
+      className={css.overlay}
+      ref={modalRef}
+      onMouseDown={(e) => e.stopPropagation()}
+      onClick={(e) => e.stopPropagation()}
+    >
       <div className={modalClass}>
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

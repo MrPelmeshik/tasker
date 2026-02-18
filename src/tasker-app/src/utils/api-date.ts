@@ -4,7 +4,7 @@
  */
 
 /** Поля с датой/временем в ответах API (соответствуют DateTimeOffset на бэкенде) */
-const API_DATE_FIELDS = ['createdAt', 'updatedAt', 'eventDate', 'deactivatedAt'] as const;
+const API_DATE_FIELDS = ['createdAt', 'updatedAt', 'eventDate', 'deactivatedAt', 'startAt', 'endAt'] as const;
 
 /**
  * Парсит ISO 8601 строку в Date.

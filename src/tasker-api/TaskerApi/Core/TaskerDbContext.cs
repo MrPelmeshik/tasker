@@ -30,6 +30,7 @@ public class TaskerDbContext : DbContext
     public DbSet<EventToSubtaskEntity> EventToSubtasks { get; set; }
     public DbSet<RefreshTokenEntity> RefreshTokens { get; set; }
     public DbSet<AttachmentEntity> Attachments { get; set; }
+    public DbSet<TaskScheduleEntity> TaskSchedules { get; set; }
 
     /// <inheritdoc />
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -70,6 +71,8 @@ public class TaskerDbContext : DbContext
             t.IsActive && t.Area != null && t.Area.IsActive && (t.FolderId == null || (t.Folder != null && t.Folder.IsActive)));
         modelBuilder.Entity<FolderEntity>().HasQueryFilter(f =>
             f.IsActive && f.Area != null && f.Area.IsActive);
+        modelBuilder.Entity<TaskScheduleEntity>().HasQueryFilter(s =>
+            s.IsActive && s.Task != null && s.Task.IsActive);
     }
 
     /// <summary>

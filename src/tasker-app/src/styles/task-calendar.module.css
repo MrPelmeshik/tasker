@@ -1,0 +1,255 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-8) var(--space-12);
+  border-bottom: var(--border-1) solid var(--glass-border-1);
+  flex-shrink: 0;
+}
+
+.weekLabel {
+  font-size: var(--font-12);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+}
+
+.spacer {
+  flex: 1;
+}
+
+.muted {
+  font-size: var(--font-11);
+  color: var(--color-text-tertiary);
+}
+
+.loaderWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: var(--space-24);
+}
+
+/* Обёртка для области сетки — занимает всё оставшееся пространство */
+.gridArea {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Grid wrapper — без скролла, заполняет gridArea */
+.gridWrapper {
+  position: relative;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* Main CSS Grid */
+.calendarGrid {
+  display: grid;
+  grid-template-columns: 50px repeat(7, 1fr);
+  /* rows are implicit */
+}
+
+.cornerCell {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--glass-bg);
+  border-bottom: var(--border-1) solid var(--glass-border-1);
+}
+
+.dayHeader {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4) 0;
+  font-size: var(--font-11);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  background: var(--glass-bg);
+  border-bottom: var(--border-1) solid var(--glass-border-1);
+  border-left: var(--border-1) solid var(--glass-border-1);
+}
+
+.dayHeaderHighlight {
+  background: rgb(var(--color-accent) / 0.08);
+}
+
+.timeLabel {
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: var(--space-2) var(--space-4) 0 0;
+  font-size: var(--font-10);
+  color: var(--color-text-tertiary);
+  height: var(--hour-height, 60px);
+  box-sizing: border-box;
+  border-bottom: var(--border-1) solid var(--glass-border-1);
+}
+
+.timeSlot {
+  height: var(--hour-height, 60px);
+  box-sizing: border-box;
+  border-bottom: var(--border-1) solid var(--glass-border-1);
+  border-left: var(--border-1) solid var(--glass-border-1);
+}
+
+.timeSlotOver {
+  background: rgb(var(--color-accent) / 0.1);
+}
+
+/* Overlay container for absolute-positioned entries */
+.overlayContainer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  pointer-events: none;
+}
+
+.overlayGrid {
+  display: grid;
+  grid-template-columns: 50px repeat(7, 1fr);
+  grid-template-rows: auto 1fr;
+}
+
+.overlayCorner {
+  /* высота устанавливается динамически через style prop */
+  flex-shrink: 0;
+  grid-row: 1;
+}
+
+.dayColumn {
+  position: relative;
+  pointer-events: auto;
+  grid-row: 2;
+  margin: 0;
+  padding: 0;
+}
+
+/* Schedule entry block */
+.scheduleEntry {
+  position: absolute;
+  box-sizing: border-box;
+  background: rgb(var(--card-custom-color-rgb, var(--color-accent)) / 0.22);
+  border: var(--border-1) solid rgb(var(--card-custom-color-rgb, var(--color-accent)) / 0.5);
+  border-left: var(--border-3) solid var(--card-custom-color, var(--color-accent-solid));
+  border-radius: var(--radius-xs);
+  padding: var(--space-2) var(--space-6);
+  overflow: hidden;
+  z-index: 1;
+  transition: box-shadow var(--transition-fast);
+  display: flex;
+  flex-direction: column;
+  gap: var(--border-1);
+  user-select: none;
+  touch-action: none;
+  box-shadow: inset 0 1px 0 rgb(var(--white) / 0.08);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.scheduleEntry:hover,
+.scheduleEntryHovered {
+  box-shadow:
+    inset 0 1px 0 rgb(var(--white) / 0.12),
+    0 2px 8px rgb(0 0 0 / 0.25);
+  z-index: 2;
+}
+
+.scheduleTitle {
+  font-size: var(--font-10);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: var(--line-height-tight);
+}
+
+.scheduleTime {
+  font-size: var(--font-9);
+  color: var(--color-text-tertiary);
+  line-height: var(--line-height-tight);
+}
+
+.resizeHandleTop {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+  background: transparent;
+  z-index: 3;
+}
+
+.resizeHandleTop:hover {
+  background: rgb(var(--white) / 0.1);
+}
+
+.resizeHandle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 6px;
+  cursor: ns-resize;
+  background: transparent;
+  z-index: 3;
+}
+
+.resizeHandle:hover {
+  background: rgb(var(--white) / 0.1);
+}
+
+.deleteBtn {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  opacity: 0;
+  background: none;
+  border: none;
+  padding: var(--space-2);
+  cursor: pointer;
+  color: var(--color-text-tertiary);
+  border-radius: var(--radius-2xs);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: opacity var(--transition-fast), background var(--transition-fast);
+  z-index: 4;
+}
+
+.scheduleEntry:hover .deleteBtn,
+.scheduleEntryHovered .deleteBtn {
+  opacity: 1;
+}
+
+.deleteBtn:hover {
+  background: rgb(var(--white) / 0.1);
+  color: var(--color-text);
+}
+
+/* Ghost indicator for cross-day drag */
+.dragGhost {
+  position: absolute;
+  box-sizing: border-box;
+  border: var(--border-2) dashed var(--color-text-secondary);
+  border-radius: var(--radius-xs);
+  background: var(--glass-bg-1);
+  pointer-events: none;
+  z-index: 20;
+}

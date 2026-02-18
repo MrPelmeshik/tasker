@@ -49,6 +49,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IUserLogRepository, UserLogRepository>();
         services.AddScoped<IUserAreaAccessRepository, UserAreaAccessRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ITaskScheduleRepository, TaskScheduleRepository>();
 
         services.AddSingleton<IDbConnectionFactory, DbConnectionFactory>();
         services.AddScoped<IUnitOfWorkFactory, UnitOfWorkFactory>();
@@ -83,6 +84,7 @@ public static partial class ServiceCollectionExtensions
         services.AddScoped<IHubAreaAccessService, HubAreaAccessService>();
         services.AddSingleton<IConnectionAreaTracker, ConnectionAreaTracker>();
         services.AddScoped<IAttachmentService, AttachmentService>();
+        services.AddScoped<ITaskScheduleService, TaskScheduleService>();
         services.AddScoped<IRealtimeNotifier, RealtimeNotifier>();
         services.AddHostedService<RefreshTokenCleanupHostedService>();
 

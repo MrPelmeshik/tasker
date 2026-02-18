@@ -1,0 +1,117 @@
+.section {
+  margin-top: var(--space-8);
+  border-radius: var(--radius-xs);
+  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-8) 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: var(--font-12);
+  font-weight: var(--font-weight-medium);
+  text-align: left;
+  transition: background var(--transition-fast);
+}
+
+.header:hover {
+  background: rgb(var(--white) / 0.06);
+}
+
+.headerTitle {
+  flex: 1;
+}
+
+.chevron {
+  display: inline-block;
+  font-size: var(--font-12);
+  color: rgb(var(--white) / 0.5);
+  transition: transform var(--transition-fast);
+}
+
+.chevron[data-expanded='false'] {
+  transform: rotate(-90deg);
+}
+
+.body {
+  padding: 0 0 var(--space-8);
+  border-top: var(--border-1) solid rgb(var(--white) / 0.06);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding: var(--space-4) var(--space-8);
+  border-radius: var(--radius-xs);
+  background: rgb(var(--white) / 0.04);
+  font-size: var(--font-12);
+  color: var(--color-text-secondary);
+}
+
+.itemTime {
+  white-space: nowrap;
+}
+
+.deleteBtn {
+  flex-shrink: 0;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.item:hover .deleteBtn {
+  opacity: 1;
+}
+
+.addRow {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.addRow input {
+  flex: 1;
+  min-width: 0;
+}
+
+.empty {
+  font-size: var(--font-11);
+  color: var(--color-text-tertiary);
+  padding: var(--space-4) 0;
+}
+
+.unsavedIndicator {
+  color: var(--color-accent-solid);
+  margin-left: var(--space-4);
+  font-weight: var(--font-weight-bold);
+}
+
+.itemPendingDelete {
+  opacity: 0.4;
+  text-decoration: line-through;
+}
+
+.itemPendingDelete .deleteBtn {
+  opacity: 1;
+}
+
+.itemPending {
+  border: 1px dashed rgb(var(--color-accent) / 0.4);
+  background: rgb(var(--color-accent) / 0.06);
+}

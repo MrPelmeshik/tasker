@@ -67,6 +67,14 @@ export {
   deleteEvent,
 } from './events';
 
+export {
+  createSchedule,
+  updateSchedule,
+  deleteSchedule,
+  fetchSchedulesByTask,
+  fetchSchedulesByWeek,
+} from './schedules';
+
 // Экспорт типов
 export type {
   TaskWeeklyActivity,

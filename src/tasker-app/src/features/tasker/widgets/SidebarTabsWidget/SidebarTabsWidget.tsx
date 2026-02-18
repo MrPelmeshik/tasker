@@ -3,6 +3,7 @@
  */
 
 import React, { useState } from 'react';
+import type { DragEndEvent } from '@dnd-kit/core';
 import { GlassWidget } from '../../../../components/common/GlassWidget';
 import { GlassButton } from '../../../../components/ui/GlassButton';
 import { Tree } from '../Tree';
@@ -17,6 +18,10 @@ export type SidebarTab = 'tree' | 'deadlines' | 'activities';
 export interface SidebarTabsWidgetProps extends WidgetSizeProps {
   /** Deep link для открытия сущности при загрузке страницы (передаётся в Tree) */
   initialDeepLink?: { entityType: EntityType; entityId: string };
+  /** When true, DndContext is provided by a parent component */
+  externalDnd?: boolean;
+  /** Ref to expose tree's handleDragEnd callback to the parent */
+  dragEndRef?: React.MutableRefObject<((event: DragEndEvent) => Promise<void>) | null>;
 }
 
 /** Опции вкладок для панели переключения */
@@ -30,6 +35,8 @@ export const SidebarTabsWidget: React.FC<SidebarTabsWidgetProps> = ({
   colSpan,
   rowSpan,
   initialDeepLink,
+  externalDnd,
+  dragEndRef,
 }) => {
   const [activeTab, setActiveTab] = useState<SidebarTab>('tree');
 
@@ -50,7 +57,7 @@ export const SidebarTabsWidget: React.FC<SidebarTabsWidgetProps> = ({
       <div className={css.content}>
         {activeTab === 'tree' && (
           <div className={css.tabPanel}>
-            <Tree embedded initialDeepLink={initialDeepLink} />
+            <Tree embedded initialDeepLink={initialDeepLink} externalDnd={externalDnd} dragEndRef={dragEndRef} />
           </div>
         )}
         {activeTab === 'deadlines' && (

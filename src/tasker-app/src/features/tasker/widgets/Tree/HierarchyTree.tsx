@@ -6,6 +6,7 @@ import {
     DragOverlay,
     PointerSensor,
     TouchSensor,
+    useDndMonitor,
     useSensor,
     useSensors,
     type DragEndEvent,
@@ -37,8 +38,8 @@ import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
 import css from '../../../../styles/tree.module.css';
 
 export interface HierarchyTreeProps {
-    /** 
-     * Root entity to display hierarchy for. 
+    /**
+     * Root entity to display hierarchy for.
      * If null/undefined, displays all areas (root of the world).
      */
     root?: { type: 'area' | 'folder'; id: string; areaId?: string } | null;
@@ -48,11 +49,19 @@ export interface HierarchyTreeProps {
     initialDeepLink?: { entityType: EntityType; entityId: string };
     className?: string;
     /**
-     * Optional callback overrides or additional props can be added here
+     * When true, DndContext is provided by a parent component.
+     * HierarchyTree will NOT render its own DndContext/DragOverlay
+     * and will use useDndMonitor instead.
      */
+    externalDnd?: boolean;
+    /**
+     * Ref to expose tree's handleDragEnd callback to the parent DndContext.
+     * Only relevant when externalDnd=true.
+     */
+    dragEndRef?: React.MutableRefObject<((event: DragEndEvent) => Promise<void>) | null>;
 }
 
-export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepLink, className }) => {
+export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepLink, className, externalDnd, dragEndRef }) => {
     const { openAreaModal, openFolderModal, openTaskModal } = useModal();
     const { notifyTaskUpdate, subscribeToTaskUpdates } = useTaskUpdate();
     const { showError, addSuccess } = useToast();
@@ -186,6 +195,16 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
         [handleDragEndCallback]
     );
 
+    // Expose tree's dragEnd handler to parent when using external DndContext
+    useEffect(() => {
+        if (externalDnd && dragEndRef) {
+            dragEndRef.current = handleDragEndCallback;
+        }
+        return () => {
+            if (dragEndRef) dragEndRef.current = null;
+        };
+    }, [externalDnd, dragEndRef, handleDragEndCallback]);
+
     // Construct Context Value
     const contextValue = useMemo(() => ({
         // Data
@@ -309,6 +328,46 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
         return <TreeContent />;
     };
 
+    // When parent provides DndContext, listen via useDndMonitor instead
+    useDndMonitor(externalDnd ? {
+        onDragStart: handleDragStart,
+        onDragEnd: (event) => { setActiveDrag(null); },
+        onDragCancel: () => setActiveDrag(null),
+    } : {});
+
+    const treeContent = (
+        <div className={`${css.tree} ${className || ''}`}>
+            <TreeToolbar
+                onCreateArea={!root ? handlers.handleCreateArea : undefined}
+                isAllExpanded={isAllExpanded}
+                onExpandAll={expandAll}
+                onCollapseAll={collapseAll}
+                enabledStatuses={enabledStatuses}
+                toggleStatus={toggleStatus}
+                sortPreset={sortPreset}
+                setSortPreset={setSortPreset}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+            />
+            {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
+            <div className={`${css.widgetContent} scrollbar-compact`}>
+                {loading ? (
+                    <div className={glassWidgetStyles.placeholder}><Loader size="m" ariaLabel="Загрузка" /></div>
+                ) : (
+                    renderRootContent()
+                )}
+            </div>
+        </div>
+    );
+
+    if (externalDnd) {
+        return (
+            <TreeProvider value={contextValue}>
+                {treeContent}
+            </TreeProvider>
+        );
+    }
+
     return (
         <TreeProvider value={contextValue}>
             <DndContext
@@ -318,28 +377,7 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
                 onDragEnd={handleDragEnd}
                 onDragCancel={() => setActiveDrag(null)}
             >
-                <div className={`${css.tree} ${className || ''}`}>
-                    <TreeToolbar
-                        onCreateArea={!root ? handlers.handleCreateArea : undefined} // Only allow creating area if we are at root
-                        isAllExpanded={isAllExpanded}
-                        onExpandAll={expandAll}
-                        onCollapseAll={collapseAll}
-                        enabledStatuses={enabledStatuses}
-                        toggleStatus={toggleStatus}
-                        sortPreset={sortPreset}
-                        setSortPreset={setSortPreset}
-                        searchQuery={searchQuery}
-                        onSearchChange={setSearchQuery}
-                    />
-                    {activeDrag && <div className={css.dragHint}>Переместите в папку или область</div>}
-                    <div className={`${css.widgetContent} scrollbar-compact`}>
-                        {loading ? (
-                            <div className={glassWidgetStyles.placeholder}><Loader size="m" ariaLabel="Загрузка" /></div>
-                        ) : (
-                            renderRootContent()
-                        )}
-                    </div>
-                </div>
+                {treeContent}
 
                 {createPortal(
                     <DragOverlay zIndex={Z_INDEX_DND_OVERLAY} className="cursor-grabbing">

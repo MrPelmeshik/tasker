@@ -14,9 +14,14 @@ import { useTaskTableData } from './useTaskTableData';
 import { useTaskTableHandlers } from './useTaskTableHandlers';
 import { useTaskTableFilters } from './useTaskTableFilters';
 import { TaskTableToolbar } from './TaskTableToolbar';
+import { CalendarIcon } from '../../../../components/icons';
 import css from '../../../../styles/task-table.module.css';
 
-export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
+export interface TaskTableProps extends WidgetSizeProps {
+  onViewModeChange?: (mode: 'calendar') => void;
+}
+
+export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewModeChange }) => {
   const { weekStartIso, go } = useWeek();
   const { openTaskModal, openActivityModal, closeActivityModal } = useModal();
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
@@ -119,6 +124,11 @@ export const TaskTable: React.FC<WidgetSizeProps> = ({ colSpan, rowSpan }) => {
 
           <div className={css.spacer} />
           <span className={css.muted}>{dateRangeLabel}</span>
+          {onViewModeChange && (
+            <GlassButton size="s" variant="subtle" onClick={() => onViewModeChange('calendar')} aria-label="Календарь">
+              <CalendarIcon width={16} height={16} />
+            </GlassButton>
+          )}
         </div>
         <div className={css.gridWrapper}>
           <table className={css.table}>

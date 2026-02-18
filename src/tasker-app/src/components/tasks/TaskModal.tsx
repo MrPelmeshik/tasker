@@ -21,6 +21,7 @@ import { TaskStatus, getTaskStatusOptions } from '../../types';
 import type { ModalSize } from '../../types/modal-size';
 import { formatDateTime } from '../../utils/date';
 import { AttachmentList, AttachmentListHandle } from '../attachments/AttachmentList';
+import { TaskScheduleList, TaskScheduleListHandle } from './TaskScheduleList';
 import { EntityType } from '../../services/api/attachment.api';
 
 export interface TaskModalProps {
@@ -50,7 +51,9 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 }) => {
   const { copyLink: handleCopyLink } = useCopyEntityLink('task', task?.id);
   const attachmentRef = useRef<AttachmentListHandle>(null);
+  const scheduleRef = useRef<TaskScheduleListHandle>(null);
   const [hasAttachmentChanges, setHasAttachmentChanges] = useState(false);
+  const [hasScheduleChanges, setHasScheduleChanges] = useState(false);
 
   const modal = useEntityFormModal<TaskCreateRequest>({
     isOpen,
@@ -85,12 +88,19 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         await attachmentRef.current.saveChanges();
       }
       setHasAttachmentChanges(false);
+
+      // Save schedule changes and notify calendar
+      if (scheduleRef.current && scheduleRef.current.hasPendingChanges) {
+        await scheduleRef.current.saveChanges();
+        if (task?.id) notifyTaskUpdate(task.id);
+      }
+      setHasScheduleChanges(false);
     },
     onDelete,
     validate: (data) => Boolean(data.title?.trim() && data.areaId),
     getExtraUnsavedChanges: ({ originalData: orig }) => {
       const hasAreaChange = Boolean(areas?.length && orig.areaId && defaultAreaId && orig.areaId !== defaultAreaId);
-      return hasAreaChange || hasAttachmentChanges;
+      return hasAreaChange || hasAttachmentChanges || hasScheduleChanges;
     }
   });
 
@@ -136,7 +146,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
   const taskEvents = useEvents('task', task?.id);
   const [editEvent, setEditEvent] = useState<EventResponse | null>(null);
-  const { subscribeToTaskUpdates } = useTaskUpdate();
+  const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const refetchRef = useRef(taskEvents.refetch);
   refetchRef.current = taskEvents.refetch;
   const isViewMode = Boolean(task && !isEditMode);
@@ -168,7 +178,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
           onSave={safeHandleSave}
           onClose={safeHandleClose}
           isLoading={isLoading}
-          saveDisabled={(!hasChanges && !hasAttachmentChanges) || !formData.title.trim() || !formData.areaId}
+          saveDisabled={(!hasChanges && !hasAttachmentChanges && !hasScheduleChanges) || !formData.title.trim() || !formData.areaId}
         />
         <div className={css.modalBody}>
           <div className={formCss.formContainer}>
@@ -295,6 +305,15 @@ export const TaskModal: React.FC<TaskModalProps> = ({
                   onPendingChange={setHasAttachmentChanges}
                 />
               </div>
+            )}
+
+            {task && (
+              <TaskScheduleList
+                ref={scheduleRef}
+                taskId={task.id}
+                isEditMode={isEditMode}
+                onPendingChange={setHasScheduleChanges}
+              />
             )}
 
             {task && (

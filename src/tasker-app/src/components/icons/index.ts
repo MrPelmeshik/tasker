@@ -26,3 +26,5 @@ export { SearchIcon } from './SearchIcon';
 export { SortIcon } from './SortIcon';
 export { AttachmentIcon } from './AttachmentIcon';
 export { DownloadIcon } from './DownloadIcon';
+export { CalendarIcon } from './CalendarIcon';
+export { TableIcon } from './TableIcon';

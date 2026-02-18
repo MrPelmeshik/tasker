@@ -8,3 +8,4 @@ export { useCopyEntityLink } from './useCopyEntityLink';
 export type { UseEntityFormModalOptions } from './useEntityFormModal';
 export { useWeek } from './useWeek';
 export type { WeekNav } from './useWeek';
+export { useWidgetState } from './useWidgetState';

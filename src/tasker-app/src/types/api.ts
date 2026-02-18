@@ -48,3 +48,9 @@ export type {
   EventMessage,
   EventResponse,
 } from './api/activity';
+
+export type {
+  TaskScheduleCreateRequest,
+  TaskScheduleUpdateRequest,
+  TaskScheduleResponse,
+} from './api/schedule';
