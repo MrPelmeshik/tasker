@@ -328,15 +328,15 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
         return <TreeContent />;
     };
 
-    // When parent provides DndContext, listen via useDndMonitor instead
-    useDndMonitor(externalDnd ? {
-        onDragStart: handleDragStart,
-        onDragEnd: (event) => { setActiveDrag(null); },
-        onDragCancel: () => setActiveDrag(null),
-    } : {});
-
     const treeContent = (
         <div className={`${css.tree} ${className || ''}`}>
+            {externalDnd && (
+                <DndMonitor
+                    onDragStart={handleDragStart}
+                    onDragEnd={() => setActiveDrag(null)}
+                    onDragCancel={() => setActiveDrag(null)}
+                />
+            )}
             <TreeToolbar
                 onCreateArea={!root ? handlers.handleCreateArea : undefined}
                 isAllExpanded={isAllExpanded}
@@ -393,4 +393,14 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
             </DndContext>
         </TreeProvider>
     );
+};
+
+/** Компонент-обёртка для useDndMonitor — рендерится только внутри DndContext */
+const DndMonitor: React.FC<{
+    onDragStart: (event: DragStartEvent) => void;
+    onDragEnd: () => void;
+    onDragCancel: () => void;
+}> = ({ onDragStart, onDragEnd, onDragCancel }) => {
+    useDndMonitor({ onDragStart, onDragEnd, onDragCancel });
+    return null;
 };
