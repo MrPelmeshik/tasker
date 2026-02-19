@@ -26,7 +26,8 @@ public static partial class EntityMapper
             CreatedAt = entity.CreatedAt,
             UpdatedAt = entity.UpdatedAt,
             IsActive = entity.IsActive,
-            DeactivatedAt = entity.DeactivatedAt
+            DeactivatedAt = entity.DeactivatedAt,
+            CustomColor = entity.Color
         };
     }
 
@@ -49,7 +50,8 @@ public static partial class EntityMapper
             IsActive = entity.IsActive,
             DeactivatedAt = entity.DeactivatedAt,
             TasksCount = tasksCount,
-            SubfoldersCount = subfoldersCount
+            SubfoldersCount = subfoldersCount,
+            CustomColor = entity.Color
         };
     }
 
@@ -65,6 +67,7 @@ public static partial class EntityMapper
             Description = request.Description,
             AreaId = request.AreaId,
             ParentFolderId = request.ParentFolderId,
+            Color = request.Color,
             OwnerUserId = ownerUserId,
             CreatedAt = DateTimeOffset.UtcNow,
             UpdatedAt = DateTimeOffset.UtcNow,
@@ -81,6 +84,7 @@ public static partial class EntityMapper
         entity.Description = request.Description;
         entity.AreaId = request.AreaId;
         entity.ParentFolderId = request.ParentFolderId;
+        entity.Color = request.Color;
         entity.UpdatedAt = DateTimeOffset.UtcNow;
     }
 }

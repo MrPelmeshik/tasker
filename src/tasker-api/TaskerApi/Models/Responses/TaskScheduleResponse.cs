@@ -31,6 +31,11 @@ public class TaskScheduleResponse
     public string? AreaColor { get; set; }
 
     /// <summary>
+    /// Цвет папки (может быть null). Если задан — используется вместо цвета области.
+    /// </summary>
+    public string? FolderColor { get; set; }
+
+    /// <summary>
     /// Статус задачи (числовой код)
     /// </summary>
     public int TaskStatus { get; set; }

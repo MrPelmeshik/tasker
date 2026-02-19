@@ -9,7 +9,7 @@ export interface AreaCardLinkArea {
   title: string;
   foldersCount: number;
   rootTasksCount: number;
-  customColor?: string;
+  customColor?: string | null;
 }
 
 export interface AreaCardLinkProps {

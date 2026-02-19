@@ -71,3 +71,29 @@
   opacity: 0;
   pointer-events: none;
 }
+
+.clearBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-2);
+  border: none;
+  background: none;
+  color: var(--color-text-tertiary);
+  cursor: pointer;
+  font-size: var(--font-14);
+  line-height: var(--line-height-tight);
+  border-radius: var(--radius-2xs);
+  flex-shrink: 0;
+  transition: color var(--transition-fast), background var(--transition-fast);
+}
+
+.clearBtn:hover {
+  color: var(--color-text);
+  background: rgb(var(--white) / 0.1);
+}
+
+.clearBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

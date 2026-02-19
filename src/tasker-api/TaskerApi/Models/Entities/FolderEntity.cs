@@ -40,6 +40,12 @@ public class FolderEntity :
     public Guid? ParentFolderId { get; set; }
 
     /// <summary>
+    ///     Цвет папки (hex, например #ff0000). Если null — используется цвет области.
+    /// </summary>
+    [Column("color")]
+    public string? Color { get; set; }
+
+    /// <summary>
     ///     Навигационное свойство к области (для каскадных query filters)
     /// </summary>
     public AreaEntity? Area { get; set; }

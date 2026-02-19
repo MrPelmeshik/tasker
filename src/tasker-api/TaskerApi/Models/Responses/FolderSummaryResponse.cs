@@ -69,4 +69,9 @@ public class FolderSummaryResponse
     /// Дата и время деактивации
     /// </summary>
     public DateTimeOffset? DeactivatedAt { get; set; }
+
+    /// <summary>
+    /// Цвет папки (hex). Если null — используется цвет области.
+    /// </summary>
+    public string? CustomColor { get; set; }
 }

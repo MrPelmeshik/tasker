@@ -21,7 +21,7 @@ export interface Folder {
   deactivatedAt?: Date;
   isActive: boolean;
   updatedAt: Date;
-  customColor?: string;
+  customColor?: string | null;
 }
 
 // Типы для Tree виджета
@@ -48,7 +48,7 @@ export interface FolderSummary {
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
-  customColor?: string;
+  customColor?: string | null;
 }
 
 export interface Task {

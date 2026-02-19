@@ -9,7 +9,7 @@ export interface FolderCardLinkFolder {
   title: string;
   tasksCount: number;
   subfoldersCount: number;
-  customColor?: string;
+  customColor?: string | null;
 }
 
 export interface FolderCardLinkProps {

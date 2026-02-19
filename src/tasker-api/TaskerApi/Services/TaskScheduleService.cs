@@ -9,6 +9,7 @@ using TaskerApi.Models.Responses;
 using TaskerApi.Services.Base;
 using TaskerApi.Services.Mapping;
 
+using TaskerApi.Models.Entities;
 using System.Text.Json;
 
 namespace TaskerApi.Services;
@@ -22,6 +23,7 @@ public class TaskScheduleService(
     ITaskScheduleRepository scheduleRepository,
     ITaskRepository taskRepository,
     IAreaRepository areaRepository,
+    IFolderRepository folderRepository,
     IAreaRoleService areaRoleService,
     IEntityEventLogger entityEventLogger,
     TaskerDbContext context)
@@ -30,6 +32,39 @@ public class TaskScheduleService(
     private string FormatSchedule(DateTimeOffset start, DateTimeOffset end)
     {
         return $"{start:g} - {end:g}";
+    }
+
+    /// <summary>
+    /// Поднимается вверх по иерархии папок и возвращает первый найденный цвет.
+    /// Используется для одиночных операций (Create/Update/GetByTaskId).
+    /// </summary>
+    private async Task<string?> GetEffectiveFolderColorAsync(Guid? folderId, CancellationToken cancellationToken)
+    {
+        var current = folderId;
+        while (current.HasValue)
+        {
+            var folder = await folderRepository.GetByIdAsync(current.Value, cancellationToken);
+            if (folder == null) break;
+            if (folder.Color != null) return folder.Color;
+            current = folder.ParentFolderId;
+        }
+        return null;
+    }
+
+    /// <summary>
+    /// Поднимается вверх по иерархии папок в предзагруженном словаре и возвращает первый найденный цвет.
+    /// Используется для batch-операций (GetByWeek).
+    /// </summary>
+    private static string? GetEffectiveFolderColor(Guid? folderId, Dictionary<Guid, FolderEntity> folderMap)
+    {
+        var current = folderId;
+        while (current.HasValue)
+        {
+            if (!folderMap.TryGetValue(current.Value, out var folder)) break;
+            if (folder.Color != null) return folder.Color;
+            current = folder.ParentFolderId;
+        }
+        return null;
     }
 
     /// <inheritdoc />
@@ -62,7 +97,8 @@ public class TaskScheduleService(
             await entityEventLogger.LogAsync(Models.Common.EntityType.TASK, task.Id, Models.Common.EventType.UPDATE, task.Title, messageJson, cancellationToken);
 
             var area = await areaRepository.GetByIdAsync(task.AreaId, cancellationToken);
-            return created.ToTaskScheduleResponse(task.Title, task.AreaId, area?.Color, (int)task.Status);
+            var folderColor = await GetEffectiveFolderColorAsync(task.FolderId, cancellationToken);
+            return created.ToTaskScheduleResponse(task.Title, task.AreaId, area?.Color, folderColor, (int)task.Status);
         }, nameof(CreateAsync), request);
     }
 
@@ -108,7 +144,8 @@ public class TaskScheduleService(
             }
 
             var area = await areaRepository.GetByIdAsync(task.AreaId, cancellationToken);
-            return updated.ToTaskScheduleResponse(task.Title, task.AreaId, area?.Color, (int)task.Status);
+            var folderColor = await GetEffectiveFolderColorAsync(task.FolderId, cancellationToken);
+            return updated.ToTaskScheduleResponse(task.Title, task.AreaId, area?.Color, folderColor, (int)task.Status);
         }, nameof(UpdateAsync), new { id, request });
     }
 
@@ -157,9 +194,10 @@ public class TaskScheduleService(
 
             var schedules = await scheduleRepository.GetByTaskIdAsync(taskId, cancellationToken);
             var area = await areaRepository.GetByIdAsync(task.AreaId, cancellationToken);
+            var folderColor = await GetEffectiveFolderColorAsync(task.FolderId, cancellationToken);
 
             return (IReadOnlyList<TaskScheduleResponse>)schedules
-                .Select(s => s.ToTaskScheduleResponse(task.Title, task.AreaId, area?.Color, (int)task.Status))
+                .Select(s => s.ToTaskScheduleResponse(task.Title, task.AreaId, area?.Color, folderColor, (int)task.Status))
                 .ToList();
         }, nameof(GetByTaskIdAsync), new { taskId });
     }
@@ -192,12 +230,21 @@ public class TaskScheduleService(
             var areas = await areaRepository.FindAsync(a => areaIds.Contains(a.Id), cancellationToken);
             var areaMap = areas.ToDictionary(a => a.Id, a => (a.Title, a.Color));
 
+            // Загружаем все папки затронутых областей одним запросом для обхода иерархии в памяти
+            Dictionary<Guid, FolderEntity> folderMap = new();
+            if (areaIds.Count > 0)
+            {
+                var folders = await folderRepository.FindAsync(f => areaIds.Contains(f.AreaId), cancellationToken);
+                folderMap = folders.ToDictionary(f => f.Id);
+            }
+
             return (IReadOnlyList<TaskScheduleResponse>)accessibleSchedules
                 .Select(s =>
                 {
                     var task = s.Task!;
                     var areaInfo = areaMap.GetValueOrDefault(task.AreaId);
-                    return s.ToTaskScheduleResponse(task.Title, task.AreaId, areaInfo.Color, (int)task.Status);
+                    var folderColor = GetEffectiveFolderColor(task.FolderId, folderMap);
+                    return s.ToTaskScheduleResponse(task.Title, task.AreaId, areaInfo.Color, folderColor, (int)task.Status);
                 })
                 .ToList();
         }, nameof(GetByWeekAsync), new { weekStartIso });

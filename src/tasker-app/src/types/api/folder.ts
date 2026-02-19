@@ -5,6 +5,8 @@ export interface FolderCreateRequest {
   description?: string;
   areaId: string;
   parentFolderId?: string | null;
+  /** Цвет папки (hex). Необязателен — если не задан, используется цвет области. */
+  color?: string | null;
 }
 
 export interface FolderUpdateRequest {
@@ -12,6 +14,8 @@ export interface FolderUpdateRequest {
   description?: string;
   areaId: string;
   parentFolderId?: string | null;
+  /** Цвет папки (hex). Необязателен — если не задан, используется цвет области. */
+  color?: string | null;
 }
 
 export interface FolderResponse {
@@ -26,6 +30,8 @@ export interface FolderResponse {
   updatedAt: Date;
   isActive: boolean;
   deactivatedAt?: Date;
+  /** Цвет папки (hex). Если не задан — используется цвет области. */
+  customColor?: string | null;
 }
 
 export interface FolderSummaryResponse {
@@ -39,4 +45,6 @@ export interface FolderSummaryResponse {
   ownerUserName: string;
   createdAt: Date;
   updatedAt: Date;
+  /** Цвет папки (hex). Если не задан — используется цвет области. */
+  customColor?: string | null;
 }

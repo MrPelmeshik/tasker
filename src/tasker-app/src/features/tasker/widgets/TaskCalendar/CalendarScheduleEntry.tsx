@@ -470,9 +470,10 @@ export const CalendarScheduleEntry: React.FC<CalendarScheduleEntryProps> = ({
     opacity: interacting ? 0 : 1, // Hide original item during drag
   };
 
-  if (entry.areaColor) {
-    (style as Record<string, string>)['--card-custom-color'] = entry.areaColor;
-    (style as Record<string, string>)['--card-custom-color-rgb'] = hexToRgb(entry.areaColor);
+  const entryColor = entry.folderColor || entry.areaColor;
+  if (entryColor) {
+    (style as Record<string, string>)['--card-custom-color'] = entryColor;
+    (style as Record<string, string>)['--card-custom-color-rgb'] = hexToRgb(entryColor);
   }
 
   return (

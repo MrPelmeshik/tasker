@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
 import { EntityConfirmModals } from '../common/EntityConfirmModals';
-import { GlassInput, GlassSelect } from '../ui';
+import { GlassInput, GlassSelect, ColorPicker } from '../ui';
 import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
 import { MarkdownViewer } from '../ui/MarkdownViewer/MarkdownViewer';
 import { EntityMetaBlock } from '../common/EntityMetaBlock';
@@ -50,19 +50,20 @@ export const FolderModal: React.FC<FolderModalProps> = ({
     getInitialData: () => {
       const pid = folder?.parentFolderId ?? defaultParentFolderId ?? null;
       return folder
-        ? { title: folder.title, description: folder.description || '', areaId: folder.areaId, parentFolderId: pid == null ? '' : pid }
+        ? { title: folder.title, description: folder.description || '', areaId: folder.areaId, parentFolderId: pid == null ? '' : pid, color: folder.customColor ?? '' }
         : {
           title: '',
           description: '',
           areaId: defaultAreaId || (areas.length > 0 ? areas[0].id : ''),
           parentFolderId: pid == null ? '' : pid,
+          color: '',
         };
     },
     deps: [folder, areas, defaultAreaId, defaultParentFolderId],
     onClose,
     onSave: async (data) => {
       const pid = (data.parentFolderId === '' || data.parentFolderId == null) ? null : data.parentFolderId;
-      await onSave({ ...data, parentFolderId: pid }, folder?.id);
+      await onSave({ ...data, parentFolderId: pid, color: data.color || null }, folder?.id);
     },
     onDelete,
     validate: (data) => Boolean(data.title?.trim() && data.areaId),
@@ -213,6 +214,40 @@ export const FolderModal: React.FC<FolderModalProps> = ({
                 />
               }
             />
+
+            <EntityFormField
+              label="Цвет"
+              hasChange={fieldChanges.color}
+              onReset={() => handleResetField('color')}
+              isViewMode={isViewMode}
+              viewContent={
+                formData.color ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 4,
+                      backgroundColor: formData.color,
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      flexShrink: 0,
+                    }} />
+                    <span>{formData.color}</span>
+                  </div>
+                ) : (
+                  <div className={formCss.fieldValueReadonly}>Наследуется от области</div>
+                )
+              }
+              editContent={
+                <ColorPicker
+                  value={formData.color || undefined}
+                  onChange={(hex) => handleFieldChange('color', hex)}
+                  onClear={() => handleFieldChange('color', '')}
+                  disabled={isLoading}
+                  showHexInput
+                />
+              }
+            />
+
             {folder && (
               <div style={{ marginBottom: 16 }}>
                 <AttachmentList

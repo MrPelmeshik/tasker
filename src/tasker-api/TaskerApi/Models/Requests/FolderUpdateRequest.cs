@@ -30,4 +30,10 @@ public class FolderUpdateRequest
     /// Идентификатор родительской папки (null = корень области)
     /// </summary>
     public Guid? ParentFolderId { get; set; }
+
+    /// <summary>
+    /// Цвет папки (hex, например #ff0000). Необязателен — если null, используется цвет области.
+    /// </summary>
+    [StringLength(9, ErrorMessage = "Цвет не может быть длиннее 9 символов")]
+    public string? Color { get; set; }
 }

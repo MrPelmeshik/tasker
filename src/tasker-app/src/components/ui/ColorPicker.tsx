@@ -6,6 +6,8 @@ export interface ColorPickerProps {
   value?: string;
   /** Вызов при выборе цвета */
   onChange: (hex: string) => void;
+  /** Вызов при сбросе цвета (если передан — отображается кнопка «×») */
+  onClear?: () => void;
   /** Отключить взаимодействие */
   disabled?: boolean;
   /** Подпись поля */
@@ -34,6 +36,7 @@ function normalizeHex(hex: string): string {
 export const ColorPicker: React.FC<ColorPickerProps> = ({
   value,
   onChange,
+  onClear,
   disabled,
   label,
   required,
@@ -116,6 +119,18 @@ export const ColorPicker: React.FC<ColorPickerProps> = ({
           tabIndex={-1}
           aria-hidden
         />
+        {onClear && value && (
+          <button
+            type="button"
+            className={css.clearBtn}
+            onClick={onClear}
+            disabled={disabled}
+            title="Сбросить цвет"
+            aria-label="Сбросить цвет"
+          >
+            ×
+          </button>
+        )}
       </div>
     </div>
   );

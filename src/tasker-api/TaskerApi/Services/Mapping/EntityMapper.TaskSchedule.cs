@@ -12,7 +12,7 @@ public static partial class EntityMapper
     /// <summary>
     /// Маппинг TaskScheduleEntity в TaskScheduleResponse
     /// </summary>
-    public static TaskScheduleResponse ToTaskScheduleResponse(this TaskScheduleEntity entity, string taskTitle = "", Guid? areaId = null, string? areaColor = null, int taskStatus = 0)
+    public static TaskScheduleResponse ToTaskScheduleResponse(this TaskScheduleEntity entity, string taskTitle = "", Guid? areaId = null, string? areaColor = null, string? folderColor = null, int taskStatus = 0)
     {
         return new TaskScheduleResponse
         {
@@ -21,6 +21,7 @@ public static partial class EntityMapper
             TaskTitle = taskTitle,
             AreaId = areaId ?? Guid.Empty,
             AreaColor = areaColor,
+            FolderColor = folderColor,
             TaskStatus = taskStatus,
             StartAt = entity.StartAt,
             EndAt = entity.EndAt,
