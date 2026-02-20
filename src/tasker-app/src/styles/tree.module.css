@@ -268,7 +268,7 @@
 .areaCard[data-custom-color]:hover,
 .folderCard[data-custom-color]:hover,
 .taskCard[data-custom-color]:hover {
-  background: rgba(var(--custom-color-rgb), 0.15);
+  background: rgb(var(--custom-color-rgb) / 0.15);
 }
 
 .treeRowMain {

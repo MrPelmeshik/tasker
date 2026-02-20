@@ -9,5 +9,5 @@ export function hexToRgb(hex: string): string {
   const g = parseInt(result[2], 16);
   const b = parseInt(result[3], 16);
 
-  return `${r}, ${g}, ${b}`;
+  return `${r} ${g} ${b}`;
 }
