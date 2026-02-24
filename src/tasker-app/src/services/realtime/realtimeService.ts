@@ -8,6 +8,7 @@ import { getStoredTokens } from '../storage/token';
 import { fetchAreaShortCard } from '../api';
 import { getHubUrl } from '../../config/api';
 import { UUID_REGEX } from '../../utils/uuid';
+import { logger } from '../../utils/logger';
 
 /** Payload события EntityChanged */
 export interface EntityChangedPayload {
@@ -58,7 +59,7 @@ async function joinAreas(): Promise<void> {
       await connection.invoke('JoinAreas', areaIds);
     }
   } catch (err) {
-    console.warn('Ошибка JoinAreas:', err);
+    logger.warn('Ошибка JoinAreas:', err);
   }
 }
 
@@ -144,7 +145,7 @@ export async function startRealtime(): Promise<void> {
 
       connection.on('EntityChanged', (payload: unknown) => {
         if (!isValidEntityChangedPayload(payload)) {
-          console.warn('EntityChanged: некорректный payload', payload);
+          logger.warn('EntityChanged: некорректный payload', payload);
           return;
         }
       // Каждый callback в отдельном try/catch — ошибка в одном не прерывает остальные
@@ -152,7 +153,7 @@ export async function startRealtime(): Promise<void> {
         try {
           cb(payload);
         } catch (e) {
-          console.error('Ошибка в callback EntityChanged:', e);
+          logger.error('Ошибка в callback EntityChanged:', e);
         }
       });
         if (
@@ -170,7 +171,7 @@ export async function startRealtime(): Promise<void> {
           try {
             cb();
           } catch (e) {
-            console.error('Ошибка в callback reconnected:', e);
+            logger.error('Ошибка в callback reconnected:', e);
           }
         });
       };
@@ -186,13 +187,13 @@ export async function startRealtime(): Promise<void> {
       await connection.start();
       await updateJoinAreas();
     } catch (err) {
-      console.warn('SignalR: не удалось подключиться', err);
+      logger.warn('SignalR: не удалось подключиться', err);
       notifyStatusChange(true);
       connectionFailedCallbacks.forEach((cb) => {
         try {
           cb(err);
         } catch (e) {
-          console.error('Ошибка в callback connectionFailed:', e);
+          logger.error('Ошибка в callback connectionFailed:', e);
         }
       });
     }

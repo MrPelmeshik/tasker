@@ -1,6 +1,7 @@
 import { apiFetch, ensureAccessTokenFresh, refreshAccessToken } from "./client";
 import { getApiBase } from "../../config/api";
 import { getStoredTokens } from "../storage/token";
+import { logger } from "../../utils/logger";
 
 export enum EntityType {
     AREA = 0,
@@ -96,10 +97,10 @@ export const attachmentApi = {
             a.download = fileName;
             document.body.appendChild(a);
             a.click();
-            window.URL.revokeObjectURL(blobUrl);
             document.body.removeChild(a);
-        } catch (err: any) {
-            console.error('Download error:', err);
+            setTimeout(() => window.URL.revokeObjectURL(blobUrl), 100);
+        } catch (err: unknown) {
+            logger.error('Download error:', err);
             throw err;
         }
     },

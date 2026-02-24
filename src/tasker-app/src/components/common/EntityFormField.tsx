@@ -13,7 +13,7 @@ export interface EntityFormFieldProps {
   className?: string;
 }
 
-export const EntityFormField: React.FC<EntityFormFieldProps> = ({
+export const EntityFormField: React.FC<EntityFormFieldProps> = React.memo(({
   label,
   hasChange,
   onReset,
@@ -33,4 +33,4 @@ export const EntityFormField: React.FC<EntityFormFieldProps> = ({
       {isViewMode ? viewContent : editContent}
     </div>
   </div>
-);
+));

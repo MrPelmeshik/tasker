@@ -169,7 +169,6 @@ export function useTaskTableData({
       setGroupedRows(grouped);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
-      console.error('Ошибка загрузки задач:', error);
       if (alive) {
         setGroupedRows([]);
         showError(error);

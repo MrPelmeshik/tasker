@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Modal } from '../common/Modal';
+import { ConfirmModal } from '../common/ConfirmModal';
 import { SimpleModalHeader } from '../common/SimpleModalHeader';
 import { EntityFormField } from '../common/EntityFormField';
 import { GlassInput, ModalSaveButton, GlassSelect } from '../ui';
@@ -36,6 +37,7 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
   const [eventType, setEventType] = useState('ACTIVITY');
   const [eventDateTime, setEventDateTime] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const attachmentRef = useRef<AttachmentListHandle>(null);
 
   useEffect(() => {
@@ -55,14 +57,9 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
     }
   }, [isOpen, event]);
 
-  const safeOnClose = async () => {
-    // Check if we have uploaded attachments but not saved
+  const safeOnClose = () => {
     if (attachmentRef.current?.hasPendingChanges) {
-      if (window.confirm('Сохранить изменения?')) {
-        await handleSave();
-      } else {
-        onClose();
-      }
+      setShowCloseConfirm(true);
     } else {
       onClose();
     }
@@ -90,7 +87,6 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
 
       onClose();
     } catch (error) {
-      console.error('Ошибка сохранения:', error);
       showError(error);
     } finally {
       setIsLoading(false);
@@ -100,6 +96,17 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
   if (!event) return null;
 
   return (
+    <>
+    <ConfirmModal
+      isOpen={showCloseConfirm}
+      onClose={() => setShowCloseConfirm(false)}
+      onCancel={() => { setShowCloseConfirm(false); onClose(); }}
+      onConfirm={async () => { setShowCloseConfirm(false); await handleSave(); }}
+      title="Несохранённые изменения"
+      message="Сохранить изменения перед закрытием?"
+      confirmText="Сохранить"
+      cancelText="Не сохранять"
+    />
     <Modal isOpen={isOpen} onClose={safeOnClose} size="medium">
       <div className={css.modalContent}>
         <SimpleModalHeader
@@ -194,5 +201,6 @@ export const EventEditModal: React.FC<EventEditModalProps> = ({
         </div>
       </div>
     </Modal>
+    </>
   );
 };

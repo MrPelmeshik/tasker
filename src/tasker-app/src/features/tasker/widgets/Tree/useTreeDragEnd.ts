@@ -146,7 +146,6 @@ export function useTreeDragEnd(params: UseTreeDragEndParams) {
           addSuccess('Задача перемещена');
         }
       } catch (error) {
-        console.error('Ошибка перемещения:', error);
         showError(error);
       }
     },

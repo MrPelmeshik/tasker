@@ -1,6 +1,7 @@
 import { getStoredTokens, isAccessTokenExpiredOrMissing, setStoredTokens, clearStoredTokens } from '../storage/token';
 import type { ApiResponse, RefreshTokenResponse } from '../../types';
 import { parseApiDates } from '../../utils/api-date';
+import { logger } from '../../utils/logger';
 import {
 	AUTH_TOKENS_CLEARED_EVENT,
 	createAuthTokensClearedDetail,
@@ -146,7 +147,7 @@ export async function apiFetch<T>(input: RequestInfo, init?: RequestInit): Promi
 		const raw = JSON.parse(text);
 		return parseApiDates(raw) as T;
 	} catch (e) {
-		console.error('Error parsing JSON response', e);
+		logger.error('Error parsing JSON response', e);
 		throw new Error('Invalid JSON response from server');
 	}
 }

@@ -26,7 +26,7 @@ export type UserCardProps = {
  * Карточка пользователя для отображения во всплывающей подсказке.
  * Показывает аватар с инициалами, имя и при наличии — email, имя и фамилию.
  */
-export const UserCard: React.FC<UserCardProps> = ({ userName, user }) => {
+export const UserCard: React.FC<UserCardProps> = React.memo(({ userName, user }) => {
   const displayName = userName.trim() || '—';
   const initials = getInitials(displayName);
 
@@ -64,4 +64,4 @@ export const UserCard: React.FC<UserCardProps> = ({ userName, user }) => {
       )}
     </div>
   );
-};
+});

@@ -94,18 +94,18 @@
 }
 
 .markdown code {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--glass-bg-1);
   padding: 0.15em 0.4em;
-  border-radius: 4px;
+  border-radius: var(--radius-2xs);
   font-family: var(--font-family-mono);
   font-size: 0.9em;
 }
 
 .markdown pre {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--glass-border-1);
-  border-radius: 8px;
-  padding: 10px 12px;
+  background: var(--glass-bg-1);
+  border: var(--border-1) solid var(--glass-border-1);
+  border-radius: var(--radius-xs);
+  padding: var(--space-10) var(--space-12);
   margin: 0.5em 0;
   overflow-x: auto;
 }
@@ -141,19 +141,19 @@
 
 .markdown th,
 .markdown td {
-  border: 1px solid var(--glass-border-2);
-  padding: 6px 10px;
+  border: var(--border-1) solid var(--glass-border-2);
+  padding: var(--space-6) var(--space-10);
   text-align: left;
 }
 
 .markdown th {
-  background: rgba(255, 255, 255, 0.06);
+  background: var(--glass-bg-1);
   font-weight: var(--font-weight-semibold);
 }
 
 .markdown hr {
   border: none;
-  border-top: 1px solid var(--glass-border-2);
+  border-top: var(--border-1) solid var(--glass-border-2);
   margin: 0.8em 0;
 }
 
@@ -163,7 +163,7 @@
 
 .markdown img {
   max-width: 100%;
-  border-radius: 8px;
+  border-radius: var(--radius-xs);
 }
 
 .markdown strong {

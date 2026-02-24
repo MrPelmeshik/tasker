@@ -108,7 +108,7 @@ export const AttachmentList = forwardRef<AttachmentListHandle, AttachmentListPro
             {error && <div className={css.error}>{error}</div>}
 
             <div className={css.list}>
-                {attachments.map((attachment: any) => (
+                {attachments.map((attachment) => (
                     <AttachmentItem
                         key={attachment.id}
                         attachment={attachment}

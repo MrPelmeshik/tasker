@@ -3,6 +3,8 @@ import { useDroppable } from '@dnd-kit/core';
 import type { DaySchedules } from './useCalendarData';
 import { CalendarScheduleEntry } from './CalendarScheduleEntry';
 import { DAY_START_HOUR, DAY_END_HOUR, TOTAL_HOURS, HOUR_HEIGHT, formatHour, formatDayHeader } from './calendarUtils';
+import type { OverlapInfo } from './calendarUtils';
+import type { TaskScheduleResponse } from '../../../../types/api';
 import css from '../../../../styles/task-calendar.module.css';
 
 export interface CalendarGridProps {
@@ -172,8 +174,8 @@ const GhostEntry: React.FC<{
   dragState: { id: string; start: Date; end: Date };
   dayDate: Date;
   hourHeight: number;
-  originalEntries: any[];
-  overlapMap: Map<string, any>;
+  originalEntries: TaskScheduleResponse[];
+  overlapMap: Map<string, OverlapInfo>;
 }> = ({ dragState, dayDate, hourHeight }) => {
   const { start, end } = dragState;
   const dayStart = new Date(dayDate);

@@ -1,6 +1,8 @@
 import React from 'react';
 import { Modal } from '../common/Modal';
+import { ConfirmModal } from '../common/ConfirmModal';
 import { EntityConfirmModals } from '../common/EntityConfirmModals';
+import { logger } from '../../utils/logger';
 import { GlassInput, GlassSelect, ColorPicker } from '../ui';
 import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
 import { MarkdownViewer } from '../ui/MarkdownViewer/MarkdownViewer';
@@ -73,6 +75,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
 
   // Transactional attachments
   const [uploadedAttachmentIds, setUploadedAttachmentIds] = React.useState<Set<string>>(new Set());
+  const [showCloseConfirm, setShowCloseConfirm] = React.useState(false);
 
   const handleUploadSuccess = (id: string) => {
     setUploadedAttachmentIds(prev => new Set(prev).add(id));
@@ -84,7 +87,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
         try {
           await attachmentApi.delete(id);
         } catch (e) {
-          console.error('Error cleaning up attachment', id, e);
+          logger.warn('Error cleaning up attachment', id, e);
         }
       }
       setUploadedAttachmentIds(new Set());
@@ -92,15 +95,18 @@ export const FolderModal: React.FC<FolderModalProps> = ({
   };
 
   // Overwrite handleClose to include cleanup
-  const safeHandleClose = async () => {
+  const safeHandleClose = () => {
     if (hasUnsavedChanges || uploadedAttachmentIds.size > 0) {
-      if (window.confirm('Есть несохраненные изменения. Закрыть без сохранения?')) {
-        await cleanupAttachments();
-        handleClose();
-      }
+      setShowCloseConfirm(true);
     } else {
       handleClose();
     }
+  };
+
+  const handleConfirmClose = async () => {
+    setShowCloseConfirm(false);
+    await cleanupAttachments();
+    handleClose();
   };
 
   // Overwrite handleSave to clear tracking
@@ -286,6 +292,16 @@ export const FolderModal: React.FC<FolderModalProps> = ({
           </div>
         </div>
       </div>
+      <ConfirmModal
+        isOpen={showCloseConfirm}
+        onClose={() => setShowCloseConfirm(false)}
+        onCancel={() => setShowCloseConfirm(false)}
+        onConfirm={handleConfirmClose}
+        title="Несохранённые изменения"
+        message="Есть несохраненные изменения. Закрыть без сохранения?"
+        confirmText="Закрыть"
+        variant="danger"
+      />
       <EntityConfirmModals
         showConfirmModal={showConfirmModal}
         onConfirmSave={handleConfirmSave}

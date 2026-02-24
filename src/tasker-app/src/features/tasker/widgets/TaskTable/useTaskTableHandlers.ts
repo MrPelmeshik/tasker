@@ -50,7 +50,6 @@ export function useTaskTableHandlers({
       await loadData();
       notifyTaskUpdate(taskId, data.folderId ?? undefined);
     } catch (error) {
-      console.error('Ошибка сохранения задачи:', error);
       throw error;
     }
   }, [loadData, notifyTaskUpdate]);
@@ -61,7 +60,6 @@ export function useTaskTableHandlers({
       await loadData();
       notifyTaskUpdate(id, undefined);
     } catch (error) {
-      console.error('Ошибка удаления задачи:', error);
       throw error;
     }
   }, [loadData, notifyTaskUpdate]);
@@ -78,7 +76,6 @@ export function useTaskTableHandlers({
           const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
           openTaskModal(fullTask, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
         } catch (error) {
-          console.error('Ошибка загрузки задачи:', error);
           showError(error);
         }
       };
@@ -103,7 +100,6 @@ export function useTaskTableHandlers({
       const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
       openTaskModal(task, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
     } catch (error) {
-      console.error('Ошибка загрузки задачи:', error);
       showError(error);
     }
   }, [openTaskModal, handleTaskSave, handleTaskDelete, showError]);

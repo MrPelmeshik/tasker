@@ -62,7 +62,6 @@ export function useTreeFolderHandlers({
         setAreas((prev) => prev.map((a) => (a.id === areaId ? { ...a, foldersCount: rootFolders.length } : a)));
         setExpandedAreas((prev) => new Set(prev).add(areaId));
       } catch (error) {
-        console.error('Ошибка сохранения папки:', error);
         throw error;
       }
     },
@@ -96,7 +95,6 @@ export function useTreeFolderHandlers({
           return next;
         });
       } catch (error) {
-        console.error('Ошибка удаления папки:', error);
         throw error;
       }
     },
@@ -131,7 +129,6 @@ export function useTreeFolderHandlers({
           openFolderModal(folder, 'edit', areasForModal, (data, fid) => handleFolderSave(data as FolderUpdateRequest, fid), handleFolderDelete);
         }
       } catch (error) {
-        console.error('Ошибка загрузки папки:', error);
         showError(error);
       }
     },

@@ -7,19 +7,19 @@
 .toolbar {
   display: flex;
   align-items: center;
-  gap: 2px;
-  padding: 4px 6px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
   background: var(--glass-gradient-bg);
-  border: 1px solid var(--glass-border-2);
+  border: var(--border-1) solid var(--glass-border-2);
   border-bottom: none;
-  border-radius: 12px 12px 0 0;
+  border-radius: var(--radius-m) var(--radius-m) 0 0;
   backdrop-filter: var(--glass-backdrop-blur-6);
   flex-wrap: wrap;
 }
 
 .toolbar button {
-  width: 28px;
-  height: 28px;
+  width: var(--size-28);
+  height: var(--size-28);
   padding: 0;
   display: flex;
   align-items: center;
@@ -32,10 +32,10 @@
 }
 
 .divider {
-  width: 1px;
-  height: 20px;
+  width: var(--border-1);
+  height: var(--size-20);
   background: var(--glass-border-3);
-  margin: 0 4px;
+  margin: 0 var(--space-4);
   flex-shrink: 0;
 }
 
@@ -58,15 +58,15 @@
 }
 
 .textareaWrapper textarea {
-  border-radius: 0 0 12px 12px !important;
+  border-radius: 0 0 var(--radius-m) var(--radius-m) !important;
   border-top: none !important;
 }
 
 .charCounter {
   text-align: right;
-  font-size: var(--font-12, 12px);
-  color: rgba(255, 255, 255, 0.35);
-  padding: 4px 8px 0;
+  font-size: var(--font-12);
+  color: var(--glass-text-muted);
+  padding: var(--space-4) var(--space-8) 0;
   transition: color var(--transition-fast);
 }
 
@@ -77,10 +77,10 @@
 
 .preview {
   background: var(--surface-subtle-bg);
-  border: 1px solid var(--glass-border-2);
+  border: var(--border-1) solid var(--glass-border-2);
   border-top: none;
-  border-radius: 0 0 12px 12px;
-  padding: 12px 14px;
+  border-radius: 0 0 var(--radius-m) var(--radius-m);
+  padding: var(--space-12) var(--space-14);
   min-height: 120px;
   max-height: 400px;
   overflow-y: auto;

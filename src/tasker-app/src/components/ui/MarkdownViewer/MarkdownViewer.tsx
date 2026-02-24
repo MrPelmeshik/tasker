@@ -11,7 +11,7 @@ export interface MarkdownViewerProps {
   emptyText?: string;
 }
 
-export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
+export const MarkdownViewer: React.FC<MarkdownViewerProps> = React.memo(({
   value,
   emptyText = '—',
 }) => {
@@ -44,4 +44,4 @@ export const MarkdownViewer: React.FC<MarkdownViewerProps> = ({
       )}
     </div>
   );
-};
+});

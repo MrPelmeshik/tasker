@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { logger } from '../../../../utils/logger';
 import {
   fetchAreaShortCard,
   fetchRootFoldersByArea,
@@ -19,26 +20,29 @@ export interface UseTreeDataOptions {
 }
 
 // Простая проверка глубокого равенства для наших структур данных
-function isDeepEqual(a: any, b: any): boolean {
+function isDeepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
   if (!a || !b || typeof a !== 'object' || typeof b !== 'object') return false;
   if (Array.isArray(a) !== Array.isArray(b)) return false;
 
   if (Array.isArray(a)) {
-    if (a.length !== b.length) return false;
+    const bArr = b as unknown[];
+    if (a.length !== bArr.length) return false;
     for (let i = 0; i < a.length; i++) {
-      if (!isDeepEqual(a[i], b[i])) return false;
+      if (!isDeepEqual(a[i], bArr[i])) return false;
     }
     return true;
   }
 
-  const keysA = Object.keys(a);
-  const keysB = Object.keys(b);
+  const aObj = a as Record<string, unknown>;
+  const bObj = b as Record<string, unknown>;
+  const keysA = Object.keys(aObj);
+  const keysB = Object.keys(bObj);
   if (keysA.length !== keysB.length) return false;
 
   for (const key of keysA) {
     if (!keysB.includes(key)) return false;
-    if (!isDeepEqual(a[key], b[key])) return false;
+    if (!isDeepEqual(aObj[key], bObj[key])) return false;
   }
 
   return true;
@@ -158,7 +162,7 @@ export function useTreeData({ showError, subscribeToTaskUpdates, root }: UseTree
           return sorted;
         } catch (error) {
           if (error instanceof Error && error.name === 'AbortError') return [];
-          console.error(errorContext, error);
+          logger.error(errorContext, error);
           onError();
           showError(error);
           return [];
@@ -275,7 +279,7 @@ export function useTreeData({ showError, subscribeToTaskUpdates, root }: UseTree
       updateStateIfChanged(setAreas, sorted);
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') return;
-      console.error('Ошибка загрузки областей:', error);
+      logger.error('Ошибка загрузки областей:', error);
       setAreas([]);
       showError(error);
     }

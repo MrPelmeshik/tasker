@@ -66,7 +66,6 @@ export function useTreeTaskHandlers({
         setExpandedAreas((prev) => new Set(prev).add(areaId));
         notifyTaskUpdate(taskId, folderId);
       } catch (error) {
-        console.error('Ошибка сохранения задачи:', error);
         throw error;
       }
     },
@@ -92,7 +91,6 @@ export function useTreeTaskHandlers({
         }
         notifyTaskUpdate(id, folderId);
       } catch (error) {
-        console.error('Ошибка удаления задачи:', error);
         throw error;
       }
     },
@@ -127,7 +125,6 @@ export function useTreeTaskHandlers({
           openTaskModal(task, 'edit', (data, tid) => handleTaskSave(data as TaskUpdateRequest, tid), handleTaskDelete, undefined, undefined, areasForTaskModal);
         }
       } catch (error) {
-        console.error('Ошибка загрузки задачи:', error);
         showError(error);
       }
     },

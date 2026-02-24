@@ -61,7 +61,6 @@ export function useTreeAreaHandlers({
           setAreas(sortAreasByTitle(updated));
         }
       } catch (error) {
-        console.error('Ошибка сохранения области:', error);
         throw error;
       }
     },
@@ -82,7 +81,6 @@ export function useTreeAreaHandlers({
         setAreas((prev) => prev.map((a) => (a.id === areaId ? { ...a, customColor: hex } : a)));
         notifyTaskUpdate?.(undefined, undefined, { entityType: 'AREA', entityId: areaId });
       } catch (error) {
-        console.error('Ошибка обновления цвета области:', error);
         showError(error);
       }
     },
@@ -106,7 +104,6 @@ export function useTreeAreaHandlers({
           return next;
         });
       } catch (error) {
-        console.error('Ошибка удаления области:', error);
         throw error;
       }
     },
@@ -124,7 +121,6 @@ export function useTreeAreaHandlers({
         const area = await fetchAreaById(areaId);
         if (area) openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
       } catch (error) {
-        console.error('Ошибка загрузки области:', error);
         showError(error);
       }
     },

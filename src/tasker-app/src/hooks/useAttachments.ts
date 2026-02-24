@@ -1,5 +1,6 @@
 import { useState, useCallback, useEffect, useMemo } from 'react';
 import { attachmentApi, Attachment, EntityType } from '../services/api/attachment.api';
+import { logger } from '../utils/logger';
 
 export interface PendingAttachment {
     file: File;
@@ -26,9 +27,9 @@ export const useAttachments = (entityId: string, entityType: EntityType, onPendi
             const data = await attachmentApi.getList(entityId, entityType);
             setAttachments(data);
             setError(null);
-        } catch (err: any) {
-            console.error(err);
-            setError(err.message || 'Error fetching attachments');
+        } catch (err: unknown) {
+            logger.error(err);
+            setError(err instanceof Error ? err.message : 'Error fetching attachments');
         } finally {
             setLoading(false);
         }
@@ -74,9 +75,9 @@ export const useAttachments = (entityId: string, entityType: EntityType, onPendi
             setPendingDeletes(new Set());
             setPendingUploads([]);
             await fetchAttachments();
-        } catch (err: any) {
-            console.error(err);
-            setError(err.message || 'Error saving changes');
+        } catch (err: unknown) {
+            logger.error(err);
+            setError(err instanceof Error ? err.message : 'Error saving changes');
             throw err;
         } finally {
             setLoading(false);
@@ -92,9 +93,9 @@ export const useAttachments = (entityId: string, entityType: EntityType, onPendi
         try {
             setError(null);
             await attachmentApi.download(id, fileName);
-        } catch (err: any) {
-            console.error(err);
-            setError(err.message || 'Error downloading file');
+        } catch (err: unknown) {
+            logger.error(err);
+            setError(err instanceof Error ? err.message : 'Error downloading file');
         }
     }, []);
 
@@ -116,6 +117,7 @@ export const useAttachments = (entityId: string, entityType: EntityType, onPendi
     const displayedAttachments = useMemo(() => {
         const existing = attachments.map(a => ({
             ...a,
+            isPending: false as const,
             isPendingDelete: pendingDeletes.has(a.id),
         }));
         const pending = pendingUploads.map(p => ({

@@ -7,7 +7,7 @@ import styles from '../../styles/realtime-banner.module.css';
  * Баннер при недоступности real-time обновлений (WebSocket).
  * Показывает сообщение и кнопку принудительного обновления.
  */
-export const RealtimeBanner: React.FC = () => {
+export const RealtimeBanner: React.FC = React.memo(() => {
   const { realtimeUnavailable, forceRefresh } = useTaskUpdate();
   if (!realtimeUnavailable) return null;
 
@@ -21,4 +21,4 @@ export const RealtimeBanner: React.FC = () => {
       </GlassButton>
     </div>
   );
-};
+});

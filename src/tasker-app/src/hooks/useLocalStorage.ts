@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { safeLocalStorage } from '../services/storage';
+import { logger } from '../utils/logger';
 
 /**
  * Hook for managing state in localStorage.
@@ -16,7 +17,7 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
             const item = safeLocalStorage.getItem(key);
             return item ? (JSON.parse(item) as T) : initialValue;
         } catch (error) {
-            console.warn(`Error reading localStorage key "${key}":`, error);
+            logger.warn(`Error reading localStorage key "${key}":`, error);
             return initialValue;
         }
     }, [key, initialValue]);
@@ -36,13 +37,13 @@ export function useLocalStorage<T>(key: string, initialValue: T): [T, (value: T 
                 try {
                     safeLocalStorage.setItem(key, JSON.stringify(valueToStore));
                 } catch (error) {
-                    console.warn(`Error setting localStorage key "${key}":`, error);
+                    logger.warn(`Error setting localStorage key "${key}":`, error);
                 }
 
                 return valueToStore;
             });
         } catch (error) {
-            console.warn(`Error setting state for key "${key}":`, error);
+            logger.warn(`Error setting state for key "${key}":`, error);
         }
     }, [key]);
 

@@ -79,7 +79,6 @@ export function useEntityFormModal<TForm extends object>(
       await onSave(formData);
       onClose();
     } catch (error) {
-      console.error('Ошибка сохранения:', error);
       showError(error);
     } finally {
       isSubmittingRef.current = false;
@@ -140,7 +139,6 @@ export function useEntityFormModal<TForm extends object>(
       await onDelete(entity.id);
       onClose();
     } catch (error) {
-      console.error('Ошибка удаления:', error);
       showError(error);
     } finally {
       isSubmittingRef.current = false;

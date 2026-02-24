@@ -1,4 +1,5 @@
 import { apiFetch } from './client';
+import { logger } from '../../utils/logger';
 import type {
   ApiResponse,
   AuthResponse,
@@ -63,6 +64,6 @@ export async function logoutRequest(): Promise<void> {
       credentials: 'include',
     });
   } catch (err) {
-    console.warn('logoutRequest failed:', err);
+    logger.warn('logoutRequest failed:', err);
   }
 }

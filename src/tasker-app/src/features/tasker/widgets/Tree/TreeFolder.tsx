@@ -5,7 +5,7 @@ import { useTreeContext } from './TreeContext';
 import { TreeFolderRow } from './TreeFolderRow';
 import { TreeFolderChildren } from './TreeFolderChildren';
 import { matchesSearch, folderHasMatch } from './treeSearchUtils';
-import type { FolderSummary } from '../../../../types';
+import type { FolderSummary, TaskSummary } from '../../../../types';
 import css from '../../../../styles/tree.module.css';
 import glassWidgetStyles from '../../../../styles/glass-widget.module.css';
 import { Loader } from '../../../../components/ui/Loader';
@@ -117,6 +117,6 @@ export const TreeFolder: React.FC<TreeFolderProps> = React.memo(({ folder, areaI
     );
 });
 
-function hasChildren(folder: FolderSummary, subfolders: FolderSummary[], tasks: any[]) {
+function hasChildren(folder: FolderSummary, subfolders: FolderSummary[], tasks: TaskSummary[]) {
     return subfolders.length + tasks.length > 0 || folder.tasksCount + folder.subfoldersCount > 0;
 }

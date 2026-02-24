@@ -1,13 +1,14 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
-import { ActivityModal } from '../components/activities/ActivityModal';
-import { AreaModal } from '../components/areas/AreaModal';
-import { CabinetModal } from '../components/cabinet/CabinetModal';
-import { FolderModal } from '../components/folders/FolderModal';
-import { TaskModal } from '../components/tasks/TaskModal';
+import React, { createContext, useContext, useState, Suspense, lazy, ReactNode } from 'react';
 import type { AreaResponse, FolderResponse, TaskResponse, AreaCreateRequest, AreaUpdateRequest, FolderCreateRequest, FolderUpdateRequest, TaskCreateRequest, TaskUpdateRequest } from '../types/api';
 import type { ActivityFormData } from '../components/activities/ActivityModal';
 import type { EventResponse, EventUpdateRequest } from '../types/api';
 import type { ModalSize } from '../types/modal-size';
+
+const ActivityModal = lazy(() => import('../components/activities/ActivityModal').then(m => ({ default: m.ActivityModal })));
+const AreaModal = lazy(() => import('../components/areas/AreaModal').then(m => ({ default: m.AreaModal })));
+const CabinetModal = lazy(() => import('../components/cabinet/CabinetModal').then(m => ({ default: m.CabinetModal })));
+const FolderModal = lazy(() => import('../components/folders/FolderModal').then(m => ({ default: m.FolderModal })));
+const TaskModal = lazy(() => import('../components/tasks/TaskModal').then(m => ({ default: m.TaskModal })));
 
 export interface ModalContextType {
   openAreaModal: (area: AreaResponse | null, mode: 'create' | 'edit', onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>, onDelete?: (id: string) => Promise<void>, size?: ModalSize) => void;
@@ -141,56 +142,66 @@ export const ModalProvider: React.FC<ModalProviderProps> = ({ children }) => {
       {children}
       
       {/* Модальные окна на уровне приложения */}
-      <AreaModal
-        isOpen={areaModal.isOpen}
-        onClose={closeAreaModal}
-        onSave={areaModal.onSave || (() => Promise.resolve())}
-        onDelete={areaModal.onDelete ?? undefined}
-        area={areaModal.area}
-        title={areaModal.mode === 'create' ? 'Создание области' : 'Редактирование области'}
-        size={areaModal.size}
-      />
+      <Suspense fallback={null}>
+        <AreaModal
+          isOpen={areaModal.isOpen}
+          onClose={closeAreaModal}
+          onSave={areaModal.onSave || (() => Promise.resolve())}
+          onDelete={areaModal.onDelete ?? undefined}
+          area={areaModal.area}
+          title={areaModal.mode === 'create' ? 'Создание области' : 'Редактирование области'}
+          size={areaModal.size}
+        />
+      </Suspense>
 
-      <FolderModal
-        isOpen={folderModal.isOpen}
-        onClose={closeFolderModal}
-        onSave={folderModal.onSave || (() => Promise.resolve())}
-        onDelete={folderModal.onDelete ?? undefined}
-        folder={folderModal.folder}
-        areas={folderModal.areas}
-        title={folderModal.mode === 'create' ? 'Создание папки' : 'Редактирование папки'}
-        size={folderModal.size}
-        defaultAreaId={folderModal.areaId}
-        defaultParentFolderId={folderModal.parentFolderId}
-      />
+      <Suspense fallback={null}>
+        <FolderModal
+          isOpen={folderModal.isOpen}
+          onClose={closeFolderModal}
+          onSave={folderModal.onSave || (() => Promise.resolve())}
+          onDelete={folderModal.onDelete ?? undefined}
+          folder={folderModal.folder}
+          areas={folderModal.areas}
+          title={folderModal.mode === 'create' ? 'Создание папки' : 'Редактирование папки'}
+          size={folderModal.size}
+          defaultAreaId={folderModal.areaId}
+          defaultParentFolderId={folderModal.parentFolderId}
+        />
+      </Suspense>
 
-      <TaskModal
-        isOpen={taskModal.isOpen}
-        onClose={closeTaskModal}
-        onSave={taskModal.onSave || (() => Promise.resolve())}
-        onDelete={taskModal.onDelete ?? undefined}
-        task={taskModal.task}
-        title={taskModal.mode === 'create' ? 'Создание задачи' : 'Редактирование задачи'}
-        size={taskModal.size}
-        defaultFolderId={taskModal.defaultFolderId}
-        defaultAreaId={taskModal.defaultAreaId}
-        areas={taskModal.areas}
-      />
+      <Suspense fallback={null}>
+        <TaskModal
+          isOpen={taskModal.isOpen}
+          onClose={closeTaskModal}
+          onSave={taskModal.onSave || (() => Promise.resolve())}
+          onDelete={taskModal.onDelete ?? undefined}
+          task={taskModal.task}
+          title={taskModal.mode === 'create' ? 'Создание задачи' : 'Редактирование задачи'}
+          size={taskModal.size}
+          defaultFolderId={taskModal.defaultFolderId}
+          defaultAreaId={taskModal.defaultAreaId}
+          areas={taskModal.areas}
+        />
+      </Suspense>
 
       {activityModal.task && (
-        <ActivityModal
-          isOpen={activityModal.isOpen}
-          onClose={closeActivityModal}
-          onSave={activityModal.onSave || (() => Promise.resolve())}
-          task={activityModal.task}
-          date={activityModal.date}
-          onOpenTaskDetails={activityModal.onOpenTaskDetails || (() => {})}
-          onSaveEdit={activityModal.onSaveEdit ?? undefined}
-          onDeleteEvent={activityModal.onDeleteEvent ?? undefined}
-        />
+        <Suspense fallback={null}>
+          <ActivityModal
+            isOpen={activityModal.isOpen}
+            onClose={closeActivityModal}
+            onSave={activityModal.onSave || (() => Promise.resolve())}
+            task={activityModal.task}
+            date={activityModal.date}
+            onOpenTaskDetails={activityModal.onOpenTaskDetails || (() => {})}
+            onSaveEdit={activityModal.onSaveEdit ?? undefined}
+            onDeleteEvent={activityModal.onDeleteEvent ?? undefined}
+          />
+        </Suspense>
       )}
 
-      <CabinetModal isOpen={cabinetModal.isOpen} onClose={closeCabinetModal} />
+      <Suspense fallback={null}>
+        <CabinetModal isOpen={cabinetModal.isOpen} onClose={closeCabinetModal} />
+      </Suspense>
     </ModalContext.Provider>
   );
 };

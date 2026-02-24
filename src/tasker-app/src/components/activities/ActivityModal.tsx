@@ -89,7 +89,6 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
       });
       onClose();
     } catch (error) {
-      console.error('Ошибка сохранения активности:', error);
       showError(error);
     } finally {
       isSubmittingRef.current = false;

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
+import { logger } from '../utils/logger';
 import { useAuth } from './AuthContext';
 import {
   startRealtime,
@@ -52,7 +53,7 @@ export const TaskUpdateProvider: React.FC<TaskUpdateProviderProps> = ({ children
         try {
           callback(taskId, folderId, payload);
         } catch (error) {
-          console.error('Ошибка в callback обновления задачи:', error);
+          logger.error('Ошибка в callback обновления задачи:', error);
         }
       });
     },
