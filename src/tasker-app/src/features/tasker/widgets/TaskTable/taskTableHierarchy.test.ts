@@ -82,7 +82,9 @@ describe('buildTaskTableDisplayRows', () => {
       new Set(),
       new Set(),
       'alpha',
-      false
+      false,
+      {},
+      {}
     );
     expect(out).toHaveLength(1);
     expect(out[0].kind).toBe('area_collapsed');
@@ -100,7 +102,9 @@ describe('buildTaskTableDisplayRows', () => {
       new Set(['a1']),
       new Set(),
       'alpha',
-      false
+      false,
+      {},
+      {}
     );
     const folderRows = out.filter((r) => r.kind === 'folder');
     expect(folderRows).toHaveLength(1);
@@ -109,7 +113,7 @@ describe('buildTaskTableDisplayRows', () => {
     if (fr.kind === 'folder') {
       expect(fr.collapsed).toBe(true);
       expect(fr.metrics?.days[0].count).toBe(2);
-      expect(fr.tasksCount).toBe(1);
+      expect(fr.displayTasksCount).toBe(1);
     }
     expect(out.some((r) => r.kind === 'task')).toBe(false);
   });
@@ -123,7 +127,9 @@ describe('buildTaskTableDisplayRows', () => {
       new Set(['a1']),
       new Set(['f1']),
       'alpha',
-      false
+      false,
+      {},
+      {}
     );
     expect(out.some((r) => r.kind === 'folder' && !r.collapsed)).toBe(true);
     expect(out.some((r) => r.kind === 'task')).toBe(true);

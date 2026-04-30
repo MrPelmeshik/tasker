@@ -179,10 +179,7 @@
   border-bottom: none;
 }
 
-/** Подсветка строки только когда курсор не на области */
-.table tbody tr:hover:not(:has(td.colArea:hover)) td:not(.colArea) {
-  background-color: var(--glass-hover-bg);
-}
+/** Подсветка как в обычном дереве: только карточки узлов, не вся строка таблицы */
 
 .colCarry,
 .colFuture {
@@ -381,7 +378,7 @@
 .folderRowInner {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--tree-row-gap);
   min-width: 0;
 }
 
@@ -405,18 +402,48 @@
   flex-shrink: 0;
 }
 
+.treeToggleIconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--size-20);
+  height: var(--size-20);
+  cursor: pointer;
+  color: var(--glass-icon-default);
+  border-radius: var(--radius-2xs);
+}
+
+.treeToggleIconButton:hover {
+  color: var(--glass-icon-hover);
+}
+
 .rowMain {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--tree-row-gap);
   min-width: 0;
+}
+
+.treeNodeCard {
+  border-radius: var(--radius-xs);
+  padding-top: var(--tree-row-padding-y);
+  padding-bottom: var(--tree-row-padding-y);
+  transition: background var(--transition-fast);
+}
+
+.treeNodeCard:hover {
+  background: var(--glass-hover-bg);
+}
+
+.treeNodeCard[data-custom-color='true']:hover {
+  background: rgb(var(--card-custom-color-rgb, var(--color-accent)) / 0.15);
 }
 
 .rowActions {
   margin-left: auto;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--space-2);
   opacity: 0;
   transition: opacity var(--transition-fast);
 }
@@ -429,6 +456,23 @@
   cursor: pointer;
 }
 
-.table tbody tr:hover .rowActions {
+.table tbody tr:hover .rowActions,
+.treeNodeCard:hover .rowActions {
   opacity: 1;
+}
+
+.colHeaderHovered {
+  background: rgb(var(--white) / 0.025) !important;
+}
+
+.dayRowHovered {
+  background: rgb(var(--white) / 0.025);
+}
+
+.dayColHovered {
+  background: rgb(var(--white) / 0.025);
+}
+
+.tableRowHovered td {
+  background: rgb(var(--white) / 0.025);
 }

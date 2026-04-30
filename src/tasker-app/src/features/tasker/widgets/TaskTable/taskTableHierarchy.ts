@@ -13,6 +13,7 @@ import {
   getChildFolderIdsFromIndex,
   collectDescendantFolderIdsIncludingSelf,
 } from './taskTableFolderIndex';
+import type { AreaTotalCounts, FolderTotalCounts } from './useTaskTableData';
 
 /** Группа по области для построения иерархии (совместимо с GroupedTaskRows). */
 export type HierarchyAreaGroup = {
@@ -38,12 +39,20 @@ export type TaskTableDisplayRow =
       areaId: string;
       areaTitle: string;
       areaColor?: string;
+      displayFoldersCount: number;
+      displayRootTasksCount: number;
+      totalFoldersCount: number;
+      totalRootTasksCount: number;
     }
   | {
       kind: 'area_collapsed';
       areaId: string;
       areaTitle: string;
       areaColor?: string;
+      displayFoldersCount: number;
+      displayRootTasksCount: number;
+      totalFoldersCount: number;
+      totalRootTasksCount: number;
       metrics: AggregatedTaskRowMetrics;
     }
   | {
@@ -56,9 +65,11 @@ export type TaskTableDisplayRow =
       collapsed: boolean;
       /** null если папка раскрыта — ячейки дней без теплокарты */
       metrics: AggregatedTaskRowMetrics | null;
-      /** Для FolderCardLink: видимые дочерние папки и задачи в поддереве */
-      subfoldersCount: number;
-      tasksCount: number;
+      /** Для FolderCardLink: display/total как в основном дереве */
+      displaySubfoldersCount: number;
+      displayTasksCount: number;
+      totalSubfoldersCount: number;
+      totalTasksCount: number;
     }
   | { kind: 'task'; areaId: string; depth: number; row: TaskRow };
 
@@ -149,17 +160,23 @@ function emitFolderAndChildren(
   expandedFolders: Set<string>,
   out: TaskTableDisplayRow[],
   memoFolder: Map<string, boolean>,
-  displayedTaskIds: Set<string>
+  displayedTaskIds: Set<string>,
+  folderTotals: FolderTotalCounts
 ): void {
   const meta = idx.folderById.get(folderId);
   const title = meta?.title ?? folderId;
   const customColor = meta?.customColor ?? null;
   const collapsed = !expandedFolders.has(folderId);
   const subtreeTasks = taskRowsInFolderSubtree(folderId, areaId, taskRowsInArea, idx);
+  const directTasks = taskRowsInArea.filter((r) => r.task.folderId === folderId);
   const childFolders = getChildFolderIdsFromIndex(folderId, areaId, idx);
   const visibleChildFolders = childFolders.filter((cf) =>
     folderHasVisibleTasks(cf, areaId, taskRowsInArea, idx, memoFolder)
   );
+
+  const totalFromApi = folderTotals[folderId];
+  const totalTasksCount = totalFromApi?.tasksCount ?? directTasks.length;
+  const totalSubfoldersCount = totalFromApi?.subfoldersCount ?? visibleChildFolders.length;
 
   if (collapsed) {
     for (const t of subtreeTasks) {
@@ -174,8 +191,10 @@ function emitFolderAndChildren(
       customColor,
       collapsed: true,
       metrics: aggregateTaskRows(subtreeTasks),
-      subfoldersCount: visibleChildFolders.length,
-      tasksCount: subtreeTasks.length,
+      displaySubfoldersCount: visibleChildFolders.length,
+      displayTasksCount: directTasks.length,
+      totalSubfoldersCount,
+      totalTasksCount,
     });
     return;
   }
@@ -189,16 +208,17 @@ function emitFolderAndChildren(
     customColor,
     collapsed: false,
     metrics: null,
-    subfoldersCount: visibleChildFolders.length,
-    tasksCount: subtreeTasks.length,
+    displaySubfoldersCount: visibleChildFolders.length,
+    displayTasksCount: directTasks.length,
+    totalSubfoldersCount,
+    totalTasksCount,
   });
 
   for (const cf of childFolders) {
     if (!folderHasVisibleTasks(cf, areaId, taskRowsInArea, idx, memoFolder)) continue;
-    emitFolderAndChildren(cf, areaId, depth + 1, taskRowsInArea, idx, sortPreset, expandedFolders, out, memoFolder, displayedTaskIds);
+    emitFolderAndChildren(cf, areaId, depth + 1, taskRowsInArea, idx, sortPreset, expandedFolders, out, memoFolder, displayedTaskIds, folderTotals);
   }
 
-  const directTasks = taskRowsInArea.filter((r) => r.task.folderId === folderId);
   const sortedDirect = sortTaskRows(directTasks, sortPreset);
   for (const tr of sortedDirect) {
     displayedTaskIds.add(tr.taskId);
@@ -215,7 +235,9 @@ export function buildTaskTableDisplayRows(
   expandedAreas: Set<string>,
   expandedFolders: Set<string>,
   sortPreset: TreeSortPreset,
-  forceExpandAll: boolean
+  forceExpandAll: boolean,
+  areaTotals: AreaTotalCounts,
+  folderTotals: FolderTotalCounts
 ): TaskTableDisplayRow[] {
   const allAreaIds = new Set(grouped.map((g) => g.areaId));
   const allFolderIdsInTableAreas = new Set<string>();
@@ -232,12 +254,25 @@ export function buildTaskTableDisplayRows(
     const { areaId, areaTitle, areaColor, rows: taskRowsInArea } = group;
     if (taskRowsInArea.length === 0) continue;
 
+    const rootFolders = getChildFolderIdsFromIndex(null, areaId, folderIndex);
+    const visibleRootFolders = rootFolders.filter((fid) =>
+      folderHasVisibleTasks(fid, areaId, taskRowsInArea, folderIndex, new Map<string, boolean>())
+    );
+    const rootTasksCount = taskRowsInArea.filter((r) => !r.task.folderId).length;
+    const areaTotal = areaTotals[areaId];
+    const totalFoldersCount = areaTotal?.foldersCount ?? visibleRootFolders.length;
+    const totalRootTasksCount = areaTotal?.rootTasksCount ?? rootTasksCount;
+
     if (!effAreas.has(areaId)) {
       result.push({
         kind: 'area_collapsed',
         areaId,
         areaTitle,
         areaColor,
+        displayFoldersCount: visibleRootFolders.length,
+        displayRootTasksCount: rootTasksCount,
+        totalFoldersCount,
+        totalRootTasksCount,
         metrics: aggregateTaskRows(taskRowsInArea),
       });
       continue;
@@ -248,11 +283,14 @@ export function buildTaskTableDisplayRows(
       areaId,
       areaTitle,
       areaColor,
+      displayFoldersCount: visibleRootFolders.length,
+      displayRootTasksCount: rootTasksCount,
+      totalFoldersCount,
+      totalRootTasksCount,
     });
 
     const displayedTaskIds = new Set<string>();
     const memoFolder = new Map<string, boolean>();
-    const rootFolders = getChildFolderIdsFromIndex(null, areaId, folderIndex);
     for (const fid of rootFolders) {
       if (!folderHasVisibleTasks(fid, areaId, taskRowsInArea, folderIndex, memoFolder)) continue;
       emitFolderAndChildren(
@@ -265,7 +303,8 @@ export function buildTaskTableDisplayRows(
         effFolders,
         result,
         memoFolder,
-        displayedTaskIds
+        displayedTaskIds,
+        folderTotals
       );
     }
 

@@ -12,6 +12,8 @@ import {
   deleteEvent,
   fetchAreaShortCard,
   fetchFolders,
+  fetchRootFoldersByArea,
+  fetchChildFolders,
 } from '../../../../services/api';
 import type { EventUpdateRequest } from '../../../../types/api';
 import { TaskStatus } from '../../../../types/task-status';
@@ -30,6 +32,8 @@ const EMPTY_FOLDER_INDEX: FolderIndex = {
 
 /** Группа строк по области (areaColor из данных области). */
 export type GroupedTaskRows = Array<{ areaId: string; areaTitle: string; areaColor?: string; rows: TaskRow[] }>;
+export type AreaTotalCounts = Record<string, { foldersCount: number; rootTasksCount: number }>;
+export type FolderTotalCounts = Record<string, { tasksCount: number; subfoldersCount: number }>;
 
 function groupRowsByArea(rows: TaskRow[], sortPreset: TreeSortPreset): GroupedTaskRows {
   const byArea = new Map<string, TaskRow[]>();
@@ -89,22 +93,56 @@ export function useTaskTableData({
   const [groupedRows, setGroupedRows] = useState<GroupedTaskRows>([]);
   const [folderIndex, setFolderIndex] = useState<FolderIndex>(EMPTY_FOLDER_INDEX);
   const [areaColors, setAreaColors] = useState<Record<string, string>>({});
+  const [areaTotals, setAreaTotals] = useState<AreaTotalCounts>({});
+  const [folderTotals, setFolderTotals] = useState<FolderTotalCounts>({});
   const abortControllerRef = useRef<AbortController | null>(null);
+
+  const refreshAreaMeta = useCallback(async () => {
+    const areas = await fetchAreaShortCard();
+    const colorMap: Record<string, string> = {};
+    const totalsMap: AreaTotalCounts = {};
+    for (const a of areas) {
+      if (a.customColor) colorMap[a.id] = a.customColor;
+      totalsMap[a.id] = {
+        foldersCount: a.foldersCount,
+        rootTasksCount: a.rootTasksCount,
+      };
+    }
+    setAreaColors(colorMap);
+    setAreaTotals(totalsMap);
+    return areas.map((a) => a.id);
+  }, []);
+
+  const refreshFolderTotals = useCallback(async (areaIds: string[]) => {
+    const totals: FolderTotalCounts = {};
+    await Promise.all(
+      areaIds.map(async (areaId) => {
+        const queue = await fetchRootFoldersByArea(areaId).catch(() => []);
+        const pending = [...queue];
+        while (pending.length > 0) {
+          const folder = pending.shift()!;
+          totals[folder.id] = {
+            tasksCount: folder.tasksCount,
+            subfoldersCount: folder.subfoldersCount,
+          };
+          const children = await fetchChildFolders(folder.id, areaId).catch(() => []);
+          pending.push(...children);
+        }
+      })
+    );
+    setFolderTotals(totals);
+  }, []);
 
   useEffect(() => {
     let alive = true;
-    fetchAreaShortCard()
-      .then((areas) => {
+    refreshAreaMeta()
+      .then((areaIds) => {
         if (!alive) return;
-        const map: Record<string, string> = {};
-        for (const a of areas) {
-          if (a.customColor) map[a.id] = a.customColor;
-        }
-        setAreaColors(map);
+        return refreshFolderTotals(areaIds);
       })
       .catch(() => { });
     return () => { alive = false; };
-  }, []);
+  }, [refreshAreaMeta, refreshFolderTotals]);
 
   const groupedRowsWithColors = useMemo(
     () => groupedRows.map((g) => ({ ...g, areaColor: areaColors[g.areaId] })),
@@ -239,18 +277,15 @@ export function useTaskTableData({
   useEffect(() => {
     const unsubscribe = subscribeToTaskUpdates((taskId, folderId, payload) => {
       if (payload?.entityType === 'AREA') {
-        fetchAreaShortCard()
-          .then((areas) => {
-            const map: Record<string, string> = {};
-            for (const a of areas) {
-              if (a.customColor) map[a.id] = a.customColor;
-            }
-            setAreaColors(map);
-          })
+        refreshAreaMeta()
+          .then((areaIds) => refreshFolderTotals(areaIds))
           .catch(() => { });
       } else if (payload?.entityType === 'FOLDER') {
         fetchFolders()
           .then((folders) => setFolderIndex(buildFolderIndex(folders)))
+          .catch(() => { });
+        refreshAreaMeta()
+          .then((areaIds) => refreshFolderTotals(areaIds))
           .catch(() => { });
         loadData(abortControllerRef.current?.signal);
       } else {
@@ -258,12 +293,14 @@ export function useTaskTableData({
       }
     });
     return unsubscribe;
-  }, [subscribeToTaskUpdates, loadData]);
+  }, [subscribeToTaskUpdates, loadData, refreshAreaMeta, refreshFolderTotals]);
 
   return {
     loading,
     groupedRows: groupedRowsWithColors,
     folderIndex,
+    areaTotals,
+    folderTotals,
     loadData,
     handleActivitySaveForTask,
     handleActivityUpdateForTask,

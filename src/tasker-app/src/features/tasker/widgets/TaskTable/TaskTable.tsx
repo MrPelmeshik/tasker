@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useState } from 'react';
 import { GlassWidget, GlassButton, Tooltip } from '../../../../components';
 import { Loader } from '../../../../components/ui/Loader';
 import { EventStatusBadge } from '../../../../components/ui/EventStatusBadge';
@@ -10,9 +10,9 @@ import { buildWeekDays, getWeekEndIso } from '../../../../utils/week';
 import { useTaskTableData } from './useTaskTableData';
 import { useTaskTableHandlers } from './useTaskTableHandlers';
 import { TaskTableToolbar } from './TaskTableToolbar';
-import { CalendarIcon } from '../../../../components/icons';
+import { CalendarIcon, FoldVerticalIcon, UnfoldVerticalIcon } from '../../../../components/icons';
 import { useTreeExpandState } from '../Tree/useTreeExpandState';
-import { buildTaskTableDisplayRows } from './taskTableHierarchy';
+import { buildTaskTableDisplayRows, type TaskTableDisplayRow } from './taskTableHierarchy';
 import { TaskTableRow } from './TaskTableRow';
 import { useTaskerShellFilters } from '../../context/TaskerShellContext';
 import { useTaskerDetailPanel } from '../../context/TaskerDetailPanelContext';
@@ -28,9 +28,9 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const { showError } = useToast();
 
-  const { enabledStatuses, sortPreset, searchQuery, setSearchQuery, toggleStatus, setSortPreset, enabledEventTypes, toggleEventType } = useTaskerShellFilters();
+  const { enabledStatuses, sortPreset, searchQuery, setSearchQuery, toggleStatus, setSortPreset, enabledEventTypes, toggleEventType, hasStatusFilter } = useTaskerShellFilters();
 
-  const { loading, groupedRows, folderIndex, loadData, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask } = useTaskTableData({
+  const { loading, groupedRows, folderIndex, areaTotals, folderTotals, loadData, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask } = useTaskTableData({
     weekStartIso,
     showError,
     notifyTaskUpdate,
@@ -42,6 +42,8 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
   });
 
   const { expandedAreas, expandedFolders, setExpandedAreas, setExpandedFolders } = useTreeExpandState();
+  const [hoveredRowKey, setHoveredRowKey] = useState<string | null>(null);
+  const [hoveredDayIndex, setHoveredDayIndex] = useState<number | null>(null);
 
   const handlers = useTaskTableHandlers({
     loadData,
@@ -72,9 +74,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
         expandedAreas,
         expandedFolders,
         sortPreset,
-        forceExpandAll
+        forceExpandAll,
+        areaTotals,
+        folderTotals
       ),
-    [groupedRows, folderIndex, expandedAreas, expandedFolders, sortPreset, forceExpandAll]
+    [groupedRows, folderIndex, expandedAreas, expandedFolders, sortPreset, forceExpandAll, areaTotals, folderTotals]
   );
 
   const bodyColSpan = 4 + daysHeader.length;
@@ -120,6 +124,17 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
     setExpandedFolders(new Set());
   }, [setExpandedAreas, setExpandedFolders]);
 
+  const isAllExpandedInTable = useMemo(() => {
+    if (groupedRows.length === 0) return false;
+    const allAreaExpanded = groupedRows.every((g) => expandedAreas.has(g.areaId));
+    if (!allAreaExpanded) return false;
+    const tableAreaIds = new Set(groupedRows.map((g) => g.areaId));
+    const folderIdsInTable = Array.from(folderIndex.folderById.values())
+      .filter((f) => tableAreaIds.has(f.areaId))
+      .map((f) => f.id);
+    return folderIdsInTable.every((id) => expandedFolders.has(id));
+  }, [groupedRows, folderIndex, expandedAreas, expandedFolders]);
+
   const renderEventTooltip = useCallback((events: { id: string; eventType: number }[]) => {
     const counts: Record<number, number> = {};
     let total = 0;
@@ -163,6 +178,13 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
     return types.some((t) => enabledEventTypes.has(t));
   }, [enabledEventTypes]);
 
+  const getDisplayRowKey = useCallback((dr: TaskTableDisplayRow): string => {
+    if (dr.kind === 'task') return dr.row.taskId;
+    if (dr.kind === 'folder') return `folder-${dr.folderId}-${dr.collapsed ? 'c' : 'e'}`;
+    if (dr.kind === 'area_header') return `area-header-${dr.areaId}`;
+    return `area-${dr.areaId}`;
+  }, []);
+
   return (
     <GlassWidget colSpan={colSpan} rowSpan={rowSpan}>
       <div className={css.container}>
@@ -177,12 +199,16 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
           <GlassButton size="s" variant="subtle" onClick={() => go('next')}>
             Следующая
           </GlassButton>
-          <GlassButton size="s" variant="subtle" onClick={expandAllInTable}>
-            Развернуть всё
-          </GlassButton>
-          <GlassButton size="s" variant="subtle" onClick={collapseAllInTable}>
-            Свернуть всё
-          </GlassButton>
+          <Tooltip content={isAllExpandedInTable ? 'Свернуть всё' : 'Развернуть всё'} placement="bottom" size="s">
+            <GlassButton
+              size="s"
+              variant="subtle"
+              onClick={isAllExpandedInTable ? collapseAllInTable : expandAllInTable}
+              aria-label={isAllExpandedInTable ? 'Свернуть всё' : 'Развернуть всё'}
+            >
+              {isAllExpandedInTable ? <FoldVerticalIcon className="icon-m" /> : <UnfoldVerticalIcon className="icon-m" />}
+            </GlassButton>
+          </Tooltip>
 
           <TaskTableToolbar
             enabledStatuses={enabledStatuses}
@@ -203,13 +229,19 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
             </GlassButton>
           )}
         </div>
-        <div className={css.gridWrapper}>
+        <div
+          className={css.gridWrapper}
+          onMouseLeave={() => {
+            setHoveredRowKey(null);
+            setHoveredDayIndex(null);
+          }}
+        >
           <table className={css.table}>
             <thead className={css.thead}>
               <tr>
                 <th className={`${css.th} ${css.colCarry}`} />
                 {daysHeader.map((d, i) => (
-                  <th key={i} className={`${css.th} ${css.colDay}`}>
+                  <th key={i} className={`${css.th} ${css.colDay} ${hoveredDayIndex === i ? css.colHeaderHovered : ''}`}>
                     <Tooltip content={`${d.weekdayLong}, ${d.date}`} placement="bottom" size="s">
                       <span>{d.label}</span>
                     </Tooltip>
@@ -229,9 +261,12 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
                 </tr>
               )}
               {!loading &&
-                displayRows.map((dr) => (
+                displayRows.map((dr) => {
+                  const rowKey = getDisplayRowKey(dr);
+                  return (
                   <TaskTableRow
-                    key={dr.kind === 'task' ? dr.row.taskId : dr.kind === 'folder' ? `folder-${dr.folderId}-${dr.collapsed ? 'c' : 'e'}` : dr.kind === 'area_header' ? `area-header-${dr.areaId}` : `area-${dr.areaId}`}
+                    key={rowKey}
+                    rowKey={rowKey}
                     row={dr}
                     daysHeader={daysHeader}
                     groupMetaByAreaId={groupMetaByAreaId}
@@ -247,8 +282,27 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
                     onFolderOpen={handlers.handleViewFolderDetails}
                     onFolderCreateFolder={handlers.handleCreateFolderForFolder}
                     onFolderCreateTask={handlers.handleCreateTaskForFolder}
+                    showFilteredCounts={hasStatusFilter}
+                    hoveredRowKey={hoveredRowKey}
+                    hoveredDayIndex={hoveredDayIndex}
+                    onHoverDayCell={(nextRowKey, dayIndex) => {
+                      setHoveredRowKey(nextRowKey);
+                      setHoveredDayIndex(dayIndex);
+                    }}
+                    onLeaveDayCell={() => {
+                      setHoveredDayIndex(null);
+                    }}
+                    onHoverRow={(nextRowKey) => {
+                      setHoveredRowKey(nextRowKey);
+                      setHoveredDayIndex(null);
+                    }}
+                    onLeaveRow={() => {
+                      setHoveredRowKey(null);
+                      setHoveredDayIndex(null);
+                    }}
                   />
-                ))}
+                  );
+                })}
             </tbody>
           </table>
         </div>
