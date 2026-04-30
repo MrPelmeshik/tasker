@@ -391,10 +391,6 @@
   min-width: 0;
 }
 
-.folderChevronBtn {
-  flex-shrink: 0;
-}
-
 .folderChevron {
   transition: transform var(--transition-fast);
   transform: rotate(-90deg);
@@ -403,4 +399,42 @@
 .folderChevronExpanded {
   transition: transform var(--transition-fast);
   transform: rotate(0deg);
+}
+
+.compactChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--icon-m);
+  height: var(--icon-m);
+  color: var(--glass-icon-default);
+  flex-shrink: 0;
+}
+
+.rowMain {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.rowActions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+}
+
+.rowActionButton {
+  flex-shrink: 0;
+}
+
+.rowClickable {
+  cursor: pointer;
+}
+
+.table tbody tr:hover .rowActions {
+  opacity: 1;
 }
