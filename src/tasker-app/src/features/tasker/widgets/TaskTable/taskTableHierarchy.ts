@@ -34,6 +34,12 @@ export type AggregatedTaskRowMetrics = {
 /** Строка отображения таблицы активностей */
 export type TaskTableDisplayRow =
   | {
+      kind: 'area_header';
+      areaId: string;
+      areaTitle: string;
+      areaColor?: string;
+    }
+  | {
       kind: 'area_collapsed';
       areaId: string;
       areaTitle: string;
@@ -236,6 +242,13 @@ export function buildTaskTableDisplayRows(
       });
       continue;
     }
+
+    result.push({
+      kind: 'area_header',
+      areaId,
+      areaTitle,
+      areaColor,
+    });
 
     const displayedTaskIds = new Set<string>();
     const memoFolder = new Map<string, boolean>();

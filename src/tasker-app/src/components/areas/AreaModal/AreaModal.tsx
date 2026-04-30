@@ -37,6 +37,7 @@ export interface AreaModalProps {
   area?: AreaResponse | null;
   title?: string;
   size?: ModalSize;
+  renderMode?: 'portal' | 'inline';
 }
 
 export const AreaModal: React.FC<AreaModalProps> = ({
@@ -47,6 +48,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   area = null,
   title = 'Область',
   size = 'medium',
+  renderMode = 'portal',
 }) => {
   const { showError, addSuccess } = useToast();
   const { copyLink: handleCopyLink } = useCopyEntityLink('area', area?.id);
@@ -205,6 +207,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
       onClose={safeHandleClose}
       hasUnsavedChanges={hasUnsavedChanges}
       size={size}
+      renderMode={renderMode}
     >
       <div className={css.modalContent}>
         <EntityModalHeader

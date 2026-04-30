@@ -34,6 +34,7 @@ export interface ActivityModalProps {
   onSaveEdit?: (eventId: string, data: EventUpdateRequest) => Promise<void>;
   /** Колбэк удаления записи (если передан — в списке показываются кнопки удаления) */
   onDeleteEvent?: (event: EventResponse) => Promise<void>;
+  renderMode?: 'portal' | 'inline';
 }
 
 export const ActivityModal: React.FC<ActivityModalProps> = ({
@@ -45,6 +46,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   onOpenTaskDetails,
   onSaveEdit,
   onDeleteEvent,
+  renderMode = 'portal',
 }) => {
   const { showError } = useToast();
   const [title, setTitle] = useState('');
@@ -97,7 +99,7 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="medium">
+    <Modal isOpen={isOpen} onClose={onClose} size="medium" renderMode={renderMode}>
       <div className={css.modalContent}>
         <SimpleModalHeader
           title="Создание события"

@@ -37,12 +37,33 @@
   padding: var(--space-24);
 }
 
+.bodySplit {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  flex: 1;
+  min-height: 0;
+  gap: var(--space-12);
+}
+
+.treeArea {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
 /* Обёртка для области сетки — занимает всё оставшееся пространство */
 .gridArea {
   flex: 1;
   min-height: 0;
   overflow: hidden;
   position: relative;
+}
+
+@media (min-width: 768px) {
+  .bodySplit {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 32%);
+  }
 }
 
 /* Grid wrapper — без скролла, заполняет gridArea */

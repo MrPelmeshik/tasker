@@ -3,10 +3,10 @@
  */
 
 import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
-import type { ModalContextType } from '../../../../context/ModalContext';
+import type { TaskerDetailPanelApi } from '../../context/TaskerDetailPanelContext';
 
 export interface UseTreeHandlersOptions
-  extends Pick<ModalContextType, 'openAreaModal' | 'openFolderModal' | 'openTaskModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openAreaModal' | 'openFolderModal' | 'openTaskModal'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setFoldersByArea: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;

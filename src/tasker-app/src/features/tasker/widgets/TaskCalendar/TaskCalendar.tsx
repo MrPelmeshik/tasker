@@ -3,7 +3,7 @@ import { GlassWidget, GlassButton } from '../../../../components';
 import { TableIcon } from '../../../../components/icons';
 import { Loader } from '../../../../components/ui/Loader';
 import type { WidgetSizeProps } from '../../../../types';
-import { useModal, useToast, useTaskUpdate } from '../../../../context';
+import { useToast, useTaskUpdate } from '../../../../context';
 import { useWeek } from '../../../../hooks';
 import { formatDateOnly } from '../../../../utils/date';
 import { getWeekEndIso } from '../../../../utils/week';
@@ -12,18 +12,20 @@ import { TOTAL_HOURS, HOUR_HEIGHT } from './calendarUtils';
 import { useCalendarData } from './useCalendarData';
 import { CalendarGrid } from './CalendarGrid';
 import css from '../../../../styles/task-calendar.module.css';
+import { useTaskerDetailPanel } from '../../context/TaskerDetailPanelContext';
 
 /** Минимальная высота одного часового слота */
 const MIN_HOUR_HEIGHT = 16;
 
 export interface TaskCalendarProps extends WidgetSizeProps {
-  onViewModeChange?: (mode: 'table') => void;
+  onViewModeChange?: (mode: 'activities') => void;
   refetchRef?: React.MutableRefObject<(() => void) | null>;
+  treeContent?: React.ReactNode;
 }
 
-export const TaskCalendar: React.FC<TaskCalendarProps> = ({ colSpan, rowSpan, onViewModeChange, refetchRef }) => {
-  const { weekStartIso, go, set: setWeekStart } = useWeek();
-  const { openTaskModal } = useModal();
+export const TaskCalendar: React.FC<TaskCalendarProps> = ({ colSpan, rowSpan, onViewModeChange, refetchRef, treeContent }) => {
+  const { weekStartIso, go } = useWeek();
+  const { openTaskModal } = useTaskerDetailPanel();
   const { showError } = useToast();
   const { subscribeToTaskUpdates } = useTaskUpdate();
 
@@ -123,27 +125,30 @@ export const TaskCalendar: React.FC<TaskCalendarProps> = ({ colSpan, rowSpan, on
           <div className={css.spacer} />
           <span className={css.muted}>{dateRangeLabel}</span>
           {onViewModeChange && (
-            <GlassButton size="s" variant="subtle" onClick={() => onViewModeChange('table')} aria-label="Таблица">
+            <GlassButton size="s" variant="subtle" onClick={() => onViewModeChange('activities')} aria-label="Таблица">
               <TableIcon width={16} height={16} />
             </GlassButton>
           )}
         </div>
 
-        <div className={css.gridArea} ref={gridContainerRef}>
-          {loading ? (
-            <div className={css.loaderWrap}>
-              <Loader size="s" />
-            </div>
-          ) : (
-            <CalendarGrid
-              daySchedules={daySchedules}
-              weekDays={days}
-              hourHeight={hourHeight}
-              onClickEntry={handleClickEntry}
-              onRefetch={refetch}
-              onEdgeDrag={handleEdgeDrag}
-            />
-          )}
+        <div className={css.bodySplit}>
+          <div className={css.gridArea} ref={gridContainerRef}>
+            {loading ? (
+              <div className={css.loaderWrap}>
+                <Loader size="s" />
+              </div>
+            ) : (
+              <CalendarGrid
+                daySchedules={daySchedules}
+                weekDays={days}
+                hourHeight={hourHeight}
+                onClickEntry={handleClickEntry}
+                onRefetch={refetch}
+                onEdgeDrag={handleEdgeDrag}
+              />
+            )}
+          </div>
+          {treeContent && <div className={css.treeArea}>{treeContent}</div>}
         </div>
       </div>
     </GlassWidget>

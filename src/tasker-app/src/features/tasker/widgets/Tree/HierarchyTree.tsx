@@ -14,7 +14,7 @@ import {
 } from '@dnd-kit/core';
 import { Z_INDEX_DND_OVERLAY } from '../../../../config/constants';
 import { Loader } from '../../../../components/ui/Loader';
-import { useModal, useTaskUpdate, useToast } from '../../../../context';
+import { useTaskUpdate, useToast } from '../../../../context';
 import {
     collisionDetection,
     filterTasksByStatus,
@@ -25,6 +25,7 @@ import { matchesSearch, folderHasMatch } from './treeSearchUtils';
 import { useTreeData } from './useTreeData';
 import { useTreeHandlers } from './useTreeHandlers';
 import { useTaskerShellFilters } from '../../context/TaskerShellContext';
+import { useTaskerDetailPanel } from '../../context/TaskerDetailPanelContext';
 import { useTreeDeepLink } from './useTreeDeepLink';
 import { useTreeDragEnd } from './useTreeDragEnd';
 import { TreeDndOverlay } from './TreeDndOverlay';
@@ -62,7 +63,7 @@ export interface HierarchyTreeProps {
 }
 
 export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepLink, className, externalDnd, dragEndRef }) => {
-    const { openAreaModal, openFolderModal, openTaskModal } = useModal();
+    const { openAreaModal, openFolderModal, openTaskModal } = useTaskerDetailPanel();
     const { notifyTaskUpdate, subscribeToTaskUpdates } = useTaskUpdate();
     const { showError, addSuccess } = useToast();
 

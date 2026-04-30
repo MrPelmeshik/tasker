@@ -4,7 +4,7 @@
   height: 100%;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: auto minmax(0, 2fr) minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr);
   gap: var(--space-16);
   padding: var(--space-16);
 }
@@ -24,33 +24,34 @@
   min-height: 0;
   display: grid;
   grid-template-columns: 1fr;
-  grid-template-rows: 1fr;
+  grid-template-rows: minmax(0, 1fr) minmax(0, auto);
+  gap: var(--space-16);
 }
 
-.sidebarArea {
+.contentPane {
   display: flex;
   flex-direction: column;
   min-width: 0;
   min-height: 0;
 }
 
+.detailPane {
+  min-width: 0;
+  min-height: 0;
+}
+
 @media (min-width: 768px) {
-  .taskerPageContainer {
-    grid-template-columns: 2fr 1fr;
-    grid-template-rows: auto 1fr;
-  }
-
   .mainArea {
-    grid-column: 1;
-    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 1fr;
   }
 
-  .sidebarArea {
-    grid-column: 2;
-    grid-row: 2;
+  .mainAreaWithPanel {
+    grid-template-columns: minmax(0, 1fr) minmax(320px, 34%);
   }
 
-  .bannerWrapper {
-    grid-row: 1;
+  .contentPane,
+  .detailPane {
+    height: 100%;
   }
 }

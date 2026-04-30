@@ -8,13 +8,15 @@ import { UserMenu } from './UserMenu';
 import { useAuth } from '../../context/AuthContext';
 import { useTheme } from '../../context/ThemeContext';
 import { useModal } from '../../context/ModalContext';
-import { SunIcon, MoonIcon } from '../icons';
+import { SunIcon, MoonIcon, CalendarIcon, TableIcon } from '../icons';
+import { useTaskerViewMode } from '../../features/tasker/context/TaskerViewModeContext';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
   const { userName, isAuth } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { openCabinetModal } = useModal();
+  const { viewMode, setViewMode } = useTaskerViewMode();
 
   return (
     <header className={styles.header}>
@@ -23,20 +25,38 @@ export const Header: React.FC = () => {
           Tasker
         </NavLink>
         <nav className={styles.nav}>
+          <GlassButton
+            variant="subtle"
+            size="s"
+            onClick={() => navigate(ROUTES.HOME)}
+          >
+            Задачник
+          </GlassButton>
+          <GlassButton
+            variant="subtle"
+            size="s"
+            onClick={openCabinetModal}
+          >
+            Управление
+          </GlassButton>
+          <div className={styles.navModeGroup}>
             <GlassButton
-              variant="subtle"
               size="s"
-              onClick={() => navigate(ROUTES.HOME)}
+              variant={viewMode === 'activities' ? 'primary' : 'subtle'}
+              onClick={() => setViewMode('activities')}
             >
-              Задачник
+              <TableIcon width={16} height={16} />
+              Активности
             </GlassButton>
             <GlassButton
-              variant="subtle"
               size="s"
-              onClick={openCabinetModal}
+              variant={viewMode === 'calendar' ? 'primary' : 'subtle'}
+              onClick={() => setViewMode('calendar')}
             >
-              Управление
+              <CalendarIcon width={16} height={16} />
+              Календарь
             </GlassButton>
+          </div>
         </nav>
       </div>
       <div className={styles.right}>

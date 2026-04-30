@@ -13,23 +13,25 @@ import {
 import styles from '../styles/tasker-page.module.css';
 import { TaskTable } from '../features/tasker/widgets/TaskTable';
 import { TaskCalendar } from '../features/tasker/widgets/TaskCalendar';
-import { SidebarTabsWidget } from '../features/tasker/widgets/SidebarTabsWidget';
-import { WidgetPanel } from '../components/common/WidgetPanel';
+import { Tree } from '../features/tasker/widgets/Tree';
 import { RealtimeBanner } from '../components/common/RealtimeBanner';
-import { useDeepLink, useWidgetState } from '../hooks';
+import { useDeepLink } from '../hooks';
 import { useToast } from '../context';
 import { createSchedule } from '../services/api';
 import { collisionDetection, type DragPayload } from '../features/tasker/widgets/Tree/treeUtils';
 import { TreeDndOverlay } from '../features/tasker/widgets/Tree/TreeDndOverlay';
 import { Z_INDEX_DND_OVERLAY } from '../config/constants';
 import { TaskerShellProvider } from '../features/tasker/context/TaskerShellContext';
+import { TaskerDetailPanelProvider, RightGlassDetailPanel, useTaskerDetailPanel } from '../features/tasker/context/TaskerDetailPanelContext';
+import type { EntityType } from '../utils/entity-links';
+import { useTaskerViewMode } from '../features/tasker/context/TaskerViewModeContext';
 
 export const TaskerPage: React.FC = () => {
   const { entityType, entityId } = useDeepLink();
   const initialDeepLink =
     entityType && entityId ? { entityType, entityId } : undefined;
 
-  const [viewMode, setViewMode] = useWidgetState<'table' | 'calendar'>('tasker-page', 'viewMode', 'table');
+  const { viewMode, setViewMode } = useTaskerViewMode();
   const { showError } = useToast();
 
   // DnD state
@@ -87,34 +89,15 @@ export const TaskerPage: React.FC = () => {
       onDragCancel={() => setActiveDrag(null)}
     >
       <TaskerShellProvider>
-        <div className={styles.taskerPageContainer}>
-          <div className={styles.bannerWrapper}>
-            <RealtimeBanner />
-          </div>
-          <div className={styles.mainArea}>
-            {viewMode === 'table' ? (
-              <TaskTable colSpan="full" rowSpan="full" onViewModeChange={() => setViewMode('calendar')} />
-            ) : (
-              <TaskCalendar
-                colSpan="full"
-                rowSpan="full"
-                onViewModeChange={() => setViewMode('table')}
-                refetchRef={calendarRefetchRef}
-              />
-            )}
-          </div>
-          <div className={styles.sidebarArea}>
-            <WidgetPanel variant="sidebar">
-              <SidebarTabsWidget
-                colSpan={1}
-                rowSpan={1}
-                initialDeepLink={initialDeepLink}
-                externalDnd
-                dragEndRef={treeDragEndRef}
-              />
-            </WidgetPanel>
-          </div>
-        </div>
+        <TaskerDetailPanelProvider>
+          <TaskerShellLayout
+            viewMode={viewMode}
+            setViewMode={setViewMode}
+            initialDeepLink={initialDeepLink}
+            treeDragEndRef={treeDragEndRef}
+            calendarRefetchRef={calendarRefetchRef}
+          />
+        </TaskerDetailPanelProvider>
       </TaskerShellProvider>
 
       {createPortal(
@@ -129,5 +112,44 @@ export const TaskerPage: React.FC = () => {
         document.body,
       )}
     </DndContext>
+  );
+};
+
+const TaskerShellLayout: React.FC<{
+  viewMode: 'activities' | 'calendar';
+  setViewMode: (mode: 'activities' | 'calendar') => void;
+  initialDeepLink?: { entityType: EntityType; entityId: string };
+  treeDragEndRef: React.MutableRefObject<((event: DragEndEvent) => Promise<void>) | null>;
+  calendarRefetchRef: React.MutableRefObject<(() => void) | null>;
+}> = ({ viewMode, setViewMode, initialDeepLink, treeDragEndRef, calendarRefetchRef }) => {
+  const { isPanelOpen } = useTaskerDetailPanel();
+  return (
+    <div className={styles.taskerPageContainer}>
+      <div className={styles.bannerWrapper}>
+        <RealtimeBanner />
+      </div>
+      <div className={`${styles.mainArea} ${isPanelOpen ? styles.mainAreaWithPanel : ''}`}>
+        <div className={styles.contentPane}>
+          {viewMode === 'activities' ? (
+            <TaskTable colSpan="full" rowSpan="full" onViewModeChange={() => setViewMode('calendar')} />
+          ) : (
+            <TaskCalendar
+              colSpan="full"
+              rowSpan="full"
+              onViewModeChange={() => setViewMode('activities')}
+              refetchRef={calendarRefetchRef}
+              treeContent={
+                <Tree embedded initialDeepLink={initialDeepLink} externalDnd dragEndRef={treeDragEndRef} />
+              }
+            />
+          )}
+        </div>
+        {isPanelOpen && (
+          <div className={styles.detailPane}>
+            <RightGlassDetailPanel />
+          </div>
+        )}
+      </div>
+    </div>
   );
 };

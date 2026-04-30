@@ -196,21 +196,15 @@
 }
 
 .colArea {
-  /** Ширина под один символ вертикального текста (font-11 ≈ 11–13px) */
-  width: var(--icon-m);
-  min-width: var(--icon-m);
-  max-width: var(--icon-m);
+  width: 0;
+  min-width: 0;
+  max-width: 0;
   vertical-align: middle;
   position: relative;
   z-index: 1;
-  z-index: 10;
-  border-right: var(--border-1) solid rgb(var(--white) / 0.06);
+  border-right: none;
   overflow: hidden;
-}
-
-/** Полупрозрачный фон ячейки области (как в Tree); переменные --card-custom-color, --card-custom-color-rgb задаются на элементе */
-.colAreaWithColor {
-  background: rgb(var(--card-custom-color-rgb) / 0.15);
+  padding: 0;
 }
 
 /** Слой обрезки — текст не выходит в соседние области */
@@ -232,7 +226,7 @@
 }
 
 .colArea .areaLabel {
-  display: inline-block;
+  display: none;
   writing-mode: vertical-rl;
   text-orientation: mixed;
   transform: rotate(180deg);

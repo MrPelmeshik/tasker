@@ -35,6 +35,7 @@ export interface TaskModalProps {
   defaultFolderId?: string;
   defaultAreaId?: string;
   areas?: Array<{ id: string; title: string }>;
+  renderMode?: 'portal' | 'inline';
 }
 
 export const TaskModal: React.FC<TaskModalProps> = ({
@@ -48,6 +49,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   defaultFolderId,
   defaultAreaId,
   areas,
+  renderMode = 'portal',
 }) => {
   const { copyLink: handleCopyLink } = useCopyEntityLink('task', task?.id);
   const attachmentRef = useRef<AttachmentListHandle>(null);
@@ -163,7 +165,7 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   const folderValue = formData.folderId === '' || formData.folderId == null ? '' : formData.folderId;
 
   return (
-    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size}>
+    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size} renderMode={renderMode}>
       <div className={css.modalContent}>
         <EntityModalHeader
           title={isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи'}

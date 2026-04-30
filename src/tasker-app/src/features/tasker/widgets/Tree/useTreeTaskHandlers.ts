@@ -17,10 +17,10 @@ import type {
   TaskCreateRequest,
   TaskUpdateRequest,
 } from '../../../../types';
-import type { ModalContextType } from '../../../../context/ModalContext';
+import type { TaskerDetailPanelApi } from '../../context/TaskerDetailPanelContext';
 
 export interface UseTreeTaskHandlersOptions
-  extends Pick<ModalContextType, 'openTaskModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openTaskModal'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setTasksByArea: React.Dispatch<React.SetStateAction<Map<string, TaskSummary[]>>>;

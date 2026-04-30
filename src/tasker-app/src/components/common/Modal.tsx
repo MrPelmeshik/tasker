@@ -13,6 +13,7 @@ export interface ModalProps {
   hasUnsavedChanges?: boolean;
   onUnsavedChangesClose?: () => void;
   size?: ModalSize;
+  renderMode?: 'portal' | 'inline';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -25,6 +26,7 @@ export const Modal: React.FC<ModalProps> = ({
   hasUnsavedChanges = false,
   onUnsavedChangesClose,
   size = 'large',
+  renderMode = 'portal',
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -87,6 +89,14 @@ export const Modal: React.FC<ModalProps> = ({
     getSizeClass(size),
     className
   ].filter(Boolean).join(' ');
+
+  if (renderMode === 'inline') {
+    return (
+      <div className={css.inlineRoot}>
+        <div className={`${modalClass} ${css.inlineModal}`}>{children}</div>
+      </div>
+    );
+  }
 
   return createPortal(
     <div

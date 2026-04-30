@@ -3,7 +3,7 @@ import { GlassWidget, GlassButton, Tooltip } from '../../../../components';
 import { Loader } from '../../../../components/ui/Loader';
 import { EventStatusBadge } from '../../../../components/ui/EventStatusBadge';
 import type { WidgetSizeProps } from '../../../../types';
-import { useModal, useTaskUpdate, useToast } from '../../../../context';
+import { useTaskUpdate, useToast } from '../../../../context';
 import { useWeek } from '../../../../hooks';
 import { formatDateOnly } from '../../../../utils/date';
 import { buildWeekDays, getWeekEndIso } from '../../../../utils/week';
@@ -15,6 +15,7 @@ import { useTreeExpandState } from '../Tree/useTreeExpandState';
 import { buildTaskTableDisplayRows } from './taskTableHierarchy';
 import { TaskTableRow } from './TaskTableRow';
 import { useTaskerShellFilters } from '../../context/TaskerShellContext';
+import { useTaskerDetailPanel } from '../../context/TaskerDetailPanelContext';
 import css from '../../../../styles/task-table.module.css';
 
 export interface TaskTableProps extends WidgetSizeProps {
@@ -23,7 +24,7 @@ export interface TaskTableProps extends WidgetSizeProps {
 
 export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewModeChange }) => {
   const { weekStartIso, go } = useWeek();
-  const { openAreaModal, openFolderModal, openTaskModal, openActivityModal, closeActivityModal } = useModal();
+  const { openAreaModal, openFolderModal, openTaskModal, openActivityModal, closeActivityModal } = useTaskerDetailPanel();
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const { showError } = useToast();
 
@@ -104,6 +105,21 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
     [setExpandedFolders]
   );
 
+  const expandAllInTable = useCallback(() => {
+    const nextAreas = new Set(groupedRows.map((g) => g.areaId));
+    const nextFolders = new Set<string>();
+    for (const folder of Array.from(folderIndex.folderById.values())) {
+      nextFolders.add(folder.id);
+    }
+    setExpandedAreas(nextAreas);
+    setExpandedFolders(nextFolders);
+  }, [groupedRows, folderIndex, setExpandedAreas, setExpandedFolders]);
+
+  const collapseAllInTable = useCallback(() => {
+    setExpandedAreas(new Set());
+    setExpandedFolders(new Set());
+  }, [setExpandedAreas, setExpandedFolders]);
+
   const renderEventTooltip = useCallback((events: { id: string; eventType: number }[]) => {
     const counts: Record<number, number> = {};
     let total = 0;
@@ -161,6 +177,12 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
           <GlassButton size="s" variant="subtle" onClick={() => go('next')}>
             Следующая
           </GlassButton>
+          <GlassButton size="s" variant="subtle" onClick={expandAllInTable}>
+            Развернуть всё
+          </GlassButton>
+          <GlassButton size="s" variant="subtle" onClick={collapseAllInTable}>
+            Свернуть всё
+          </GlassButton>
 
           <TaskTableToolbar
             enabledStatuses={enabledStatuses}
@@ -209,7 +231,7 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
               {!loading &&
                 displayRows.map((dr) => (
                   <TaskTableRow
-                    key={dr.kind === 'task' ? dr.row.taskId : dr.kind === 'folder' ? `folder-${dr.folderId}-${dr.collapsed ? 'c' : 'e'}` : `area-${dr.areaId}`}
+                    key={dr.kind === 'task' ? dr.row.taskId : dr.kind === 'folder' ? `folder-${dr.folderId}-${dr.collapsed ? 'c' : 'e'}` : dr.kind === 'area_header' ? `area-header-${dr.areaId}` : `area-${dr.areaId}`}
                     row={dr}
                     daysHeader={daysHeader}
                     groupMetaByAreaId={groupMetaByAreaId}

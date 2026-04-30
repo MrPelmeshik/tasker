@@ -70,7 +70,7 @@ const AreaCell: React.FC<{
   interactive?: boolean;
 }> = React.memo(({ areaId, areaTitle, areaColor, onToggleArea, interactive = true }) => (
   <td
-    className={`${css.td} ${css.colArea} ${areaColor ? css.colAreaWithColor : ''}`}
+    className={`${css.td} ${css.colArea}`}
     onClick={(e) => {
       if (!interactive) return;
       e.stopPropagation();
@@ -85,14 +85,6 @@ const AreaCell: React.FC<{
         onToggleArea(areaId);
       }
     }}
-    style={
-      areaColor
-        ? ({
-            '--card-custom-color': areaColor,
-            '--card-custom-color-rgb': hexToRgb(areaColor),
-          } as React.CSSProperties)
-        : undefined
-    }
     title="Развернуть / свернуть область"
   >
     <div className={css.areaLabelClip}>
@@ -128,11 +120,52 @@ export const TaskTableRow: React.FC<TaskTableRowProps> = React.memo(
     onFolderCreateTask,
   }) => {
     const areaMeta = groupMetaByAreaId.get(row.areaId);
-    const areaTitle = areaMeta?.areaTitle ?? (row.kind === 'area_collapsed' ? row.areaTitle : '—');
+    const areaTitle = areaMeta?.areaTitle ?? (row.kind === 'area_collapsed' || row.kind === 'area_header' ? row.areaTitle : '—');
     const areaColor = areaMeta?.areaColor;
     const { copyLink: copyAreaLink } = useCopyEntityLink('area', row.areaId);
     const { copyLink: copyFolderLink } = useCopyEntityLink('folder', row.kind === 'folder' ? row.folderId : undefined);
     const { copyLink: copyTaskLink } = useCopyEntityLink('task', row.kind === 'task' ? row.row.taskId : undefined);
+
+    if (row.kind === 'area_header') {
+      return (
+        <tr onClick={() => onToggleArea(row.areaId)} className={css.rowClickable}>
+          <td className={`${css.td} ${css.colCarry}`} />
+          {renderDayCells(daysHeader, null, false, renderEventTooltip)}
+          <td className={`${css.td} ${css.colFuture}`} />
+          <AreaCell areaId={row.areaId} areaTitle={areaTitle} areaColor={areaColor} onToggleArea={onToggleArea} interactive={false} />
+          <td className={`${css.td} ${css.colTask}`}>
+            <div className={css.rowMain}>
+              <span className={`${css.compactChevron} ${css.folderChevronExpanded}`} aria-hidden="true">
+                <ChevronDownIcon width={14} height={14} />
+              </span>
+              <span>{areaTitle}</span>
+              <div className={css.rowActions} onClick={(e) => e.stopPropagation()}>
+                <Tooltip content="Просмотреть" placement="top">
+                  <GlassButton variant="subtle" size="xs" className={css.rowActionButton} onClick={(e) => onAreaOpen(row.areaId, e)} aria-label="Просмотреть область">
+                    <EyeIcon className="icon-m" />
+                  </GlassButton>
+                </Tooltip>
+                <Tooltip content="Создать папку" placement="top">
+                  <GlassButton variant="subtle" size="xs" className={css.rowActionButton} onClick={(e) => onAreaCreateFolder(row.areaId, e)} aria-label="Создать папку">
+                    <FolderIcon className="icon-m" />
+                  </GlassButton>
+                </Tooltip>
+                <Tooltip content="Создать задачу" placement="top">
+                  <GlassButton variant="subtle" size="xs" className={css.rowActionButton} onClick={(e) => onAreaCreateTask(row.areaId, e)} aria-label="Создать задачу">
+                    <CheckSquareIcon className="icon-m" />
+                  </GlassButton>
+                </Tooltip>
+                <Tooltip content="Копировать ссылку" placement="top">
+                  <GlassButton variant="subtle" size="xs" className={css.rowActionButton} onClick={copyAreaLink} aria-label="Копировать ссылку">
+                    <LinkIcon className="icon-m" />
+                  </GlassButton>
+                </Tooltip>
+              </div>
+            </div>
+          </td>
+        </tr>
+      );
+    }
 
     if (row.kind === 'area_collapsed') {
       const m = row.metrics;

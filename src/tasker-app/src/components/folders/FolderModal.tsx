@@ -30,6 +30,7 @@ export interface FolderModalProps {
   size?: ModalSize;
   defaultAreaId?: string;
   defaultParentFolderId?: string | null;
+  renderMode?: 'portal' | 'inline';
 }
 
 export const FolderModal: React.FC<FolderModalProps> = ({
@@ -43,6 +44,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
   size = 'medium',
   defaultAreaId,
   defaultParentFolderId = null,
+  renderMode = 'portal',
 }) => {
   const { copyLink: handleCopyLink } = useCopyEntityLink('folder', folder?.id);
 
@@ -123,7 +125,7 @@ export const FolderModal: React.FC<FolderModalProps> = ({
   const isViewMode = Boolean(folder && !isEditMode);
 
   return (
-    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size}>
+    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size} renderMode={renderMode}>
       <div className={css.modalContent}>
         <EntityModalHeader
           title={isViewMode ? 'Папка' : folder ? 'Редактирование папки' : 'Создание папки'}

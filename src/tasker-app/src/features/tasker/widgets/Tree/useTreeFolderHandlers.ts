@@ -18,10 +18,10 @@ import type {
   FolderCreateRequest,
   FolderUpdateRequest,
 } from '../../../../types';
-import type { ModalContextType } from '../../../../context/ModalContext';
+import type { TaskerDetailPanelApi } from '../../context/TaskerDetailPanelContext';
 
 export interface UseTreeFolderHandlersOptions
-  extends Pick<ModalContextType, 'openFolderModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openFolderModal'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setFoldersByArea: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;

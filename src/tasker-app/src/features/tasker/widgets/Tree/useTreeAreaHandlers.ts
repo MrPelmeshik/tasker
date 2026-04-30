@@ -5,7 +5,7 @@
 import { useCallback, useMemo } from 'react';
 import { fetchAreaShortCard, fetchAreaById, createArea, updateArea, deleteArea } from '../../../../services/api';
 import type { AreaShortCard, FolderSummary, TaskSummary, AreaCreateRequest, AreaUpdateRequest } from '../../../../types';
-import type { ModalContextType } from '../../../../context/ModalContext';
+import type { TaskerDetailPanelApi } from '../../context/TaskerDetailPanelContext';
 
 /** Данные формы: API-поля + selectedColor для формы (отправляется как color). */
 type AreaSaveData = (AreaCreateRequest | (AreaUpdateRequest & { id?: string })) & { selectedColor?: string };
@@ -18,7 +18,7 @@ function sortAreasByTitle(items: AreaShortCard[]): AreaShortCard[] {
 }
 
 export interface UseTreeAreaHandlersOptions
-  extends Pick<ModalContextType, 'openAreaModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openAreaModal'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setFoldersByArea: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;
