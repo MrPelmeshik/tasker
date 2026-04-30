@@ -11,6 +11,7 @@ import {
   updateEvent,
   deleteEvent,
   fetchAreaShortCard,
+  fetchFolders,
 } from '../../../../services/api';
 import type { EventUpdateRequest } from '../../../../types/api';
 import { TaskStatus } from '../../../../types/task-status';
@@ -19,6 +20,13 @@ import type { TaskRow } from './taskTableUtils';
 import { sortTaskRows } from './taskTableUtils';
 import { matchesSearch } from '../Tree/treeSearchUtils';
 import type { TreeSortPreset } from '../Tree/treeUtils';
+import { buildFolderIndex, type FolderIndex } from './taskTableFolderIndex';
+
+/** Пустой индекс папок до первой загрузки. */
+const EMPTY_FOLDER_INDEX: FolderIndex = {
+  folderById: new Map(),
+  childFolderIdsByParent: new Map(),
+};
 
 /** Группа строк по области (areaColor из данных области). */
 export type GroupedTaskRows = Array<{ areaId: string; areaTitle: string; areaColor?: string; rows: TaskRow[] }>;
@@ -79,6 +87,7 @@ export function useTaskTableData({
 }: UseTaskTableDataOptions) {
   const [loading, setLoading] = useState(false);
   const [groupedRows, setGroupedRows] = useState<GroupedTaskRows>([]);
+  const [folderIndex, setFolderIndex] = useState<FolderIndex>(EMPTY_FOLDER_INDEX);
   const [areaColors, setAreaColors] = useState<Record<string, string>>({});
   const abortControllerRef = useRef<AbortController | null>(null);
 
@@ -111,8 +120,13 @@ export function useTaskTableData({
         statuses: Array.from(enabledStatuses),
         includeTasksWithActivitiesInRange: true,
       });
-      const res = await fetchTasksWithActivities(filter, { signal });
+      const [res, folderList] = await Promise.all([
+        fetchTasksWithActivities(filter, { signal }),
+        fetchFolders().catch(() => [] as Awaited<ReturnType<typeof fetchFolders>>),
+      ]);
       if (!alive) return;
+
+      setFolderIndex(buildFolderIndex(folderList));
 
       const merged: TaskRow[] = res.items.map(item => {
         // Filter events and recalculate counts based on enabledEventTypes
@@ -171,6 +185,7 @@ export function useTaskTableData({
       if (error instanceof Error && error.name === 'AbortError') return;
       if (alive) {
         setGroupedRows([]);
+        setFolderIndex(EMPTY_FOLDER_INDEX);
         showError(error);
       }
     } finally {
@@ -233,6 +248,11 @@ export function useTaskTableData({
             setAreaColors(map);
           })
           .catch(() => { });
+      } else if (payload?.entityType === 'FOLDER') {
+        fetchFolders()
+          .then((folders) => setFolderIndex(buildFolderIndex(folders)))
+          .catch(() => { });
+        loadData(abortControllerRef.current?.signal);
       } else {
         loadData(abortControllerRef.current?.signal);
       }
@@ -243,6 +263,7 @@ export function useTaskTableData({
   return {
     loading,
     groupedRows: groupedRowsWithColors,
+    folderIndex,
     loadData,
     handleActivitySaveForTask,
     handleActivityUpdateForTask,

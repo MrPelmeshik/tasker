@@ -382,3 +382,25 @@
 .muted {
   color: var(--color-text-subtle);
 }
+
+/** Строка папки: шеврон + FolderCardLink */
+.folderRowInner {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.folderChevronBtn {
+  flex-shrink: 0;
+}
+
+.folderChevron {
+  transition: transform var(--transition-fast);
+  transform: rotate(-90deg);
+}
+
+.folderChevronExpanded {
+  transition: transform var(--transition-fast);
+  transform: rotate(0deg);
+}
