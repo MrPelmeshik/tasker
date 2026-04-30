@@ -24,7 +24,7 @@ import {
 import { matchesSearch, folderHasMatch } from './treeSearchUtils';
 import { useTreeData } from './useTreeData';
 import { useTreeHandlers } from './useTreeHandlers';
-import { useTreeFilters } from './useTreeFilters';
+import { useTaskerShellFilters } from '../../context/TaskerShellContext';
 import { useTreeDeepLink } from './useTreeDeepLink';
 import { useTreeDragEnd } from './useTreeDragEnd';
 import { TreeDndOverlay } from './TreeDndOverlay';
@@ -118,9 +118,7 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
     });
 
     const [activeDrag, setActiveDrag] = useState<{ id: string; data: DragPayload } | null>(null);
-    const [searchQuery, setSearchQuery] = useState('');
-
-    const { enabledStatuses, sortPreset, hasStatusFilter, toggleStatus, setSortPreset } = useTreeFilters();
+    const { enabledStatuses, sortPreset, hasStatusFilter, toggleStatus, setSortPreset, searchQuery, setSearchQuery } = useTaskerShellFilters();
 
     /** При появлении непустого поиска раскрываем дерево, чтобы совпадения были видны */
     useEffect(() => {

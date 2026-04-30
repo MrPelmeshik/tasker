@@ -22,6 +22,7 @@ import { createSchedule } from '../services/api';
 import { collisionDetection, type DragPayload } from '../features/tasker/widgets/Tree/treeUtils';
 import { TreeDndOverlay } from '../features/tasker/widgets/Tree/TreeDndOverlay';
 import { Z_INDEX_DND_OVERLAY } from '../config/constants';
+import { TaskerShellProvider } from '../features/tasker/context/TaskerShellContext';
 
 export const TaskerPage: React.FC = () => {
   const { entityType, entityId } = useDeepLink();
@@ -85,34 +86,36 @@ export const TaskerPage: React.FC = () => {
       onDragEnd={handleDragEnd}
       onDragCancel={() => setActiveDrag(null)}
     >
-      <div className={styles.taskerPageContainer}>
-        <div className={styles.bannerWrapper}>
-          <RealtimeBanner />
+      <TaskerShellProvider>
+        <div className={styles.taskerPageContainer}>
+          <div className={styles.bannerWrapper}>
+            <RealtimeBanner />
+          </div>
+          <div className={styles.mainArea}>
+            {viewMode === 'table' ? (
+              <TaskTable colSpan="full" rowSpan="full" onViewModeChange={() => setViewMode('calendar')} />
+            ) : (
+              <TaskCalendar
+                colSpan="full"
+                rowSpan="full"
+                onViewModeChange={() => setViewMode('table')}
+                refetchRef={calendarRefetchRef}
+              />
+            )}
+          </div>
+          <div className={styles.sidebarArea}>
+            <WidgetPanel variant="sidebar">
+              <SidebarTabsWidget
+                colSpan={1}
+                rowSpan={1}
+                initialDeepLink={initialDeepLink}
+                externalDnd
+                dragEndRef={treeDragEndRef}
+              />
+            </WidgetPanel>
+          </div>
         </div>
-        <div className={styles.mainArea}>
-          {viewMode === 'table' ? (
-            <TaskTable colSpan="full" rowSpan="full" onViewModeChange={() => setViewMode('calendar')} />
-          ) : (
-            <TaskCalendar
-              colSpan="full"
-              rowSpan="full"
-              onViewModeChange={() => setViewMode('table')}
-              refetchRef={calendarRefetchRef}
-            />
-          )}
-        </div>
-        <div className={styles.sidebarArea}>
-          <WidgetPanel variant="sidebar">
-            <SidebarTabsWidget
-              colSpan={1}
-              rowSpan={1}
-              initialDeepLink={initialDeepLink}
-              externalDnd
-              dragEndRef={treeDragEndRef}
-            />
-          </WidgetPanel>
-        </div>
-      </div>
+      </TaskerShellProvider>
 
       {createPortal(
         <DragOverlay zIndex={Z_INDEX_DND_OVERLAY} className="cursor-grabbing">
