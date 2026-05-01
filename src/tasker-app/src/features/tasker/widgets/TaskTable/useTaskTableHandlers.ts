@@ -32,20 +32,20 @@ import type {
 } from '../../../../types/api';
 import type { ModalSize } from '../../../../types';
 import type { TaskRowTask } from './taskTableUtils';
-import type { ActivityFormData } from '../../../../components/activities/ActivityModal';
+import type { ActivityFormData } from '../../../../components/activities/ActivityDetailEditor';
 
 export interface UseTaskTableHandlersOptions {
   loadData: () => Promise<void>;
   showError: (error: unknown) => void;
   notifyTaskUpdate: (taskId?: string, folderId?: string) => void;
-  openAreaModal: (
+  openAreaDetail: (
     area: AreaResponse | null,
     mode: 'create' | 'edit',
     onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>,
     onDelete?: (id: string) => Promise<void>,
     size?: ModalSize
   ) => void;
-  openFolderModal: (
+  openFolderDetail: (
     folder: FolderResponse | null,
     mode: 'create' | 'edit',
     areas: Array<{ id: string; title: string; description?: string }>,
@@ -55,16 +55,16 @@ export interface UseTaskTableHandlersOptions {
     parentFolderId?: string | null,
     size?: ModalSize
   ) => void;
-  openTaskModal: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>) => void;
-  openActivityModal: (
+  openTaskDetail: (task: TaskResponse | null, mode: 'create' | 'edit', onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>, onDelete?: (id: string) => Promise<void>, defaultFolderId?: string, defaultAreaId?: string, areas?: Array<{ id: string; title: string }>) => void;
+  openActivityDetail: (
     task: TaskResponse,
     date: string,
     onSave: (data: ActivityFormData) => Promise<void>,
-    onOpenTaskDetails: () => void,
+    onOpenTaskDetail: () => void,
     onSaveEdit?: (eventId: string, data: EventUpdateRequest) => Promise<void>,
     onDeleteEvent?: (event: EventResponse) => Promise<void>
   ) => void;
-  closeActivityModal: () => void;
+  closeActivityDetail: () => void;
   handleActivitySaveForTask: (task: TaskResponse) => (data: ActivityFormData) => Promise<void>;
   handleActivityUpdateForTask: (task: TaskResponse) => (eventId: string, data: EventUpdateRequest) => Promise<void>;
   handleActivityDeleteForTask: (task: TaskResponse) => (event: { id: string }) => Promise<void>;
@@ -74,11 +74,11 @@ export function useTaskTableHandlers({
   loadData,
   showError,
   notifyTaskUpdate,
-  openAreaModal,
-  openFolderModal,
-  openTaskModal,
-  openActivityModal,
-  closeActivityModal,
+  openAreaDetail,
+  openFolderDetail,
+  openTaskDetail,
+  openActivityDetail,
+  closeActivityDetail,
   handleActivitySaveForTask,
   handleActivityUpdateForTask,
   handleActivityDeleteForTask,
@@ -104,7 +104,7 @@ export function useTaskTableHandlers({
     }
   }, [loadData, notifyTaskUpdate]);
 
-  const getAreasForFolderModal = useCallback(async () => {
+  const getAreasForFolderDetail = useCallback(async () => {
     const areas = await fetchAreaShortCard();
     return areas.map((a) => ({ id: a.id, title: a.title, description: a.description }));
   }, []);
@@ -135,11 +135,11 @@ export function useTaskTableHandlers({
     try {
       const area = await fetchAreaById(areaId);
       if (!area) return;
-      openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
+      openAreaDetail(area, 'edit', handleAreaSave, handleAreaDelete);
     } catch (error) {
       showError(error);
     }
-  }, [openAreaModal, handleAreaSave, handleAreaDelete, showError]);
+  }, [openAreaDetail, handleAreaSave, handleAreaDelete, showError]);
 
   /** <summary>Сохранение папки из таблицы активностей.</summary> */
   const handleFolderSave = useCallback(async (data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => {
@@ -163,44 +163,44 @@ export function useTaskTableHandlers({
     try {
       const folder = await fetchFolderById(folderId);
       if (!folder) return;
-      const areasForModal = await getAreasForFolderModal();
-      openFolderModal(
+      const areasForPicker = await getAreasForFolderDetail();
+      openFolderDetail(
         folder,
         'edit',
-        areasForModal,
+        areasForPicker,
         (data, fid) => handleFolderSave(data as FolderUpdateRequest, fid),
         handleFolderDelete
       );
     } catch (error) {
       showError(error);
     }
-  }, [getAreasForFolderModal, openFolderModal, handleFolderSave, handleFolderDelete, showError]);
+  }, [getAreasForFolderDetail, openFolderDetail, handleFolderSave, handleFolderDelete, showError]);
 
   const handleDayCellClick = useCallback(
     (task: TaskRowTask, date: string, event: React.MouseEvent) => {
       event.stopPropagation();
-      const onOpenTaskDetails = async () => {
-        closeActivityModal();
+      const onOpenTaskDetail = async () => {
+        closeActivityDetail();
         try {
           const fullTask = await fetchTaskById(task.id);
           if (!fullTask) return;
           const areasData = await fetchAreaShortCard();
-          const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
-          openTaskModal(fullTask, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
+          const areasForTask = areasData.map(a => ({ id: a.id, title: a.title }));
+          openTaskDetail(fullTask, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTask);
         } catch (error) {
           showError(error);
         }
       };
-      openActivityModal(
+      openActivityDetail(
         task as TaskResponse,
         date,
         handleActivitySaveForTask(task as TaskResponse),
-        onOpenTaskDetails,
+        onOpenTaskDetail,
         handleActivityUpdateForTask(task as TaskResponse),
         handleActivityDeleteForTask(task as TaskResponse)
       );
     },
-    [openActivityModal, closeActivityModal, openTaskModal, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask, showError]
+    [openActivityDetail, closeActivityDetail, openTaskDetail, handleTaskSave, handleTaskDelete, handleActivitySaveForTask, handleActivityUpdateForTask, handleActivityDeleteForTask, showError]
   );
 
   const handleViewTaskDetails = useCallback(async (taskId: string, event: React.MouseEvent) => {
@@ -209,21 +209,21 @@ export function useTaskTableHandlers({
       const task = await fetchTaskById(taskId);
       if (!task) return;
       const areasData = await fetchAreaShortCard();
-      const areasForTaskModal = areasData.map(a => ({ id: a.id, title: a.title }));
-      openTaskModal(task, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTaskModal);
+      const areasForTask = areasData.map(a => ({ id: a.id, title: a.title }));
+      openTaskDetail(task, 'edit', (data, id) => handleTaskSave(data, id), handleTaskDelete, undefined, undefined, areasForTask);
     } catch (error) {
       showError(error);
     }
-  }, [openTaskModal, handleTaskSave, handleTaskDelete, showError]);
+  }, [openTaskDetail, handleTaskSave, handleTaskDelete, showError]);
 
   const handleCreateFolderForArea = useCallback(async (areaId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const areasForModal = await getAreasForFolderModal();
-      openFolderModal(
+      const areasForPicker = await getAreasForFolderDetail();
+      openFolderDetail(
         null,
         'create',
-        areasForModal,
+        areasForPicker,
         (data, folderId) => handleFolderSave(data as FolderCreateRequest, folderId),
         undefined,
         areaId,
@@ -232,27 +232,27 @@ export function useTaskTableHandlers({
     } catch (error) {
       showError(error);
     }
-  }, [getAreasForFolderModal, openFolderModal, handleFolderSave, showError]);
+  }, [getAreasForFolderDetail, openFolderDetail, handleFolderSave, showError]);
 
   const handleCreateTaskForArea = useCallback(async (areaId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       const areasData = await fetchAreaShortCard();
-      const areasForTaskModal = areasData.map((a) => ({ id: a.id, title: a.title }));
-      openTaskModal(null, 'create', (data, taskId) => handleTaskSave(data, taskId), undefined, undefined, areaId, areasForTaskModal);
+      const areasForTask = areasData.map((a) => ({ id: a.id, title: a.title }));
+      openTaskDetail(null, 'create', (data, taskId) => handleTaskSave(data, taskId), undefined, undefined, areaId, areasForTask);
     } catch (error) {
       showError(error);
     }
-  }, [openTaskModal, handleTaskSave, showError]);
+  }, [openTaskDetail, handleTaskSave, showError]);
 
   const handleCreateFolderForFolder = useCallback(async (folderId: string, areaId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
-      const areasForModal = await getAreasForFolderModal();
-      openFolderModal(
+      const areasForPicker = await getAreasForFolderDetail();
+      openFolderDetail(
         null,
         'create',
-        areasForModal,
+        areasForPicker,
         (data, fid) => handleFolderSave(data as FolderCreateRequest, fid),
         undefined,
         areaId,
@@ -261,18 +261,18 @@ export function useTaskTableHandlers({
     } catch (error) {
       showError(error);
     }
-  }, [getAreasForFolderModal, openFolderModal, handleFolderSave, showError]);
+  }, [getAreasForFolderDetail, openFolderDetail, handleFolderSave, showError]);
 
   const handleCreateTaskForFolder = useCallback(async (folderId: string, areaId: string, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       const areasData = await fetchAreaShortCard();
-      const areasForTaskModal = areasData.map((a) => ({ id: a.id, title: a.title }));
-      openTaskModal(null, 'create', (data, taskId) => handleTaskSave(data, taskId), undefined, folderId, areaId, areasForTaskModal);
+      const areasForTask = areasData.map((a) => ({ id: a.id, title: a.title }));
+      openTaskDetail(null, 'create', (data, taskId) => handleTaskSave(data, taskId), undefined, folderId, areaId, areasForTask);
     } catch (error) {
       showError(error);
     }
-  }, [openTaskModal, handleTaskSave, showError]);
+  }, [openTaskDetail, handleTaskSave, showError]);
 
   return {
     handleTaskSave,

@@ -24,7 +24,7 @@ export interface TaskTableProps extends WidgetSizeProps {
 
 export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewModeChange }) => {
   const { weekStartIso, go } = useWeek();
-  const { openAreaModal, openFolderModal, openTaskModal, openActivityModal, closeActivityModal } = useTaskerDetailPanel();
+  const { openAreaDetail, openFolderDetail, openTaskDetail, openActivityDetail, closeActivityDetail } = useTaskerDetailPanel();
   const { subscribeToTaskUpdates, notifyTaskUpdate } = useTaskUpdate();
   const { showError } = useToast();
 
@@ -49,11 +49,11 @@ export const TaskTable: React.FC<TaskTableProps> = ({ colSpan, rowSpan, onViewMo
     loadData,
     showError,
     notifyTaskUpdate,
-    openAreaModal,
-    openFolderModal,
-    openTaskModal,
-    openActivityModal,
-    closeActivityModal,
+    openAreaDetail,
+    openFolderDetail,
+    openTaskDetail,
+    openActivityDetail,
+    closeActivityDetail,
     handleActivitySaveForTask,
     handleActivityUpdateForTask,
     handleActivityDeleteForTask,

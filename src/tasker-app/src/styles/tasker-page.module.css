@@ -35,9 +35,43 @@
   min-height: 0;
 }
 
+/**
+ * Хост дерева вне экрана: нужен только чтобы при deep link в режиме «Активности»
+ * отработали загрузка дерева и useTreeDeepLink (виджет дерева на этом экране не показан).
+ */
+.deepLinkTreeHost {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 0;
+  height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
+  z-index: -1;
+}
+
 .detailPane {
   min-width: 0;
   min-height: 0;
+  max-width: 100%;
+}
+
+/** Узкая колонка: панель свёрнута в полоску, основная область забирает ширину */
+.detailPaneCollapsed {
+  width: fit-content;
+  max-width: 100%;
+  justify-self: end;
+}
+
+@media (max-width: 767px) {
+  .detailPane {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
 }
 
 @media (min-width: 768px) {
@@ -48,6 +82,11 @@
 
   .mainAreaWithPanel {
     grid-template-columns: minmax(0, 1fr) minmax(320px, 34%);
+  }
+
+  /** Вторая колонка по ширине контента — полоска ~56px, остальное у contentPane */
+  .mainAreaWithPanelCollapsed {
+    grid-template-columns: minmax(0, 1fr) minmax(0, max-content);
   }
 
   .contentPane,

@@ -1,10 +1,10 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import { GlassButton } from '../../../components/ui/GlassButton';
 import { CloseIcon, FoldVerticalIcon, UnfoldVerticalIcon } from '../../../components/icons';
-import { AreaModal } from '../../../components/areas/AreaModal';
-import { FolderModal } from '../../../components/folders/FolderModal';
-import { TaskModal } from '../../../components/tasks/TaskModal';
-import { ActivityModal } from '../../../components/activities/ActivityModal';
+import { AreaDetailEditor } from '../../../components/areas/AreaModal';
+import { FolderDetailEditor } from '../../../components/folders/FolderDetailEditor';
+import { TaskDetailEditor } from '../../../components/tasks/TaskDetailEditor';
+import { ActivityDetailEditor } from '../../../components/activities/ActivityDetailEditor';
 import type {
   AreaResponse,
   AreaCreateRequest,
@@ -18,7 +18,7 @@ import type {
   EventResponse,
   EventUpdateRequest,
 } from '../../../types/api';
-import type { ActivityFormData } from '../../../components/activities/ActivityModal';
+import type { ActivityFormData } from '../../../components/activities/ActivityDetailEditor';
 import type { ModalSize } from '../../../types/modal-size';
 import css from '../../../styles/tasker-detail-panel.module.css';
 
@@ -54,7 +54,7 @@ type ActivityState = {
   task: TaskResponse | null;
   date: string | null;
   onSave: ((data: ActivityFormData) => Promise<void>) | null;
-  onOpenTaskDetails: (() => void) | null;
+  onOpenTaskDetail: (() => void) | null;
   onSaveEdit: ((eventId: string, data: EventUpdateRequest) => Promise<void>) | null;
   onDeleteEvent: ((event: EventResponse) => Promise<void>) | null;
 };
@@ -62,17 +62,20 @@ type ActivityState = {
 const initArea: AreaState = { isOpen: false, area: null, onSave: null, onDelete: null, size: 'medium' };
 const initFolder: FolderState = { isOpen: false, folder: null, areas: [], onSave: null, onDelete: null, size: 'medium' };
 const initTask: TaskState = { isOpen: false, task: null, onSave: null, onDelete: null, size: 'medium' };
-const initActivity: ActivityState = { isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetails: null, onSaveEdit: null, onDeleteEvent: null };
+const initActivity: ActivityState = { isOpen: false, task: null, date: null, onSave: null, onOpenTaskDetail: null, onSaveEdit: null, onDeleteEvent: null };
+
+/** Заголовок и действия сущности в объединённой шапке панели */
+export type DetailPanelChrome = { title: React.ReactNode; actions: React.ReactNode } | null;
 
 export interface TaskerDetailPanelApi {
-  openAreaModal: (
+  openAreaDetail: (
     area: AreaResponse | null,
     mode: 'create' | 'edit',
     onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>,
     onDelete?: (id: string) => Promise<void>,
     size?: ModalSize
   ) => void;
-  openFolderModal: (
+  openFolderDetail: (
     folder: FolderResponse | null,
     mode: 'create' | 'edit',
     areas: Array<{ id: string; title: string; description?: string }>,
@@ -82,7 +85,7 @@ export interface TaskerDetailPanelApi {
     parentFolderId?: string | null,
     size?: ModalSize
   ) => void;
-  openTaskModal: (
+  openTaskDetail: (
     task: TaskResponse | null,
     mode: 'create' | 'edit',
     onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>,
@@ -92,26 +95,36 @@ export interface TaskerDetailPanelApi {
     areas?: Array<{ id: string; title: string }>,
     size?: ModalSize
   ) => void;
-  openActivityModal: (
+  openActivityDetail: (
     task: TaskResponse,
     date: string,
     onSave: (data: ActivityFormData) => Promise<void>,
-    onOpenTaskDetails: () => void,
+    onOpenTaskDetail: () => void,
     onSaveEdit?: (eventId: string, data: EventUpdateRequest) => Promise<void>,
     onDeleteEvent?: (event: EventResponse) => Promise<void>
   ) => void;
-  closeAreaModal: () => void;
-  closeFolderModal: () => void;
-  closeTaskModal: () => void;
-  closeActivityModal: () => void;
+  closeAreaDetail: () => void;
+  closeFolderDetail: () => void;
+  closeTaskDetail: () => void;
+  closeActivityDetail: () => void;
   closePanel: () => void;
   toggleCollapse: () => void;
   isPanelOpen: boolean;
   isCollapsed: boolean;
-  areaState: AreaState;
-  folderState: FolderState;
-  taskState: TaskState;
-  activityState: ActivityState;
+  areaDetail: AreaState;
+  folderDetail: FolderState;
+  taskDetail: TaskState;
+  activityDetail: ActivityState;
+  /** Заголовок и кнопки активного редактора в шапке панели */
+  detailChrome: DetailPanelChrome;
+  setDetailChrome: (value: DetailPanelChrome) => void;
+  /**
+   * Регистрирует обработчик «закрыть панель» (учёт несохранённых изменений).
+   * Вызывать из редактора в панели; сбрасывать в cleanup.
+   */
+  registerDetailPanelCloseHandler: (handler: (() => void) | null) => void;
+  /** Вызов из кнопки закрытия панели */
+  requestDetailPanelClose: () => void;
 }
 
 const TaskerDetailPanelContext = createContext<TaskerDetailPanelApi | undefined>(undefined);
@@ -125,93 +138,119 @@ export const useTaskerDetailPanel = (): TaskerDetailPanelApi => {
 export const TaskerDetailPanelProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [areaState, setAreaState] = useState<AreaState>(initArea);
-  const [folderState, setFolderState] = useState<FolderState>(initFolder);
-  const [taskState, setTaskState] = useState<TaskState>(initTask);
-  const [activityState, setActivityState] = useState<ActivityState>(initActivity);
+  const [areaDetail, setAreaDetail] = useState<AreaState>(initArea);
+  const [folderDetail, setFolderDetail] = useState<FolderState>(initFolder);
+  const [taskDetail, setTaskDetail] = useState<TaskState>(initTask);
+  const [activityDetail, setActivityDetail] = useState<ActivityState>(initActivity);
+  const [detailChrome, setDetailChrome] = useState<DetailPanelChrome>(null);
+  const detailPanelCloseRef = useRef<(() => void) | null>(null);
 
   const clearStates = useCallback(() => {
-    setAreaState(initArea);
-    setFolderState(initFolder);
-    setTaskState(initTask);
-    setActivityState(initActivity);
+    setAreaDetail(initArea);
+    setFolderDetail(initFolder);
+    setTaskDetail(initTask);
+    setActivityDetail(initActivity);
   }, []);
 
   const activatePanel = useCallback(() => {
     setIsPanelOpen(true);
     setIsCollapsed(false);
+    setDetailChrome(null);
+    detailPanelCloseRef.current = null;
   }, []);
 
   const closePanel = useCallback(() => {
     setIsPanelOpen(false);
     setIsCollapsed(false);
+    setDetailChrome(null);
+    detailPanelCloseRef.current = null;
     clearStates();
   }, [clearStates]);
 
-  const openAreaModal = useCallback<TaskerDetailPanelApi['openAreaModal']>((area, _mode, onSave, onDelete, size = 'medium') => {
+  const registerDetailPanelCloseHandler = useCallback((handler: (() => void) | null) => {
+    detailPanelCloseRef.current = handler;
+  }, []);
+
+  const requestDetailPanelClose = useCallback(() => {
+    const fn = detailPanelCloseRef.current;
+    if (fn) {
+      fn();
+      return;
+    }
+    closePanel();
+  }, [closePanel]);
+
+  const openAreaDetail = useCallback<TaskerDetailPanelApi['openAreaDetail']>((area, _mode, onSave, onDelete, size = 'medium') => {
     clearStates();
-    setAreaState({ isOpen: true, area, onSave, onDelete: onDelete ?? null, size });
+    setAreaDetail({ isOpen: true, area, onSave, onDelete: onDelete ?? null, size });
     activatePanel();
   }, [activatePanel, clearStates]);
 
-  const openFolderModal = useCallback<TaskerDetailPanelApi['openFolderModal']>((folder, _mode, areas, onSave, onDelete, areaId, parentFolderId, size = 'medium') => {
+  const openFolderDetail = useCallback<TaskerDetailPanelApi['openFolderDetail']>((folder, _mode, areas, onSave, onDelete, areaId, parentFolderId, size = 'medium') => {
     clearStates();
-    setFolderState({ isOpen: true, folder, areas, onSave, onDelete: onDelete ?? null, areaId, parentFolderId, size });
+    setFolderDetail({ isOpen: true, folder, areas, onSave, onDelete: onDelete ?? null, areaId, parentFolderId, size });
     activatePanel();
   }, [activatePanel, clearStates]);
 
-  const openTaskModal = useCallback<TaskerDetailPanelApi['openTaskModal']>((task, _mode, onSave, onDelete, defaultFolderId, defaultAreaId, areas, size = 'medium') => {
+  const openTaskDetail = useCallback<TaskerDetailPanelApi['openTaskDetail']>((task, _mode, onSave, onDelete, defaultFolderId, defaultAreaId, areas, size = 'medium') => {
     clearStates();
-    setTaskState({ isOpen: true, task, onSave, onDelete: onDelete ?? null, defaultFolderId, defaultAreaId, areas, size });
+    setTaskDetail({ isOpen: true, task, onSave, onDelete: onDelete ?? null, defaultFolderId, defaultAreaId, areas, size });
     activatePanel();
   }, [activatePanel, clearStates]);
 
-  const openActivityModal = useCallback<TaskerDetailPanelApi['openActivityModal']>((task, date, onSave, onOpenTaskDetails, onSaveEdit, onDeleteEvent) => {
+  const openActivityDetail = useCallback<TaskerDetailPanelApi['openActivityDetail']>((task, date, onSave, onOpenTaskDetail, onSaveEdit, onDeleteEvent) => {
     clearStates();
-    setActivityState({ isOpen: true, task, date, onSave, onOpenTaskDetails, onSaveEdit: onSaveEdit ?? null, onDeleteEvent: onDeleteEvent ?? null });
+    setActivityDetail({ isOpen: true, task, date, onSave, onOpenTaskDetail, onSaveEdit: onSaveEdit ?? null, onDeleteEvent: onDeleteEvent ?? null });
     activatePanel();
   }, [activatePanel, clearStates]);
 
-  const closeAreaModal = useCallback(() => setAreaState(initArea), []);
-  const closeFolderModal = useCallback(() => setFolderState(initFolder), []);
-  const closeTaskModal = useCallback(() => setTaskState(initTask), []);
-  const closeActivityModal = useCallback(() => setActivityState(initActivity), []);
+  const closeAreaDetail = useCallback(() => setAreaDetail(initArea), []);
+  const closeFolderDetail = useCallback(() => setFolderDetail(initFolder), []);
+  const closeTaskDetail = useCallback(() => setTaskDetail(initTask), []);
+  const closeActivityDetail = useCallback(() => setActivityDetail(initActivity), []);
   const toggleCollapse = useCallback(() => setIsCollapsed((prev) => !prev), []);
 
   const value = useMemo<TaskerDetailPanelApi>(() => ({
-    openAreaModal,
-    openFolderModal,
-    openTaskModal,
-    openActivityModal,
-    closeAreaModal,
-    closeFolderModal,
-    closeTaskModal,
-    closeActivityModal,
+    openAreaDetail,
+    openFolderDetail,
+    openTaskDetail,
+    openActivityDetail,
+    closeAreaDetail,
+    closeFolderDetail,
+    closeTaskDetail,
+    closeActivityDetail,
     closePanel,
     toggleCollapse,
     isPanelOpen,
     isCollapsed,
-    areaState,
-    folderState,
-    taskState,
-    activityState,
+    areaDetail,
+    folderDetail,
+    taskDetail,
+    activityDetail,
+    detailChrome,
+    setDetailChrome,
+    registerDetailPanelCloseHandler,
+    requestDetailPanelClose,
   }), [
-    openAreaModal,
-    openFolderModal,
-    openTaskModal,
-    openActivityModal,
-    closeAreaModal,
-    closeFolderModal,
-    closeTaskModal,
-    closeActivityModal,
+    openAreaDetail,
+    openFolderDetail,
+    openTaskDetail,
+    openActivityDetail,
+    closeAreaDetail,
+    closeFolderDetail,
+    closeTaskDetail,
+    closeActivityDetail,
     closePanel,
     toggleCollapse,
     isPanelOpen,
     isCollapsed,
-    areaState,
-    folderState,
-    taskState,
-    activityState,
+    areaDetail,
+    folderDetail,
+    taskDetail,
+    activityDetail,
+    detailChrome,
+    registerDetailPanelCloseHandler,
+    requestDetailPanelClose,
   ]);
 
   return <TaskerDetailPanelContext.Provider value={value}>{children}</TaskerDetailPanelContext.Provider>;
@@ -223,14 +262,12 @@ export const RightGlassDetailPanel: React.FC = () => {
     isCollapsed,
     toggleCollapse,
     closePanel,
-    closeAreaModal,
-    closeFolderModal,
-    closeTaskModal,
-    closeActivityModal,
-    areaState,
-    folderState,
-    taskState,
-    activityState,
+    areaDetail,
+    folderDetail,
+    taskDetail,
+    activityDetail,
+    detailChrome,
+    requestDetailPanelClose,
   } = useTaskerDetailPanel();
 
   if (!isPanelOpen) return null;
@@ -238,23 +275,34 @@ export const RightGlassDetailPanel: React.FC = () => {
   return (
     <aside className={`${css.detailPanel} ${isCollapsed ? css.collapsed : ''}`}>
       <div className={css.detailPanelHeader}>
-        <span className={css.detailPanelTitle}>Детали</span>
+        {!isCollapsed && (
+          <div className={css.detailPanelLead}>
+            {detailChrome ? (
+              <>
+                <span className={css.detailEntityTitle}>{detailChrome.title}</span>
+                <div className={css.detailEntityActions}>{detailChrome.actions}</div>
+              </>
+            ) : (
+              <span className={css.detailPanelTitle}>Детали</span>
+            )}
+          </div>
+        )}
         <div className={css.detailPanelActions}>
           <GlassButton variant="subtle" size="xs" onClick={toggleCollapse} aria-label={isCollapsed ? 'Развернуть панель' : 'Свернуть панель'}>
             {isCollapsed ? <UnfoldVerticalIcon className="icon-m" /> : <FoldVerticalIcon className="icon-m" />}
           </GlassButton>
-          <GlassButton variant="subtle" size="xs" onClick={closePanel} aria-label="Закрыть панель">
+          <GlassButton variant="subtle" size="xs" onClick={() => requestDetailPanelClose()} aria-label="Закрыть панель">
             <CloseIcon className="icon-m" />
           </GlassButton>
         </div>
       </div>
       {!isCollapsed && (
         <div className={css.detailPanelBody}>
-          <AreaModal isOpen={areaState.isOpen} onClose={closeAreaModal} onSave={areaState.onSave ?? (async () => {})} onDelete={areaState.onDelete ?? undefined} area={areaState.area} size={areaState.size} renderMode="inline" />
-          <FolderModal isOpen={folderState.isOpen} onClose={closeFolderModal} onSave={folderState.onSave ?? (async () => {})} onDelete={folderState.onDelete ?? undefined} folder={folderState.folder} areas={folderState.areas} defaultAreaId={folderState.areaId} defaultParentFolderId={folderState.parentFolderId} size={folderState.size} renderMode="inline" />
-          <TaskModal isOpen={taskState.isOpen} onClose={closeTaskModal} onSave={taskState.onSave ?? (async () => {})} onDelete={taskState.onDelete ?? undefined} task={taskState.task} defaultFolderId={taskState.defaultFolderId} defaultAreaId={taskState.defaultAreaId} areas={taskState.areas} size={taskState.size} renderMode="inline" />
-          {activityState.task && (
-            <ActivityModal isOpen={activityState.isOpen} onClose={closeActivityModal} onSave={activityState.onSave ?? (async () => {})} task={activityState.task} date={activityState.date} onOpenTaskDetails={activityState.onOpenTaskDetails ?? (() => {})} onSaveEdit={activityState.onSaveEdit ?? undefined} onDeleteEvent={activityState.onDeleteEvent ?? undefined} renderMode="inline" />
+          <AreaDetailEditor isOpen={areaDetail.isOpen} onClose={closePanel} onSave={areaDetail.onSave ?? (async () => {})} onDelete={areaDetail.onDelete ?? undefined} area={areaDetail.area} size={areaDetail.size} />
+          <FolderDetailEditor isOpen={folderDetail.isOpen} onClose={closePanel} onSave={folderDetail.onSave ?? (async () => {})} onDelete={folderDetail.onDelete ?? undefined} folder={folderDetail.folder} areas={folderDetail.areas} defaultAreaId={folderDetail.areaId} defaultParentFolderId={folderDetail.parentFolderId} size={folderDetail.size} />
+          <TaskDetailEditor isOpen={taskDetail.isOpen} onClose={closePanel} onSave={taskDetail.onSave ?? (async () => {})} onDelete={taskDetail.onDelete ?? undefined} task={taskDetail.task} defaultFolderId={taskDetail.defaultFolderId} defaultAreaId={taskDetail.defaultAreaId} areas={taskDetail.areas} size={taskDetail.size} />
+          {activityDetail.task && (
+            <ActivityDetailEditor isOpen={activityDetail.isOpen} onClose={closePanel} onSave={activityDetail.onSave ?? (async () => {})} task={activityDetail.task} date={activityDetail.date} onOpenTaskDetail={activityDetail.onOpenTaskDetail ?? (() => {})} onSaveEdit={activityDetail.onSaveEdit ?? undefined} onDeleteEvent={activityDetail.onDeleteEvent ?? undefined} />
           )}
         </div>
       )}

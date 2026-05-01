@@ -18,7 +18,7 @@ function sortAreasByTitle(items: AreaShortCard[]): AreaShortCard[] {
 }
 
 export interface UseTreeAreaHandlersOptions
-  extends Pick<TaskerDetailPanelApi, 'openAreaModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openAreaDetail'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setFoldersByArea: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;
@@ -32,7 +32,7 @@ export function useTreeAreaHandlers({
   setAreas,
   setFoldersByArea,
   setTasksByArea,
-  openAreaModal,
+  openAreaDetail,
   showError,
   notifyTaskUpdate,
 }: UseTreeAreaHandlersOptions) {
@@ -111,20 +111,20 @@ export function useTreeAreaHandlers({
   );
 
   const handleCreateArea = useCallback(() => {
-    openAreaModal(null, 'create', handleAreaSave);
-  }, [openAreaModal, handleAreaSave]);
+    openAreaDetail(null, 'create', handleAreaSave);
+  }, [openAreaDetail, handleAreaSave]);
 
   const handleViewAreaDetails = useCallback(
     async (areaId: string, e: React.MouseEvent) => {
       e.stopPropagation();
       try {
         const area = await fetchAreaById(areaId);
-        if (area) openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
+        if (area) openAreaDetail(area, 'edit', handleAreaSave, handleAreaDelete);
       } catch (error) {
         showError(error);
       }
     },
-    [openAreaModal, handleAreaSave, handleAreaDelete, showError]
+    [openAreaDetail, handleAreaSave, handleAreaDelete, showError]
   );
 
   return useMemo(() => ({

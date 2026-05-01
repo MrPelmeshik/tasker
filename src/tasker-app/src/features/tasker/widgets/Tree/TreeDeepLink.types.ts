@@ -1,6 +1,6 @@
 /**
  * Типы для открытия сущностей по deep link (openEntityByDeepLink).
- * Колбэки модалок приведены к сигнатурам, используемым при открытии по ссылке (mode: 'edit').
+ * Колбэки панели детализации приведены к сигнатурам, используемым при открытии по ссылке (mode: 'edit').
  */
 
 import type React from 'react';
@@ -18,29 +18,29 @@ import type {
 import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../types';
 import type { EntityType } from '../../../../utils/entity-links';
 
-/** Область для селекта в модалке папки */
+/** Область для селекта в форме папки (панель детализации) */
 export interface AreaOption {
   id: string;
   title: string;
   description?: string;
 }
 
-/** Область для селекта в модалке задачи */
+/** Область для селекта в форме задачи (панель детализации) */
 export interface AreaOptionShort {
   id: string;
   title: string;
 }
 
-/** Колбэк открытия модалки области (режим редактирования) */
-export type OpenAreaModalFn = (
+/** Колбэк открытия детализации области (режим редактирования) */
+export type OpenAreaDetailFn = (
   area: AreaResponse,
   mode: 'edit',
   onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>,
   onDelete?: (id: string) => Promise<void>
 ) => void;
 
-/** Колбэк открытия модалки папки (режим редактирования) */
-export type OpenFolderModalFn = (
+/** Колбэк открытия детализации папки (режим редактирования) */
+export type OpenFolderDetailFn = (
   folder: FolderResponse,
   mode: 'edit',
   areas: AreaOption[],
@@ -48,8 +48,8 @@ export type OpenFolderModalFn = (
   onDelete?: (id: string) => Promise<void>
 ) => void;
 
-/** Колбэк открытия модалки задачи (режим редактирования) */
-export type OpenTaskModalFn = (
+/** Колбэк открытия детализации задачи (режим редактирования) */
+export type OpenTaskDetailFn = (
   task: TaskResponse,
   mode: 'edit',
   onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>,
@@ -72,9 +72,9 @@ export interface OpenEntityByDeepLinkParams {
   setExpandedFolders: React.Dispatch<React.SetStateAction<Set<string>>>;
   loadAreaContent: (areaId: string) => Promise<unknown>;
   loadFolderContent: (folderId: string, areaId: string) => Promise<unknown>;
-  openAreaModal: OpenAreaModalFn;
-  openFolderModal: OpenFolderModalFn;
-  openTaskModal: OpenTaskModalFn;
+  openAreaDetail: OpenAreaDetailFn;
+  openFolderDetail: OpenFolderDetailFn;
+  openTaskDetail: OpenTaskDetailFn;
   showError: (error: unknown) => void;
   handleAreaSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>;
   handleAreaDelete: (id: string) => Promise<void>;

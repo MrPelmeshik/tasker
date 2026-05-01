@@ -20,7 +20,7 @@ import type {
 import type { TaskerDetailPanelApi } from '../../context/TaskerDetailPanelContext';
 
 export interface UseTreeTaskHandlersOptions
-  extends Pick<TaskerDetailPanelApi, 'openTaskModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openTaskDetail'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setTasksByArea: React.Dispatch<React.SetStateAction<Map<string, TaskSummary[]>>>;
@@ -38,7 +38,7 @@ export function useTreeTaskHandlers({
   setTasksByFolder,
   setExpandedAreas,
   setExpandedFolders,
-  openTaskModal,
+  openTaskDetail,
   notifyTaskUpdate,
   showError,
 }: UseTreeTaskHandlersOptions) {
@@ -100,19 +100,19 @@ export function useTreeTaskHandlers({
   const handleCreateTaskForArea = useCallback(
     (areaId: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
-      openTaskModal(null, 'create', (data, taskId) => handleTaskSave(data as TaskCreateRequest, taskId), undefined, undefined, areaId, areasForTaskModal);
+      const areasForTask = areas.map((a) => ({ id: a.id, title: a.title }));
+      openTaskDetail(null, 'create', (data, taskId) => handleTaskSave(data as TaskCreateRequest, taskId), undefined, undefined, areaId, areasForTask);
     },
-    [areas, openTaskModal, handleTaskSave]
+    [areas, openTaskDetail, handleTaskSave]
   );
 
   const handleCreateTaskForFolder = useCallback(
     (folderId: string, areaId: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
-      openTaskModal(null, 'create', (data, taskId) => handleTaskSave(data as TaskCreateRequest, taskId), undefined, folderId, areaId, areasForTaskModal);
+      const areasForTask = areas.map((a) => ({ id: a.id, title: a.title }));
+      openTaskDetail(null, 'create', (data, taskId) => handleTaskSave(data as TaskCreateRequest, taskId), undefined, folderId, areaId, areasForTask);
     },
-    [areas, openTaskModal, handleTaskSave]
+    [areas, openTaskDetail, handleTaskSave]
   );
 
   const handleViewTaskDetails = useCallback(
@@ -121,14 +121,14 @@ export function useTreeTaskHandlers({
       try {
         const task = await fetchTaskById(taskId);
         if (task) {
-          const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
-          openTaskModal(task, 'edit', (data, tid) => handleTaskSave(data as TaskUpdateRequest, tid), handleTaskDelete, undefined, undefined, areasForTaskModal);
+          const areasForTask = areas.map((a) => ({ id: a.id, title: a.title }));
+          openTaskDetail(task, 'edit', (data, tid) => handleTaskSave(data as TaskUpdateRequest, tid), handleTaskDelete, undefined, undefined, areasForTask);
         }
       } catch (error) {
         showError(error);
       }
     },
-    [areas, openTaskModal, handleTaskSave, handleTaskDelete, showError]
+    [areas, openTaskDetail, handleTaskSave, handleTaskDelete, showError]
   );
 
   return useMemo(() => ({

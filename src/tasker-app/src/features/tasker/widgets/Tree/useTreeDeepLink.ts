@@ -1,16 +1,22 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, type MutableRefObject } from 'react';
 import type { EntityType } from '../../../../utils/entity-links';
 import { openEntityByDeepLink, type OpenEntityByDeepLinkParams } from './treeDeepLinkUtils';
 
 export interface UseTreeDeepLinkParams extends Omit<OpenEntityByDeepLinkParams, 'entityType' | 'entityId'> {
   loading: boolean;
   initialDeepLink: { entityType: EntityType; entityId: string } | undefined;
+  /**
+   * Общий ref ключа уже обработанного deep link (`entityType:entityId`).
+   * Если задан, повторный вызов openEntityByDeepLink с тем же ключом пропускается (например при смене режима Активности/Календарь).
+   */
+  processedDeepLinkKeyRef?: MutableRefObject<string | null>;
 }
 
 export function useTreeDeepLink(params: UseTreeDeepLinkParams): void {
   const {
     loading,
     initialDeepLink,
+    processedDeepLinkKeyRef: sharedProcessedKeyRef,
     areas,
     foldersByArea,
     foldersByParent,
@@ -20,9 +26,9 @@ export function useTreeDeepLink(params: UseTreeDeepLinkParams): void {
     setExpandedFolders,
     loadAreaContent,
     loadFolderContent,
-    openAreaModal,
-    openFolderModal,
-    openTaskModal,
+    openAreaDetail,
+    openFolderDetail,
+    openTaskDetail,
     showError,
     handleAreaSave,
     handleAreaDelete,
@@ -32,13 +38,14 @@ export function useTreeDeepLink(params: UseTreeDeepLinkParams): void {
     handleTaskDelete,
   } = params;
 
-  const processedDeepLinkRef = useRef<string | null>(null);
+  const internalProcessedKeyRef = useRef<string | null>(null);
+  const processedKeyRef = sharedProcessedKeyRef ?? internalProcessedKeyRef;
 
   useEffect(() => {
     if (loading || !initialDeepLink) return;
     const key = `${initialDeepLink.entityType}:${initialDeepLink.entityId}`;
-    if (processedDeepLinkRef.current === key) return;
-    processedDeepLinkRef.current = key;
+    if (processedKeyRef.current === key) return;
+    processedKeyRef.current = key;
 
     openEntityByDeepLink({
       entityType: initialDeepLink.entityType,
@@ -52,9 +59,9 @@ export function useTreeDeepLink(params: UseTreeDeepLinkParams): void {
       setExpandedFolders,
       loadAreaContent,
       loadFolderContent,
-      openAreaModal,
-      openFolderModal,
-      openTaskModal,
+      openAreaDetail,
+      openFolderDetail,
+      openTaskDetail,
       showError,
       handleAreaSave,
       handleAreaDelete,
@@ -75,9 +82,9 @@ export function useTreeDeepLink(params: UseTreeDeepLinkParams): void {
     setExpandedFolders,
     loadAreaContent,
     loadFolderContent,
-    openAreaModal,
-    openFolderModal,
-    openTaskModal,
+    openAreaDetail,
+    openFolderDetail,
+    openTaskDetail,
     showError,
     handleAreaSave,
     handleAreaDelete,
@@ -85,5 +92,6 @@ export function useTreeDeepLink(params: UseTreeDeepLinkParams): void {
     handleFolderDelete,
     handleTaskSave,
     handleTaskDelete,
+    processedKeyRef,
   ]);
 }

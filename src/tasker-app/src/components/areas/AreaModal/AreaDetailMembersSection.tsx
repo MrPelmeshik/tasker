@@ -1,5 +1,5 @@
 /**
- * Секция «Участники» в модалке области: заголовок, состояние загрузки/ошибки и список по ролям.
+ * <summary>Секция «Участники» в редакторе области в панели детализации.</summary>
  */
 
 import React from 'react';
@@ -8,7 +8,7 @@ import { ParticipantsByRole } from './ParticipantsByRole';
 import formCss from '../../../styles/modal-form.module.css';
 import type { AreaMemberResponse, AreaRole } from '../../../types';
 
-export interface AreaModalMembersSectionProps {
+export interface AreaDetailMembersSectionProps {
   /** Участники для отображения (с учётом pending добавлений/удалений и смены ролей) */
   displayMembers: AreaMemberResponse[];
   /** Режим только просмотра (без добавления/изменения ролей/удаления) */
@@ -29,7 +29,7 @@ export interface AreaModalMembersSectionProps {
   onRemoveMember: (member: AreaMemberResponse) => void;
 }
 
-export const AreaModalMembersSection: React.FC<AreaModalMembersSectionProps> = ({
+export const AreaDetailMembersSection: React.FC<AreaDetailMembersSectionProps> = ({
   displayMembers,
   isViewMode,
   membersLoading,

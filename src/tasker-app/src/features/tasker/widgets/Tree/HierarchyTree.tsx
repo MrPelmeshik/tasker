@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, type MutableRefObject } from 'react';
 import { type EntityType } from '../../../../utils/entity-links';
 import { createPortal } from 'react-dom';
 import {
@@ -48,6 +48,10 @@ export interface HierarchyTreeProps {
      * If provided, used for highlighting or scrolling to specific entity.
      */
     initialDeepLink?: { entityType: EntityType; entityId: string };
+    /**
+     * Общий ref обработанного deep link; см. useTreeDeepLink (дедуп при смене режима страницы).
+     */
+    processedDeepLinkKeyRef?: MutableRefObject<string | null>;
     className?: string;
     /**
      * When true, DndContext is provided by a parent component.
@@ -62,8 +66,8 @@ export interface HierarchyTreeProps {
     dragEndRef?: React.MutableRefObject<((event: DragEndEvent) => Promise<void>) | null>;
 }
 
-export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepLink, className, externalDnd, dragEndRef }) => {
-    const { openAreaModal, openFolderModal, openTaskModal } = useTaskerDetailPanel();
+export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepLink, processedDeepLinkKeyRef, className, externalDnd, dragEndRef }) => {
+    const { openAreaDetail, openFolderDetail, openTaskDetail } = useTaskerDetailPanel();
     const { notifyTaskUpdate, subscribeToTaskUpdates } = useTaskUpdate();
     const { showError, addSuccess } = useToast();
 
@@ -113,9 +117,9 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
         showError,
         addSuccess,
         notifyTaskUpdate,
-        openAreaModal,
-        openFolderModal,
-        openTaskModal,
+        openAreaDetail,
+        openFolderDetail,
+        openTaskDetail,
     });
 
     const [activeDrag, setActiveDrag] = useState<{ id: string; data: DragPayload } | null>(null);
@@ -131,6 +135,7 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
     useTreeDeepLink({
         loading,
         initialDeepLink,
+        processedDeepLinkKeyRef,
         areas,
         foldersByArea,
         foldersByParent,
@@ -140,9 +145,9 @@ export const HierarchyTree: React.FC<HierarchyTreeProps> = ({ root, initialDeepL
         setExpandedFolders,
         loadAreaContent,
         loadFolderContent,
-        openAreaModal,
-        openFolderModal,
-        openTaskModal,
+        openAreaDetail,
+        openFolderDetail,
+        openTaskDetail,
         showError,
         handleAreaSave: handlers.handleAreaSave,
         handleAreaDelete: handlers.handleAreaDelete ?? (() => Promise.resolve()),

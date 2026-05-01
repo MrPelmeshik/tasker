@@ -22,9 +22,9 @@ export async function openEntityByDeepLink(params: OpenEntityByDeepLinkParams): 
     setExpandedFolders,
     loadAreaContent,
     loadFolderContent,
-    openAreaModal,
-    openFolderModal,
-    openTaskModal,
+    openAreaDetail,
+    openFolderDetail,
+    openTaskDetail,
     showError,
     handleAreaSave,
     handleAreaDelete,
@@ -50,7 +50,7 @@ export async function openEntityByDeepLink(params: OpenEntityByDeepLinkParams): 
       if (!foldersByArea.has(area.id) && !tasksByArea.has(area.id)) {
         await loadAreaContent(area.id);
       }
-      openAreaModal(area, 'edit', handleAreaSave, handleAreaDelete);
+      openAreaDetail(area, 'edit', handleAreaSave, handleAreaDelete);
     } else if (entityType === 'folder') {
       const folder = await fetchFolderById(entityId);
       if (!folder) {
@@ -83,8 +83,8 @@ export async function openEntityByDeepLink(params: OpenEntityByDeepLinkParams): 
       if (!foldersByParent.has(folder.id) && !tasksByFolder.has(folder.id)) {
         await loadFolderContent(folder.id, folder.areaId);
       }
-      const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
-      openFolderModal(folder, 'edit', areasForModal, handleFolderSave, handleFolderDelete);
+      const areasForFolder = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+      openFolderDetail(folder, 'edit', areasForFolder, handleFolderSave, handleFolderDelete);
     } else {
       const task = await fetchTaskById(entityId);
       if (!task) {
@@ -114,8 +114,8 @@ export async function openEntityByDeepLink(params: OpenEntityByDeepLinkParams): 
       } else if (!foldersByArea.has(task.areaId) && !tasksByArea.has(task.areaId)) {
         await loadAreaContent(task.areaId);
       }
-      const areasForTaskModal = areas.map((a) => ({ id: a.id, title: a.title }));
-      openTaskModal(task, 'edit', handleTaskSave, handleTaskDelete, undefined, undefined, areasForTaskModal);
+      const areasForTask = areas.map((a) => ({ id: a.id, title: a.title }));
+      openTaskDetail(task, 'edit', handleTaskSave, handleTaskDelete, undefined, undefined, areasForTask);
     }
   } catch {
     showError('Ресурс недоступен');

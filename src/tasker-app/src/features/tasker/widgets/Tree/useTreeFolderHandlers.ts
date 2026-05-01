@@ -21,7 +21,7 @@ import type {
 import type { TaskerDetailPanelApi } from '../../context/TaskerDetailPanelContext';
 
 export interface UseTreeFolderHandlersOptions
-  extends Pick<TaskerDetailPanelApi, 'openFolderModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openFolderDetail'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setFoldersByArea: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;
@@ -40,7 +40,7 @@ export function useTreeFolderHandlers({
   setTasksByFolder,
   setExpandedAreas,
   setExpandedFolders,
-  openFolderModal,
+  openFolderDetail,
   showError,
 }: UseTreeFolderHandlersOptions) {
   const handleFolderSave = useCallback(
@@ -104,19 +104,19 @@ export function useTreeFolderHandlers({
   const handleCreateFolderForArea = useCallback(
     (areaId: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
-      openFolderModal(null, 'create', areasForModal, (data, folderId) => handleFolderSave(data as FolderCreateRequest, folderId), undefined, areaId, null);
+      const areasForFolder = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+      openFolderDetail(null, 'create', areasForFolder, (data, folderId) => handleFolderSave(data as FolderCreateRequest, folderId), undefined, areaId, null);
     },
-    [areas, openFolderModal, handleFolderSave]
+    [areas, openFolderDetail, handleFolderSave]
   );
 
   const handleCreateFolderForFolder = useCallback(
     (folderId: string, areaId: string, e: React.MouseEvent) => {
       e.stopPropagation();
-      const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
-      openFolderModal(null, 'create', areasForModal, (data, fid) => handleFolderSave(data as FolderCreateRequest, fid), undefined, areaId, folderId);
+      const areasForFolder = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+      openFolderDetail(null, 'create', areasForFolder, (data, fid) => handleFolderSave(data as FolderCreateRequest, fid), undefined, areaId, folderId);
     },
-    [areas, openFolderModal, handleFolderSave]
+    [areas, openFolderDetail, handleFolderSave]
   );
 
   const handleViewFolderDetails = useCallback(
@@ -125,14 +125,14 @@ export function useTreeFolderHandlers({
       try {
         const folder = await fetchFolderById(folderId);
         if (folder) {
-          const areasForModal = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
-          openFolderModal(folder, 'edit', areasForModal, (data, fid) => handleFolderSave(data as FolderUpdateRequest, fid), handleFolderDelete);
+          const areasForFolder = areas.map((a) => ({ ...a, id: a.id, title: a.title, description: a.description }));
+          openFolderDetail(folder, 'edit', areasForFolder, (data, fid) => handleFolderSave(data as FolderUpdateRequest, fid), handleFolderDelete);
         }
       } catch (error) {
         showError(error);
       }
     },
-    [areas, openFolderModal, handleFolderSave, handleFolderDelete, showError]
+    [areas, openFolderDetail, handleFolderSave, handleFolderDelete, showError]
   );
 
   return useMemo(() => ({

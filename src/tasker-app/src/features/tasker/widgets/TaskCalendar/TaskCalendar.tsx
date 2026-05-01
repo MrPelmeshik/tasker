@@ -25,7 +25,7 @@ export interface TaskCalendarProps extends WidgetSizeProps {
 
 export const TaskCalendar: React.FC<TaskCalendarProps> = ({ colSpan, rowSpan, onViewModeChange, refetchRef, treeContent }) => {
   const { weekStartIso, go } = useWeek();
-  const { openTaskModal } = useTaskerDetailPanel();
+  const { openTaskDetail } = useTaskerDetailPanel();
   const { showError } = useToast();
   const { subscribeToTaskUpdates } = useTaskUpdate();
 
@@ -79,7 +79,7 @@ export const TaskCalendar: React.FC<TaskCalendarProps> = ({ colSpan, rowSpan, on
       if (!task) return;
       const areasData = await fetchAreaShortCard();
       const areas = areasData.map((a) => ({ id: a.id, title: a.title }));
-      openTaskModal(
+      openTaskDetail(
         task,
         'edit',
         async (data, id) => {
@@ -98,7 +98,7 @@ export const TaskCalendar: React.FC<TaskCalendarProps> = ({ colSpan, rowSpan, on
     } catch (e) {
       showError(e);
     }
-  }, [openTaskModal, showError]);
+  }, [openTaskDetail, showError]);
 
   const handleEdgeDrag = useCallback(async (
     direction: 'prev' | 'next',

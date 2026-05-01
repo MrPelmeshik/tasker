@@ -14,6 +14,10 @@ export interface ModalProps {
   onUnsavedChangesClose?: () => void;
   size?: ModalSize;
   renderMode?: 'portal' | 'inline';
+  /**
+   * Внешний вид при renderMode=inline: card — как отдельное окно; embedded — без второй «карточки» (панель детализации).
+   */
+  inlinePresentation?: 'card' | 'embedded';
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -27,6 +31,7 @@ export const Modal: React.FC<ModalProps> = ({
   onUnsavedChangesClose,
   size = 'large',
   renderMode = 'portal',
+  inlinePresentation = 'card',
 }) => {
   const modalRef = useRef<HTMLDivElement>(null);
 
@@ -47,6 +52,13 @@ export const Modal: React.FC<ModalProps> = ({
       }
     };
 
+    if (renderMode === 'inline') {
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+
     const handleOverlayClick = (event: MouseEvent) => {
       if (closeOnOverlayClick && modalRef.current && event.target === modalRef.current) {
         handleClose();
@@ -56,7 +68,7 @@ export const Modal: React.FC<ModalProps> = ({
     document.addEventListener('keydown', handleEscape);
     document.addEventListener('mousedown', handleOverlayClick);
 
-    // Блокируем скролл body при открытом модальном окне
+    // Блокируем скролл body при открытом модальном окне (только портал с оверлеем)
     document.body.style.overflow = 'hidden';
 
     return () => {
@@ -64,7 +76,7 @@ export const Modal: React.FC<ModalProps> = ({
       document.removeEventListener('mousedown', handleOverlayClick);
       document.body.style.overflow = '';
     };
-  }, [isOpen, closeOnOverlayClick, closeOnEscape, handleClose]);
+  }, [isOpen, closeOnOverlayClick, closeOnEscape, handleClose, renderMode]);
 
   if (!isOpen) return null;
 
@@ -91,9 +103,10 @@ export const Modal: React.FC<ModalProps> = ({
   ].filter(Boolean).join(' ');
 
   if (renderMode === 'inline') {
+    const inlineExtra = inlinePresentation === 'embedded' ? ` ${css.inlineModalEmbedded}` : '';
     return (
       <div className={css.inlineRoot}>
-        <div className={`${modalClass} ${css.inlineModal}`}>{children}</div>
+        <div className={`${modalClass} ${css.inlineModal}${inlineExtra}`}>{children}</div>
       </div>
     );
   }

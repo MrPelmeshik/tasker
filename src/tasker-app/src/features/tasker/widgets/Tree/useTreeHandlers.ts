@@ -12,7 +12,7 @@ export function useTreeHandlers(options: UseTreeHandlersOptions) {
     setAreas: options.setAreas,
     setFoldersByArea: options.setFoldersByArea,
     setTasksByArea: options.setTasksByArea,
-    openAreaModal: options.openAreaModal,
+    openAreaDetail: options.openAreaDetail,
     showError: options.showError,
     notifyTaskUpdate: options.notifyTaskUpdate,
   });
@@ -25,7 +25,7 @@ export function useTreeHandlers(options: UseTreeHandlersOptions) {
     setTasksByFolder: options.setTasksByFolder,
     setExpandedAreas: options.setExpandedAreas,
     setExpandedFolders: options.setExpandedFolders,
-    openFolderModal: options.openFolderModal,
+    openFolderDetail: options.openFolderDetail,
     showError: options.showError,
   });
 
@@ -36,7 +36,7 @@ export function useTreeHandlers(options: UseTreeHandlersOptions) {
     setTasksByFolder: options.setTasksByFolder,
     setExpandedAreas: options.setExpandedAreas,
     setExpandedFolders: options.setExpandedFolders,
-    openTaskModal: options.openTaskModal,
+    openTaskDetail: options.openTaskDetail,
     notifyTaskUpdate: options.notifyTaskUpdate,
     showError: options.showError,
   });

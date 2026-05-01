@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Modal } from '../common/Modal';
-import { SimpleModalHeader } from '../common/SimpleModalHeader';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
+import { ModalContentFrame, ModalFormBody } from '../common/ModalFrame';
 import { EntityFormField } from '../common/EntityFormField';
 import { GlassInput, ModalSaveButton, GlassSelect } from '../ui';
 import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
@@ -8,10 +7,10 @@ import { ActivityList } from './ActivityList';
 import { EventEditModal } from './EventEditModal';
 import { TaskCardLink } from '../tasks';
 import { useToast } from '../../context/ToastContext';
+import { useTaskerDetailPanel } from '../../features/tasker/context/TaskerDetailPanelContext';
 import { useEvents } from './useEvents';
-import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
-import activityModalCss from '../../styles/activity-modal.module.css';
+import activityDetailEditorCss from '../../styles/activity-detail-editor.module.css';
 import { formatDateOnly, toDateTimeLocalValue } from '../../utils/date';
 import type { TaskResponse, EventResponse, EventUpdateRequest } from '../../types/api';
 
@@ -23,31 +22,31 @@ export interface ActivityFormData {
   eventType: string;
 }
 
-export interface ActivityModalProps {
+export interface ActivityDetailEditorProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: ActivityFormData) => Promise<void>;
   task: TaskResponse;
   date?: string | null;
-  onOpenTaskDetails: () => void;
+  /** Открыть карточку задачи в панели детализации */
+  onOpenTaskDetail: () => void;
   /** Колбэк сохранения при редактировании записи (если передан — в списке показываются кнопки редактирования) */
   onSaveEdit?: (eventId: string, data: EventUpdateRequest) => Promise<void>;
   /** Колбэк удаления записи (если передан — в списке показываются кнопки удаления) */
   onDeleteEvent?: (event: EventResponse) => Promise<void>;
-  renderMode?: 'portal' | 'inline';
 }
 
-export const ActivityModal: React.FC<ActivityModalProps> = ({
+export const ActivityDetailEditor: React.FC<ActivityDetailEditorProps> = ({
   isOpen,
   onClose,
   onSave,
   task,
   date,
-  onOpenTaskDetails,
+  onOpenTaskDetail,
   onSaveEdit,
   onDeleteEvent,
-  renderMode = 'portal',
 }) => {
+  const { setDetailChrome, registerDetailPanelCloseHandler } = useTaskerDetailPanel();
   const { showError } = useToast();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -98,24 +97,52 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
     }
   };
 
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+  const handleSaveRef = useRef(handleSave);
+  handleSaveRef.current = handleSave;
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+      return undefined;
+    }
+    registerDetailPanelCloseHandler(() => onCloseRef.current());
+    setDetailChrome({
+      title: 'Создание события',
+      actions: (
+        <ModalSaveButton
+          onClick={() => handleSaveRef.current()}
+          disabled={!title.trim() || !eventDateTime.trim() || isLoading}
+        />
+      ),
+    });
+    return () => {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+    };
+  }, [
+    isOpen,
+    setDetailChrome,
+    registerDetailPanelCloseHandler,
+    title,
+    eventDateTime,
+    isLoading,
+  ]);
+
+  if (!isOpen) {
+    return null;
+  }
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} size="medium" renderMode={renderMode}>
-      <div className={css.modalContent}>
-        <SimpleModalHeader
-          title="Создание события"
-          onClose={onClose}
-          closeDisabled={isLoading}
-        >
-          <ModalSaveButton
-            onClick={handleSave}
-            disabled={!title.trim() || !eventDateTime.trim() || isLoading}
-          />
-        </SimpleModalHeader>
-        <div className={css.modalBody}>
+    <>
+      <ModalContentFrame>
+        <ModalFormBody>
           <TaskCardLink
             task={{ id: task.id, title: task.title, status: task.status }}
-            onClick={() => onOpenTaskDetails()}
-            className={activityModalCss.taskCard}
+            onClick={() => onOpenTaskDetail()}
+            className={activityDetailEditorCss.taskCard}
           />
           {date && (
             <div className="mb-16">
@@ -203,8 +230,8 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
               }
             />
           </div>
-        </div>
-      </div>
+        </ModalFormBody>
+      </ModalContentFrame>
       {onSaveEdit && (
         <EventEditModal
           isOpen={editEvent != null}
@@ -219,6 +246,6 @@ export const ActivityModal: React.FC<ActivityModalProps> = ({
           event={editEvent}
         />
       )}
-    </Modal>
+    </>
   );
 };

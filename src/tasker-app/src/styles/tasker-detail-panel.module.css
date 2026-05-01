@@ -1,4 +1,7 @@
 .detailPanel {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
   min-width: 0;
   min-height: 0;
   display: flex;
@@ -11,16 +14,44 @@
   overflow: hidden;
 }
 
+/** Вертикальная полоска: только иконки, узкая колонка сетки */
 .detailPanel.collapsed {
-  width: 64px;
+  width: 56px;
+  min-width: 56px;
+  max-width: 56px;
+  align-self: stretch;
 }
 
 .detailPanelHeader {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: var(--space-8);
   padding: var(--space-8) var(--space-12);
   border-bottom: var(--border-1) solid var(--glass-border-2);
+  min-width: 0;
+}
+
+.detailPanel.collapsed .detailPanelHeader {
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  gap: var(--space-6);
+  padding: var(--space-8) var(--space-6);
+  border-bottom: none;
+}
+
+.detailPanel.collapsed .detailPanelActions {
+  flex-direction: column;
+}
+
+.detailPanelLead {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
 }
 
 .detailPanelTitle {
@@ -28,14 +59,44 @@
   color: var(--color-text-secondary);
 }
 
+.detailEntityTitle {
+  font-size: var(--font-14);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.detailEntityActions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-6);
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 100%;
+}
+
 .detailPanelActions {
   display: flex;
   align-items: center;
   gap: var(--space-6);
+  flex-shrink: 0;
 }
 
 .detailPanelBody {
   flex: 1 1 auto;
+  min-width: 0;
   min-height: 0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 767px) {
+  .detailPanel.collapsed {
+    margin-inline-start: auto;
+  }
 }

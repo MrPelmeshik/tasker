@@ -1,2 +1,2 @@
-export { AreaModal } from './AreaModal';
+export { AreaDetailEditor } from './AreaModal';
 export { AreaCardLink } from './AreaCardLink';

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Modal } from '../../common/Modal';
+import React, { useLayoutEffect, useRef, useState } from 'react';
+import { ModalContentFrame, ModalFormBody } from '../../common/ModalFrame';
 import { ConfirmModal } from '../../common/ConfirmModal';
 import { EntityConfirmModals } from '../../common/EntityConfirmModals';
 import { logger } from '../../../utils/logger';
@@ -9,18 +9,18 @@ import { MarkdownViewer } from '../../ui/MarkdownViewer/MarkdownViewer';
 import { ActivityList } from '../../activities/ActivityList';
 import { EventEditModal } from '../../activities/EventEditModal';
 import { EntityMetaBlock } from '../../common/EntityMetaBlock';
-import { EntityModalHeader } from '../../common/EntityModalHeader';
+import { EntityModalToolbar } from '../../common/EntityModalHeader';
+import { useTaskerDetailPanel } from '../../../features/tasker/context/TaskerDetailPanelContext';
 import { EntityFormField } from '../../common/EntityFormField';
 import { updateEvent, deleteEvent } from '../../../services/api';
 import { useEntityFormModal, useCopyEntityLink } from '../../../hooks';
 import { useToast } from '../../../context/ToastContext';
 import { areaApi } from '../../../services/api/areas';
-import css from '../../../styles/modal.module.css';
 import formCss from '../../../styles/modal-form.module.css';
 import { formatDateTime } from '../../../utils/date';
 import type { AreaResponse, AreaCreateRequest, AreaUpdateRequest, AreaRole, EventResponse } from '../../../types';
 import type { ModalSize } from '../../../types/modal-size';
-import { AreaModalMembersSection } from './AreaModalMembersSection';
+import { AreaDetailMembersSection } from './AreaDetailMembersSection';
 import { useAreaMembers } from './useAreaMembers';
 import { HierarchyTree } from '../../../features/tasker/widgets/Tree/HierarchyTree';
 import { AttachmentList } from '../../attachments/AttachmentList';
@@ -29,7 +29,7 @@ import { EntityType, attachmentApi } from '../../../services/api/attachment.api'
 /** Данные формы области: название, описание, цвет (в форме — selectedColor, при сохранении уходит как color). */
 type AreaFormData = { title: string; description: string; selectedColor?: string; id?: string };
 
-export interface AreaModalProps {
+export interface AreaDetailEditorProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: AreaCreateRequest | AreaUpdateRequest) => Promise<void>;
@@ -37,10 +37,9 @@ export interface AreaModalProps {
   area?: AreaResponse | null;
   title?: string;
   size?: ModalSize;
-  renderMode?: 'portal' | 'inline';
 }
 
-export const AreaModal: React.FC<AreaModalProps> = ({
+export const AreaDetailEditor: React.FC<AreaDetailEditorProps> = ({
   isOpen,
   onClose,
   onSave,
@@ -48,8 +47,8 @@ export const AreaModal: React.FC<AreaModalProps> = ({
   area = null,
   title = 'Область',
   size = 'medium',
-  renderMode = 'portal',
 }) => {
+  const { setDetailChrome, registerDetailPanelCloseHandler } = useTaskerDetailPanel();
   const { showError, addSuccess } = useToast();
   const { copyLink: handleCopyLink } = useCopyEntityLink('area', area?.id);
 
@@ -114,7 +113,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             addSuccess('Участники обновлены');
           }
         } catch (err) {
-          logger.error('AreaModal: ошибка batch-обновления участников', { step: 'members', error: err });
+          logger.error('AreaDetailEditor: ошибка batch-обновления участников', { step: 'members', error: err });
           throw new Error(
             'Не удалось обновить участников. Часть изменений могла примениться. Перезагрузите страницу и проверьте состав области.'
           );
@@ -201,33 +200,86 @@ export const AreaModal: React.FC<AreaModalProps> = ({
 
   const isViewMode = Boolean(area && !isEditMode);
 
-  return (
-    <Modal
-      isOpen={isOpen}
-      onClose={safeHandleClose}
-      hasUnsavedChanges={hasUnsavedChanges}
-      size={size}
-      renderMode={renderMode}
-    >
-      <div className={css.modalContent}>
-        <EntityModalHeader
-          title={isViewMode ? 'Область' : area ? 'Редактирование области' : 'Создание области'}
+  const headerTitle = isViewMode ? 'Область' : area ? 'Редактирование области' : 'Создание области';
+  const areaSaveDisabled =
+    (!hasUnsavedChanges && uploadedAttachmentIds.size === 0) ||
+    !formData.title.trim() ||
+    (!area && !(formData as AreaFormData).selectedColor);
+
+  const panelCloseRef = useRef(safeHandleClose);
+  panelCloseRef.current = safeHandleClose;
+
+  const toolbarCallbacksRef = useRef({
+    handleCopyLink,
+    handleDeleteRequest,
+    handleReturnToView,
+    safeHandleSave,
+    safeHandleClose,
+    setIsEditMode,
+  });
+  toolbarCallbacksRef.current = {
+    handleCopyLink,
+    handleDeleteRequest,
+    handleReturnToView,
+    safeHandleSave,
+    safeHandleClose,
+    setIsEditMode,
+  };
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+      return undefined;
+    }
+    registerDetailPanelCloseHandler(() => panelCloseRef.current());
+    const tc = toolbarCallbacksRef.current;
+    setDetailChrome({
+      title: headerTitle,
+      actions: (
+        <EntityModalToolbar
           isViewMode={isViewMode}
           hasEntity={!!area?.id}
           canEdit={canEdit}
           showDeleteInViewMode={!!(canEdit && area && onDelete)}
           showDeleteInEditMode={!!(area && onDelete)}
-          onCopyLink={handleCopyLink}
-          onEdit={() => setIsEditMode(true)}
-          onDelete={handleDeleteRequest}
-          onCancel={handleReturnToView}
-          onSave={safeHandleSave}
-          onClose={safeHandleClose}
+          onCopyLink={() => tc.handleCopyLink()}
+          onEdit={() => tc.setIsEditMode(true)}
+          onDelete={() => tc.handleDeleteRequest()}
+          onCancel={() => tc.handleReturnToView()}
+          onSave={() => void tc.safeHandleSave()}
+          onClose={() => tc.safeHandleClose()}
           isLoading={isLoading}
-          saveDisabled={(!hasUnsavedChanges && uploadedAttachmentIds.size === 0) || !formData.title.trim() || (!area && !(formData as AreaFormData).selectedColor)}
+          saveDisabled={areaSaveDisabled}
+          showCloseButton={false}
         />
+      ),
+    });
+    return () => {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+    };
+  }, [
+    isOpen,
+    setDetailChrome,
+    registerDetailPanelCloseHandler,
+    headerTitle,
+    isViewMode,
+    area,
+    canEdit,
+    onDelete,
+    isLoading,
+    areaSaveDisabled,
+  ]);
 
-        <div className={css.modalBody}>
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <>
+      <ModalContentFrame>
+        <ModalFormBody>
           <div className={formCss.formContainer}>
             <div className={formCss.fieldRow}>
               <EntityFormField
@@ -311,7 +363,7 @@ export const AreaModal: React.FC<AreaModalProps> = ({
             )}
 
             {area && (
-              <AreaModalMembersSection
+              <AreaDetailMembersSection
                 displayMembers={displayMembers}
                 isViewMode={isViewMode}
                 membersLoading={membersLoading}
@@ -375,8 +427,8 @@ export const AreaModal: React.FC<AreaModalProps> = ({
               />
             )}
           </div>
-        </div>
-      </div>
+        </ModalFormBody>
+      </ModalContentFrame>
 
       <ConfirmModal
         isOpen={showCloseConfirm}
@@ -419,6 +471,6 @@ export const AreaModal: React.FC<AreaModalProps> = ({
         }}
         event={editEvent}
       />
-    </Modal>
+    </>
   );
 };

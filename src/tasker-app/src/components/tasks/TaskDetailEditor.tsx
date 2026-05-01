@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Modal } from '../common/Modal';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { ModalContentFrame, ModalFormBody } from '../common/ModalFrame';
 import { EntityConfirmModals } from '../common/EntityConfirmModals';
 import { GlassInput, GlassSelect } from '../ui';
 import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
@@ -8,13 +8,13 @@ import { TaskStatusBadge } from '../ui/TaskStatusBadge';
 import { ActivityList } from '../activities/ActivityList';
 import { EventEditModal } from '../activities/EventEditModal';
 import { EntityMetaBlock } from '../common/EntityMetaBlock';
-import { EntityModalHeader } from '../common/EntityModalHeader';
+import { EntityModalToolbar } from '../common/EntityModalHeader';
+import { useTaskerDetailPanel } from '../../features/tasker/context/TaskerDetailPanelContext';
 import { EntityFormField } from '../common/EntityFormField';
 import { useEvents } from '../activities/useEvents';
 import { updateEvent, deleteEvent } from '../../services/api';
 import { useEntityFormModal, useFolderOptions, useCopyEntityLink } from '../../hooks';
 import { useTaskUpdate } from '../../context';
-import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import type { TaskResponse, TaskCreateRequest, TaskUpdateRequest, EventResponse } from '../../types';
 import { TaskStatus, getTaskStatusOptions } from '../../types';
@@ -24,7 +24,7 @@ import { AttachmentList, AttachmentListHandle } from '../attachments/AttachmentL
 import { TaskScheduleList, TaskScheduleListHandle } from './TaskScheduleList';
 import { EntityType } from '../../services/api/attachment.api';
 
-export interface TaskModalProps {
+export interface TaskDetailEditorProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: TaskCreateRequest | TaskUpdateRequest, taskId?: string) => Promise<void>;
@@ -35,10 +35,9 @@ export interface TaskModalProps {
   defaultFolderId?: string;
   defaultAreaId?: string;
   areas?: Array<{ id: string; title: string }>;
-  renderMode?: 'portal' | 'inline';
 }
 
-export const TaskModal: React.FC<TaskModalProps> = ({
+export const TaskDetailEditor: React.FC<TaskDetailEditorProps> = ({
   isOpen,
   onClose,
   onSave,
@@ -49,8 +48,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
   defaultFolderId,
   defaultAreaId,
   areas,
-  renderMode = 'portal',
 }) => {
+  const { setDetailChrome, registerDetailPanelCloseHandler } = useTaskerDetailPanel();
   const { copyLink: handleCopyLink } = useCopyEntityLink('task', task?.id);
   const attachmentRef = useRef<AttachmentListHandle>(null);
   const scheduleRef = useRef<TaskScheduleListHandle>(null);
@@ -164,25 +163,82 @@ export const TaskModal: React.FC<TaskModalProps> = ({
 
   const folderValue = formData.folderId === '' || formData.folderId == null ? '' : formData.folderId;
 
-  return (
-    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size} renderMode={renderMode}>
-      <div className={css.modalContent}>
-        <EntityModalHeader
-          title={isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи'}
+  const headerTitle = isViewMode ? 'Задача' : task ? 'Редактирование задачи' : 'Создание задачи';
+  const saveDisabled =
+    (!hasChanges && !hasAttachmentChanges && !hasScheduleChanges) || !formData.title.trim() || !formData.areaId;
+
+  const panelCloseRef = useRef(safeHandleClose);
+  panelCloseRef.current = safeHandleClose;
+
+  const toolbarCallbacksRef = useRef({
+    handleCopyLink,
+    handleDeleteRequest,
+    handleReturnToView,
+    safeHandleSave,
+    safeHandleClose,
+    setIsEditMode,
+  });
+  toolbarCallbacksRef.current = {
+    handleCopyLink,
+    handleDeleteRequest,
+    handleReturnToView,
+    safeHandleSave,
+    safeHandleClose,
+    setIsEditMode,
+  };
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+      return undefined;
+    }
+    registerDetailPanelCloseHandler(() => panelCloseRef.current());
+    const tc = toolbarCallbacksRef.current;
+    setDetailChrome({
+      title: headerTitle,
+      actions: (
+        <EntityModalToolbar
           isViewMode={isViewMode}
           hasEntity={!!task?.id}
           showDeleteInViewMode={!!(task && onDelete)}
           showDeleteInEditMode={!!(task && onDelete)}
-          onCopyLink={handleCopyLink}
-          onEdit={() => setIsEditMode(true)}
-          onDelete={handleDeleteRequest}
-          onCancel={handleReturnToView}
-          onSave={safeHandleSave}
-          onClose={safeHandleClose}
+          onCopyLink={() => tc.handleCopyLink()}
+          onEdit={() => tc.setIsEditMode(true)}
+          onDelete={() => tc.handleDeleteRequest()}
+          onCancel={() => tc.handleReturnToView()}
+          onSave={() => void tc.safeHandleSave()}
+          onClose={() => tc.safeHandleClose()}
           isLoading={isLoading}
-          saveDisabled={(!hasChanges && !hasAttachmentChanges && !hasScheduleChanges) || !formData.title.trim() || !formData.areaId}
+          saveDisabled={saveDisabled}
+          showCloseButton={false}
         />
-        <div className={css.modalBody}>
+      ),
+    });
+    return () => {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+    };
+  }, [
+    isOpen,
+    setDetailChrome,
+    registerDetailPanelCloseHandler,
+    headerTitle,
+    isViewMode,
+    task,
+    onDelete,
+    isLoading,
+    saveDisabled,
+  ]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <>
+      <ModalContentFrame>
+        <ModalFormBody>
           <div className={formCss.formContainer}>
             <EntityFormField
               label="Название задачи *"
@@ -334,8 +390,8 @@ export const TaskModal: React.FC<TaskModalProps> = ({
               />
             )}
           </div>
-        </div>
-      </div>
+        </ModalFormBody>
+      </ModalContentFrame>
       <EntityConfirmModals
         showConfirmModal={showConfirmModal}
         onConfirmSave={handleConfirmSave}
@@ -362,6 +418,6 @@ export const TaskModal: React.FC<TaskModalProps> = ({
         }}
         event={editEvent}
       />
-    </Modal>
+    </>
   );
 };

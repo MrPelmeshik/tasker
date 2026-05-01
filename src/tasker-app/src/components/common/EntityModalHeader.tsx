@@ -11,8 +11,7 @@ import { Tooltip } from '../ui/Tooltip';
 import { LinkIcon } from '../icons/LinkIcon';
 import css from '../../styles/modal.module.css';
 
-export interface EntityModalHeaderProps {
-  title: string;
+export type EntityModalToolbarProps = {
   isViewMode: boolean;
   hasEntity: boolean;
   canEdit?: boolean;
@@ -26,10 +25,14 @@ export interface EntityModalHeaderProps {
   onClose: () => void;
   isLoading: boolean;
   saveDisabled: boolean;
-}
+  /** Показывать кнопку закрытия модалки (в панели детализации закрытие — у панели) */
+  showCloseButton?: boolean;
+};
 
-export const EntityModalHeader: React.FC<EntityModalHeaderProps> = ({
-  title,
+/**
+ * <summary>Кнопки действий сущности без заголовка (панель детализации или шапка модалки).</summary>
+ */
+export const EntityModalToolbar: React.FC<EntityModalToolbarProps> = ({
   isViewMode,
   hasEntity,
   canEdit = true,
@@ -43,40 +46,53 @@ export const EntityModalHeader: React.FC<EntityModalHeaderProps> = ({
   onClose,
   isLoading,
   saveDisabled,
+  showCloseButton = true,
+}) => (
+  <div className={css.modalActions}>
+    {showCloseButton && <ModalCloseButton onClick={onClose} disabled={isLoading} />}
+    {hasEntity && (
+      <Tooltip content="Копировать ссылку" placement="bottom">
+        <GlassButton
+          variant="subtle"
+          size="xs"
+          onClick={onCopyLink}
+          disabled={isLoading}
+          aria-label="Копировать ссылку"
+        >
+          <LinkIcon />
+        </GlassButton>
+      </Tooltip>
+    )}
+    {isViewMode ? (
+      <>
+        {canEdit && (
+          <ModalEditButton variant="primary" onClick={onEdit} disabled={isLoading} />
+        )}
+        {showDeleteInViewMode && <ModalDeleteButton onClick={onDelete} disabled={isLoading} />}
+      </>
+    ) : (
+      <>
+        {hasEntity && <ModalCancelButton onClick={onCancel} disabled={isLoading} />}
+        <ModalSaveButton onClick={onSave} disabled={saveDisabled || isLoading} />
+        {showDeleteInEditMode && <ModalDeleteButton onClick={onDelete} disabled={isLoading} />}
+      </>
+    )}
+  </div>
+);
+
+export interface EntityModalHeaderProps extends EntityModalToolbarProps {
+  title: string;
+}
+
+export const EntityModalHeader: React.FC<EntityModalHeaderProps> = ({
+  title,
+  showCloseButton = true,
+  ...toolbar
 }) => {
   return (
     <div className={css.modalHeader}>
       <h3 className={css.modalTitle}>{title}</h3>
-      <div className={css.modalActions}>
-        <ModalCloseButton onClick={onClose} disabled={isLoading} />
-        {hasEntity && (
-          <Tooltip content="Копировать ссылку" placement="bottom">
-            <GlassButton
-              variant="subtle"
-              size="xs"
-              onClick={onCopyLink}
-              disabled={isLoading}
-              aria-label="Копировать ссылку"
-            >
-              <LinkIcon />
-            </GlassButton>
-          </Tooltip>
-        )}
-        {isViewMode ? (
-          <>
-            {canEdit && (
-              <ModalEditButton variant="primary" onClick={onEdit} disabled={isLoading} />
-            )}
-            {showDeleteInViewMode && <ModalDeleteButton onClick={onDelete} disabled={isLoading} />}
-          </>
-        ) : (
-          <>
-            {hasEntity && <ModalCancelButton onClick={onCancel} disabled={isLoading} />}
-            <ModalSaveButton onClick={onSave} disabled={saveDisabled || isLoading} />
-            {showDeleteInEditMode && <ModalDeleteButton onClick={onDelete} disabled={isLoading} />}
-          </>
-        )}
-      </div>
+      <EntityModalToolbar {...toolbar} showCloseButton={showCloseButton} />
     </div>
   );
 };

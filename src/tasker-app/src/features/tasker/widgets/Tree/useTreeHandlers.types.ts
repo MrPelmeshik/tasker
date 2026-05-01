@@ -6,7 +6,7 @@ import type { AreaShortCard, FolderSummary, TaskSummary } from '../../../../type
 import type { TaskerDetailPanelApi } from '../../context/TaskerDetailPanelContext';
 
 export interface UseTreeHandlersOptions
-  extends Pick<TaskerDetailPanelApi, 'openAreaModal' | 'openFolderModal' | 'openTaskModal'> {
+  extends Pick<TaskerDetailPanelApi, 'openAreaDetail' | 'openFolderDetail' | 'openTaskDetail'> {
   areas: AreaShortCard[];
   setAreas: React.Dispatch<React.SetStateAction<AreaShortCard[]>>;
   setFoldersByArea: React.Dispatch<React.SetStateAction<Map<string, FolderSummary[]>>>;

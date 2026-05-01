@@ -1,5 +1,5 @@
-import React from 'react';
-import { Modal } from '../common/Modal';
+import React, { useLayoutEffect, useRef } from 'react';
+import { ModalContentFrame, ModalFormBody } from '../common/ModalFrame';
 import { ConfirmModal } from '../common/ConfirmModal';
 import { EntityConfirmModals } from '../common/EntityConfirmModals';
 import { logger } from '../../utils/logger';
@@ -7,10 +7,10 @@ import { GlassInput, GlassSelect, ColorPicker } from '../ui';
 import { MarkdownEditor } from '../ui/MarkdownEditor/MarkdownEditor';
 import { MarkdownViewer } from '../ui/MarkdownViewer/MarkdownViewer';
 import { EntityMetaBlock } from '../common/EntityMetaBlock';
-import { EntityModalHeader } from '../common/EntityModalHeader';
+import { EntityModalToolbar } from '../common/EntityModalHeader';
+import { useTaskerDetailPanel } from '../../features/tasker/context/TaskerDetailPanelContext';
 import { EntityFormField } from '../common/EntityFormField';
 import { useEntityFormModal, useFolderOptions, useCopyEntityLink } from '../../hooks';
-import css from '../../styles/modal.module.css';
 import formCss from '../../styles/modal-form.module.css';
 import { formatDateTime } from '../../utils/date';
 import type { FolderResponse, FolderCreateRequest, FolderUpdateRequest } from '../../types/api';
@@ -19,7 +19,7 @@ import { HierarchyTree } from '../../features/tasker/widgets/Tree/HierarchyTree'
 import { AttachmentList } from '../attachments/AttachmentList';
 import { EntityType, attachmentApi } from '../../services/api/attachment.api';
 
-export interface FolderModalProps {
+export interface FolderDetailEditorProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (data: FolderCreateRequest | FolderUpdateRequest, folderId?: string) => Promise<void>;
@@ -30,10 +30,9 @@ export interface FolderModalProps {
   size?: ModalSize;
   defaultAreaId?: string;
   defaultParentFolderId?: string | null;
-  renderMode?: 'portal' | 'inline';
 }
 
-export const FolderModal: React.FC<FolderModalProps> = ({
+export const FolderDetailEditor: React.FC<FolderDetailEditorProps> = ({
   isOpen,
   onClose,
   onSave,
@@ -44,8 +43,8 @@ export const FolderModal: React.FC<FolderModalProps> = ({
   size = 'medium',
   defaultAreaId,
   defaultParentFolderId = null,
-  renderMode = 'portal',
 }) => {
+  const { setDetailChrome, registerDetailPanelCloseHandler } = useTaskerDetailPanel();
   const { copyLink: handleCopyLink } = useCopyEntityLink('folder', folder?.id);
 
   const modal = useEntityFormModal<FolderCreateRequest & { parentFolderId?: string | null }>({
@@ -124,25 +123,82 @@ export const FolderModal: React.FC<FolderModalProps> = ({
 
   const isViewMode = Boolean(folder && !isEditMode);
 
-  return (
-    <Modal isOpen={isOpen} onClose={safeHandleClose} hasUnsavedChanges={hasUnsavedChanges} size={size} renderMode={renderMode}>
-      <div className={css.modalContent}>
-        <EntityModalHeader
-          title={isViewMode ? 'Папка' : folder ? 'Редактирование папки' : 'Создание папки'}
+  const headerTitle = isViewMode ? 'Папка' : folder ? 'Редактирование папки' : 'Создание папки';
+  const folderSaveDisabled =
+    (!hasChanges && uploadedAttachmentIds.size === 0) || !formData.title.trim() || !formData.areaId;
+
+  const panelCloseRef = useRef(safeHandleClose);
+  panelCloseRef.current = safeHandleClose;
+
+  const toolbarCallbacksRef = useRef({
+    handleCopyLink,
+    handleDeleteRequest,
+    handleReturnToView,
+    safeHandleSave,
+    safeHandleClose,
+    setIsEditMode,
+  });
+  toolbarCallbacksRef.current = {
+    handleCopyLink,
+    handleDeleteRequest,
+    handleReturnToView,
+    safeHandleSave,
+    safeHandleClose,
+    setIsEditMode,
+  };
+
+  useLayoutEffect(() => {
+    if (!isOpen) {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+      return undefined;
+    }
+    registerDetailPanelCloseHandler(() => panelCloseRef.current());
+    const tc = toolbarCallbacksRef.current;
+    setDetailChrome({
+      title: headerTitle,
+      actions: (
+        <EntityModalToolbar
           isViewMode={isViewMode}
           hasEntity={!!folder?.id}
           showDeleteInViewMode={!!(folder && onDelete)}
           showDeleteInEditMode={!!(folder && onDelete)}
-          onCopyLink={handleCopyLink}
-          onEdit={() => setIsEditMode(true)}
-          onDelete={handleDeleteRequest}
-          onCancel={handleReturnToView}
-          onSave={safeHandleSave}
-          onClose={safeHandleClose}
+          onCopyLink={() => tc.handleCopyLink()}
+          onEdit={() => tc.setIsEditMode(true)}
+          onDelete={() => tc.handleDeleteRequest()}
+          onCancel={() => tc.handleReturnToView()}
+          onSave={() => void tc.safeHandleSave()}
+          onClose={() => tc.safeHandleClose()}
           isLoading={isLoading}
-          saveDisabled={(!hasChanges && uploadedAttachmentIds.size === 0) || !formData.title.trim() || !formData.areaId}
+          saveDisabled={folderSaveDisabled}
+          showCloseButton={false}
         />
-        <div className={css.modalBody}>
+      ),
+    });
+    return () => {
+      setDetailChrome(null);
+      registerDetailPanelCloseHandler(null);
+    };
+  }, [
+    isOpen,
+    setDetailChrome,
+    registerDetailPanelCloseHandler,
+    headerTitle,
+    isViewMode,
+    folder,
+    onDelete,
+    isLoading,
+    folderSaveDisabled,
+  ]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  return (
+    <>
+      <ModalContentFrame>
+        <ModalFormBody>
           <div className={formCss.formContainer}>
             <EntityFormField
               label="Название папки *"
@@ -292,8 +348,8 @@ export const FolderModal: React.FC<FolderModalProps> = ({
               </div>
             )}
           </div>
-        </div>
-      </div>
+        </ModalFormBody>
+      </ModalContentFrame>
       <ConfirmModal
         isOpen={showCloseConfirm}
         onClose={() => setShowCloseConfirm(false)}
@@ -318,6 +374,6 @@ export const FolderModal: React.FC<FolderModalProps> = ({
         isLoading={isLoading}
         entityNameForDelete="папку"
       />
-    </Modal>
+    </>
   );
 };
