@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
+using TaskerApi.Constants;
 using TaskerApi.Models.Common;
 
 namespace TaskerApi.Extensions;
@@ -15,8 +16,8 @@ public static partial class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddTaskerAuthentication(this IServiceCollection services, IConfiguration configuration)
     {
-        services.Configure<JwtSettings>(configuration.GetSection("Jwt"));
-        services.Configure<SignalRSettings>(configuration.GetSection("SignalR"));
+        services.Configure<JwtSettings>(configuration.GetSection(EnvName.Jwt));
+        services.Configure<SignalRSettings>(configuration.GetSection(EnvName.SignalR));
 
         services.AddAuthentication(options =>
         {
@@ -25,10 +26,10 @@ public static partial class ServiceCollectionExtensions
         })
         .AddJwtBearer(options =>
         {
-            var jwt = configuration.GetSection("Jwt").Get<JwtSettings>();
+            var jwt = configuration.GetSection(EnvName.Jwt).Get<JwtSettings>();
             if (jwt == null || string.IsNullOrEmpty(jwt.SecretKey) || string.IsNullOrEmpty(jwt.Issuer) || string.IsNullOrEmpty(jwt.Audience))
             {
-                throw new InvalidOperationException("Конфигурация JWT отсутствует или неполная. Пожалуйста, убедитесь, что переменные окружения JWT_ISSUER, JWT_AUDIENCE и JWT_SECRET_KEY установлены.");
+                throw new InvalidOperationException($"{EnvName.Jwt}: Конфигурация JWT отсутствует или неполная. Пожалуйста, убедитесь, что переменные окружения SecretKey, Issuer и Audience установлены.");
             }
 
             options.RequireHttpsMetadata = jwt.RequireHttpsMetadata;
@@ -45,7 +46,8 @@ public static partial class ServiceCollectionExtensions
                 RoleClaimType = ClaimTypes.Role,
                 ClockSkew = TimeSpan.FromSeconds(jwt.ClockSkewSeconds > 0 ? jwt.ClockSkewSeconds : 30)
             };
-            var hubPathBase = configuration["SignalR:HubPathBase"] ?? "/hubs";
+
+            var hubPathBase = configuration[EnvName.SignalR + ":" + EnvName.HubPathBase] ?? "/hubs";
             options.Events = new JwtBearerEvents
             {
                 OnMessageReceived = context =>

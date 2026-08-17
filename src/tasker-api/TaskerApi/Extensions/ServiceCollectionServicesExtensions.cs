@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using TaskerApi.Constants;
 using TaskerApi.Core;
 using TaskerApi.Interfaces.Core;
 using TaskerApi.Interfaces.Models.Entities;
@@ -21,17 +22,17 @@ public static partial class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddTaskerServices(this IServiceCollection services, IConfiguration configuration)
     {
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
+        var connectionString = configuration.GetConnectionString(EnvName.DefaultConnection);
         if (string.IsNullOrEmpty(connectionString))
         {
-            throw new InvalidOperationException("Строка подключения к базе данных не настроена. Задайте ConnectionStrings__DefaultConnection.");
+            throw new InvalidOperationException($"{EnvName.DefaultConnection}: Строка подключения к базе данных не настроена. Задайте {EnvName.DefaultConnection}.");
         }
 
         services.Configure<DatabaseSettings>(options => options.ConnectionString = connectionString);
-        services.Configure<RefreshTokenCleanupSettings>(configuration.GetSection("RefreshTokenCleanup"));
-        services.Configure<SignalRSettings>(configuration.GetSection("SignalR"));
-        services.Configure<AuthSettings>(configuration.GetSection("Auth"));
-        services.Configure<TasksSettings>(configuration.GetSection("Tasks"));
+        services.Configure<RefreshTokenCleanupSettings>(configuration.GetSection(EnvName.RefreshTokenCleanup));
+        services.Configure<SignalRSettings>(configuration.GetSection(EnvName.SignalR));
+        services.Configure<AuthSettings>(configuration.GetSection(EnvName.Auth));
+        services.Configure<TasksSettings>(configuration.GetSection(EnvName.Tasks));
 
         services.AddDbContext<TaskerDbContext>(options =>
         {

@@ -1,3 +1,5 @@
+using TaskerApi.Constants;
+
 namespace TaskerApi.Extensions;
 
 /// <summary>
@@ -10,8 +12,8 @@ public static partial class ServiceCollectionExtensions
     /// </summary>
     public static IServiceCollection AddTaskerCors(this IServiceCollection services, IConfiguration configuration)
     {
-        var allowedOrigins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
-        var allowedOriginsCsv = configuration["Cors:AllowedOriginsCsv"];
+        var allowedOrigins = configuration.GetSection(EnvName.Cors + ":" + EnvName.AllowedOrigins).Get<string[]>() ?? [];
+        var allowedOriginsCsv = configuration[EnvName.Cors + ":" + EnvName.AllowedOriginsCsv];
         if (!string.IsNullOrWhiteSpace(allowedOriginsCsv))
         {
             var csv = allowedOriginsCsv
@@ -21,7 +23,7 @@ public static partial class ServiceCollectionExtensions
 
         var isProduction = string.Equals(configuration["ASPNETCORE_ENVIRONMENT"], "Production", StringComparison.OrdinalIgnoreCase);
         if (allowedOrigins.Length == 0 && isProduction)
-            throw new InvalidOperationException("CORS: в production необходимо задать Cors:AllowedOrigins или Cors:AllowedOriginsCsv. AllowAnyOrigin несовместим с AllowCredentials.");
+            throw new InvalidOperationException($"{EnvName.Cors}: в production необходимо задать {EnvName.AllowedOrigins} или {EnvName.AllowedOriginsCsv}. AllowAnyOrigin несовместим с AllowCredentials.");
 
         services.AddCors(options =>
         {
